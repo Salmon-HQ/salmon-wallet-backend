@@ -86,17 +86,20 @@
       "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
-        "logs:DeleteLogGroup",
-        "logs:PutRetentionPolicy",
-        "logs:TagLogGroup",
-        "logs:UntagLogGroup",
-        "logs:DescribeLogGroups",
         "logs:CreateLogStream",
-        "logs:PutLogEvents",
+        "logs:DeleteLogGroup",
+        "logs:DescribeLogGroups",
         "logs:DescribeLogStreams",
         "logs:FilterLogEvents",
         "logs:GetLogEvents",
-        "logs:ListTagsLogGroup"
+        "logs:ListTagsForResource",
+        "logs:ListTagsLogGroup",
+        "logs:PutLogEvents",
+        "logs:PutRetentionPolicy",
+        "logs:TagLogGroup",
+        "logs:TagResource",
+        "logs:UntagLogGroup",
+        "logs:UntagResource"
       ],
       "Resource": [
         "arn:aws:logs:us-east-1:<AWS_ACCOUNT_ID>:log-group:/aws/lambda/gol-salmon-api-*",
@@ -165,7 +168,10 @@
     {
       "Sid": "ApiGatewayReadOnly",
       "Effect": "Allow",
-      "Action": ["apigateway:List*", "apigateway:Describe*"],
+      "Action": [
+        "apigateway:List*",
+        "apigateway:Describe*"
+      ],
       "Resource": "*"
     },
     {
@@ -193,7 +199,10 @@
     {
       "Sid": "EventBridgeReadOnly",
       "Effect": "Allow",
-      "Action": ["events:ListRules", "events:DescribeEventBus"],
+      "Action": [
+        "events:ListRules",
+        "events:DescribeEventBus"
+      ],
       "Resource": "*"
     },
     {
