@@ -25,14 +25,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Salmon-HQ/salmon-api.git"
+    "url": "git+https://github.com/Salmon-HQ/salmon-wallet-backend.git"
   },
   "author": "GeekOcean Labs Ltd",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Salmon-HQ/salmon-api/issues"
+    "url": "https://github.com/Salmon-HQ/salmon-wallet-backend/issues"
   },
-  "homepage": "https://github.com/Salmon-HQ/salmon-api#readme",
+  "homepage": "https://github.com/Salmon-HQ/salmon-wallet-backend#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "dotenv": "^17.4.2",
