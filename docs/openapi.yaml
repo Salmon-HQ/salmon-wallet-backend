@@ -1,0 +1,1999 @@
+openapi: 3.0.3
+info:
+  title: Salmon API
+  version: 0.15.1
+  description: |
+    Public HTTP API of the Salmon Wallet backend (`gol-salmon-api`).
+
+    The API is organized as vertical slices per blockchain, mounted at
+    `/v1/<chain>-{env}` (e.g. `/v1/solana-mainnet`), plus cross-chain
+    surfaces (`/v1/networks`, `/v1/bridge`, `/v1/dapp`, CoinGecko market
+    data, and the multichain balance endpoint) and unversioned service-info
+    endpoints (`/health`, `/status`, `/ip`).
+
+    Error payloads use the envelope `{ error: '<snake_case_code>',
+    error_description: '<human message>' }` (see the `Error` schema), except
+    the analytics ingest endpoint (`POST /v1/events`), which is a separate
+    dependency-light Lambda and returns `{ error: '<code>' }` without
+    `error_description`.
+
+    Response shapes are defined by the `src/resources/` layer — that layer
+    is the public contract. Shapes documented as `additionalProperties: true`
+    are provider-enriched and carry extra fields beyond the stable ones
+    listed here; the referenced resource file is the source of truth.
+# The API is public and unauthenticated (CORS-restricted to *.salmonwallet.io
+# origins, per-IP rate limited over /v1). Declared explicitly so tooling knows
+# the absence of a security scheme is intentional.
+security: []
+servers:
+  - url: https://api.salmonwallet.io
+    description: production
+  - url: http://localhost:3000/local
+    description: serverless-offline local (routes are prefixed with the stage, hence `/local`)
+tags:
+  - name: info
+    description: Unversioned service info (mounted before `/v1`)
+  - name: networks
+    description: Network catalog (`network-catalog` contract)
+  - name: market-data
+    description: CoinGecko-backed market data (`coingecko-market-data` contract)
+  - name: dapp
+    description: Dapp metadata (`dapp-metadata` contract)
+  - name: bridge
+    description: StealthEX-backed bridge aggregator (`bridge-aggregator` contract)
+  - name: multichain
+    description: Cross-chain account endpoints (`multichain-account-balance` contract)
+  - name: solana
+    description: Solana chain slice (`/v1/solana-{env}`)
+  - name: bitcoin
+    description: Bitcoin chain slice (`/v1/bitcoin-{env}`)
+  - name: analytics
+    description: Usage-analytics ingest (separate Lambda, not part of the Express app)
+
+paths:
+  # ───────────────────────── info ─────────────────────────
+  /health:
+    get:
+      tags: [info]
+      operationId: getHealth
+      summary: Liveness / dependency health check
+      description: |
+        Runs the dependency health check (internet reachability + Redis) and
+        reports per-dependency status. Responds 200 when healthy, 500 when a
+        probe fails (status reported as DOWN).
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthInfo'
+        '500':
+          description: One or more dependency probes failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthInfo'
+
+  /status:
+    get:
+      tags: [info]
+      operationId: getStatus
+      summary: Service/build identification
+      responses:
+        '200':
+          description: Build metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: salmon-api
+                  version:
+                    type: string
+                    example: 0.14.0
+                  build:
+                    type: string
+                    nullable: true
+                    description: GitHub Actions run id (absent/undefined outside CI builds)
+                  commit:
+                    type: string
+                    nullable: true
+                    description: Git SHA of the deployed build
+                  stage:
+                    type: string
+                    nullable: true
+                    example: prod
+                  time:
+                    type: string
+                    format: date-time
+
+  /ip:
+    get:
+      tags: [info]
+      operationId: getIp
+      summary: Caller IP geolocation echo
+      description: |
+        Proxies `ip-api.com/json` and returns its payload (server-side
+        egress IP info). On upstream failure responds 500 with the raw error.
+      responses:
+        '200':
+          description: ip-api.com payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '500':
+          description: Upstream lookup failed (raw error payload)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  # ─────────────────────── networks ───────────────────────
+  /v1/networks:
+    get:
+      tags: [networks]
+      operationId: listNetworks
+      summary: List supported networks for the current stage
+      description: |
+        Stage-derived network list with `enabled` + `sections` flags. See the
+        `network-catalog` contract (`src/resources/shared/network-resource.js`).
+        Cached 3600s.
+      responses:
+        '200':
+          description: Array of network resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Network'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ────────────────────── market data ─────────────────────
+  /v1/exchange-rates:
+    get:
+      tags: [market-data]
+      operationId: getExchangeRates
+      summary: BTC-denominated fiat exchange rates
+      description: Raw CoinGecko exchange-rates payload. Cached 900s.
+      responses:
+        '200':
+          description: Exchange rates (raw CoinGecko shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/chart/{platform}/contract/{address}:
+    get:
+      tags: [market-data]
+      operationId: getContractMarketChart
+      summary: Market chart for a token by contract address (mint)
+      description: |
+        Charts any token CoinGecko lists for the platform, keyed by contract
+        address instead of CoinGecko coin id. Same `days` normalization and
+        long-term-fallback policy as `/v1/chart/{coinId}`.
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+          description: CoinGecko asset-platform id (e.g. `solana`)
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Token contract address / mint
+        - name: days
+          in: query
+          schema:
+            type: string
+          description: Numeric day count, `ytd`, or `max`
+        - name: currency
+          in: query
+          schema:
+            type: string
+            default: usd
+      responses:
+        '200':
+          description: Chart data
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [platform, contractAddress, currency, days, prices]
+                properties:
+                  platform:
+                    type: string
+                  contractAddress:
+                    type: string
+                  currency:
+                    type: string
+                  days: {}
+                  prices:
+                    type: array
+                    items: { type: array, items: { type: number } }
+                  marketCaps:
+                    type: array
+                    items: { type: array, items: { type: number } }
+                  totalVolumes:
+                    type: array
+                    items: { type: array, items: { type: number } }
+        '404':
+          description: CoinGecko does not list this contract on this platform
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/chart/{coinId}:
+    get:
+      tags: [market-data]
+      operationId: getMarketChart
+      summary: Historical market chart data for a coin
+      description: |
+        Raw CoinGecko market-chart payload. `days` is normalized and a
+        long-term-fallback policy is applied by the service (see the
+        `coingecko-market-data` contract). Cached 300s.
+      parameters:
+        - name: coinId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: solana
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Number of days of history (normalized server-side)
+        - name: currency
+          in: query
+          required: false
+          schema:
+            type: string
+          example: usd
+      responses:
+        '200':
+          description: Market chart data (raw CoinGecko shape, e.g. `prices`, `market_caps`, `total_volumes` arrays)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/coin/{coinId}:
+    get:
+      tags: [market-data]
+      operationId: getCoinInfo
+      summary: Coin detail
+      description: Raw CoinGecko coin-detail payload. Cached 300s.
+      parameters:
+        - name: coinId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: bitcoin
+        - name: currency
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Coin detail (raw CoinGecko shape)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/coin/{platform}/contract/{address}:
+    get:
+      tags: [market-data]
+      operationId: getContractCoinInfo
+      summary: Coin detail by token contract address
+      description: Same mapped shape as `/v1/coin/{coinId}`, resolved by contract address (mint) for tokens without a known CoinGecko id. The response always includes the resolved CoinGecko `id`, so clients can cache it and switch to the coin-id paths. Cached 300s.
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+          example: solana
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          example: JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN
+        - name: currency
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Coin detail (same shape as `/v1/coin/{coinId}`, `id` included)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          description: Contract not listed on CoinGecko for the platform (`info_not_found`) — expected for the long tail of SPL tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ───────────────────────── dapp ─────────────────────────
+  /v1/dapp/metadata:
+    get:
+      tags: [dapp]
+      operationId: getDappMetadata
+      summary: OpenGraph-derived dapp metadata
+      description: Returns `{ name, icon }` for a dapp URL (`dapp-metadata` contract). Cached 60s.
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: Dapp URL to fetch OpenGraph metadata for
+      responses:
+        '200':
+          description: Dapp metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    nullable: true
+                  icon:
+                    type: string
+                    nullable: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ──────────────────────── bridge ────────────────────────
+  /v1/bridge/available:
+    get:
+      tags: [bridge]
+      operationId: listBridgeAvailable
+      summary: Tokens available for bridging
+      description: |
+        StealthEX-supported tokens, filtered to resolvable chains
+        (Solana / Ethereum / Bitcoin) with the featured subset appended.
+      parameters:
+        - name: symbol
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Exclude this symbol from the featured subset (typically the source token)
+      responses:
+        '200':
+          description: Bridge token list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BridgeToken'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/bridge/estimate:
+    get:
+      tags: [bridge]
+      operationId: getBridgeEstimate
+      summary: Estimated exchange amount for a pair
+      parameters:
+        - name: symbolIn
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: symbolOut
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Raw StealthEX estimate response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estimated_amount:
+                    type: number
+                additionalProperties: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/bridge/minimal:
+    get:
+      tags: [bridge]
+      operationId: getBridgeMinimal
+      summary: Minimal exchangeable amount for a pair
+      parameters:
+        - name: symbolIn
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: symbolOut
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Exchangeable range for the pair (`max_amount` omitted when the pair has no upstream cap)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [min_amount]
+                properties:
+                  min_amount:
+                    type: string
+                  max_amount:
+                    type: string
+                additionalProperties: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/bridge/exchange:
+    post:
+      tags: [bridge]
+      operationId: createBridgeExchangeFromBody
+      summary: Create an exchange order (preferred)
+      description: |
+        Creates a StealthEX exchange order. Preferred over the GET variant:
+        clients retry failed GETs (network error / 5xx), which can duplicate
+        the upstream order when the response is lost after creation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [symbolIn, symbolOut, amount, addressTo]
+              properties:
+                symbolIn:
+                  type: string
+                symbolOut:
+                  type: string
+                amount:
+                  type: string
+                addressTo:
+                  type: string
+                  description: Destination address for the exchanged funds
+                refundAddress:
+                  type: string
+                  description: |
+                    Optional. The user's own address on the `symbolIn` chain,
+                    forwarded to StealthEX as `refund_address` — where the base
+                    currency is returned if the exchange fails. Omitted or
+                    implausible values are dropped and refunds then fall back to
+                    StealthEX's own policy.
+      responses:
+        '200':
+          description: Created exchange, decorated to the camelCase public shape
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgeExchange'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    get:
+      tags: [bridge]
+      operationId: createBridgeExchange
+      summary: Create an exchange order (legacy)
+      description: |
+        Creates a StealthEX exchange order (note the GET verb — this endpoint
+        mutates upstream state despite being a GET; it is a legacy contract
+        preserved for deployed wallet clients). Prefer `POST /v1/bridge/exchange`.
+      parameters:
+        - name: symbolIn
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: symbolOut
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: addressTo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Destination address for the exchanged funds
+        - name: refundAddress
+          in: query
+          required: false
+          schema:
+            type: string
+          description: |
+            Optional. The user's own address on the `symbolIn` chain, forwarded
+            to StealthEX as `refund_address`.
+      responses:
+        '200':
+          description: Created exchange, decorated to the camelCase public shape
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgeExchange'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/bridge/transaction:
+    get:
+      tags: [bridge]
+      operationId: getBridgeTransaction
+      summary: Exchange status lookup
+      description: |
+        Looks up an exchange by id. Upstream `status` is normalized to the
+        canonical set `inProgress | success | fail | refunded | unknown`
+        (`unknown` for an upstream value the normalizer does not recognize).
+        An unknown exchange id answers 404 `exchange_not_found`.
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: StealthEX exchange id
+      responses:
+        '200':
+          description: Bridge exchange resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgeExchange'
+        '404':
+          description: Unknown exchange id (`exchange_not_found`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ────────────────────── multichain ──────────────────────
+  /v1/{networkId}/account/{address}/balance:
+    get:
+      tags: [multichain]
+      operationId: getAccountBalance
+      summary: Cross-chain account balance
+      description: |
+        Array-shape balance response with native/token branching, dispatching
+        on the network's blockchain (`multichain-account-balance` contract,
+        `src/resources/shared/account-balance-resource.js`). Only Bitcoin and
+        Solana networks are allowlisted (`BALANCE_CHAINS`); other network ids
+        fall through to the catch-all 404.
+      parameters:
+        - name: networkId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - bitcoin-mainnet
+              - bitcoin-testnet
+              - solana-mainnet
+              - solana-testnet
+              - solana-devnet
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account address on the given network
+        - name: tokens
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Chain-specific token filter (passed through to the balance provider)
+        - name: includeSpam
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['true', 'false', '1', '0']
+          description: |
+            When truthy (`true`/`1`), opts out of the chain-specific spam
+            filter (e.g. Solana drops tokens with only `unknown` Jupiter tags
+            by default).
+      responses:
+        '200':
+          description: Balance items (native + token entries)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BalanceItem'
+        '400':
+          description: Unknown network id (`bad_request`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ──────────────────────── solana ────────────────────────
+  /v1/solana-{env}/account/{address}/transactions:
+    get:
+      tags: [solana]
+      operationId: listSolanaTransactions
+      summary: Solana transaction history
+      description: |
+        Enriched transaction history (`solana-transaction-enrichment`
+        contract). Provider routing: Triton One primary, Helius Enhanced API
+        fallback, bare-RPC last resort. First-page queries are served through
+        a short-lived cache; paged queries always hit the provider.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account public key (base58)
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Number of transactions per page
+        - name: pageToken
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Cursor — signature to paginate before
+      responses:
+        '200':
+          description: Array of enriched transaction resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SolanaTransaction'
+        '400':
+          $ref: '#/components/responses/InvalidNetwork'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/solana-{env}/ft/verified:
+    get:
+      tags: [solana]
+      operationId: listVerifiedSolanaFungibleTokens
+      summary: Verified-token list
+      description: NFTs (decimals = 0) excluded. Cached 300s.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+      responses:
+        '200':
+          description: Verified token list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FungibleToken'
+        '400':
+          $ref: '#/components/responses/InvalidNetwork'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/solana-{env}/ft/search:
+    get:
+      tags: [solana]
+      operationId: searchSolanaFungibleTokens
+      summary: Token search
+      description: NFTs (decimals = 0) excluded. Not cached.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          example: sol
+      responses:
+        '200':
+          description: Matching token list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FungibleToken'
+        '400':
+          description: '`missing_parameter` when `query` is absent'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/solana-{env}/ft/swap/order:
+    get:
+      tags: [solana]
+      operationId: getSolanaSwapOrder
+      summary: Jupiter Ultra swap quote/order
+      description: |
+        Requests a Jupiter Ultra `/order` and returns the decorated order
+        resource (`solana-swap-orchestration` contract). Referral fees are
+        applied server-side. Rate-limited more strictly than the rest of the
+        API (transaction-building surface).
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - name: inputMint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: outputMint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: publicKey
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Wallet public key that will sign the swap
+        - name: amount
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Raw input amount (base units). One of `amount`/`uiAmount` is required.
+        - name: uiAmount
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Human-readable input amount, resolved server-side using the mint's decimals
+      responses:
+        '200':
+          description: Swap order resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapOrder'
+        '400':
+          description: '`missing_parameter` for missing required params, or amount-resolution errors'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: '`route_not_found` — Jupiter has no route for the pair/amount'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/solana-{env}/ft/swap/execute:
+    post:
+      tags: [solana]
+      operationId: executeSolanaSwap
+      summary: Execute a Jupiter Ultra swap order
+      description: |
+        Submits the signed transaction for a previously-requested order.
+        Jupiter Ultra broadcasts it and returns execution status
+        (`solana-swap-orchestration` contract).
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                signedTransaction:
+                  type: string
+                  description: Base64-encoded signed transaction (from the order's `custom.transaction`)
+                requestId:
+                  type: string
+                  description: '`custom.requestId` from the order response'
+              required: [signedTransaction, requestId]
+      responses:
+        '200':
+          description: Execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapExecuteResult'
+        '400':
+          description: '`missing_parameter` when required body fields are absent'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: '`execution_failed` — transaction execution failed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/solana-{env}/nft:
+    get:
+      tags: [solana]
+      operationId: listSolanaNfts
+      summary: List NFTs owned by a public key
+      description: |
+        Flat backend shape per the `solana-nft-listing` contract. Fungible
+        tokens are filtered out by the resource layer; blacklisted or
+        positively-spam-scored NFTs are dropped unless `includeSpam=true`.
+        An owner with no NFTs gets a 200 with an empty `data` array — 404
+        (`nfts_not_found`) only signals a provider-level lookup failure.
+        Cached 60s.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - name: publicKey
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Owner wallet public key (base58)
+        - name: includeSpam
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['true', 'false', '1', '0']
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: noCache
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['true', 'false']
+          deprecated: true
+          description: Accepted for compatibility; has no effect.
+      responses:
+        '200':
+          description: NFT list with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Nft'
+                  pagination:
+                    type: object
+                    nullable: true
+                    additionalProperties: true
+                    description: |
+                      Provider pagination metadata (DAS-driven). `total` is the
+                      provider's raw count, so a page may carry fewer than `limit`
+                      items once filtering runs.
+                    properties:
+                      hidden:
+                        type: object
+                        description: Items dropped from this page only (not cumulative)
+                        properties:
+                          spam:
+                            type: integer
+                            description: Hidden by blacklist / spam score; 0 when `includeSpam` is on
+                          fungible:
+                            type: integer
+                            description: DAS assets rejected as fungible by the resource
+                        required: [spam, fungible]
+                required: [data]
+        '400':
+          description: '`bad_request` when `publicKey` is missing (or invalid network env)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: '`nfts_not_found` — provider returned no result'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/solana-{env}/nft/{mintAddress}:
+    post:
+      tags: [solana]
+      operationId: buildSolanaNftBurnTransaction
+      summary: Build an unsigned NFT burn transaction
+      description: |
+        Routes on token standard — cNFT (Bubblegum v1/v2), pNFT, printed
+        edition, master edition (`solana-nft-burn` contract). Returns an
+        unsigned transaction for the client to sign. Oversized compressed
+        burns fall back to a multi-step lookup-table flow
+        (`{ transactions, lookupTable, message }`). Rate-limited more
+        strictly than the rest of the API.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - $ref: '#/components/parameters/MintAddress'
+        - name: owner
+          in: query
+          required: true
+          schema:
+            type: string
+          description: NFT owner's public key (signs and pays)
+      responses:
+        '200':
+          description: Unsigned burn transaction payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnsignedTransactionResponse'
+        '400':
+          description: '`bad_request` when `owner` is missing'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: '`nft_not_found` — mint could not be resolved to an NFT'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`burn_not_supported` (unknown token standard) or `burn_transaction_too_large` (exceeds the 1232-byte tx limit even after lookup-table fallback)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: '`burn_transaction` (service returned no data) or `server_error`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/solana-{env}/nft/{mintAddress}/transfer:
+    post:
+      tags: [solana]
+      operationId: buildSolanaNftTransferTransaction
+      summary: Build an unsigned NFT transfer transaction
+      description: |
+        Uses Token Metadata `transferV1` (or Bubblegum for compressed
+        assets) so programmable NFTs work. Returns an unsigned transaction
+        for the client to sign. Rate-limited more strictly than the rest of
+        the API.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - $ref: '#/components/parameters/MintAddress'
+        - name: owner
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: destination
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Recipient wallet address
+      responses:
+        '200':
+          description: Unsigned transfer transaction payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnsignedTransactionResponse'
+        '400':
+          description: '`bad_request` when `owner` or `destination` is missing'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: '`nft_not_found`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`transfer_not_supported` or `transfer_transaction_too_large`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: '`transfer_transaction` (service returned no data) or `server_error`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ──────────────────────── bitcoin ───────────────────────
+  /v1/bitcoin-{env}/account/{address}/transactions:
+    get:
+      tags: [bitcoin]
+      operationId: listBitcoinTransactions
+      summary: Bitcoin transaction history
+      description: |
+        Canonical 9-bucket transaction shape with fee attribution and
+        full-set UTXO walk (`bitcoin-account-history` contract). Query params
+        are passed through as pagination/filter options.
+      parameters:
+        - $ref: '#/components/parameters/BitcoinEnv'
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Array of Bitcoin transaction resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BitcoinTransaction'
+        '400':
+          $ref: '#/components/responses/InvalidNetwork'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags: [bitcoin]
+      operationId: broadcastBitcoinTransaction
+      summary: Broadcast a signed Bitcoin transaction
+      description: |
+        Broadcasts the raw signed transaction. The upstream node/provider
+        response is passed through on success (documented pass-through per
+        the bitcoin slice conventions).
+      parameters:
+        - $ref: '#/components/parameters/BitcoinEnv'
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tx:
+                  type: string
+                  description: Raw signed transaction (hex string)
+              required: [tx]
+      responses:
+        '200':
+          description: Upstream broadcast result (pass-through)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: '`bad_request` when `tx` is missing or not a string (or invalid network env)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /v1/bitcoin-{env}/account/{address}/utxo:
+    get:
+      tags: [bitcoin]
+      operationId: listBitcoinUtxos
+      summary: UTXO set for an address
+      parameters:
+        - $ref: '#/components/parameters/BitcoinEnv'
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Array of UTXO resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BitcoinUtxo'
+        '400':
+          $ref: '#/components/responses/InvalidNetwork'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  # ─────────────────────── analytics ──────────────────────
+  /v1/events:
+    post:
+      tags: [analytics]
+      operationId: ingestAnalyticsEvents
+      summary: Usage-analytics event ingest
+      description: |
+        Dedicated Lambda (`src/analytics/handler.js`), wired as an explicit
+        API Gateway route so it does not share concurrency with the main API
+        function. Events are re-validated against a server-side allow-list;
+        anything resembling an address, mint, raw number, or oversized string
+        is dropped. The client IP is never read or stored. Up to 100 events
+        per batch are processed.
+
+        Error responses use a reduced envelope `{ error: '<code>' }` (no
+        `error_description`). CORS is `Access-Control-Allow-Origin: *`;
+        OPTIONS preflight returns 204.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                context:
+                  type: object
+                  properties:
+                    installId:
+                      type: string
+                      maxLength: 64
+                    sessionId:
+                      type: string
+                      maxLength: 64
+                    platform:
+                      type: string
+                      enum: [web, extension, mobile]
+                      description: Anything else is recorded as `unknown`
+                    appVersion:
+                      type: string
+                      description: Must be plain semver (max 32 chars) or it is dropped
+                events:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: object
+                    properties:
+                      event:
+                        type: string
+                        description: Allow-listed event name (see `src/analytics/event-schema.js`)
+                      props:
+                        type: object
+                        additionalProperties: true
+                      ts:
+                        type: number
+                        description: Client-side epoch-millis timestamp (defaults to server receive time)
+                    required: [event]
+              required: [events]
+      responses:
+        '202':
+          description: |
+            Batch accepted (always 202, even when the sink write fails —
+            best-effort delivery, `accepted: 0, buffered: false` in that case).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted:
+                    type: integer
+                  rejected:
+                    type: integer
+                  buffered:
+                    type: boolean
+                    description: Present (false) only when the sink write failed
+                required: [accepted, rejected]
+        '400':
+          description: '`invalid_json`, `events_array_required`, or `no_valid_events` (with a `rejected` count)'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum: [invalid_json, events_array_required, no_valid_events]
+                  rejected:
+                    type: integer
+                required: [error]
+        '405':
+          description: '`method_not_allowed` for any verb other than POST/OPTIONS'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum: [method_not_allowed]
+                required: [error]
+
+components:
+  parameters:
+    SolanaEnv:
+      name: env
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [mainnet, testnet, devnet]
+      description: |
+        Solana network environment. Combined with the chain prefix into the
+        network id (`solana-mainnet`, `solana-testnet`, `solana-devnet`).
+        An unknown combination responds 400 `bad_request`.
+    BitcoinEnv:
+      name: env
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [mainnet, testnet]
+      description: |
+        Bitcoin network environment (`bitcoin-mainnet`, `bitcoin-testnet`).
+        An unknown combination responds 400 `bad_request`.
+    MintAddress:
+      name: mintAddress
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[1-9A-HJ-NP-Za-km-z]{32,44}$'
+      description: NFT mint address (base58 Solana public key)
+
+  responses:
+    ServerError:
+      description: Unexpected error (`server_error`), emitted by the final error middleware
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidNetwork:
+      description: 'Unknown `<chain>-<env>` network id (`bad_request`)'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      description: |
+        Standard error envelope. `error` is a stable snake_case code;
+        `error_description` is a human-readable message. Codes in use:
+        `bad_request`, `missing_parameter`, `invalid_parameter`,
+        `too_many_mints`, `not_found` (catch-all 404), `nft_not_found`,
+        `nfts_not_found`, `route_not_found`, `execution_failed`,
+        `burn_not_supported`, `burn_transaction_too_large`,
+        `burn_transaction`, `transfer_not_supported`,
+        `transfer_transaction_too_large`, `transfer_transaction`,
+        `server_error`.
+      properties:
+        error:
+          type: string
+          description: Stable snake_case error code
+          example: bad_request
+        error_description:
+          type: string
+          description: Human-readable message
+      required: [error, error_description]
+
+    HealthInfo:
+      type: object
+      description: |
+        Health-check payload from `packages/health-check` — `app_state` plus
+        per-dependency status objects (network, redis) and the resolved
+        client IP.
+      properties:
+        app_state:
+          type: string
+          example: UP
+        network:
+          type: object
+          properties:
+            ip:
+              type: string
+            internet:
+              type: string
+            error:
+              type: string
+          additionalProperties: true
+        redis:
+          type: object
+          properties:
+            status:
+              type: string
+            error:
+              type: string
+          additionalProperties: true
+        x-forwarded-for:
+          type: string
+          nullable: true
+      additionalProperties: true
+
+    Network:
+      type: object
+      description: 'Network catalog entry (`src/resources/shared/network-resource.js`)'
+      properties:
+        id:
+          type: string
+          example: solana-mainnet
+        blockchain:
+          type: string
+          example: solana
+        environment:
+          type: string
+          example: mainnet
+        name:
+          type: string
+        icon:
+          type: string
+        currency:
+          type: object
+          additionalProperties: true
+        config:
+          type: object
+          additionalProperties: true
+          description: Public network config (e.g. node URL); always an object
+        enabled:
+          type: boolean
+          description: Stage-derived enable flag (`network-capabilities-<stage>`)
+        sections:
+          type: object
+          additionalProperties: true
+          description: Stage-derived feature-section flags; always an object
+      required: [id, blockchain, environment, name, enabled, sections]
+
+    BridgeToken:
+      type: object
+      description: 'StealthEX-supported token (`src/resources/shared/bridge-token-resource.js`)'
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        network:
+          type: string
+          nullable: true
+          description: Raw StealthEX network (null for cross-chain natives like BTC/ETH/SOL)
+        chain:
+          type: string
+          nullable: true
+          description: 'Canonical chain id resolved from network/symbol: `solana`, `ethereum`, or `bitcoin`'
+        has_extra_id:
+          type: boolean
+        extra_id:
+          type: string
+        warnings_from: {}
+        warnings_to: {}
+        validation_address: {}
+        validation_extra: {}
+        address_explorer:
+          type: string
+        tx_explorer:
+          type: string
+        logo:
+          type: string
+          nullable: true
+          description: '`logo` field, falling back to `image`'
+
+    BridgeExchange:
+      type: object
+      description: |
+        StealthEX exchange record mapped to the camelCase public contract
+        (`src/resources/shared/bridge-exchange-resource.js`). `payinAddress`
+        is the deposit address the user sends funds to. Amounts are numbers;
+        optional fields are omitted when the upstream record lacks them.
+      required: [id, currencyFrom, currencyTo, payinAddress, payoutAddress, status]
+      properties:
+        id:
+          type: string
+        currencyFrom:
+          type: string
+        currencyTo:
+          type: string
+        amountExpectedFrom:
+          type: number
+        amountExpectedTo:
+          type: number
+        amountFrom:
+          type: number
+        amountTo:
+          type: number
+        payinAddress:
+          type: string
+        payinExtraId:
+          type: string
+        payoutAddress:
+          type: string
+        payoutExtraId:
+          type: string
+        payinHash:
+          type: string
+        payoutHash:
+          type: string
+        refundAddress:
+          type: string
+        status:
+          type: string
+          enum: [inProgress, success, fail, refunded, unknown]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        type:
+          type: string
+        updated_at:
+          type: string
+
+    BalanceItem:
+      type: object
+      description: |
+        One balance entry (`src/resources/shared/account-balance-resource.js`).
+        Branches on `type`: native entries carry `address` (chain-native
+        pseudo-address) and usually `coingeckoId`; token entries carry
+        `mint`/`address` (contract) and optional `coingeckoId`/`tags`.
+        Pricing fields (`price`, `usdBalance`, `priceChange24h`) and `logo`
+        are present only when the enrichers resolved them.
+      properties:
+        owner:
+          type: string
+        blockchain:
+          type: string
+          example: solana
+        amount:
+          type: string
+          description: Confirmed balance in base units (provider-typed; may arrive as number)
+        decimals:
+          type: integer
+        symbol:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          description: '`native` or a token type (e.g. `erc20`-style provider types)'
+        address:
+          type: string
+          description: Native pseudo-address or token contract/mint address
+        mint:
+          type: string
+          description: Token entries only — same value as `address`
+        coingeckoId:
+          type: string
+          description: Present for known natives (BTC/ETH/SOL) and enriched tokens
+        tags:
+          type: array
+          items:
+            type: string
+          description: Token entries only, when the enricher attached Jupiter tags
+        price:
+          type: number
+          description: USD unit price (when price enrichment resolved)
+        usdBalance:
+          type: number
+          description: USD value of the balance (when price enrichment resolved)
+        priceChange24h:
+          type: number
+          description: 24h price change (when price enrichment resolved)
+        logo:
+          type: string
+          description: Logo URL (provider marker or side-loaded via `?include=logo`)
+      required: [owner, blockchain, amount, decimals, symbol, name, type, address]
+
+    FungibleToken:
+      type: object
+      description: |
+        Canonical Solana fungible-token shape
+        (`src/resources/solana/solana-ft-batch-resource.js`).
+      properties:
+        chainId:
+          type: integer
+          example: 101
+          description: '`101` = Solana mainnet'
+        address:
+          type: string
+          description: Mint address
+        symbol:
+          type: string
+        name:
+          type: string
+        decimals:
+          type: integer
+        logo:
+          type: string
+          nullable: true
+          description: Logo URL, IPFS-normalized to a stable gateway
+        tags:
+          type: array
+          items:
+            type: string
+        coingeckoId:
+          type: string
+          nullable: true
+          description: 'Null for Jupiter-v2-sourced tokens (v2 omits it)'
+      required: [chainId, address, symbol, name, decimals, logo, tags, coingeckoId]
+
+    Nft:
+      type: object
+      description: |
+        Solana NFT resource (`src/resources/solana/solana-nft-resource.js`).
+        Fungible tokens never appear (the resource returns null for them and
+        the list endpoint filters those out).
+      properties:
+        mint:
+          type: string
+        owner:
+          type: string
+        name:
+          type: string
+        symbol:
+          type: string
+        uri:
+          type: string
+          nullable: true
+          description: Normalized metadata URI
+        description:
+          type: string
+          description: From the JSON metadata; absent when metadata lacks it
+        collection:
+          type: object
+          additionalProperties: true
+          description: From the JSON metadata; absent when metadata lacks it
+        media:
+          type: string
+          nullable: true
+          description: 'Normalized display image URL (override → `json.image` → `nft.image`)'
+        extras:
+          type: object
+          properties:
+            creators:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+              nullable: true
+            attributes:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+              nullable: true
+            properties:
+              type: object
+              additionalProperties: true
+              nullable: true
+        extensions:
+          type: object
+          additionalProperties: true
+          description: Token-2022 extensions; absent for classic NFTs
+        spamScore:
+          type: number
+          description: 'Heuristic spam score; > 0 means the NFT is hidden by default from list responses'
+        spamReasons:
+          type: array
+          items:
+            type: string
+        blacklisted:
+          type: boolean
+          description: Side-loaded from the scam blacklist (list endpoint requests it)
+      required: [mint, owner, name, symbol, media, extras, spamScore, spamReasons]
+
+    SolanaTransaction:
+      type: object
+      description: |
+        Enriched Solana transaction (`solana-transaction-enrichment`
+        contract). Two producers share this shape: the provider-enriched
+        path (Triton-parsed or Helius Enhanced, see
+        `src/resources/solana/helius-transaction-resource.js`) and the
+        bare-RPC fallback (`src/resources/solana/solana-transaction-resource.js`).
+        The fields listed here are the stable core; the enriched path adds
+        provider fields (`description`, `source`, `events`, `heliusType`,
+        `swapRoute`, `instructions`, `feePayer`, `slot`, `blockTime`,
+        `confirmationStatus`) whose inner structure is provider-defined —
+        hence `additionalProperties: true`.
+      properties:
+        id:
+          type: string
+          description: Transaction signature
+        timestamp:
+          type: number
+          nullable: true
+          description: Unix epoch seconds (block time)
+        status:
+          type: string
+          enum: [completed, failed]
+        fee:
+          type: object
+          nullable: true
+          description: Present only when the queried address paid the fee
+          properties:
+            amount:
+              type: number
+            decimals:
+              type: integer
+            symbol:
+              type: string
+        type:
+          type: string
+          description: 'Canonical transaction type (e.g. `send`, `receive`, `swap`, `interaction`, `mint`, `unknown` — see `src/constants/transaction-types.js`)'
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferLeg'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferLeg'
+      required: [id, status, type, inputs, outputs]
+      additionalProperties: true
+
+    TransferLeg:
+      type: object
+      description: One transfer leg (token, native, or NFT) of a transaction
+      properties:
+        amount:
+          description: Raw amount in base units (number or numeric string depending on source)
+          oneOf:
+            - type: number
+            - type: string
+        decimals:
+          type: integer
+          nullable: true
+        symbol:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        logo:
+          type: string
+          nullable: true
+        contract:
+          type: string
+          nullable: true
+          description: Mint/contract address (SOL pseudo-address for native legs)
+        source:
+          type: string
+          description: Present on input legs
+        destination:
+          type: string
+          description: Present on output legs
+      additionalProperties: true
+
+    SwapOrder:
+      type: object
+      description: |
+        Decorated Jupiter Ultra swap order
+        (`src/resources/solana/solana-swap-order-resource.js`).
+      properties:
+        routeNames:
+          type: array
+          items:
+            type: string
+            nullable: true
+        routeSymbols:
+          type: array
+          items:
+            type: string
+            nullable: true
+        fee:
+          type: object
+          nullable: true
+          description: Null when `feeBps` is missing or the route carries no input amount
+          properties:
+            amount:
+              type: number
+              description: |
+                Fee in the INPUT token's smallest units (`inAmount * feeBps / 10000`).
+            decimals:
+              type: integer
+              description: Decimals of the input token, matching `amount`
+            symbol:
+              type: string
+              description: Symbol of the input token
+              example: USDC
+            percent:
+              type: number
+              description: Fee percentage (bps / 100)
+        input:
+          $ref: '#/components/schemas/SwapLegToken'
+        output:
+          $ref: '#/components/schemas/SwapLegToken'
+        custom:
+          type: object
+          description: Ultra-specific fields required to execute the swap
+          properties:
+            transaction:
+              type: string
+              description: Base64 unsigned transaction
+            requestId:
+              type: string
+              description: Required by the execute endpoint
+            router:
+              type: string
+              description: e.g. metis, jupiterz, dflow, okx
+            priceImpact:
+              type: number
+            feeBps:
+              type: number
+            prioritizationFeeLamports:
+              type: number
+            rentFeeLamports:
+              type: number
+            gasless:
+              type: boolean
+            slippageBps:
+              type: number
+            swapMode:
+              type: string
+              description: ExactIn or ExactOut
+            otherAmountThreshold:
+              type: number
+              description: Minimum output amount after slippage
+            inUsdValue:
+              type: number
+            outUsdValue:
+              type: number
+      required: [routeNames, routeSymbols, fee, input, output, custom]
+
+    SwapLegToken:
+      type: object
+      description: Token metadata for a swap input/output leg
+      properties:
+        amount:
+          description: Raw amount in base units
+          oneOf:
+            - type: number
+            - type: string
+        decimals:
+          type: integer
+          nullable: true
+        symbol:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        logo:
+          type: string
+          nullable: true
+        contract:
+          type: string
+          nullable: true
+          description: Mint address
+
+    SwapExecuteResult:
+      type: object
+      description: |
+        Jupiter Ultra execute result passthrough
+        (`src/resources/solana/solana-swap-execute-resource.js`).
+      properties:
+        status:
+          type: string
+          description: '`Success` or `Failed`'
+        signature:
+          type: string
+          nullable: true
+          description: Transaction signature (on success)
+        slot:
+          type: number
+          nullable: true
+        error:
+          type: string
+          nullable: true
+          description: Error message (on failure)
+        totalInputAmount:
+          type: string
+          nullable: true
+        totalOutputAmount:
+          type: string
+          nullable: true
+        inputAmountResult:
+          type: string
+          nullable: true
+        outputAmountResult:
+          type: string
+          nullable: true
+        swapEvents:
+          type: array
+          nullable: true
+          items:
+            type: object
+            additionalProperties: true
+        code:
+          type: number
+          nullable: true
+
+    UnsignedTransactionResponse:
+      description: |
+        Unsigned transaction payload for the client to sign
+        (`src/services/solana/transaction-serialization.js`). Single-tx case
+        is `{ transaction }`; oversized compressed-NFT burns return the
+        lookup-table fallback multi-step shape instead.
+      oneOf:
+        - type: object
+          title: SingleTransaction
+          properties:
+            transaction:
+              type: string
+              description: Base64-encoded v0 VersionedTransaction
+          required: [transaction]
+        - type: object
+          title: LookupTableFallback
+          description: 'cNFT lookup-table fallback: sign and send each step in order'
+          properties:
+            transactions:
+              type: array
+              items:
+                type: object
+                properties:
+                  transaction:
+                    type: string
+                    description: Base64-encoded v0 VersionedTransaction
+                  step:
+                    type: string
+                    description: 'Step label (e.g. `createLookupTable`, `extendLookupTable`, `burn`)'
+                additionalProperties: true
+            lookupTable:
+              type: string
+              description: Address of the lookup table being created
+            message:
+              type: string
+              description: Human-readable explanation of the multi-step flow
+          required: [transactions]
+
+    BitcoinTransaction:
+      type: object
+      description: |
+        Bitcoin transaction resource
+        (`src/resources/bitcoin/bitcoin-transaction-resource.js`), built from
+        the UTXO event feed per the `bitcoin-account-history` contract.
+      properties:
+        id:
+          type: string
+          description: Transaction id (txid)
+        timestamp:
+          type: string
+          description: Transaction date from the provider feed
+        status:
+          type: string
+        type:
+          type: string
+          description: '`send` | `receive` | `swap` (address is both source and destination) | `unknown`'
+        fee:
+          type: object
+          nullable: true
+          description: Present only when the queried address paid the fee
+          properties:
+            amount:
+              type: string
+            decimals:
+              type: integer
+            symbol:
+              type: string
+              example: BTC
+        inputs:
+          type: array
+          description: Transfer legs received by the queried address
+          items:
+            $ref: '#/components/schemas/BitcoinTransferLeg'
+        outputs:
+          type: array
+          description: Transfer legs sent by the queried address
+          items:
+            $ref: '#/components/schemas/BitcoinTransferLeg'
+      required: [id, timestamp, status, type, inputs, outputs]
+
+    BitcoinTransferLeg:
+      type: object
+      properties:
+        amount:
+          type: string
+        decimals:
+          type: integer
+        symbol:
+          type: string
+          nullable: true
+          description: '`BTC` for native legs, absent otherwise'
+        name:
+          type: string
+          nullable: true
+        logo:
+          type: string
+          nullable: true
+        contract:
+          type: string
+          nullable: true
+          description: Denomination for non-BTC legs
+        source:
+          type: string
+          nullable: true
+        destination:
+          type: string
+          nullable: true
+
+    BitcoinUtxo:
+      type: object
+      description: 'UTXO resource (`src/resources/bitcoin/bitcoin-utxo-resource.js`)'
+      properties:
+        address:
+          type: string
+          nullable: true
+        txId:
+          type: string
+          nullable: true
+        outputIndex:
+          type: integer
+          nullable: true
+        script:
+          type: string
+          nullable: true
+        satoshis:
+          type: number
+      required: [satoshis]

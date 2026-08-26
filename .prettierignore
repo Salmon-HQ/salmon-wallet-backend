@@ -1,0 +1,4 @@
+# .gitignore is respected automatically (prettier 3); list only tracked
+# files that must not be reformatted.
+package-lock.json
+docs/openapi.yaml

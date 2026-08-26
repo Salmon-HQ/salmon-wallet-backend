@@ -1,0 +1,34 @@
+{
+  "name": "@4m/api-utils",
+  "version": "0.0.1",
+  "description": "4M api utility",
+  "main": "index.js",
+  "engines": {
+    "node": ">=14.17.1"
+  },
+  "scripts": {
+    "test": "jest",
+    "linter": "eslint ./ --fix",
+    "publish:patch": "npm version patch && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salmonw/4m-modules.git"
+  },
+  "keywords": [
+    "api",
+    "utility"
+  ],
+  "author": "4M",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/salmonw/4m-modules/issues"
+  },
+  "homepage": "https://github.com/salmonw/4m-modules/tree/utils/api-utils#readme",
+  "devDependencies": {
+    "jest": "^27.0.6"
+  },
+  "dependencies": {
+    "express-validator": "^6.12.1"
+  }
+}

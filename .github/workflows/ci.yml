@@ -1,0 +1,132 @@
+# PR checks: everything deterministic runs here, before any reviewer looks.
+# Spec: specs/001-ci-pr-checks/spec.md
+#
+# Security model (public repo, fork PRs): plain `pull_request` only — fork
+# runs get no secrets by construction. Top-level permissions are empty and
+# each job grants itself the minimum. All actions are pinned to full SHAs.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: lint / test / config
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint (zero warnings)
+        run: npm run lint:check
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      # Credential-free smoke of serverless config resolution: the local
+      # stage resolves `${env:X, ''}` with no `.env` present, so a broken
+      # serverless.yml fails here without touching AWS or secrets. Output
+      # is discarded — never print resolved config in CI logs.
+      - name: Serverless config resolves
+        run: npx serverless print --stage local > /dev/null
+
+  integration-hermetic:
+    name: hermetic integration (redis)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Only the curated hermetic set runs here (docker-compose services
+      # only, no provider keys). External-provider integration specs run in
+      # the nightly workflow instead — see docs/TESTING.md.
+      - name: Hermetic integration tests
+        run: npm run test:integration:hermetic
+        env:
+          REDIS_HOST: localhost
+
+  pr-title:
+    name: conventional PR title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    steps:
+      # Squash-merge policy makes the PR title the commit on main; this
+      # replaces commitlint-on-commits entirely.
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            refactor
+            docs
+            test
+            chore
+            perf
+            ci
+
+  zizmor:
+    name: workflow security lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # contents: read (not {}) — while the repo is private, an empty grant
+    # strips the token entirely and checkout gets "repository not found".
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+        with:
+          advanced-security: false

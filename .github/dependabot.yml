@@ -1,0 +1,40 @@
+# Weekly, grouped: one PR per ecosystem per week instead of a PR per package.
+# Security updates are not limited by these groups — GitHub raises them as
+# soon as an advisory lands.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    # Cooldown: a freshly published version waits before being proposed, so a
+    # compromised release gets caught by the ecosystem before it reaches a
+    # wallet-backend PR (zizmor dependabot-cooldown).
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    # Majors need a human decision in a wallet backend; they arrive as
+    # separate PRs.
+    ignore:
+      # serverless v4 requires CLI auth (SERVERLESS_ACCESS_KEY) even for
+      # free users — it breaks the credential-free CI verify job — and needs
+      # serverless-offline@14 plus a plugin-compatibility audit. Migrate
+      # deliberately as its own task, not via a dependabot bump. Security
+      # advisories still raise PRs (ignore only affects version updates).
+      - dependency-name: serverless
+        update-types: [version-update:semver-major]
+      - dependency-name: serverless-offline
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ['*']

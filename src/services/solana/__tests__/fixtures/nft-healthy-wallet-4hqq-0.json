@@ -1,0 +1,3348 @@
+{
+  "data": [
+    {
+      "mint": "1pjGp8LicMNb32wYJVM9HbjvDKqwgVGi3u4ZbwRexhj",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "VTOPIAN",
+      "symbol": "VT",
+      "uri": "https://ipfs.io/ipfs/bafybeihflx6k35cg7lgtmsf5iwt6ejnwfrcdafztjgzkjqr5h57gozojr4/310.json",
+      "description": "Vtopians are an exclusive Gen1 collection traversing the virtual web3 utopia while building the next evolution of advanced cross-chain marketverse with value back to holders and traders.",
+      "media": "https://ipfs.io/ipfs/QmRQzh72AKGq83ExsTaoDp2CiuqQC8G99x5BxiHWyryd64/1291.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8boKGLaHLuXkhDcQRgsR65YHhHL3Cpu1wBYYwEpv5MtF",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "67RXPoCKq9a4UnRdWqQqFWPYni9ghfMhCq1FJb3DtQRm",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Orange", "trait_type": "Background" },
+          { "value": "Red", "trait_type": "Body" },
+          { "value": "Classic Suit", "trait_type": "Cloth" },
+          { "value": "None", "trait_type": "Ear" },
+          { "value": "Droid Eyes", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Head" },
+          { "value": "Mask Of The Future", "trait_type": "Mask" },
+          { "value": "None", "trait_type": "Mouth" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "12xMC4zK8fVJH8WdW9RzHWY8vsJZ6VQhCPaTsbKubBDz",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #2781",
+      "symbol": "BW",
+      "uri": "https://arweave.net/l9K1_Y4ufk84m6ex8XUbgkxgFZrkEE0dp76AuKC4yIQ",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/tusNaKJUJ81hqX3qZfqInwChbLv9DZS4XoWcwBHs33w?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Red Gradient", "trait_type": "Background" },
+          { "value": "Shirt Black Fish Bone", "trait_type": "Body" },
+          { "value": "Pink", "trait_type": "Skull" },
+          { "value": "!@#$", "trait_type": "Mouth" },
+          { "value": "Beanie Pink", "trait_type": "Head" },
+          { "value": "Coding", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "132vDoZEnPuAXP7VutGMyvjFfrYkTjVUDBjaXVAMZhN3",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Golden Ticket",
+      "symbol": "GTKT",
+      "uri": "https://arweave.net/AWXlqC4EHMnuVcQ2AVdRZ0eaO-NLFFoUum8AxOr2kSA",
+      "description": "You're invited to the Governor's Ball! Come for the drinks, stay for the auctions, and see who takes the mantle! This ticket entitles you to lifelong perks from Unlock DeFi.",
+      "media": "https://arweave.net/WlZbCLVbA5Wty7LwovO7D4wkZLYS5SrIOVibL-EiRgM?ext=gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "Ef896VQS1tfMACgL5Ce1TR7JZhehkrtowCyZZyYv7SWn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Governor's Ball", "trait_type": "Event" },
+          { "value": "NeoNexus", "trait_type": "City" },
+          { "value": "Governor's Mansion", "trait_type": "Location" },
+          { "value": "One", "trait_type": "Admission" },
+          { "value": "Joel Dunkels", "trait_type": "Artist" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "55zG5ehU2GjXExY7kKbxsqcvF8RHvUt45G84U3VjnTG",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7Hmi1CjN6UKrjLGJn88WEVNjHVhARLAd219q1ZDwdzr",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #922",
+      "symbol": "BW",
+      "uri": "https://arweave.net/3bYej_y7J5ZlWT4j2hfb7IDSyYq8P6BcrcePK9faStc",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/vZMOLFz3YY3hVsTOh1EoDu6rVQsKWFFnJoD6GDkY000?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Dark Blue Icons", "trait_type": "Background" },
+          { "value": "Shirt Black", "trait_type": "Body" },
+          { "value": "Bone", "trait_type": "Skull" },
+          { "value": "Bandana", "trait_type": "Head" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "Bxt6ofa367hfB5aUUwUxJQpfqmgmt2mxup3HRofkrqG",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Get NFT Collection Holders:EP 6",
+      "symbol": "BF",
+      "uri": "https://cdn.shyft.to/brainfood/ep6/track-holders-of-nft-collection.json",
+      "description": "In this episode, we will see how to get NFT collection holders, powered by Shyft DAS RPCs.",
+      "media": "https://cdn.shyft.to/brainfood/ep6/track-holders-of-nft-collection.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "2iJJNyPvCXsQZaYkxU6gWKF7umhg6BSogkRntJN9xRYQ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          {
+            "value": "https://blogs.shyft.to/how-to-fetch-all-holders-of-nft-collection-with-shyft-das-api-d96d1b540970",
+            "trait_type": "blog_url"
+          },
+          {
+            "value": "https://github.com/Shyft-to/community-projects/tree/main/nft-snapshot",
+            "trait_type": "github_url"
+          },
+          { "value": "EP 6", "trait_type": "episode" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "DWHLSaBbJ11GHqtPxriMHT575vWNWKFrb5JUDGd5guP",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Spider Tribal Blue",
+      "symbol": "BWS",
+      "uri": "https://arweave.net/mALRTNkEVd0eChYT6AeGkZynWCQpPvOJ6To0-Zs3PgQ",
+      "description": "BoneWorld spiders \"evacuated\" from BoneIsland for their own safety!",
+      "media": "https://www.arweave.net/XfuOmBA6-4o1tfukyWPnsXn7Ic_0F_CLDu9oyWqDJ2k?ext=jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "2ZfEbG7QC7abYcZVnh4buHwRWYFTNvKLQvwGTz96woAp",
+            "share": 50,
+            "verified": true
+          },
+          {
+            "address": "FaPQjvgyNWdBvUFEtsyeh3kqQ4WnUQPLsfDh11ChZmvA",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Blue", "trait_type": "Tribal" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "Eei2KReWD8dtPzpfe1GXP4oz7NvFoYNF4jnncbhTnW3",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "G9VCB3udWzFMWgMKmAVyNa4ys44YWyC2RaWJEHuLTub",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "FREE2PLAY SAM #1806",
+      "symbol": "FREEAOS",
+      "uri": "https://arweave.net/Fs42LLszDSpDlCWv8skfAzacni8uMjuGrPvWS4i6Qms",
+      "description": "Solana's first multi-project hold-to-earn utility NFT. Earn Solarium during weekly Moon Missions and compete for economic dominance on the Dark Side of the Moon.",
+      "media": "https://arweave.net/vZwClffCtOE4RZFtYAW4u8QysOtsy6X0b5pWGsT6YP4?ext=gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "HXgzEFYqtfUfUHb4HN7mYuSVcLi8G49DeAfmyh9AeXjc",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7m26AYuk7JSBvgkvW94TicpnJxiFgyQRi8F1vtMvDNKs",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Mech Shop", "trait_type": "Background" },
+          { "value": "Golden Skeleton Dragon", "trait_type": "Head" },
+          { "value": "Acid Drip", "trait_type": "Body" },
+          { "value": "Scout", "trait_type": "Rank" },
+          { "value": "Boryoku Dragonz", "trait_type": "Faction" },
+          { "value": "1X", "trait_type": "Boost" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "JEon8wWXYLh2Czs8g9xxXugcsULNYGFNeezE8owJzuy",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #2712",
+      "symbol": "BW",
+      "uri": "https://arweave.net/ajrikPtcrobDyjh83mSjGp4Q7F4RpoSbceLDL3zggpI",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/eZjxTyU12xh669zyZAiHVOAPS3qJTDcP-JLV6Q8M-zo?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Blue Gradient", "trait_type": "Background" },
+          { "value": "Hoodie Orange", "trait_type": "Body" },
+          { "value": "Bone", "trait_type": "Skull" },
+          { "value": "Party Horn Green", "trait_type": "Mouth" },
+          { "value": "Ushanka", "trait_type": "Head" },
+          { "value": "3D", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "NfYu7pRtQFXqS3JL7HHbdizmsMTQCGDY3cLYPg4r2Vf",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #9832",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/9831.json",
+      "description": "10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/9831-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Deep Ocean Blue", "trait_type": "background" },
+          { "value": "Nebula", "trait_type": "skin" },
+          { "value": "None", "trait_type": "specialty" },
+          { "value": "World Champion Robe", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Mullet", "trait_type": "head" },
+          { "value": "None", "trait_type": "eyes" },
+          { "value": "Cigarette", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "Rft8K9rqdcyhMmm3Rdm4UgE6cKgUHAgADDfxp6knBjg",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "W9yH5ZdMHXHQHSZF56dRBXxz6PhjJ5MyVxLnqHw2W5G",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Vox Punks Club #3308",
+      "symbol": "",
+      "uri": "https://arweave.net/HYjZ3AMklNEU1v-YlW3iyK3glVym15pqPd4eHbkfNm8",
+      "description": "VoxPunksClub are Voxel based 3D NFTs interactable and part of metaverse.",
+      "media": "https://www.arweave.net/WVr5ctu_1FooqWixZlQlY2z1wGk8o_XBFjy5Pal_tqI?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "HuAiZg55P557gdjr5jkq79YdMe9sbdHuPj5UN21XuSyK",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "5FzddvKbxE54KEg2WoeNiGWJYAUBabKVFg2MVCSacWiJ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Woman", "trait_type": "Type" },
+          { "value": "Blue Glasses", "trait_type": "Eyes" },
+          { "value": "Bubblegum", "trait_type": "Mouth" },
+          { "value": "Bandana Green", "trait_type": "Head" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "WVHjQSDjUmkRZYHUShX6wPj7GdaRRTDxj85mrTck9U2",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "$500 FTT",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreigzcghsfdzi4nznkw2qpsr4cs2ruflfzampshrr57khnil4y6buha",
+      "description": "Legendary 0.04%",
+      "media": "https://ipfs.io/ipfs/bafybeicnjr3hc2f53yj3hbcb3jzemltsddfyj44qkvt3mulgevnxdmwa2y",
+      "extras": {
+        "creators": [
+          {
+            "address": "DD1Ypok8YVKeZ3FFR9hqp6Tu9qEfmjVY2EkVGNqFme4U",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "80", "trait_type": "fast" },
+          { "value": 100, "trait_type": "efficient" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "YyWdhjLts3HCKfuWZFn3wfMa8Utf2tH9dQmrZGZSZKq",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Mech #7475",
+      "symbol": "MECH",
+      "uri": "https://arweave.net/xl_VyVs3LLSb4MpCxzwIH7RnvGf_bszm9TZZVPxtc0M",
+      "description": "Mechs on Solana",
+      "media": "https://www.arweave.net/gY6c8yVkP0Ac3AFUUTJimBN5cRBTQV5Cduj-Yr6cfgA?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "Hv3kURiwHKfGAq2a5jkHpC5mJsm95eKgi86WanEkZm3z",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "5VNbPYPh9UBcS5PwjHM8obcsz9bs5pVBRYA7nG96WHE7",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Blue_Orbit", "trait_type": "Background" },
+          { "value": "Gun_BLUE", "trait_type": "Back" },
+          { "value": "Gun_WHITE", "trait_type": "Arms_back" },
+          { "value": "Defense_CARBON", "trait_type": "Armor" },
+          { "value": "BATTLE_PURPLE", "trait_type": "Arms" },
+          { "value": "Evil_PURPLE", "trait_type": "Head" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "bRrkPYEH3nTXF1NifegXV9b8LxPs6BzUZrC7ESqCXqV",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #3306",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/3305.json",
+      "description": "10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/3305-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Alaska", "trait_type": "background" },
+          { "value": "Gold", "trait_type": "skin" },
+          { "value": "None", "trait_type": "specialty" },
+          { "value": "Steve Jobs Turtleneck", "trait_type": "clothes" },
+          { "value": "Cannibal Necklace", "trait_type": "neck" },
+          { "value": "Hippie Hair", "trait_type": "head" },
+          { "value": "None", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "dpXWcMmTNiTCSP2JoYhXmmy8N7dEtw4tM7KTZwu2hgM",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Track Loans on Citrus: EP 3",
+      "symbol": "BF",
+      "uri": "https://cdn.shyft.to/brainfood/ep3/track-loans-taken-on-citrus.json",
+      "description": "In this article, we will explore one of the most convenient methods of tracking loans taken on Citrus Protocol, powered by SHYFT Callbacks",
+      "media": "https://cdn.shyft.to/brainfood/ep3/track-loans-taken-on-citrus.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "2iJJNyPvCXsQZaYkxU6gWKF7umhg6BSogkRntJN9xRYQ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          {
+            "value": "https://blogs.shyft.to/tracking-loan-events-on-famous-fox-citrus-f294ba29fdf5",
+            "trait_type": "blog_url"
+          },
+          {
+            "value": "https://github.com/Shyft-to/solana-brainfood/tree/main/tracking-loans-taken-on-citrus",
+            "trait_type": "github_url"
+          },
+          { "value": "EP 3", "trait_type": "episode" },
+          { "value": "Citrus", "trait_type": "program" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "iGRJTDRNC7yVKkBm6nJpPGNPoJo6mTQW7avvANJ62dd",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "VTOPIAN",
+      "symbol": "VT",
+      "uri": "https://ipfs.io/ipfs/bafybeihflx6k35cg7lgtmsf5iwt6ejnwfrcdafztjgzkjqr5h57gozojr4/1832.json",
+      "description": "Vtopians are an exclusive Gen1 collection traversing the virtual web3 utopia while building the next evolution of advanced cross-chain marketverse with value back to holders and traders.",
+      "media": "https://ipfs.io/ipfs/QmRQzh72AKGq83ExsTaoDp2CiuqQC8G99x5BxiHWyryd64/127.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8boKGLaHLuXkhDcQRgsR65YHhHL3Cpu1wBYYwEpv5MtF",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "67RXPoCKq9a4UnRdWqQqFWPYni9ghfMhCq1FJb3DtQRm",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Soft", "trait_type": "Background" },
+          { "value": "Ocean", "trait_type": "Body" },
+          { "value": "Matador", "trait_type": "Cloth" },
+          { "value": "Greek Ears", "trait_type": "Ear" },
+          { "value": "Droid Eyes", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Head" },
+          { "value": "Roman Helmet", "trait_type": "Mask" },
+          { "value": "Headhunter Mouth", "trait_type": "Mouth" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "jBa2SSrRMtTW1fEJrN1yvv9rViTmRBzH8vesv7ZV2fr",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "VTOPIAN",
+      "symbol": "VT",
+      "uri": "https://ipfs.io/ipfs/bafybeihflx6k35cg7lgtmsf5iwt6ejnwfrcdafztjgzkjqr5h57gozojr4/3053.json",
+      "description": "Vtopians are an exclusive Gen1 collection traversing the virtual web3 utopia while building the next evolution of advanced cross-chain marketverse with value back to holders and traders.",
+      "media": "https://ipfs.io/ipfs/QmRQzh72AKGq83ExsTaoDp2CiuqQC8G99x5BxiHWyryd64/1202.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8boKGLaHLuXkhDcQRgsR65YHhHL3Cpu1wBYYwEpv5MtF",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "67RXPoCKq9a4UnRdWqQqFWPYni9ghfMhCq1FJb3DtQRm",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Soft", "trait_type": "Background" },
+          { "value": "Grey", "trait_type": "Body" },
+          { "value": "Resistance Armor", "trait_type": "Cloth" },
+          { "value": "Ear Spikes", "trait_type": "Ear" },
+          { "value": "Standard Eyes", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Head" },
+          { "value": "Oxygen Mask", "trait_type": "Mask" },
+          { "value": "Standard Mouth", "trait_type": "Mouth" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "r618BiZ1eNAw3gLHUStSH9V7WbbtDb1VPGnkWoAgBEo",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DING!",
+      "symbol": "DING",
+      "uri": "https://ipfs.io/ipfs/bafkreigkkeuivi73dlg7kewuup5d2qnvp7rngjeawgk3odu6qk3kvpyrdm",
+      "description": "Ding is a messaging service from https://famousfoxes.com",
+      "media": "https://ipfs.io/ipfs/bafkreidqmtnfl3zgejvuwz2x5h7jabegprpu6o3aywatxczhpw4io3syz4",
+      "extras": {
+        "creators": [
+          {
+            "address": "99uy3RZ46Kpimu6Qxv7X8Rv1dsdRqEgADhvVSCeA95Me",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "99uy3RZ46Kpimu6Qxv7X8Rv1dsdRqEgADhvVSCeA95Me", "trait_type": "From" },
+          { "value": "Thu Feb 23 2023", "trait_type": "Date" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "sjaC9AFRAS7yB85B2c12RLkYX2eW4LFdKUoEKFYoc6Z",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "wiSdWzt2S1re1mig7y7E34B89hJw95RfF5pXGrrVKgt",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "GMers #21255",
+      "symbol": "GMERS",
+      "uri": "https://arweave.net/nYKdFURyeYKc9CloS8fVl1zHjIbXsUD3jZSrC7XOIuA",
+      "description": "The GMers is a collection of 50,000 stick figures on Solana striving to be the world’s largest DAO. GMers is a transparent organization focused on building a team that is passionate about providing value to holders and to the Solana ecosystem in the form of education, networking, art procurement, charity, and tools.",
+      "media": "https://arweave.net/s12vzEoqrWnzLNARfiVye8975IQOnLD7nhV_EMvHedg",
+      "extras": {
+        "creators": [
+          {
+            "address": "GMerst9KRfW6sCTpPiVNZFbmTmupeaFca2gTUgBuQAj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "9bUKaH4jhd7wN13yC4hBTAj9pPrG2MVvi2Wf1JJxk4NW",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CHCQ7zevFTTznMQPLcqzXLyYTvL5Pnd9vqPfonfWMpVs",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Sunset", "trait_type": "Background" },
+          { "value": "Black", "trait_type": "Chair" },
+          { "value": "Spirited", "trait_type": "Character" },
+          { "value": "Glossy Eyes", "trait_type": "Eyes" },
+          { "value": "Jacket Black", "trait_type": "Body" },
+          { "value": "Fangs", "trait_type": "Mouth" },
+          { "value": "Fry Cook", "trait_type": "Headgear" },
+          { "value": "Warrior Sword", "trait_type": "Hand" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "23jeQJZ388vBRopyHkNpdV4FJ9VteWhAv1uqQwbQAyBg",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "GMers #29690",
+      "symbol": "GMERS",
+      "uri": "https://arweave.net/TEXyh8KRbv5snyUXAO93ddj45zDQadsrNucx1fIc7G0",
+      "description": "The GMers is a collection of 50,000 stick figures on Solana striving to be the world’s largest DAO. GMers is a transparent organization focused on building a team that is passionate about providing value to holders and to the Solana ecosystem in the form of education, networking, art procurement, charity, and tools.",
+      "media": "https://arweave.net/QqDjWRXfNPboZDxYSCzJtwVeGD7q_DJw4OvqEx98n3s",
+      "extras": {
+        "creators": [
+          {
+            "address": "GMerst9KRfW6sCTpPiVNZFbmTmupeaFca2gTUgBuQAj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "DgZ15Tq9hNSrnn7PC6mfdfMFVbWrSqVi8zsMevQpzUK6",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CHCQ7zevFTTznMQPLcqzXLyYTvL5Pnd9vqPfonfWMpVs",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Light Blue", "trait_type": "Background" },
+          { "value": "Purple", "trait_type": "Chair" },
+          { "value": "Alien", "trait_type": "Character" },
+          { "value": "Stars", "trait_type": "Eyes" },
+          { "value": "Bowtie", "trait_type": "Body" },
+          { "value": "Beard Black", "trait_type": "Mouth" },
+          { "value": "Cowboy", "trait_type": "Headgear" },
+          { "value": "Apple Juice", "trait_type": "Hand" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "25AUKTxhDqA9MqsMmxWt19919yyRPowPadyV7udWopRQ",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "25C722cGEfjLw5mm4hBFjfrYT1siicNx2onDLjGHNCh6",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "The MVP Society Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "MVP Society", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "26S5UYDt21c39VHdQTLz3TUGND67LHVE6MdSUxNAcG2B",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Tracking Realm Proposals: EP 2",
+      "symbol": "BF",
+      "uri": "https://cdn.shyft.to/brainfood/ep2/track-votes-for-realms-on-solana.json",
+      "description": "In this article, we dive into one of the most convenient ways of tracking votes of a Realms proposal, powered by SHYFT APIs.",
+      "media": "https://cdn.shyft.to/brainfood/ep2/track-votes-for-realms-on-solana.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "2iJJNyPvCXsQZaYkxU6gWKF7umhg6BSogkRntJN9xRYQ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          {
+            "value": "https://blogs.shyft.to/how-to-track-votes-for-realms-proposal-on-solana-807210b6e6c6",
+            "trait_type": "blog_url"
+          },
+          {
+            "value": "https://github.com/Shyft-to/solana-brainfood/tree/main/track-votes-in-gov-proposal",
+            "trait_type": "github_url"
+          },
+          { "value": "EP 1", "trait_type": "episode" },
+          { "value": "Realms", "trait_type": "program" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "271mcbGfJgKPi4C4QuPjET1hRxdjBRmkioGnJrvzpnpm",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "VTOPIAN",
+      "symbol": "VT",
+      "uri": "https://ipfs.io/ipfs/bafybeihflx6k35cg7lgtmsf5iwt6ejnwfrcdafztjgzkjqr5h57gozojr4/1997.json",
+      "description": "Vtopians are an exclusive Gen1 collection traversing the virtual web3 utopia while building the next evolution of advanced cross-chain marketverse with value back to holders and traders.",
+      "media": "https://ipfs.io/ipfs/QmRQzh72AKGq83ExsTaoDp2CiuqQC8G99x5BxiHWyryd64/1226.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8boKGLaHLuXkhDcQRgsR65YHhHL3Cpu1wBYYwEpv5MtF",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "67RXPoCKq9a4UnRdWqQqFWPYni9ghfMhCq1FJb3DtQRm",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Beige", "trait_type": "Background" },
+          { "value": "Ink", "trait_type": "Body" },
+          { "value": "None", "trait_type": "Cloth" },
+          { "value": "Bull Horns", "trait_type": "Ear" },
+          { "value": "Demon Eyes", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Head" },
+          { "value": "Roman Helmet", "trait_type": "Mask" },
+          { "value": "Beard", "trait_type": "Mouth" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2Jqb4jADytBrmAUSJeYuB9aPnWJKDrfehUYuFhwNnjrq",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #2260",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/2260.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/2260.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Platinum", "trait_type": "Background" },
+          { "value": "Skintone 2", "trait_type": "Skin Tone" },
+          { "value": "Black", "trait_type": "Hair Color" },
+          { "value": "Black", "trait_type": "Hair Color (Beard)" },
+          { "value": "Black", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Black", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Blue", "trait_type": "Eye Color" },
+          { "value": "Navy Seal Outfit", "trait_type": "Clothes" },
+          { "value": "Face 1", "trait_type": "Face" },
+          { "value": "Leather Glove", "trait_type": "Equipment" },
+          { "value": "Top Curls", "trait_type": "Head" },
+          { "value": "Harden", "trait_type": "Beard" },
+          { "value": "Bushy", "trait_type": "Moustache" },
+          { "value": "Slim", "trait_type": "Eyebrows" },
+          { "value": "Aviator (Chrome)", "trait_type": "Accessory" },
+          { "value": "Yakuza Tattoo", "trait_type": "Tattoo" },
+          { "value": "10", "trait_type": "Talent" },
+          { "value": "7", "trait_type": "Drive" },
+          { "value": "13", "trait_type": "Athleticism" },
+          { "value": "Mythic", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2KsfxMzdEmrvih1N8NfchSReE4wfiYXd82BrgvPUVN5f",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #2780",
+      "symbol": "BW",
+      "uri": "https://arweave.net/NhUVr7VJ-MXbikoE8LC5keJVDyvzHsaPolMcDvInLAI",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/heJlD2h4YbjO4snVPdf7cj6ejpCJtWTzPsLj3tWxnTs?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Dark Blue Icons", "trait_type": "Background" },
+          { "value": "Hoodie Pink", "trait_type": "Body" },
+          { "value": "Bone", "trait_type": "Skull" },
+          { "value": "Cigar", "trait_type": "Mouth" },
+          { "value": "Crown", "trait_type": "Head" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2LafQHnqkMKjyAcxq7HyDSCQYBAC8vm8Sp32nZT2EAHQ",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "NWM #3910",
+      "symbol": "NWM",
+      "uri": "https://arweave.net/csaauI7f2DhU6b6pL3glEG3YLOZ-WUFPd5DsMz9RETc",
+      "description": "New World Monkes - An Art Project.  We bring your Monke to life through beautiful art.",
+      "media": "https://www.arweave.net/ZMpyqC4I3dfs-fa87K8ekIl8gYqxYyAxTBy_pOIFRaA?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "2KviRhp6SQ1nCZR2fhUTydQfnvSRKNbJWL2rkyetHFRZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "FyHFj3iYu9TZ7oszxSfMy8kHnfEvM369dtFRGFjwPAjy",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Red", "trait_type": "Type" },
+          { "value": "Orange Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "Vipers", "trait_type": "Eyes" },
+          { "value": "Pink Headset", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2PozmbDT3FMN8xFgh5CTTtVMQrpUk6ZdFzJhW3ZndS9C",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #5777",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/5776.json",
+      "description": "10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/5776-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Teal", "trait_type": "background" },
+          { "value": "Radioactive", "trait_type": "skin" },
+          { "value": "God of War", "trait_type": "specialty" },
+          { "value": "God Beater", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Fade", "trait_type": "head" },
+          { "value": "None", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2Qh4vg1kZ4zP8CaLW9HN1Zj7x4oQruEmH6aKeaiDAVV8",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2SV8b9xatSgy8AsgFTZXBJC9rSxfSEMWntCKYquDkhti",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Mech #7435",
+      "symbol": "MECH",
+      "uri": "https://arweave.net/aLNmdxTX-wuuTvXYF19pcjAP8z0etD1-mT_L0t4Xo7s",
+      "description": "Mechs on Solana",
+      "media": "https://www.arweave.net/lJ3oGncl_V9z73Su9eg_7ifS4mmiLyUY5x_ZSNMmQHc?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "Hv3kURiwHKfGAq2a5jkHpC5mJsm95eKgi86WanEkZm3z",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "5VNbPYPh9UBcS5PwjHM8obcsz9bs5pVBRYA7nG96WHE7",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Gold_Star", "trait_type": "Background" },
+          { "value": "Rocket_MATTE", "trait_type": "Back" },
+          { "value": "Regular_WHITE", "trait_type": "Arms_back" },
+          { "value": "Defense_CHROME", "trait_type": "Armor" },
+          { "value": "Standard_MATTE", "trait_type": "Arms" },
+          { "value": "Modular_BLUE", "trait_type": "Head" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2TpRY7ykLgxWbggtZpYFztLPY5ppsn5o3ZDjg32vNbKq",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Stellar Ventures #00005 (svc.vc)",
+      "symbol": "STELLAR5",
+      "uri": "https://ipfs.io/ipfs/bafkreibmxxnbowj5ac4sy26pnipvleuasg4kryb5riqfq5fo43iw2sxeea",
+      "description": "Things are only impossible until they are not.",
+      "media": "https://ipfs.io/ipfs/bafybeic6n3cudiis2aig7txrok7jaiyn4qw7kxkenwqggez5euexuyym54",
+      "extras": {
+        "creators": [
+          {
+            "address": "4ZCiGakZJy5aJsLpMBNBNwyrmNCCSCzukzhaPzzd4d7v",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2XaD7urZZBxvReYUb4Z1n9xS8J6eKQgj5s84JFjrsrQm",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Elite Invitation #40",
+      "symbol": "ELT",
+      "uri": "https://arweave.net/NjfH-QruYmII-4ZEd61kLMI5EjHPPBQBgOemE0q0Oag",
+      "description": "This is your Official Elite Invitation! \nBecause you have been a Degod NFT Holder for more than 3 months (3-6 Months), we want to reward you with the possibility to obtain WL for our mint. Our collection is called Elite Emperors, we are a team of experienced Data and Sales Engineers coming to the space to dominate. Join our discord and learn about everything we have in store for you! discord.gg/eliteemperors NOTE: This is not a WL token, this will make your process to gain WL a whole lot easier using our Elite Rewards App. TOUGH TIMES CREATE STRONG MEN, STRONG MEN CREATE EASY TIMES. EASY TIMES CREATE WEAK MEN, WEAK MEN CREATE TOUGH TIMES",
+      "media": "https://arweave.net/uH6NXk7X0kxRbUmgiKFNe-ZAmNGBCXhG6zBIy-TdnDc?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8kiZS2z7NNb8qyenuuf5cbsZTSSCr4FQA6FygdQjbnLG",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "DdjEuB3RsE9rjDhvDSDBghhDcMgnsiuSnLGeQVpPDohi",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Focus", "trait_type": "Value" },
+          { "value": "Frank Is Typing", "trait_type": "Element" },
+          { "value": "Emperor", "trait_type": "Title" },
+          { "value": "Degod Silver", "trait_type": "Crown" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2aSXtwaEDpZxmKXkjhN5BnjkFuGNYC3u6W6h2SJaEGWE",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "000# Heartbreak",
+      "symbol": "NNPOSTER",
+      "uri": "https://arweave.net/fLoAwDfCLVzcz6AaFvsr2H95O_8RfnJxtKrtoTZujEM",
+      "description": "The crystal broken heart is a mirror through which residents of the NEONEXUS can take a peek into the real world as we know it.",
+      "media": "https://arweave.net/8TpUvw7hi7N_rVuG6avV_cOX2bXQ7OsY-ZNtILCM-zo?ext=jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "Ef896VQS1tfMACgL5Ce1TR7JZhehkrtowCyZZyYv7SWn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Miami", "trait_type": "City" },
+          { "value": "Heartbreak in Miami", "trait_type": "Theme" },
+          { "value": "Airdrop", "trait_type": "Origin" },
+          { "value": "Moody", "trait_type": "Scene" },
+          { "value": "Lockdown", "trait_type": "Period" },
+          { "value": "Daramola", "trait_type": "Artist" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2ayM1JLg8rEAxsNjukg2jddZ194WkxM2ar1sJ9a4nSze",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "GMers #47804",
+      "symbol": "GMERS",
+      "uri": "https://arweave.net/EsJx7JYeZGTjRVf2Vt-8mOh-k5P4EQ_O6kNB5jbgZCQ",
+      "description": "The GMers is a collection of 50,000 stick figures on Solana striving to be the world’s largest DAO. GMers is a transparent organization focused on building a team that is passionate about providing value to holders and to the Solana ecosystem in the form of education, networking, art procurement, charity, and tools.",
+      "media": "https://arweave.net/r-43IlNpLAYv5gKxNPNEGUWcGX3owgwrVv2CLOhoO3M",
+      "extras": {
+        "creators": [
+          {
+            "address": "GMerst9KRfW6sCTpPiVNZFbmTmupeaFca2gTUgBuQAj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "DgZ15Tq9hNSrnn7PC6mfdfMFVbWrSqVi8zsMevQpzUK6",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CHCQ7zevFTTznMQPLcqzXLyYTvL5Pnd9vqPfonfWMpVs",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Sunset", "trait_type": "Background" },
+          { "value": "Red", "trait_type": "Chair" },
+          { "value": "Tatted 2", "trait_type": "Character" },
+          { "value": "Scared", "trait_type": "Eyes" },
+          { "value": "Pimp Suit", "trait_type": "Body" },
+          { "value": "Tough Guy", "trait_type": "Mouth" },
+          { "value": "Stitches", "trait_type": "Headgear" },
+          { "value": "Wave", "trait_type": "Hand" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2bEtrEgDB5ZR2ctbkiki2JRQnh3kyWfgQYZgeNPUciN4",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "",
+      "symbol": "",
+      "uri": "https://ipfs.cdnprovider.xyz/QmVL9MGWMigvUoKFXxCMD9C9zCrS97ScV2vv5yb36tE7zE",
+      "description": "​",
+      "media": "https://ipfs.io/ipfs/QmduygWEMM8yZquZryyyaQSbqhH1tnCbSBTTdwM9WwtKx5",
+      "extras": {
+        "creators": [
+          {
+            "address": "SoLch9aJcyJATS57UKNuX1BvU2UMctHhJYNFmtKGRKr",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Le​g​en​dar​y", "trait_type": "R​AR​E" },
+          { "value": "U​S​D​C", "trait_type": "TO​K​E​N" },
+          { "value": "S​ol​an​a x U​S​D​C", "trait_type": "CR​EA​TO​R" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2bxLzpqwCX2ttKQqLasxgzx2hvgdMNUszUjXmUK6hPzT",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "JUPS.io Token Box",
+      "symbol": "OP",
+      "uri": "https://ipfs.io/ipfs/bafkreie7qgbwhj5754j35xeuzj3f7d6lmldwlgj5jisopcd6moxgjwamzi",
+      "description": "Join our rare box event!",
+      "media": "https://ipfs.io/ipfs/bafybeicnrgipkhhl2iqkh527cancw42twxvx56mizmxmzkpsw6uhhmvhme",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2fdGghEnZf6nD9xxswjCrWAXP8r9Wyf5jC4zY7VFUKCc",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "TENSOR.MARKETS PASS",
+      "symbol": "",
+      "uri": null,
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "46DhkiAyZMxarDJA11KivzJ3dDhWYSnoL4k9jcQzU3go",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2g4JmiMy2gZsDWSfQH5htHDurBE4xXpyGVCjpLeJpbvi",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Track $Booty token swaps: EP 5",
+      "symbol": "BF",
+      "uri": "https://cdn.shyft.to/brainfood/ep5/track-booty-token-swaps-on-orca.json",
+      "description": "In this article, we will explore how to track $Booty token swaps on Orca, powered by SHYFT Transaction APIs.",
+      "media": "https://cdn.shyft.to/brainfood/ep5/track-booty-token-swaps-on-orca.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "2iJJNyPvCXsQZaYkxU6gWKF7umhg6BSogkRntJN9xRYQ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          {
+            "value": "https://blogs.shyft.to/how-to-track-all-booty-token-swaps-in-one-hour-on-orca-f0d1b6f46027",
+            "trait_type": "blog_url"
+          },
+          {
+            "value": "https://github.com/Shyft-to/solana-brainfood/tree/main/track-booty-tokens-swaps-orca",
+            "trait_type": "github_url"
+          },
+          { "value": "EP 5", "trait_type": "episode" },
+          { "value": "Orca", "trait_type": "program" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2gQGpfyLg9bMiwneSsHC8a715MKP5ME2HTmvby1gsY24",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Skully Boys #1443",
+      "symbol": "SkullyB ",
+      "uri": "https://arweave.net/cCEvVsp9fsIORF41PpqHMm-UXyqF8fGVijUDwSTFagc",
+      "description": "When our carbon-14 bones will disappear, the Skully Boys will still be on the dance floor shaking this digital world.",
+      "media": "https://www.arweave.net/CtZ68icAKzHAX-U0banRqCBvA_To9oTsu1GM4xqG5V0?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "7A52STQYkVqTZzBNujH3mxGvxFmXsH5WHaKZBuTGdvUg",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "AegRkuNtA8x7tgEarLiY7Zom3wJAeV4yh7FBDVKAtfEu",
+            "share": 32,
+            "verified": false
+          },
+          {
+            "address": "GK6abV2VZsrndxHcX4sNRsijuLA11tsFakqqyiJeJFvj",
+            "share": 10,
+            "verified": false
+          },
+          {
+            "address": "H9snmCCK4exWsoaWeLsjMBgaQPUHijZH5ZiPtvagJ1du",
+            "share": 48,
+            "verified": false
+          },
+          {
+            "address": "8pGtVD2gRLPhCQa9K67R9amDAezv8G53FB17N9sMCZcd",
+            "share": 10,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Green Forest", "trait_type": "Background" },
+          { "value": "Broken Bones Skully Iron", "trait_type": "Skull" },
+          { "value": "Old Hair", "trait_type": "Hat" },
+          { "value": "Pink Magic School Uniform", "trait_type": "Clothe" },
+          { "value": "None", "trait_type": "Glasses" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2h3VEhwNUhZzGTTquzVq7jTzGsi86p6Cssep3gPn7pfA",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Stellar Ventures #00004 (svc.vc)",
+      "symbol": "STELLAR4",
+      "uri": "https://ipfs.io/ipfs/bafkreihe3jr3hy53qc3odxr6khngwqwrlw54n6ovxhtqyc27wt7d2lu5iy",
+      "description": "Things are only impossible until they are not.",
+      "media": "https://ipfs.io/ipfs/bafybeifljnrm4aqhbuphgzc3h7ykhlvgwf27e3rhuziiiath2kpgb5zffu",
+      "extras": {
+        "creators": [
+          {
+            "address": "4ZCiGakZJy5aJsLpMBNBNwyrmNCCSCzukzhaPzzd4d7v",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2nWkttHsgqRFu9g4FPvnZGbt4pLCrZJHw7UNuUGcfxT6",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "#9",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmVU1dMTNvMophijQmaCmFbbMnSi35G4GLnERUF4tyNsWf",
+      "description": "Unlock 1000 $ТRUMР at ТRUMPСHEST​.​СOM",
+      "media": "https://ipfs.io/ipfs/QmZ1mKs7hZEgK7f4j4r2YG7VwRsvNc2QP8Z6c2Ucp5Tja2",
+      "extras": {
+        "creators": [
+          {
+            "address": "7kCL2HxbcvoVvJaF7awjznm36CkPbz11mKk9wn6oySQQ",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "", "trait_type": "" },
+          { "value": "", "trait_type": "" },
+          { "value": "", "trait_type": "" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2oCsNo9Epa7yTDVgmWsJQNWAtjnu3xkm111FYRvRACKK",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #2402",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/2401.json",
+      "description": "A collection of 10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/2401-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Deep Ocean Blue", "trait_type": "background" },
+          { "value": "Turquoise", "trait_type": "skin" },
+          { "value": "None", "trait_type": "specialty" },
+          { "value": "Godchella Hoodie", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Prince Hair", "trait_type": "head" },
+          { "value": "Money Sign Shades", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2rUCtCfKJU38AgMhdggWb3y1kHHJXqHovgdKmiyHnKVK",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #2206",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/2205.json",
+      "description": "A collection of 10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/2205-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Teal", "trait_type": "background" },
+          { "value": "Zombie", "trait_type": "skin" },
+          { "value": "None", "trait_type": "specialty" },
+          { "value": "Peasant Blouse", "trait_type": "clothes" },
+          { "value": "Gold Chain", "trait_type": "neck" },
+          { "value": "Propeller Hat", "trait_type": "head" },
+          { "value": "None", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2rZw5ArqLN6WfidsFWH6V5GEeApvk7q5RmhR8pBhdMH6",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #1459",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/1458.json",
+      "description": "A collection of 10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/1458-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Blue", "trait_type": "background" },
+          { "value": "Joker", "trait_type": "skin" },
+          { "value": "Earring", "trait_type": "specialty" },
+          { "value": "None", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Fade", "trait_type": "head" },
+          { "value": "Money Sign Shades", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2sN4KzjiJft1dzxxaHp5aPUmQY199Z2AtwE44RVFws46",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #2284",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/2284.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/2284.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Red", "trait_type": "Background" },
+          { "value": "Skintone 5", "trait_type": "Skin Tone" },
+          { "value": "Black", "trait_type": "Hair Color" },
+          { "value": "Black", "trait_type": "Hair Color (Beard)" },
+          { "value": "Black", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Black", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Brown", "trait_type": "Eye Color" },
+          { "value": "Orange Hoodie with Vest", "trait_type": "Clothes" },
+          { "value": "Face 2", "trait_type": "Face" },
+          { "value": "Tennis Racket", "trait_type": "Equipment" },
+          { "value": "Medium BrushedBack Hair", "trait_type": "Head" },
+          { "value": "Diaz", "trait_type": "Beard" },
+          { "value": "Bushy", "trait_type": "Moustache" },
+          { "value": "Pointy", "trait_type": "Eyebrows" },
+          { "value": "NONE", "trait_type": "Accessory" },
+          { "value": "Biker Tattoo", "trait_type": "Tattoo" },
+          { "value": "8", "trait_type": "Talent" },
+          { "value": "13", "trait_type": "Drive" },
+          { "value": "9", "trait_type": "Athleticism" },
+          { "value": "Uncommon", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2sgXf5vfytJwHmsLH1V9kaTsfotmCqpd9JtzYbTHGX5L",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "y00t #3315",
+      "symbol": "Y00T",
+      "uri": "https://metadata.y00ts.com/y/3314.json",
+      "description": "y00ts is a generative art project of 15,000 NFTs. y00topia is a curated community of builders and creators. Each y00t was designed by De Labs in Los Angeles, CA.",
+      "media": "https://metadata.y00ts.com/y/3314.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "yootn8Kf22CQczC732psp7qEqxwPGSDQCFZHkzoXp25",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Cannoli Cream", "trait_type": "Background" },
+          { "value": "Tumbleweed", "trait_type": "Fur" },
+          { "value": "Wholesome", "trait_type": "Face" },
+          { "value": "Bear Coat", "trait_type": "Clothes" },
+          { "value": "24k Gold Blocks", "trait_type": "Eyewear" },
+          { "value": "Headphones", "trait_type": "Head" },
+          { "value": "None", "trait_type": "1/1" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2wyKXMFpBKEeWTk6xpWig71wiuvya3MzaPny2cqBTbBJ",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Vox Punks Club #371",
+      "symbol": "",
+      "uri": "https://arweave.net/mZUSjJd85M-9SpDQytuY-OOYoKcVIAJHVtirVrLEq_o",
+      "description": "VoxPunksClub are Voxel based 3D NFTs interactable and part of metaverse.",
+      "collection": { "name": "VoxPunksClub Genesis", "family": "VoxPunksClub" },
+      "media": "https://www.arweave.net/aDt1lbqvp7_pI2IWNUfhgf7lDUheMalhs2LaYjeya_U?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "HuAiZg55P557gdjr5jkq79YdMe9sbdHuPj5UN21XuSyK",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "5FzddvKbxE54KEg2WoeNiGWJYAUBabKVFg2MVCSacWiJ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "trait_type": "Type", "value": "Woman Brown" },
+          { "trait_type": "Eyes", "value": "3D Glasses" },
+          { "trait_type": "Mouth", "value": "Cigar" },
+          { "trait_type": "Head", "value": "Cowboyhat" }
+        ],
+        "properties": {
+          "files": [
+            {
+              "uri": "https://www.arweave.net/aDt1lbqvp7_pI2IWNUfhgf7lDUheMalhs2LaYjeya_U?ext=png",
+              "type": "image/png"
+            }
+          ],
+          "category": "image",
+          "creators": [{ "address": "5FzddvKbxE54KEg2WoeNiGWJYAUBabKVFg2MVCSacWiJ", "share": 100 }]
+        }
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "348qRgBrgR5Xx2sgJCkTRLaaaE5d3xHBP1D5PSirdzmy",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "FTX Auction Ticket",
+      "symbol": "FTXAUCTTIC",
+      "uri": "https://drive.google.com/u/0/uc?id=1cySKWinmLnHWCI6T92EEwp1e-n-tv8jl&export=download",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "9Hxk8c5BtpjEGRLE7tE7t75eL5RJY567m7w3gH7LQSMq",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": null
+    },
+    {
+      "mint": "34rh1aDmgwSZWTxkESxFWFVuHqtr34VYQSFQwksSXjEo",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #1598",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/1598.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/1598.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Blue", "trait_type": "Background" },
+          { "value": "Skintone 1", "trait_type": "Skin Tone" },
+          { "value": "Red", "trait_type": "Hair Color" },
+          { "value": "Brown", "trait_type": "Hair Color (Beard)" },
+          { "value": "Brown", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Brown", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Brown", "trait_type": "Eye Color" },
+          { "value": "Blue Puffy Jacket", "trait_type": "Clothes" },
+          { "value": "Face 5", "trait_type": "Face" },
+          { "value": "Black Boxing Gloves", "trait_type": "Equipment" },
+          { "value": "Fedora Black", "trait_type": "Head" },
+          { "value": "Hatfield", "trait_type": "Beard" },
+          { "value": "Vandyke", "trait_type": "Moustache" },
+          { "value": "Edgy", "trait_type": "Eyebrows" },
+          { "value": "Aviator (Gold)", "trait_type": "Accessory" },
+          { "value": "NONE", "trait_type": "Tattoo" },
+          { "value": "17", "trait_type": "Talent" },
+          { "value": "7", "trait_type": "Drive" },
+          { "value": "6", "trait_type": "Athleticism" },
+          { "value": "Uncommon", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3894UWZubUtWf3EvtgJSassW2hVx9j8a34ZuBuuBPJUW",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3ErsepQtTAwFanFf3eprBA8c9b4nB4iABcgr6eGgKYpu",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "4000$ W Drop 4000W.io",
+      "symbol": "4000W",
+      "uri": "https://www.hi-hi.vip/json/4000w.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "HuVR23bMQgjS2DRmw9Bz8RuYbs2AqGqDQphFXcWhCkQu",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3FE58k5UUd5df1UsHn1nbTSoUTtXW6nB6rimReLEkkDj",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "SAGA.PROMO AIRDROP by Saga",
+      "symbol": "SAG",
+      "uri": "https://ipfs.io/ipfs/bafkreib3ovkgmzxt5j4qatpipnws24facft23n3zxt73xt6yfpreb33vea",
+      "description": "",
+      "media": "https://i.ibb.co/xMKr0sp/gfdg.gif",
+      "extras": {},
+      "spamScore": 2,
+      "spamReasons": ["domain_in_name", "spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3HPi6nhzyJBHNULEDhorUV3fJFAnyv6YRSsa6UgyJzGd",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #369",
+      "symbol": "BW",
+      "uri": "https://arweave.net/LTB4dAOfnbJYvB3qstk0FQbDg_TcX_1aEHeibxEBCNM",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/Z3J5sn1VoUqHz91yqu97tic7i3fJMmaRdYXPe0UU5gc?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Blue Gradient", "trait_type": "Background" },
+          { "value": "Shirt Flamingos", "trait_type": "Body" },
+          { "value": "Gas Mask", "trait_type": "Skull" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3JzrCndUGkxUCp46tw8HcGBQh28pvcNKGoEYirHNnkRC",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Reptilianz #7984",
+      "symbol": "REPZ",
+      "uri": "https://gateway.lighthouse.storage/ipfs/bafybeibysbw3o6gghiqberyrtnmum2tmlhyrhrsuokp4iqiuckf4rn6pli/7984.json",
+      "description": "Reptilianz have begun their infiltration. Random wallets. Unknown motives. No whitelist. No mint. No warning.",
+      "media": "https://gateway.lighthouse.storage/ipfs/bafybeia6py55thrkwl6xd5cnqgcgpjgmohwc26r7jtfpqtrfr3dgdeos74/7984.jpeg",
+      "extras": {
+        "creators": [
+          {
+            "address": "REPzuQtBatDFMSr4nbtD8MAFQEuxuyMaBvTbE3e8YAE",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Jeweled Cobra", "trait_type": "Tail" },
+          { "value": "Emerald Gaze", "trait_type": "Eyes" },
+          { "value": "Dreadscale", "trait_type": "Outfit" },
+          { "value": "Horned Viper", "trait_type": "Head" },
+          { "value": "Golden Ivory Fang", "trait_type": "Mouth" },
+          { "value": "Underwater Tunnel", "trait_type": "Location" },
+          { "value": "Viperis", "trait_type": "Race" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3Q8TicwxcqURPDPpQi39iaZQwYdyoQ8ABSTZNfNgJvh5",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Bread Preview #10245",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreifmdibxayuw6yctbxnwj6o7ld5qqphn5hhbpy4mbmqvqbvxjzg6k4",
+      "description": "Step 1: Receive the monthly challenge.\nStep 2: Complete the airdropped challenge to claim your Winner Proof.\nStep 3: Buy or trade NFTs to collection more Winner Proofs.\nStep 4: The player with the most Winner Proofs at the end of the month wins the monthly prize pool!",
+      "media": "https://ipfs.io/ipfs/bafybeieebshhwzv24yhwoagsyg7c67sytqvlbr5digvodwczxj3rbgyuxa",
+      "extras": {
+        "creators": [
+          {
+            "address": "3AajDgUy6p8cYNr7FUGjN1tsph1PdNdqcp7bHmHVdqsB",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3TibjmKsy91iix2Z7e7txGZFKNjQsaPLNzReVgDGaA3H",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Fantastic crate #261",
+      "symbol": "",
+      "uri": "https://arweave.net/nbCWy-OEu7MG5ORuJMurP5A-65qO811R-vL_8l_JHQM",
+      "description": "This is an exclusory crate which can be opened via www.yourusdc.app",
+      "media": "https://arweave.net/IBwd9eXXM0oDAHAFG0AgaOPkcEjbDj8IanMvVekw7UQ",
+      "extras": {
+        "creators": [
+          {
+            "address": "PPpMGHom4FvQP2X3JRJg4Qowt9R19jx7DkHeNFUtf6t",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3WNfifD7sJbm7T6fAJQh2V43T6jKusppCs84KCScnUmZ",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "! ✅ BOX #72",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmQLuzdomhTY9uBNq2VJMhK27bn7vEzKFQvezgraiVWDuc",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "5iqhjZBsiFuECYVrrppmQuERRuDTxbYgLhqmznVF1PEM",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3c4TEP4q4rcFCPJGZkDr72Noi58q9w8QXBCL18hkYua2",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Okay Bear #5670",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/l2mLCEa1swWqqcAmfFumK4pkc0wNr5tZwfFYaF6XKao",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/lqmzAlJllXbg4Yzb-w4Mtjv1yNv77VusQcFK_wQa5mI",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Warm Grey", "trait_type": "Background" },
+          { "value": "Ginger", "trait_type": "Fur" },
+          { "value": "Wry", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Mumford Hat", "trait_type": "Hat" },
+          { "value": "Striped Tee", "trait_type": "Clothes" },
+          { "value": "Barrel Sunglasses", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3dgjFTW3rFMDPhkYNdDVhurEPfTkk9WaDHFZ8dUvJ2Ei",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Inside Out Friends #1607",
+      "symbol": "IOF",
+      "uri": "https://arweave.net/YBspqqC-Ts7BOZnEFcxPBVdg_maSUkLJ5doEkmvetg8",
+      "description": "Do you ever wonder what’s going on in someone’s head? Maybe a collection showing it? Meet the Inside Out Friends, a 5555 open-minded boys in their 20s chillin' and vibin' with illustrated different personalities. Created and hand-drawn by the author Stefan Jovanovic, a.k.a Stefanikius, the desire and challenge were to show through the collection both our inner and outer side.\nThe perfect combination is achieved by combining all hand-drawn traits through an algorithm that creates 5555 unique personalities, a 5555 unique men in their 20s. The uniqueness is reflected in the fact that each attribute has multiple meanings so that no person interprets it in the same way. 1607/5555",
+      "media": "https://arweave.net/zPOKIKofdjSsWHp_EVJvdrCoMrqQEikLGVRXYUBsWI0?ext=gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "WoFvLkqFgvhRZ5zHJ1q7iPwZqwQamCXDu3N2aid7q6t",
+            "share": 100,
+            "verified": true
+          },
+          { "address": "qW46yQGtN3t1c221BJknTVpZbhMpgLW4xVJ5pnDDGg2", "share": 0, "verified": true }
+        ],
+        "attributes": [
+          { "value": "Snowman", "trait_type": "Background" },
+          { "value": "Lava Lamp", "trait_type": "Glass Head" },
+          { "value": "Mocha", "trait_type": "Body" },
+          { "value": "Blue Lollipop", "trait_type": "Eyes" },
+          { "value": "Holo", "trait_type": "Clothes" },
+          { "value": "Angry", "trait_type": "Mouth" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3g15vwQQ19mmwtuMptYqxrsjeCgZYpaFV1zYXazMw1Mm",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #4063",
+      "symbol": "BW",
+      "uri": "https://arweave.net/vYSXOnMB_oSBIHmripdIg_fXwRr272dWOhc9WgymCuU",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/u9v_EkSEpQTwrAhxxwRXdj0Cmu180JLjaXqXhBiE6xw?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Blue Gradient", "trait_type": "Background" },
+          { "value": "Jersey Green", "trait_type": "Body" },
+          { "value": "Gas Helmet White", "trait_type": "Skull" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3gN5QBHBDnpCwnTi884mNuiVPC5vnefUqaGrHjztyrPz",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #7771",
+      "symbol": "BW",
+      "uri": "https://arweave.net/YgftcMqFcZqEe6OnZzWodM0JyJ9GmufYK-6FB2tsE5M",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/-d__D02eVKBA5cFY1x2JP-9t4IxXVlYMYD5pVOnsJVs?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Blue Gradient", "trait_type": "Background" },
+          { "value": "Hood Jacket Tag", "trait_type": "Body" },
+          { "value": "Bone", "trait_type": "Skull" },
+          { "value": "Cigarette", "trait_type": "Mouth" },
+          { "value": "Coding", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3gnCEA4QJRZyb5XE32ZgryX8Zrb2nwE4Vx7EuULJMDmf",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #9058",
+      "symbol": "BW",
+      "uri": "https://arweave.net/Wt28zX1ruGnJPpjkY4diLQxT9yas6kaoq-Qj28-iZIM",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/owILCyWrnqM3IMCyl5PHMgEPxFYNQAGSY3h6cuNUZzc?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Light Purple", "trait_type": "Background" },
+          { "value": "Puffer Metallic Vest", "trait_type": "Body" },
+          { "value": "Rainbow", "trait_type": "Skull" },
+          { "value": "Cap Blue Side", "trait_type": "Head" },
+          { "value": "Aviator", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3gvS8UyYtgsd6P3LDhmNho7eTVCVe2rv9rS1mSGEX958",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #9076",
+      "symbol": "BW",
+      "uri": "https://arweave.net/iAQoVI8ajlaFzx_0_QmOvhl9LyBnBn2EJgvAUMmPQG8",
+      "description": "Boneworld NFT",
+      "collection": { "name": "Boneworld", "family": "Boneworld" },
+      "media": "https://www.arweave.net/s-0axzEXiS15A4-qL6qYYeThhbbqrhcE358Rn4lKdX0?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "trait_type": "Background", "value": "No Signal" },
+          { "trait_type": "Body", "value": "Shirt Mushrooms" },
+          { "trait_type": "Skull", "value": "Pilot Helmet Green" }
+        ],
+        "properties": {
+          "creators": [{ "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99", "share": 100 }]
+        }
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3nLaUsBwRgDHzGRA1ieNymCAH5dECfe9kL8rjx9D6Fyn",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #7677",
+      "symbol": "BW",
+      "uri": "https://arweave.net/wyAgsPywJtg3lqkqm00Oq760HxMU9X2xge9Aj6ZlZcU",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/b2ZBOgH40h3zsnHq1mGem7hr-DAd6DY1g7W_Wu0NowQ?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Dark Purple", "trait_type": "Background" },
+          { "value": "Jacket Green Metallic", "trait_type": "Body" },
+          { "value": "Victorian Black", "trait_type": "Skull" },
+          { "value": "Party Horn Blue", "trait_type": "Mouth" },
+          { "value": "Pixel", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3nWezH3EcSSpV7tCnyFHEY28hTgPGGVntwRv1KVN5fsu",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Solana Six Newsletter",
+      "symbol": "SIX",
+      "uri": "https://updg8.com/jsondata/33SNScjmYSHFsTRJ1Wd71KQNkhsqUp5he5q8NGfDozTU",
+      "description": "News you don't want to miss. Subscribe to our newsletter for weekly updates.",
+      "media": "https://updg8.com/imgdata/33SNScjmYSHFsTRJ1Wd71KQNkhsqUp5he5q8NGfDozTU",
+      "extras": {
+        "creators": [
+          {
+            "address": "5FZKBMjjUbU7x4cAhPnk2EmjiPtQ9RWUbVKhkY3jptpu",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "GCqBQtjJgjReW3TU9kMWKD5FGV7zVa8F9p6FQwN3fD9T",
+            "share": 0,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3nwxYfcpecDGZ8gEojCAzxREEc6bDG6Pqs1PpyCjttYx",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #3038",
+      "symbol": "BW",
+      "uri": "https://arweave.net/oGfhBpiiC9pfkqp1yF_QTX6FYXaIkLmabPe5ZV2-u1Q",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/OZF5KPFiue7uKU-qg0olBfaxdIJzCTaxV9FilusjQvQ?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Orange Gradient", "trait_type": "Background" },
+          { "value": "Puffer Metallic Blue", "trait_type": "Body" },
+          { "value": "Bone", "trait_type": "Skull" },
+          { "value": "Beanie Orange", "trait_type": "Head" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3o73WHajkvQ8tjEgpmPkhGitSMvbW1jQHzBhk5ZQy1EG",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #9936",
+      "symbol": "BW",
+      "uri": "https://arweave.net/ZM05MEPABqF-G7sHbfOpfk1Ow-6A69Pwm6qf0Xa1BxM",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/a-e2wlF-fUj91iuNS0NPtzDObjQJiIaV9ugkUj1HrPY?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Pink", "trait_type": "Background" },
+          { "value": "Shirt Mushrooms", "trait_type": "Body" },
+          { "value": "Guy Fawkes", "trait_type": "Skull" },
+          { "value": "Party Horn Blue", "trait_type": "Mouth" },
+          { "value": "Pixel", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3ox2EHB7PK8uDQdPnr7iGAg6KjhfjGtqBZe6DyAFKixy",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #8970",
+      "symbol": "BW",
+      "uri": "https://arweave.net/wVBrBMzkJonW-72ZekZIGcfbp8ipTVV9vn_E6zSSn1s",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/EcG62_xeER0tECfzLyltsjfoix-BPdbcamGKLpHp-z0?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Light Purple", "trait_type": "Background" },
+          { "value": "Purple Many Color", "trait_type": "Body" },
+          { "value": "Guy Fawkes", "trait_type": "Skull" },
+          { "value": "Cigarette", "trait_type": "Mouth" },
+          { "value": "Punk Red", "trait_type": "Head" },
+          { "value": "3D", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3oztnWk6MGgVWvEYuqaCvSHck6fLX9PfapKtLiZKefMq",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #1844",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/1844.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/1844.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Purple", "trait_type": "Background" },
+          { "value": "Skintone 6", "trait_type": "Skin Tone" },
+          { "value": "Black", "trait_type": "Hair Color" },
+          { "value": "Black", "trait_type": "Hair Color (Beard)" },
+          { "value": "Black", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Black", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Brown", "trait_type": "Eye Color" },
+          { "value": "Red Winter Lumberjack", "trait_type": "Clothes" },
+          { "value": "Face 6", "trait_type": "Face" },
+          { "value": "Guitar", "trait_type": "Equipment" },
+          { "value": "Ball Cap 2 Backwards Black", "trait_type": "Head" },
+          { "value": "Clean Shaven", "trait_type": "Beard" },
+          { "value": "Bushy", "trait_type": "Moustache" },
+          { "value": "Basic", "trait_type": "Eyebrows" },
+          { "value": "NONE", "trait_type": "Accessory" },
+          { "value": "Hip-hop Tattoo", "trait_type": "Tattoo" },
+          { "value": "15", "trait_type": "Talent" },
+          { "value": "6", "trait_type": "Drive" },
+          { "value": "9", "trait_type": "Athleticism" },
+          { "value": "Epic", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3pCAMhpuRW6Bu3WrVcwcmrg8536wdm4P9dQC69XY4DBe",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "JUP Third round Drop",
+      "symbol": "JUP",
+      "uri": "https://www.hi-hi.vip/json/555jup.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "9fqdPWz2ynV9aNtkYXtL49hbhzU4mB7wWzjvUVidrdep",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3pEEVhtJa7rUAyJ9rutiLM6Hn8qYs1gUwq5rQgddMVdx",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #8928",
+      "symbol": "BW",
+      "uri": "https://arweave.net/otosE8YMPqlDJAllkDUilkyvJZ_Z_lA_x4it8SG-4J8",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/GrcHBRrgySBODNmSTz3MvRTtB2tYdXQFQ0v2IhkrUgA?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Yellow Gradient", "trait_type": "Background" },
+          { "value": "Shirt Wallet", "trait_type": "Body" },
+          { "value": "Guy Fawkes", "trait_type": "Skull" },
+          { "value": "Covid Mask", "trait_type": "Mouth" },
+          { "value": "Beanie Dark Blue", "trait_type": "Head" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3rn6tf4dAJYNHK89athDRj8jCzXPjkyQXY4NZjoSYgaC",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #9406",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/9406.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/9406.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Gold", "trait_type": "Background" },
+          { "value": "Skintone 3", "trait_type": "Skin Tone" },
+          { "value": "Blonde", "trait_type": "Hair Color" },
+          { "value": "Brown", "trait_type": "Hair Color (Beard)" },
+          { "value": "Brown", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Brown", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Blue", "trait_type": "Eye Color" },
+          { "value": "Jet Pilot", "trait_type": "Clothes" },
+          { "value": "Face 5", "trait_type": "Face" },
+          { "value": "Golf Club", "trait_type": "Equipment" },
+          { "value": "Bald", "trait_type": "Head" },
+          { "value": "Clean Shaven", "trait_type": "Beard" },
+          { "value": "Vandyke", "trait_type": "Moustache" },
+          { "value": "Bushy", "trait_type": "Eyebrows" },
+          { "value": "Aviator (Gold)", "trait_type": "Accessory" },
+          { "value": "NONE", "trait_type": "Tattoo" },
+          { "value": "13", "trait_type": "Talent" },
+          { "value": "16", "trait_type": "Drive" },
+          { "value": "1", "trait_type": "Athleticism" },
+          { "value": "Gold", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3sEptG3dJsnhuxe3HozAAvuDXFiqmsRXEktdDtdze4Ly",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "SHI Mecha #1373",
+      "symbol": "SHI",
+      "uri": "https://arweave.net/idXpEwpfwy6oyiWgH-5xg26-zatsJjezYq-A3LWR89o",
+      "description": "8,888 generated NFTs from 4 hand drawn lions that give you exclusive access to SolanaFloor PRO.",
+      "media": "https://www.arweave.net/_MqTy342ZsnzDOx0ULvyRC5jB9DhCguFnK-pJmtVtiU?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5X8jX6WK61wfq3wDCT2iRacvJ2Do3kUT3X7SqowDYET6",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "ADW8bd8SNtQQmSCiaeXLZuZk4So28iysmTrAsLQxEeNM",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Orange", "trait_type": "Background" },
+          { "value": "White", "trait_type": "Fur" },
+          { "value": "Purple", "trait_type": "Teeth" },
+          { "value": "Gold", "trait_type": "Face" },
+          { "value": "Green", "trait_type": "Face Accessory" },
+          { "value": "Green", "trait_type": "Eyes" },
+          { "value": "Ice", "trait_type": "Eyebrows" },
+          { "value": "Blue", "trait_type": "Nose" },
+          { "value": "Orange", "trait_type": "Gem" },
+          { "value": "None", "trait_type": "Mouth Accessory" },
+          { "value": "None", "trait_type": "Eyes Accessory" },
+          { "value": "Bandana", "trait_type": "Hat" },
+          { "value": "Mecha", "trait_type": "Type" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3t5hQS43jemxsTbrNyfakF3QSeCutVCoFK9bN5EzFsAm",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #8527",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/8527.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/8527.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Purple", "trait_type": "Background" },
+          { "value": "Skintone 2", "trait_type": "Skin Tone" },
+          { "value": "Blonde", "trait_type": "Hair Color" },
+          { "value": "Brown", "trait_type": "Hair Color (Beard)" },
+          { "value": "Brown", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Brown", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Hazel", "trait_type": "Eye Color" },
+          { "value": "Black MMA Gi", "trait_type": "Clothes" },
+          { "value": "Face 4", "trait_type": "Face" },
+          { "value": "Microphone", "trait_type": "Equipment" },
+          { "value": "Ninja Hood", "trait_type": "Head" },
+          { "value": "Clean Shaven", "trait_type": "Beard" },
+          { "value": "Vandyke", "trait_type": "Moustache" },
+          { "value": "Edgy", "trait_type": "Eyebrows" },
+          { "value": "NONE", "trait_type": "Accessory" },
+          { "value": "Hip-hop Tattoo", "trait_type": "Tattoo" },
+          { "value": "14", "trait_type": "Talent" },
+          { "value": "6", "trait_type": "Drive" },
+          { "value": "10", "trait_type": "Athleticism" },
+          { "value": "Epic", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3ufLNjiKqnAcL6aMJLFjYkPLhGiFGsSKCJDDUVnKda7R",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Golden Shorts Bingo Cards",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafybeiajcptc4p5lwd3n75rkatsowtrybbswn72yxeqekscjetn2ko5vyi/36136.json",
+      "description": "Official Bingo Cards & Mint Pass of the Golden Shorts Rascal Club. #36136",
+      "media": "https://ipfs.io/ipfs/bafybeiarry26winniyzce7gzzlidpkgs2xbcwevv7jmq4ifnqvlygungm4/36136.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "A2b2NA5QADSUQkjVqTmz2HzsRyYECgKxcrT2x4owxHoZ",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "rascals_whitelist_bingo", "trait_type": "Background" },
+          { "value": "b1328104", "trait_type": "B" },
+          { "value": "8c$100", "trait_type": "I" },
+          { "value": "7$100", "trait_type": "N" },
+          { "value": "1$100", "trait_type": "G" },
+          { "value": "7a$100", "trait_type": "O" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "41C6eizTqD1fMpBHXNZsRF3KUk2Z6AVqszSmagwNJXWP",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #2195",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/2194.json",
+      "description": "A collection of 10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/2194-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Heaven", "trait_type": "background" },
+          { "value": "Solar Spiral", "trait_type": "skin" },
+          { "value": "Earring", "trait_type": "specialty" },
+          { "value": "Godchella Hoodie", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Mushroom Head", "trait_type": "head" },
+          { "value": "None", "trait_type": "eyes" },
+          { "value": "Goatee", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "42a1F7e8vpDjaHhMvyUGvgoX2wHZj37n94D2UFjbXzwr",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #4132",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/4132.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/4132.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Green", "trait_type": "Background" },
+          { "value": "Skintone 2", "trait_type": "Skin Tone" },
+          { "value": "Brown", "trait_type": "Hair Color" },
+          { "value": "Brown", "trait_type": "Hair Color (Beard)" },
+          { "value": "Brown", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Brown", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Hazel", "trait_type": "Eye Color" },
+          { "value": "Black Collared Shirt", "trait_type": "Clothes" },
+          { "value": "Face 1", "trait_type": "Face" },
+          { "value": "Basketball", "trait_type": "Equipment" },
+          { "value": "Football Helmet with Mask", "trait_type": "Head" },
+          { "value": "Clean Shaven", "trait_type": "Beard" },
+          { "value": "Doakes", "trait_type": "Moustache" },
+          { "value": "Slim", "trait_type": "Eyebrows" },
+          { "value": "NONE", "trait_type": "Accessory" },
+          { "value": "NONE", "trait_type": "Tattoo" },
+          { "value": "4", "trait_type": "Talent" },
+          { "value": "13", "trait_type": "Drive" },
+          { "value": "13", "trait_type": "Athleticism" },
+          { "value": "Epic", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "45ShuMLHisvHwSQaN49w7fwT1m8wCCDrNvr319QHuHW3",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #8139",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/8138.json",
+      "description": "10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/8138-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Olive Green", "trait_type": "background" },
+          { "value": "Marble", "trait_type": "skin" },
+          { "value": "Devil Wings", "trait_type": "specialty" },
+          { "value": "DeGod Cutoff", "trait_type": "clothes" },
+          { "value": "Pimp Chain", "trait_type": "neck" },
+          { "value": "Headband", "trait_type": "head" },
+          { "value": "Snake Eyes", "trait_type": "eyes" },
+          { "value": "Hipster Beard", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "45nRULTheafEsD2SsJi9FsTunWFvSQedhbXcsN7YwDhu",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #2363",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/2363.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/2363.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Black", "trait_type": "Background" },
+          { "value": "Skintone 6", "trait_type": "Skin Tone" },
+          { "value": "Black", "trait_type": "Hair Color" },
+          { "value": "Black", "trait_type": "Hair Color (Beard)" },
+          { "value": "Black", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Black", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Brown", "trait_type": "Eye Color" },
+          { "value": "Rapper Chains", "trait_type": "Clothes" },
+          { "value": "Face 2", "trait_type": "Face" },
+          { "value": "Rose", "trait_type": "Equipment" },
+          { "value": "Pilot Cap", "trait_type": "Head" },
+          { "value": "Diaz", "trait_type": "Beard" },
+          { "value": "Vandyke", "trait_type": "Moustache" },
+          { "value": "Average", "trait_type": "Eyebrows" },
+          { "value": "Clear Goggles", "trait_type": "Accessory" },
+          { "value": "Yakuza Tattoo", "trait_type": "Tattoo" },
+          { "value": "7", "trait_type": "Talent" },
+          { "value": "23", "trait_type": "Drive" },
+          { "value": "0", "trait_type": "Athleticism" },
+          { "value": "Legendary", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "46GVQqJyRyF6uFrxvWRFLoZv4XH8WGhDqK7L4wDC8ftu",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #4314",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/4313.json",
+      "description": "10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/4313-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Teal", "trait_type": "background" },
+          { "value": "Ape", "trait_type": "skin" },
+          { "value": "Archer", "trait_type": "specialty" },
+          { "value": "Top God Jumper", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Mad Scientist", "trait_type": "head" },
+          { "value": "Steampunk Goggles", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4C86AURTCAyrjLuQ9SAXWL7YkxhxBXj3bjLoSntxK6sr",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Setting up gasless cNFT minting",
+      "symbol": "BF",
+      "uri": "https://cdn.shyft.to/brainfood/ep8/how-to-setup-gasless-cNFT-minting.json",
+      "description": "In this episode, we will explore how to set up gasless cNFT minting on Solana using Shyft APIs.",
+      "media": "https://cdn.shyft.to/brainfood/ep8/how-to-setup-gasless-cNFT-minting.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "2iJJNyPvCXsQZaYkxU6gWKF7umhg6BSogkRntJN9xRYQ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          {
+            "value": "https://blogs.shyft.to/how-to-setup-gasless-cnft-minting-on-solana-8a72578ee2bb",
+            "trait_type": "blog_url"
+          },
+          {
+            "value": "https://github.com/Shyft-to/community-projects/tree/main/cnft-offer-breakpoint",
+            "trait_type": "github_url"
+          },
+          { "value": "EP 8", "trait_type": "episode" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4HDFY5x2cxNY4HbWDe3ExBej2YDYMeJNvKDBdFhi7AbD",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "MVP #4527",
+      "symbol": "MVP",
+      "uri": "https://assets.thirdtimegames.com/mvp/4527.json",
+      "description": "A new generation of leaders with higher standards of excellence has arrived. The MVP Society changes the way you look at your PFP. Not just the art, but what the art stands for.",
+      "media": "https://assets.thirdtimegames.com/mvp/4527.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3VtF6hmmFDysKmk9R5qgaNpD1bJX6ag1rVdE2JKR9CTh",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Gold", "trait_type": "Background" },
+          { "value": "Skintone 6", "trait_type": "Skin Tone" },
+          { "value": "Brown", "trait_type": "Hair Color" },
+          { "value": "Brown", "trait_type": "Hair Color (Beard)" },
+          { "value": "Black", "trait_type": "Hair Color (Moustache)" },
+          { "value": "Black", "trait_type": "Hair Color (Eyebrow)" },
+          { "value": "Brown", "trait_type": "Eye Color" },
+          { "value": "Hawaiian Shirt", "trait_type": "Clothes" },
+          { "value": "Face 1", "trait_type": "Face" },
+          { "value": "Red Boxing Gloves", "trait_type": "Equipment" },
+          { "value": "Ninja Hood White", "trait_type": "Head" },
+          { "value": "Clean Shaven", "trait_type": "Beard" },
+          { "value": "Clean Shaven", "trait_type": "Moustache" },
+          { "value": "Basic", "trait_type": "Eyebrows" },
+          { "value": "NONE", "trait_type": "Accessory" },
+          { "value": "NONE", "trait_type": "Tattoo" },
+          { "value": "17", "trait_type": "Talent" },
+          { "value": "3", "trait_type": "Drive" },
+          { "value": "10", "trait_type": "Athleticism" },
+          { "value": "Gold", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "4JeEhLXFEP3BNgdbqKxtSaXmyjwk5DHGcnWpTTKMF7Et",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "y00t #9388",
+      "symbol": "Y00T",
+      "uri": "https://metadata.y00ts.com/y/9387.json",
+      "description": "y00ts is a generative art project of 15,000 NFTs. y00topia is a curated community of builders and creators. Each y00t was designed by De Labs in Los Angeles, CA.",
+      "media": "https://metadata.y00ts.com/y/9387.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "yootn8Kf22CQczC732psp7qEqxwPGSDQCFZHkzoXp25",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Antique White", "trait_type": "Background" },
+          { "value": "Stone", "trait_type": "Fur" },
+          { "value": "Chill", "trait_type": "Face" },
+          { "value": "Bear Coat", "trait_type": "Clothes" },
+          { "value": "Champ Hat", "trait_type": "Head" },
+          { "value": "Cali Sunset", "trait_type": "Eyewear" },
+          { "value": "None", "trait_type": "1/1" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4Jvcvc8Gbn2iRwA2EsWywwWqVvBpPsNDVnEaxPJYxHZd",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Shrowman",
+      "symbol": "SHMAS",
+      "uri": "https://updg8.com/jsondata/4Jvcvc8Gbn2iRwA2EsWywwWqVvBpPsNDVnEaxPJYxHZd",
+      "description": "On the sixth day of Shrempmas, my true love sent to me a sexy snowman. \n\n\"Some people are worth melting for..\"",
+      "media": "https://storage.googleapis.com/updg8/mainnet/4Jvcvc8Gbn2iRwA2EsWywwWqVvBpPsNDVnEaxPJYxHZd/image.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "H26wr3UyVTtz57zwkjJYyd36nk3b5o13NL9L2LaELSZB",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "J7M8nAFwabEjNX3EEQzLNikEudYa8ssvs4M21EFw1Lzt",
+            "share": 0,
+            "verified": true
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4RFmHcePoTteUZF5KjVuz4mUKD4bFaWydN3oSBj6n5Td",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "The MVP Society Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "GqagXhTUMoxrWbu7pAAMZiYHBoSoJN3h5AUzQuvuMN3b",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "MVP Society", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4TENzvZ3dRZabDLJDgFu7V9VvYVEUVkmJ2tA2Cu1x8vV",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "y00t #13666",
+      "symbol": "Y00T",
+      "uri": "https://metadata.y00ts.com/y/13665.json",
+      "description": "y00ts is a generative art project of 15,000 NFTs. y00topia is a curated community of builders and creators. Each y00t was designed by De Labs in Los Angeles, CA.",
+      "media": "https://metadata.y00ts.com/y/13665.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "yootn8Kf22CQczC732psp7qEqxwPGSDQCFZHkzoXp25",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Powder Puff", "trait_type": "Background" },
+          { "value": "Sand Dollar", "trait_type": "Fur" },
+          { "value": "Blasé", "trait_type": "Face" },
+          { "value": "The Hoodie", "trait_type": "Clothes" },
+          { "value": "Cali Sunset", "trait_type": "Eyewear" },
+          { "value": "24k Gold Shoey Guzzler", "trait_type": "Head" },
+          { "value": "None", "trait_type": "1/1" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4dD9NPUaXSzZKhtGftvGzs2CrY31EXZhZE1Byf3nhQU7",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4dim9Q7TPcozJ4wXBgVtB3NP8p23ncL9giWFpXiXGnL7",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "NWM #798",
+      "symbol": "NWM",
+      "uri": "https://arweave.net/KcFxmcWN6lR9C6FtIvlQKRENcxaWGOnUPGGGyxIEv5I",
+      "description": "New World Monkes - An Art Project.  We bring your Monke to life through beautiful art.",
+      "media": "https://www.arweave.net/oorYkZOabsP2vs2kkC8XPvUoKtjodKUoRlqsjpkpkyI?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "2KviRhp6SQ1nCZR2fhUTydQfnvSRKNbJWL2rkyetHFRZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "FyHFj3iYu9TZ7oszxSfMy8kHnfEvM369dtFRGFjwPAjy",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Alien", "trait_type": "Type" },
+          { "value": "Green Smoking", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "Cigarette", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Eyes" },
+          { "value": "Orange Cap", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "4epYJ9v1axUYyA17tk4UZbbDEjAc3wUcHAiXM72ks24f",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #2674",
+      "symbol": "BW",
+      "uri": "https://arweave.net/F9aGKN3TP1MI-OiN9yob9adMv1Jrfcz58L5tY5D92xY",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/o-CN-leFHxRl7cCbBIvzbd4b0ZaXzhcVzDZUsWZSPb8?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Broken TV", "trait_type": "Background" },
+          { "value": "Basketball Jersey Red", "trait_type": "Body" },
+          { "value": "Bone", "trait_type": "Skull" },
+          { "value": "Party Horn Blue", "trait_type": "Mouth" },
+          { "value": "Gold Top", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "4i9Pzq1PSVx7XtbPcXmLCByWdxg8vXGWre5WMUFFSgNT",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Jack's Lost Sol",
+      "symbol": "NNPOSTER",
+      "uri": "https://arweave.net/MO0ub2gzIeqnVJhvX8Jknstk-3Bqv70MOSwPJQViAR4",
+      "description": "Lost Sols Club Loves UnlockDeFi",
+      "media": "https://arweave.net/qnFpU6LcQsH6wzpop5SCCAlH76wSpBRmj7b97VhqT-w?ext=jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "Ef896VQS1tfMACgL5Ce1TR7JZhehkrtowCyZZyYv7SWn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Wall Poster", "trait_type": "Item" },
+          { "value": "Airdrop", "trait_type": "Origin" },
+          { "value": "Lost Sols Club", "trait_type": "Poster" },
+          { "value": "YanaBooBaddie", "trait_type": "Artist" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "4jb4UGG51rJErAvVg3DKhmpTmwZLgMSBmcFHvf3KBVhR",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "NWM #3945",
+      "symbol": "NWM",
+      "uri": "https://arweave.net/ZKPnHS4PtUh4JFVCunawM2j1thH7Aih2F2fPfBV7Hbo",
+      "description": "New World Monkes - An Art Project.  We bring your Monke to life through beautiful art.",
+      "media": "https://www.arweave.net/jssOohvZx0Xc75jY9v4SBtYzS0oIXibC-9r4xL9aXSM?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "2KviRhp6SQ1nCZR2fhUTydQfnvSRKNbJWL2rkyetHFRZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "FyHFj3iYu9TZ7oszxSfMy8kHnfEvM369dtFRGFjwPAjy",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Brown", "trait_type": "Type" },
+          { "value": "Green Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "Green Glasses", "trait_type": "Eyes" },
+          { "value": "Blue Cap", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "4utP3M3Z1atHEKndnmyP34fD74S2mZhHLo1zu2nqJyNs",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Stellar Ventures #00002 (svc.vc)",
+      "symbol": "STELLAR2",
+      "uri": "https://ipfs.io/ipfs/bafkreigysyrewpvuyu7n25xgrcb4tcrbz7roj5mrw7ftueal45hke332pq",
+      "description": "Things are only impossible until they are not.",
+      "media": "https://ipfs.io/ipfs/bafybeighejjy6e6bl5voukjv4vxibplfzq2uagec6ewk2p2f4dpdfu6tte",
+      "extras": {
+        "creators": [
+          {
+            "address": "4ZCiGakZJy5aJsLpMBNBNwyrmNCCSCzukzhaPzzd4d7v",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4vD2scSnh6AroVo3g2366P6gSx3JBhob3nuT9VWRrWHT",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "SOLARIANS LOVE NEONEXUS",
+      "symbol": "NNPOSTER",
+      "uri": "https://arweave.net/k9u8RryOx4bDZjxPR7dMH07VU5OM8mXpXRAUysM3Yj4",
+      "description": "Wall Poster - SOLARIANS LOVE NEONEXUS",
+      "media": "https://arweave.net/E6Hu5iVq_aHhk1um8Imz5t9l-I4JniAjZ8LcfZZsn94?ext=gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "Ef896VQS1tfMACgL5Ce1TR7JZhehkrtowCyZZyYv7SWn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Governor's Ball", "trait_type": "Event" },
+          { "value": "NEONEXUS", "trait_type": "City" },
+          { "value": "Poster", "trait_type": "Item" },
+          { "value": "Airdrop", "trait_type": "Origin" },
+          { "value": "Solarians", "trait_type": "Poster" },
+          { "value": "Alex Insouratselou", "trait_type": "Artist" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "4wXxXpodysA1eYitspCvsfUuUfCHVBW37yUzDh2QE8TD",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DePepe #72",
+      "symbol": "",
+      "uri": "https://arweave.net/AfqYjo3DWGQuRlK_4wWzJb0PkVFTUsAJzJAGvH6YkNA",
+      "description": "Definitely not Meth\nOriginal owner: Frek",
+      "media": "https://arweave.net/_A3SyDtWVz8gCtsfNOIZhPoJAqBNzzksXptMpnocC0Y?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "efwwem1dh5cGgPox6vMshAx7feFpw5wdST8cTcRghpt",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "1", "trait_type": "Generation" },
+          { "value": "DePepe", "trait_type": "DeGender" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "594FERtqzcr1kEWhMoaBx7aR7RUAVecoMjcZ7u9417Qw",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boneworld #4015",
+      "symbol": "BW",
+      "uri": "https://arweave.net/NrYsTSSOy5ZHM9C6wGm00CzYtiFoaR6ZdtnK-xnzNG0",
+      "description": "Boneworld NFT",
+      "media": "https://www.arweave.net/U95ModLiiulir3yyW6rWCZ1JRLfmsOEG-DxKbfRBD1Y?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9bjHVq5bKjF1eAZMTh8aAVPakm2NQCt8zaV4AX88HpZZ",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7TKTuN4bGAV3LuRqA7rtC8QHVA34FAKCb8RDKdvaau99",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Dark Blue", "trait_type": "Background" },
+          { "value": "Jersey Green", "trait_type": "Body" },
+          { "value": "Noise", "trait_type": "Skull" },
+          { "value": "Party Horn Green", "trait_type": "Mouth" },
+          { "value": "Pink Visor", "trait_type": "Head" },
+          { "value": "Orange", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "5Co2N7mzNJbER2reQ6PRthD1TFuEsekoCHZKBTFx2udJ",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "DeGod #6053",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/6052.json",
+      "description": "10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/6052-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Red", "trait_type": "background" },
+          { "value": "Leopard", "trait_type": "skin" },
+          { "value": "None", "trait_type": "specialty" },
+          { "value": "DeGod Cutoff", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Pharaohs Headdress", "trait_type": "head" },
+          { "value": "None", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "5GHZsUYNVfie8G4crtxvF6SecjfpAGtxUkVR4sfZ93Ge",
+      "owner": "4hqqNuijQSE6VD4EkJ8pphsfaAXXngpqZaXMfKAnZ8Es",
+      "name": "Boscage #6492",
+      "symbol": "",
+      "uri": "https://rentry.co/vt6eqe5p/raw",
+      "media": null,
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": null
+    }
+  ],
+  "pagination": { "total": 377, "limit": 100, "offset": 0, "hasMore": true, "nextOffset": 100 }
+}

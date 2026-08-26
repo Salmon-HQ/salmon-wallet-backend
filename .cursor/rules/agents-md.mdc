@@ -1,0 +1,6 @@
+---
+description: Canonical repo rules live in AGENTS.md
+alwaysApply: true
+---
+
+The canonical rule source for this repo is `AGENTS.md` (root, plus the nested one closest to each folder — the closest wins). Read it before making changes. It covers layer placement, public API contracts, test hermeticity/naming (CI-enforced), secrets policy, and the testing policy in `docs/TESTING.md`.

@@ -1,0 +1,32 @@
+{
+  "name": "@4m/middleware",
+  "version": "0.0.5",
+  "description": "Useful cross application middleware ",
+  "main": "index.js",
+  "engines": {
+    "node": ">=14.17.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "linter": "eslint ./ --fix",
+    "publish:patch": "npm version patch && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salmonw/4m-modules.git#middleware"
+  },
+  "keywords": [
+    "middleware"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/salmonw/4m-modules/issues"
+  },
+  "homepage": "https://github.com/salmonw/4m-modules/tree/middleware#readme",
+  "dependencies": {
+    "axios": "^0.23.0",
+    "qs": "^6.10.1",
+    "ua-parser-js": "^1.0.2"
+  }
+}

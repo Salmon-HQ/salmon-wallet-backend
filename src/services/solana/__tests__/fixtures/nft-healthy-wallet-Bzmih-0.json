@@ -1,0 +1,2676 @@
+{
+  "data": [
+    {
+      "mint": "13eYJzrkpDzTWPfVRh7mmioHjievRByPEGVycDMy3e1H",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "5YSTAj4xCu9dgyfs9RdVoCHmp34KEcifWvjFFMzX9DZ",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "83PdDhHdRhn6jNYDqYUxkRzmtv9mK8PQDDJjKQExgKh",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Citizen Card #5216",
+      "symbol": "PRTLCC",
+      "uri": "https://ipfs.io/ipfs/QmYWp5pR44pYxWejThEyuyiMakXTszjFY8EsWNmvNHgm5o",
+      "description": "Portals 'Genesis' Citizen Card",
+      "media": "https://ipfs.io/ipfs/Qmd31K7on1bcfut9Dd7oabWkmZ4DXod4MAsQkoi7mKM72V",
+      "extras": {
+        "creators": [
+          {
+            "address": "4dtVSCMTURF2Kv5QKg9nrJpjN4v8rjGZeJFoQjVW2u1T",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CsSSNshZ3dxazCFdXxwN7899GW5UyyBz6gMAKC8BdT8z",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Genesis", "trait_type": "Card Type" },
+          { "value": "5216", "trait_type": "Card Number" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "86LtYLzANJR8JH1fLzvkk6iFaZAKoJn65GyfackvZo1",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "BfBfjUN8U8ZR8hybRFtZ2ediGbiZu4moyAn1Ydtx21o",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "BhEc7ULapZS2F7stQnxk2eigErfYECdN9r3zSF5iYy4",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Citizen Card #5381",
+      "symbol": "PRTLCC",
+      "uri": "https://ipfs.io/ipfs/QmSxq4vpJ984zXgQv475maReWMYa8xC5vYQE3P5CJtLRP3",
+      "description": "Portals 'Genesis' Citizen Card",
+      "media": "https://ipfs.io/ipfs/Qmd31K7on1bcfut9Dd7oabWkmZ4DXod4MAsQkoi7mKM72V",
+      "extras": {
+        "creators": [
+          {
+            "address": "4dtVSCMTURF2Kv5QKg9nrJpjN4v8rjGZeJFoQjVW2u1T",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CsSSNshZ3dxazCFdXxwN7899GW5UyyBz6gMAKC8BdT8z",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Genesis", "trait_type": "Card Type" },
+          { "value": "5381", "trait_type": "Card Number" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "Ffx4HAg29QyZPVdCujpUdPbHMEV6ZEVpZeUREGdsf2H",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "GoWsMaZCK6NncxWEqWZuWpFX1sgpd9pQu71mMLEcLKG",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Clay #4975",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/clay/4975",
+      "description": "Soft, squishy, and moldable!",
+      "media": "https://storage.claynosaurz.com/clay/images/yellow",
+      "extras": {
+        "creators": [
+          {
+            "address": "DHJ5GZfmG6iJQBzP8ZnYJ8YXwAE96UMbLmLuTc6Mvbtj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Yellow", "trait_type": "Color" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "KJ7JKQYL55vcYcvJcH7Vg5RyviDFmJjrjxJ9tsgRmwt",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "CLAYNO SPACE BANGER RSVP",
+      "symbol": "",
+      "uri": "https://updg8.com/jsondata/Ha5AyGVxEwCddwFzsiaBJ291VqGfhh7trEpGCqFcCM8V",
+      "description": "Hey COOL KIDS its your BOY @NOTASHENONE -- come on over to our SICK BANGER we're throwing TOMORROW at 5PM EST on the BIRD APP 😎🆒\n\nits gonna be LIT and theres gonna be REAL GIRLS there -- REAL!! 👧\n\ni hearD TOLY is gonna show up and release SOLANA TWO 👏✌️\n\nmaybe even FRANK from DEGODS will show up and release CLAYNOGODS 2.0 in PARIS FRANCE 🗼\n\nwere going to the MOON with this BANGER SPACE 🌕🚀\n\nsend this to 10 friends or youll get DRAINED!! 😱😫\n\nhttps://twitter.com/i/spaces/1OyKAVVyrRbGb\nhttps://twitter.com/i/spaces/1OyKAVVyrRbGb\nhttps://twitter.com/i/spaces/1OyKAVVyrRbGb\nhttps://twitter.com/i/spaces/1OyKAVVyrRbGb",
+      "media": "https://updg8.com/imgdata/Ha5AyGVxEwCddwFzsiaBJ291VqGfhh7trEpGCqFcCM8V",
+      "extras": {
+        "creators": [
+          {
+            "address": "GTCRwmgUKe1MQEVaY98musc9aQQ9ZHvyMgq796ZnAAot",
+            "share": 100,
+            "verified": true
+          },
+          { "address": "JLH8wMdRcgcshxBxQCowqMCPvxd92FFHAgtrJNbNQ6x", "share": 0, "verified": true }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "Laujn3wcTmgZbYmBw6zxcNUQnKRH2poF7YCwsb9wRwy",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "LgfQKTQnSACyZ2hWqqGwkAZBahL4TM4TyytaJLWbVCv",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "Mdn63whHqiY2UWLG8HH4a6m9ksjNU4GfbkDLR2cr18e",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bear #2931",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/AQMkty-CJBjzRYhCAN1L0YCAakl70a_xoMnvapBDPIE",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/qW9vqkbQm77koYLpOYMZa81dWWPtZTJ_LwwrADujQAk",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Blue", "trait_type": "Background" },
+          { "value": "Grizzly", "trait_type": "Fur" },
+          { "value": "Clean Smile", "trait_type": "Mouth" },
+          { "value": "Defeated", "trait_type": "Eyes" },
+          { "value": "Scarf", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "MrUyc43vahRjrypqfG33JhWjATq7S89vsKfGMsyW5yQ",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "QisCiSJ4TsKpw3mKPqfzW5muBBQmZzPvyWMkSM3Scvv",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "R6UV64nDZ48YLBuvfFsyhDVuq2vedBomDNzgUXPBGwe",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Clay #27361",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/clay/27361",
+      "description": "Soft, squishy, and moldable!",
+      "media": "https://storage.claynosaurz.com/clay/images/black",
+      "extras": {
+        "creators": [
+          {
+            "address": "DHJ5GZfmG6iJQBzP8ZnYJ8YXwAE96UMbLmLuTc6Mvbtj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Black", "trait_type": "Color" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "RFZ2NBZhbJ5xGHX4GXcbDyR6KE54AZe6ANq6gL1JhXt",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "SFsME721nkxoijsukmARpW1GyiyHNSzpR242et1JNjv",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "UG3SPue4EMgN7u3T9p7XvWwZqP3ftNDGCnnZ55Ro5a1",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Citizen Card #2725",
+      "symbol": "PRTLCC",
+      "uri": "https://ipfs.io/ipfs/QmaKrJKBM7xZSyx4PcjRobqyqcAp4ARr7Awzv2G8QtLP23",
+      "description": "Portals 'Genesis' Citizen Card",
+      "media": "https://ipfs.io/ipfs/Qmd31K7on1bcfut9Dd7oabWkmZ4DXod4MAsQkoi7mKM72V",
+      "extras": {
+        "creators": [
+          {
+            "address": "4dtVSCMTURF2Kv5QKg9nrJpjN4v8rjGZeJFoQjVW2u1T",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CsSSNshZ3dxazCFdXxwN7899GW5UyyBz6gMAKC8BdT8z",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Genesis", "trait_type": "Card Type" },
+          { "value": "2725", "trait_type": "Card Number" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "UiX3njKLGhFcV1vxZEwqzER8FQyGvUCS15j4dWpyhxr",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Bybit X Solana AirDrop",
+      "symbol": "",
+      "uri": "https://4673647376473874828.site/fyiefnouen.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "g1dGbpS3kgsWydE6ZVajbk2bkxBZSbwRbQ4nwN4kqMK",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "VNh3weCHjCY5r2Zio6bM8BCWKhs1YfF3HqjYa65Lnbi",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "WAZ8rg57cLaVY4kg8wcfuiT2qTkuFQM8ZvoQiT9Pw84",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Claynosaurz #7750",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/claynosaurz/7750",
+      "description": "Claynosaurz is a collection of 10,000 3D animated NFTs. Helmed by a team of leading animation and game industry artists, Claynosaurz aims to rewrite the narrative on how successful IP can be built out of web3. With massive potential for scaling, the Genesis collection is an all access pass to our Universe.",
+      "media": "https://storage.claynosaurz.com/claynosaurz/animated/7750",
+      "extras": {
+        "creators": [
+          {
+            "address": "AoebZtN5iKpVyUBc82aouWhugVknLzjUmEEUezxviYNo",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Mender", "trait_type": "Class" },
+          { "value": "First", "trait_type": "Edition" },
+          { "value": "Stego", "trait_type": "Species" },
+          { "value": "Amazonia", "trait_type": "Skin" },
+          { "value": "Spring", "trait_type": "Color" },
+          { "value": "Trot", "trait_type": "Motion" },
+          { "value": "Scared", "trait_type": "Mood" },
+          { "value": "Sky", "trait_type": "Background" },
+          { "value": "1", "trait_type": "Layer Count" },
+          { "value": "Off", "trait_type": "Back" },
+          { "value": "Off", "trait_type": "Belly" },
+          { "value": "Off", "trait_type": "Pattern" },
+          { "value": "On", "trait_type": "Details" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "XPKuGwXJgxQiDmQHCbKyimtqhv4VE1eR1vGNdVeD8ky",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Galactic Gecko #3507",
+      "symbol": "GGSG",
+      "uri": "https://arweave.net/X-SldvuYOYYyEdR-1UFK_LFJbu09c7-aMeXs9NYlanE",
+      "description": "As a member of the Alura racing faction, you stand on the shoulders of the giants of the Interstellar Relay. But you can live up to the geckos who came before you: or at least, you'll try.",
+      "media": "https://www.arweave.net/0NKDFwUrpXGh-fcRQa20HvOw_u098U52_s4nbBqUTR8?ext=jpeg",
+      "extras": {
+        "creators": [
+          {
+            "address": "FEg3mmpcrcRsVTuc2n3oghHpRvAtEJJau4KWjaPpLKcA",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "N5QXCmRjQaBLR5RjMeTziSaH2ZR852tAzMSmVjptJ3M",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Alura", "trait_type": "Faction", "trait_count": 2549 },
+          { "value": "Brick", "trait_type": "Body", "trait_count": 1298 },
+          { "value": "Toothy", "trait_type": "Mouth", "trait_count": 843 },
+          { "value": "Princely Helm", "trait_type": "Helmet", "trait_count": 177 },
+          { "value": "Paranoid Eyes", "trait_type": "Eyes", "trait_count": 264 },
+          { "value": 5, "max_value": 7, "trait_type": "Attribute Count", "trait_count": 2027 }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "YoeX9ZQgESjbbgsVb3pexcXYpUD9YAiHPrba2sa58es",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Clay #15028",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/clay/15028",
+      "description": "Soft, squishy, and moldable!",
+      "media": "https://storage.claynosaurz.com/clay/images/red",
+      "extras": {
+        "creators": [
+          {
+            "address": "DHJ5GZfmG6iJQBzP8ZnYJ8YXwAE96UMbLmLuTc6Mvbtj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Red", "trait_type": "Color" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "ZmD9feJjcvumqCh2cEMGfLvpzvrUnnZhqaXPwCrTHVk",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "g32pjVu6WQ21rA1nRHezRKVwNRKyYuCxYh4o9abXD27",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Snozzberries",
+      "symbol": "TANNY",
+      "uri": "https://updg8.storage.googleapis.com/2bd74127-6baf-4ce6-9dfc-3e8c78bb3117",
+      "description": "Special thanks to the Portals community. Just sending you guys some love, always appreciate the support! - Resonance Team",
+      "media": "https://updg8.storage.googleapis.com/a301ccec-8fd0-4b5d-8fc1-450cdf7fb34f",
+      "extras": {
+        "creators": [
+          {
+            "address": "7jwnhGaEZFasq1zbLLdiEZruAmXzAaNpHr32jeRLNRsZ",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "CxsWU8rK8jSU4PkUUBEfsT1Xy5ZttELTz5PDw9rQ5Rbr",
+            "share": 0,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Snozzberries", "trait_type": "Taste:" },
+          { "value": "tanny.sol", "trait_type": "Creatoor" },
+          { "value": "Portals Holders", "trait_type": "Eligible Wallets" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "hvid26dNhNZAzBdSVZtNEuPrsh8VkbLgoxLcqJMcZ4s",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "kD2GbS5wtXu3e3NJeSa9NS5RWAPttGFwwMvdPW9dcE3",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bear #1904",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/cQUBBhUTBmnugiDG4B3pw-uKxYtrRjZdT3O4YNPZ02s",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/bXj3o-6x5dLfN4Xl7DgUASHyZMAifQ7fKQkONyt-8mU",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Purple", "trait_type": "Background" },
+          { "value": "Grizzly", "trait_type": "Fur" },
+          { "value": "Gaiter", "trait_type": "Mouth" },
+          { "value": "Sarcastic", "trait_type": "Eyes" },
+          { "value": "Insulated Jacket", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "kv9o6i3d61YBnYKfon3pEbiQ9tRNAactsBHD7FiFNgt",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "mGWUUrmoTJxQMbPHGAKCFxWo5B5ZtvQZucwiWnt2NaN",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": null,
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "mfshmKU57H83bjfQAnyeyVtMuugFEtGGopSxR1qwsb5",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "pYxPUwBd5QfcMwjuvrSbCnwnHsngBBLnVzHq3D4jhEj",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bear #4485",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/4Cwg5UqibaYMXjwLVhdzEpq-xw-3h05VAvHge7fiPAM",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/pR2NmKVjYjkW2eDNwzpuNadLwtNKTByA2t7DQUOg4_s",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Purple", "trait_type": "Background" },
+          { "value": "Green", "trait_type": "Fur" },
+          { "value": "Clean Smile", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Visor", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "r7cmwcffF9QxCqUEA5NX8V1N3Mp5FELm9ABmf25U5x3",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "rE3rCpBWCRvnR4pRR29qV334ScubK8RHf4hjSb11z29",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "sH9ezsbAm5LyhbGaD5QWG4RDYNUS7Zu3WGyKKx8ZM77",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "un3BHQgaSXwkKnfL67zBwFaKkEege7GN1GEWcJ9YYtg",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "wEzoAiNU7kbAN4w517WDZ38W32UHzGEGNhn2vJFYRUB",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Tinpot Radio",
+      "symbol": "TPR",
+      "uri": "https://gist.githubusercontent.com/jrsfiend/596ba9e4920658eea9c1b77fc78c1155/raw/9eaa1e1bec8c01c7207e1300ab90e762b74d5165/gistfile1.txt",
+      "description": "<3 from staccoverflow.",
+      "media": "https://i.imgur.com/onCvO43.png",
+      "extras": {
+        "attributes": [
+          { "value": "staccoverflow", "trait_type": "follow" },
+          { "value": "tweeter", "trait_type": "on" },
+          { "value": "profit", "trait_type": "for fun and" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "xGYjcKHCbdudHXJm7812zTdwLKBShAcg5sHG9r6tQFk",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Galactic Gecko #4665",
+      "symbol": "GGSG",
+      "uri": "https://arweave.net/UpOC91xTp-zRFElDIYlFJQK_CrM92O-XaLG4hl3xuOY",
+      "description": "As a member of the Alura racing faction, you stand on the shoulders of the giants of the Interstellar Relay. But you can live up to the geckos who came before you: or at least, you'll try.",
+      "media": "https://www.arweave.net/KfkHjDqdO6-KxbvyFafC0itebUltFGo9i8Xph92tm0A?ext=jpeg",
+      "extras": {
+        "creators": [
+          {
+            "address": "FEg3mmpcrcRsVTuc2n3oghHpRvAtEJJau4KWjaPpLKcA",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "N5QXCmRjQaBLR5RjMeTziSaH2ZR852tAzMSmVjptJ3M",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Alura", "trait_type": "Faction", "trait_count": 2549 },
+          { "value": "Orange", "trait_type": "Body", "trait_count": 1281 },
+          { "value": "Aggressive", "trait_type": "Mouth", "trait_count": 312 },
+          { "value": "Lunar Replica", "trait_type": "Helmet", "trait_count": 266 },
+          { "value": "Viral Implant", "trait_type": "Ears", "trait_count": 243 },
+          { "value": "Orbital Retinas", "trait_type": "Eyes", "trait_count": 298 },
+          { "value": 6, "max_value": 7, "trait_type": "Attribute Count", "trait_count": 3040 }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "22c98jJJJEQ7jaMuJx9XKPP6wcn3aB75ALCaLkARnBuH",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "24RdmkvDqhs1gi17Y4ehaqRtaFT6ZaaXtdbicE2tA8DG",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "25LS1utKuypSxBvjLpz1KQATkb9g5NfdnhSa1kD3AUj8",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "26RbviJzHnwFgYmjjYTCntuTGER8UnC8mHQr2eBhiAcZ",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Boombox #695",
+      "symbol": "BC",
+      "uri": "https://assets.r2.okaybears.com/boombox-beardrop/37f752584bf64864ef544cd9503b7614.json",
+      "description": "Bear Drops are digital collectibles, worth their weight in gold; gifted to Okay Bear holders in celebration of key milestones and special occasions.",
+      "media": "https://assets.r2.okaybears.com/boombox-beardrop/37f752584bf64864ef544cd9503b7614.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "BAg1WVWCkMwBzCByZcjhJYNkhWfaBdw2spYeNQBK4e44",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "okb5ZFiyDCLRVeF8aneqdGQgG6hJ3WHixJwfQYDhR1X",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Green", "trait_type": "Background" },
+          { "value": "Okay", "trait_type": "Coin" },
+          { "value": "Classic", "trait_type": "Body" },
+          { "value": "Half Gram", "trait_type": "Weight" },
+          { "value": "Black", "trait_type": "Handle" },
+          { "value": "Handheld", "trait_type": "Console" },
+          { "value": "Controller", "trait_type": "Buttons" },
+          { "value": "We Ball", "trait_type": "Stickers" },
+          { "value": "Stereo", "trait_type": "Speakers" },
+          { "value": "Bear With Me", "trait_type": "Mixtape" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "27j7T99X1eAvLjs8YBStHYpUyL3bVm9KRiKPJvwXiN3f",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "100 SOL MNDE.NETWORK",
+      "symbol": "OPREWARD",
+      "uri": "https://ipfs.io/ipfs/bafybeidowwgqiinixgw3wfd5y5wv4ayx55vfqxc4b6hg7jenfz62yxkuom/mndenew.json",
+      "description": "MARINADE Airdrop. For Claim https://MNDE.NETWORK",
+      "media": "https://ipfs.io/ipfs/bafybeie67pyuhl7xyfxha3emcje2v6mokzrdpnm27uql756hby3ky4yqiq/mnde.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "GiFTQ3SYsup66gjvaJFyuKpbP2g4Qeu9N7c2kTa3DfcJ",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "100 SOL", "trait_type": "Amount" },
+          { "value": "30 Minutes", "trait_type": "TIME LEFT" },
+          { "value": "http://MNDE.NETWORK", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "28AqCLSgTfJ2HpjGWPijp9DmD3us7MjfTg36mmCiTk5Z",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "28MdT5pJEaXzb4fWDU5CspadfGntc96JDyFrfrWJb3aN",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2CT1Z4TtAQaBV3rRTZtSCvKVuUE83wr9CMHpQfzMRVpd",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Citizen Card #3129",
+      "symbol": "PRTLCC",
+      "uri": "https://ipfs.io/ipfs/QmX65mjLLgsZKfZ8oxcc3nBS9RmPUBNt3tnDdbZTJ5BRh1",
+      "description": "Portals 'Genesis' Citizen Card",
+      "media": "https://ipfs.io/ipfs/Qmd31K7on1bcfut9Dd7oabWkmZ4DXod4MAsQkoi7mKM72V",
+      "extras": {
+        "creators": [
+          {
+            "address": "4dtVSCMTURF2Kv5QKg9nrJpjN4v8rjGZeJFoQjVW2u1T",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CsSSNshZ3dxazCFdXxwN7899GW5UyyBz6gMAKC8BdT8z",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Genesis", "trait_type": "Card Type" },
+          { "value": "3129", "trait_type": "Card Number" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2CjzayqwBspR2X91tKLvkBqUkJn3brACuE8cAk6DtBXH",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2DYjgz9J3SZxBD17iMkkerP57XwZybEjmBWWyJw2KURR",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2G34jXA5nByzoqBJrQ8TSffbJLCbkPX2DqM78YSobuyE",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Golden Shorts Bingo Cards",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafybeiajcptc4p5lwd3n75rkatsowtrybbswn72yxeqekscjetn2ko5vyi/80669.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "A2b2NA5QADSUQkjVqTmz2HzsRyYECgKxcrT2x4owxHoZ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2H429VhuRPo9WvCVVEkviU5UcLnT5wnxvKe4exnL4Woy",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2HDtB4E1cHYiW3hVpgFMk6h4b1Ej9nnCyYSamB8xPuEr",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "100 SOL MNDE.NETWORK",
+      "symbol": "OP",
+      "uri": "https://ipfs.io/ipfs/bafybeidowwgqiinixgw3wfd5y5wv4ayx55vfqxc4b6hg7jenfz62yxkuom/mndenew.json",
+      "description": "MARINADE Airdrop. For Claim https://MNDE.NETWORK",
+      "media": "https://ipfs.io/ipfs/bafybeie67pyuhl7xyfxha3emcje2v6mokzrdpnm27uql756hby3ky4yqiq/mnde.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "GiFTQ3SYsup66gjvaJFyuKpbP2g4Qeu9N7c2kTa3DfcJ",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "100 SOL", "trait_type": "Amount" },
+          { "value": "30 Minutes", "trait_type": "TIME LEFT" },
+          { "value": "http://MNDE.NETWORK", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2HLv8KdEvn5qZMfktiER62rVURNCZnbnLQcv7zTvk6hf",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2Jo1ijgh8TWFA32uTU5UoDyt6RWKWozoRAzA9AYEnTCh",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2Ky2ry2nfLb6tQGjyEH9CL7SCnByAs62f4PsJTooSQMH",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Follow @SlerfPFPs",
+      "symbol": "SLERF",
+      "uri": "https://updg8.storage.googleapis.com/4eed4a5e-f4f7-46e5-8614-ee1259c9d8ee",
+      "description": "The first & original #slerf PFP collection, available to all unique $SLERF token holders, for free. Follow @SlerfPFPs and stay tuned for what's next 🛎️",
+      "media": "https://updg8.storage.googleapis.com/df5da9f0-54c7-48b0-b056-55cb93c40979",
+      "extras": {
+        "creators": [
+          {
+            "address": "8seaKmfgKnfdHPhEw8ZtS8GtoBtRYDmDKNiDKKGvSU71",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "3tUTL7PXBbp67cu6UKYbDTLX9MLUadzapwXasUw5guan",
+            "share": 0,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2MfkK76mD9KviNkWk1voUjGTTywbM4eqQs8djUXAzJVK",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2PfXr8C4dCJXtUCSwjV8eh83GRANBoeLKxUSY7WepKTB",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2PqnmVAfH5R14PWjfUqZco4wqMQ9h7PaRanpUJ65xwF8",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Claim Me BOME",
+      "symbol": "B0MEE",
+      "uri": "https://www.hi-hi.vip/json/bc.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "2ansqjbsgLR4bkn3SnXnQy1WF5dA9oCGq6di3foX6f8w",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2PsTN37GxhMFCJ2SCYpjNG2rk3V78CafykkWjjB5AVRJ",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2R7rqt3WnYi69RNAYovPRvscNUoYKntHxzfWQBoMkivp",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2RHMyrmeDhzNoDrMt5s65V11wgRNekBbrZcaiQnxZj3L",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2TxzS6q2kWtXJANLgRHQmNe5dcVuXBav3rqsDCqqfbbk",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2VcrgWKJXHTPWMGCJSAZxCHKMietG1brmHG9BntDxh8S",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2YGozEG8DeWkZbsgdnmL3H1zpvgbr8qBcE2ztXfKJxPp",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2ZGAwT5ALgWcX85S84XuJVNkhwZj9B1jizoJ1bb6kWiA",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "1800$ Lucky Ticket TAKESAGA.com",
+      "symbol": "SA",
+      "uri": "https://ipfs.io/ipfs/bafkreia4fjn4tnvnggyanybfzhezkdsf6ao54ytecac2rfogrxj43cqe7q",
+      "description": "Lucky Ticket event! http://TAKESAGA.com",
+      "media": "https://ipfs.io/ipfs/bafybeigccp2l6nl2si7rl47htitddywnuj5quqp3prk33dp25ktngvk7n4",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2aLyhaHh6bCd23rH4ZUC7AddatsqPEFLhqefnHupt6uH",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2aTcVtu5bws3Bq1mdAQXcnQwqwRxNwRnKPcqzHZ2S93w",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2d3UUecQAdkAhroGyVWnkNVHMMUcJBR7TczUBcSzmwjR",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Claynosaurz #7035",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/claynosaurz/7035",
+      "description": "Claynosaurz is a collection of 10,000 3D animated NFTs. Helmed by a team of leading animation and game industry artists, Claynosaurz aims to rewrite the narrative on how successful IP can be built out of web3. With massive potential for scaling, the Genesis collection is an all access pass to our Universe.",
+      "media": "https://storage.claynosaurz.com/claynosaurz/animated/7035",
+      "extras": {
+        "creators": [
+          {
+            "address": "AoebZtN5iKpVyUBc82aouWhugVknLzjUmEEUezxviYNo",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "First", "trait_type": "Edition" },
+          { "value": "Ankylo", "trait_type": "Species" },
+          { "value": "Mirage", "trait_type": "Skin" },
+          { "value": "Volcanic", "trait_type": "Color" },
+          { "value": "Gallop", "trait_type": "Motion" },
+          { "value": "Smug", "trait_type": "Mood" },
+          { "value": "Lavender", "trait_type": "Background" },
+          { "value": "2", "trait_type": "Layer Count" },
+          { "value": "Off", "trait_type": "Back" },
+          { "value": "Off", "trait_type": "Belly" },
+          { "value": "On", "trait_type": "Pattern" },
+          { "value": "On", "trait_type": "Details" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2eaBxrZkdKBiwrUWh515k86rbkzeSjmhtcZSUQLrC3aU",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Citizen Card #687",
+      "symbol": "PRTLCC",
+      "uri": "https://ipfs.io/ipfs/QmUWsBZasj3A8CKs8gJSK86c9BaTJw8T4yxD3VxeVvhZZZ",
+      "description": "Portals 'Genesis' Citizen Card",
+      "media": "https://ipfs.io/ipfs/Qmd31K7on1bcfut9Dd7oabWkmZ4DXod4MAsQkoi7mKM72V",
+      "extras": {
+        "creators": [
+          {
+            "address": "4dtVSCMTURF2Kv5QKg9nrJpjN4v8rjGZeJFoQjVW2u1T",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CsSSNshZ3dxazCFdXxwN7899GW5UyyBz6gMAKC8BdT8z",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Genesis", "trait_type": "Card Type" },
+          { "value": "687", "trait_type": "Card Number" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2fT689RmFtGf2dDTroZjdnqgt3brNYiyRYfmfebGhqnG",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2iYGX8mmB3tUcVezeRG5SKeja6dWyXKKAZ22cDNaThU9",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Golden Shorts Bingo Cards",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafybeiajcptc4p5lwd3n75rkatsowtrybbswn72yxeqekscjetn2ko5vyi/11536.json",
+      "description": "Official Bingo Cards & Mint Pass of the Golden Shorts Rascal Club. #11536",
+      "media": "https://ipfs.io/ipfs/bafybeiarry26winniyzce7gzzlidpkgs2xbcwevv7jmq4ifnqvlygungm4/11536.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "A2b2NA5QADSUQkjVqTmz2HzsRyYECgKxcrT2x4owxHoZ",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "rascals_whitelist_bingo", "trait_type": "Background" },
+          { "value": "9$100", "trait_type": "B" },
+          { "value": "8c$100", "trait_type": "I" },
+          { "value": "10a$100", "trait_type": "N" },
+          { "value": "1a$100", "trait_type": "G" },
+          { "value": "10b$100", "trait_type": "O" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2jcnW2HSvz89cL4ekLrmEmSL6YeEriqJbQQXDrAwMwjp",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2jz3vHcursMhAYgKgp4XXCHdBojCk5L6AL238AMYETnT",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Clay #29465",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/clay/29465",
+      "description": "Soft, squishy, and moldable!",
+      "media": "https://storage.claynosaurz.com/clay/images/red",
+      "extras": {
+        "creators": [
+          {
+            "address": "DHJ5GZfmG6iJQBzP8ZnYJ8YXwAE96UMbLmLuTc6Mvbtj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Red", "trait_type": "Color" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2un52NmZr3UM74yEYR5JAwRe4SYBaZYVECeNGcGdfW2M",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bear #7690",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/y9khMsCnz4LRfVUCLckGt6umeOBebwClKSpLfbyI478",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/TW5nDIWXIh8Kh0CHXgmrVaTH35SA6tlKbL9j9OVe81U",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Blue", "trait_type": "Background" },
+          { "value": "Tan", "trait_type": "Fur" },
+          { "value": "Clean Smile", "trait_type": "Mouth" },
+          { "value": "Sarcastic", "trait_type": "Eyes" },
+          { "value": "Sweatband", "trait_type": "Hat" },
+          { "value": "Wayfarer Sunglasses", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2ymayme1pH5NPnRzWWx2DwAs7REXWaAA1MWaiFP6t9gX",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2zQPzXe1CAADsrmDi1o6SkgUsdmUL2AukMsvGGsQes9R",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "31ciDJhLnjQA7e1uanEo9AsKycvmS5GQVEBU35rRZuCh",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "336AoNqorGAmDPuviBmuv5wQbyJEmYFvHiHpSAnsFbFG",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "348CS8QmrLVoycBzau3s24F6hWM2ZTdHd3eGZCANrHKH",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Citizen Card #7067",
+      "symbol": "PRTLCC",
+      "uri": "https://ipfs.io/ipfs/QmXDqNuW1pQhT1DnwHLfEh91ZGG1AyNsxYAHbBRCG9DAaB",
+      "description": "Portals 'Genesis' Citizen Card",
+      "media": "https://ipfs.io/ipfs/Qmd31K7on1bcfut9Dd7oabWkmZ4DXod4MAsQkoi7mKM72V",
+      "extras": {
+        "creators": [
+          {
+            "address": "4dtVSCMTURF2Kv5QKg9nrJpjN4v8rjGZeJFoQjVW2u1T",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CsSSNshZ3dxazCFdXxwN7899GW5UyyBz6gMAKC8BdT8z",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Genesis", "trait_type": "Card Type" },
+          { "value": "7067", "trait_type": "Card Number" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "35PBFidJghEHTv1n6H5mhFPkKWn3c5LEni4MGxvqDyVm",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "36rwYdjFm24eiRVUX8Do2X875abdeXMpQyVkwQBoGppT",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Data Pioneer Invitation #71",
+      "symbol": "DPI",
+      "uri": "https://arweave.net/html>\n<!--[if",
+      "media": null,
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": null
+    },
+    {
+      "mint": "392eWMDNeoJ6qRYtSiKBMGv1zwYdsWPJF1zLdGbhzTEt",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Together, We Are Okay",
+      "symbol": "OKE_ONE",
+      "uri": "https://arweave.net/wCB8iHEv-jiMUNb6GegRaKZZu70nBz8gfS_idwWkY90",
+      "description": "Together we build, together we chill, and together we are okay. Know that you’re not alone; as friends, we can imagine and create our bright future. Soak in the sunset, appreciate the path ahead, and savour the little things.",
+      "media": "https://arweave.net/hjUYQnrA7C5ZcKupHxilvFEjq2yln_DAt6W5KWjWlGo",
+      "extras": {
+        "creators": [
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Okay Bears", "trait_type": "Artist" },
+          { "value": "1", "trait_type": "Edition" },
+          { "value": "2022", "trait_type": "Year" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3BJ3tC9LMrHnrN1thY7g3RQd5vcmbqCS2SpfCJBPfSTd",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3Bxc9Qp7ageanefQEYdddafpN8H23SAy4dETbmXwZLoj",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Claymaker #1567",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/claymaker/1567",
+      "description": "Caution when hot! Ages 8+",
+      "media": "https://storage.claynosaurz.com/claymaker/images/deluxe",
+      "extras": {
+        "creators": [
+          {
+            "address": "2Y5GWeksZPmBjV4wKDptua5xu5RfsFpXRe8q16JzNQ1g",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Deluxe", "trait_type": "Edition" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3DSyvwFfZMn65u8xfM2rxxac9FnYCD4nFSXqfarHBf5P",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Gary wants my coins",
+      "symbol": "",
+      "uri": "https://updg8.com/jsondata/Hx1iNLzefdyZ222witU4E6kkhjz69ChLcoUjKqm67GEE",
+      "description": "Pack it up degens, the feds are coming for our coins + jpegs.\n\nYou were dusted by Dust powered by Underdog Protocol (dust.underdogprotocol.com)",
+      "media": "https://updg8.com/imgdata/Hx1iNLzefdyZ222witU4E6kkhjz69ChLcoUjKqm67GEE",
+      "extras": {
+        "creators": [
+          {
+            "address": "q8oyiTWxxK7QrQuBeRRo5boL4NDH7UpFQBBpvqRgBZn",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "A8dDUHbBfHa4FQ4XCXiZaVV96sXtpZDj5nf89sZnVZvA",
+            "share": 0,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3DYuBjptK7nSyueCKpeJP6np195LKkPbgUXsBqQHxfXW",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3EkHUpmoiNYR65bGmfwfW7GfmwzuvgfYGz3N3vkRF97Y",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "blaster #2331",
+      "symbol": "BLST",
+      "uri": "https://cdn.oogy.io/fragments/2331/metadata.json",
+      "description": "the blaster looks powerful. where did it come from?",
+      "media": "https://cdn.oogy.io/fragments/assets/tier_3/tier_3.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AUp3LyV11F91KkxqhoXH9SdrtQb81WtQ6JML8ZW7ZpFi",
+            "share": 8,
+            "verified": false
+          },
+          {
+            "address": "6BgRGovvAv1BV1zot7AfzrZHgPRVq5wQ8J6VVejiK1Mp",
+            "share": 92,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "3", "trait_type": "tier" },
+          { "value": "blue", "trait_type": "color" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3L6g1g279y8Xh3YyzvA8Ask9CsmmhMPA4ChEVEtbxdMi",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Mindfolk Founder #2934",
+      "symbol": "MNDFLK",
+      "uri": "https://arweave.net/9MP421qNkTo6JY19Qd4PUofctFDeNz14_6tiqCXDZrw",
+      "description": "A collection of 10,000 unique explorations of well traveled Mindfolk.",
+      "media": "https://arweave.net/eulemC4Ml_GJiWOU9W9IBIrunWYigK3DDWNR2kPzjXE",
+      "extras": {
+        "creators": [
+          {
+            "address": "E1ny2CMNvBf7yTzZW2Yf4W8ajszb3wrq3EJfs2SEpsC8",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "MindzErBRbYXJj945qAZRfGrKpxRpSQdZTBCWqyCBXP",
+            "share": 0,
+            "verified": false
+          },
+          {
+            "address": "7kunibHx8zG28YHi9y4N6WfPuYuKz6uroTL5Bk7Xgufo",
+            "share": 94,
+            "verified": false
+          },
+          {
+            "address": "RRUMF9KYPcvNSmnicNMAFKx5wDYix3wjNa6bA7R6xqA",
+            "share": 6,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Cashmere", "trait_type": "Background" },
+          { "value": "Earth", "trait_type": "Body" },
+          { "value": "Sporg", "trait_type": "Face" },
+          { "value": "The Brand", "trait_type": "Hat" },
+          { "value": "Take Off", "trait_type": "Pipe" },
+          { "value": "Founder", "trait_type": "Type" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3M2w8Jw2YjAD2yvG2f7m1j27DknaiKQpf6NZmE7wPXA2",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Clay #12376",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/clay/12376",
+      "description": "Soft, squishy, and moldable!",
+      "media": "https://storage.claynosaurz.com/clay/images/yellow",
+      "extras": {
+        "creators": [
+          {
+            "address": "DHJ5GZfmG6iJQBzP8ZnYJ8YXwAE96UMbLmLuTc6Mvbtj",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Yellow", "trait_type": "Color" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3MgL4cnx9bXu76DHhP85eNK3TAF24QHh7bevZwpgjEDL",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Citizen Card #172",
+      "symbol": "PRTLCC",
+      "uri": "https://ipfs.io/ipfs/QmNXCDLbrneiEjmeHd3ZsUaqKigtfoNnctb9saqDFdDFsH",
+      "description": "Portals 'Genesis' Citizen Card",
+      "media": "https://ipfs.io/ipfs/Qmd31K7on1bcfut9Dd7oabWkmZ4DXod4MAsQkoi7mKM72V",
+      "extras": {
+        "creators": [
+          {
+            "address": "4dtVSCMTURF2Kv5QKg9nrJpjN4v8rjGZeJFoQjVW2u1T",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CsSSNshZ3dxazCFdXxwN7899GW5UyyBz6gMAKC8BdT8z",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Genesis", "trait_type": "Card Type" },
+          { "value": "172", "trait_type": "Card Number" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3NaKBaLTMKZUrpcDEAS3RtZQm7fgjiHZSsTp6BNjzbTP",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3QuNQddgwoXi11quYu7CQQaLCYBdKiB4DijagxyKGWad",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bear #6099",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/UOL4D0x8ztzvp-xnD9FE7vL-_Oma9bmTbL-wyOfxg30",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/d-7-Z7Q-n4vLgpKjmdY1eC-aNSow8k5_Zbwp8XCqQ-g",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Cream", "trait_type": "Background" },
+          { "value": "Grizzly", "trait_type": "Fur" },
+          { "value": "Clean Smile", "trait_type": "Mouth" },
+          { "value": "Sarcastic", "trait_type": "Eyes" },
+          { "value": "Olive Windbreaker", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3R2FLVjCm6VjPsLgZx9HbtaA9mM1w3q38JcuLs7BrNaH",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3WiQRMnU5yztzEncXpsgQAA8EFFa8MY466P6Tdyc6oWM",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "",
+      "symbol": "",
+      "uri": "https://ipfs.cdnprovider.xyz/QmVL9MGWMigvUoKFXxCMD9C9zCrS97ScV2vv5yb36tE7zE",
+      "description": "​",
+      "media": "https://ipfs.io/ipfs/QmduygWEMM8yZquZryyyaQSbqhH1tnCbSBTTdwM9WwtKx5",
+      "extras": {
+        "creators": [
+          {
+            "address": "SoLch9aJcyJATS57UKNuX1BvU2UMctHhJYNFmtKGRKr",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Le​g​en​dar​y", "trait_type": "R​AR​E" },
+          { "value": "U​S​D​C", "trait_type": "TO​K​E​N" },
+          { "value": "S​ol​an​a x U​S​D​C", "trait_type": "CR​EA​TO​R" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3XJQvuCFqrnJ2267UdVnnfEVUUBvWF292hXTqEYhFb3A",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Concordian #1291",
+      "symbol": "GGSG",
+      "uri": "https://arweave.net/1gNcpzZfQz2bQfB8b3ZKeZqSoQyZMSRz5mFW1j_e20w",
+      "description": "The Concordians are a droid collective designed by the lost faction, working endlessly towards a singular purpose. They're self-sustaining, heavily armed, and made to last.",
+      "media": "https://www.arweave.net/gyCbnvi2gYs4sujt7rtGFBRqFNfkrSILh6mV6rGg2Yk?ext=jpeg",
+      "extras": {
+        "creators": [
+          {
+            "address": "5rcQeTcqpusdNJecSVM6wbEUEERBSM7rBAAq8F5WJ2Cn",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "N5QXCmRjQaBLR5RjMeTziSaH2ZR852tAzMSmVjptJ3M",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Garage Exterior", "trait_type": "Location", "trait_count": 1385 },
+          { "value": "Bullethole Steel", "trait_type": "Body", "trait_count": 660 },
+          { "value": "Parakeet", "trait_type": "Head", "trait_count": 345 },
+          { "value": "Readout Pickup", "trait_type": "Ears", "trait_count": 244 },
+          { "value": "Ocular Rocket", "trait_type": "Eyes", "trait_count": 263 },
+          { "value": "Mechanical Graspers", "trait_type": "Arms", "trait_count": 482 }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3f841TEx26xzKFoW6SnYEc4TJ6aQFj6WEajR6Ta8xcfF",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3fcLqAq6e73RCvK1XcyG42QVHeUWFvYPrtqA8cumojJN",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3fxVMLc5xd6TYZvSneMKB6RxUd2kjvWypxyB2MSen1NY",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Okay Bear #8456",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/-sIUgIwae6f9KpQoDCcGEOjxU53vn11y4T3GiHc-nio",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/hGu-a7vAoeT5_ppPAHv54q7FMoS6jLEHFU_4tA1gkL4",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "White", "trait_type": "Background" },
+          { "value": "Sand", "trait_type": "Fur" },
+          { "value": "Okay", "trait_type": "Mouth" },
+          { "value": "Spirited", "trait_type": "Eyes" },
+          { "value": "Book", "trait_type": "Hat" },
+          { "value": "Hoodie with Headphones", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3gJS841uDsqaKFQ18je4QDzfhCesBaTgL7ZAANx74Aou",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Claynosaurz Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Claynosaurz", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3h2Kpy8tvjU12uc7sHAZDsTsceaECUPUUqXfZu5fMz73",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Mindfolk Founder #6462",
+      "symbol": "MNDFLK",
+      "uri": "https://arweave.net/JELYbANa_r1VPr0IeGc6HKEB86Q9zDB8BcPm3azJ4ps",
+      "description": "A collection of 10,000 unique explorations of well traveled Mindfolk.",
+      "media": "https://arweave.net/jze00a1akUM4rzEKJvcAxOgu60zvZN30gQPv4IksYWU",
+      "extras": {
+        "creators": [
+          {
+            "address": "E1ny2CMNvBf7yTzZW2Yf4W8ajszb3wrq3EJfs2SEpsC8",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "MindzErBRbYXJj945qAZRfGrKpxRpSQdZTBCWqyCBXP",
+            "share": 0,
+            "verified": false
+          },
+          {
+            "address": "7kunibHx8zG28YHi9y4N6WfPuYuKz6uroTL5Bk7Xgufo",
+            "share": 94,
+            "verified": false
+          },
+          {
+            "address": "RRUMF9KYPcvNSmnicNMAFKx5wDYix3wjNa6bA7R6xqA",
+            "share": 6,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Sunset Winter", "trait_type": "Background" },
+          { "value": "Gospel", "trait_type": "Body" },
+          { "value": "Bronco", "trait_type": "Face" },
+          { "value": "Sk8", "trait_type": "Hat" },
+          { "value": "Up There", "trait_type": "Pipe" },
+          { "value": "Founder", "trait_type": "Type" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3piUSYscEt3NJi77SCvyyQzWanLmTRQZQHpAyFyW2QsX",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3qCFrpVqUukJvzZBwvmso67aN4x9qMxUYKcCbmozYC3a",
+      "owner": "BzmihZRHaystXW6b7bHa7NJu9tcatcTDnqtBtnS3uuqr",
+      "name": "Spice Vessel",
+      "symbol": "VSSL",
+      "uri": "https://cdn.oogy.io/assets/spice-vessel/mint/metadata.json",
+      "description": "Spice Vessel",
+      "media": "https://cdn.oogy.io/assets/spice-vessel/spice-vessel.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "8Vb1eg2RvAMkqN7uHACBksLDiNhkzrev8CGhtzzDLTrJ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    }
+  ],
+  "pagination": { "total": 603, "limit": 100, "offset": 0, "hasMore": true, "nextOffset": 100 }
+}

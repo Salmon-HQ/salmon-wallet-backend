@@ -1,0 +1,111 @@
+service: gol-salmon-api
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
+  - serverless-api-gateway-throttling
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'prod'}
+  region: us-east-1
+  versionFunctions: false
+  # Request logs pair a client IP with the request path, and wallet routes carry
+  # the address in the path. Without this, CloudWatch keeps that pairing forever.
+  logRetentionInDays: 30
+  apiGateway:
+    shouldStartNameWithService: true
+  # Per-stage values live in config/env.<stage>.yml (see custom.envFile below).
+  # local -> plain env vars from .env (no AWS needed); prod -> SSM Parameter Store.
+  environment: ${self:custom.envFile.provider}
+
+functions:
+  listTokensJob:
+    handler: src/jobs/handler.listTokensJob
+    timeout: 60
+    events:
+      - schedule:
+          rate: rate(1 hour)
+          enabled: true
+          name: listTokensJobBtc-${self:provider.stage}
+          input:
+            platform: bitcoin
+
+  refreshPricesJob:
+    handler: src/jobs/handler.refreshPricesJob
+    timeout: 60
+    events:
+      - schedule:
+          rate: rate(60 minutes)
+          enabled: true
+          name: refreshPricesJobBtc-${self:provider.stage}
+          input:
+            platform: bitcoin
+
+  api:
+    handler: src/index.handler
+    timeout: 60
+    events:
+      - http: ANY /
+      - http: ANY /{proxy+}
+    environment:
+      GITHUB_SHA: ${env:GITHUB_SHA,'GITHUB_SHA'}
+      GITHUB_RUN_ID: ${env:GITHUB_RUN_ID,'GITHUB_RUN_ID'}
+
+  # Anonymous usage-analytics ingest. A dedicated function (not the catch-all
+  # `api`) so an event-traffic spike can't starve wallet-API concurrency. The
+  # explicit `POST /v1/events` route wins over the api function's `{proxy+}`.
+  # Defaults to the file sink (no external dependency); set ANALYTICS_SINK=ga4
+  # plus GA4_MEASUREMENT_ID/GA4_API_SECRET to forward to Google Analytics 4 via
+  # the Measurement Protocol (see docs/ANALYTICS.md). The handler never reads the
+  # client IP, and the ga4 sink never forwards it, so the user's IP never reaches
+  # Google — only this function's IP does.
+  events:
+    handler: src/analytics/handler.handler
+    timeout: 15
+    events:
+      - http:
+          path: /v1/events
+          method: post
+          cors: true
+    environment:
+      ANALYTICS_SINK: ${self:custom.envFile.functionOnly.ANALYTICS_SINK}
+      ANALYTICS_FILE_PATH: ${self:custom.envFile.functionOnly.ANALYTICS_FILE_PATH}
+      GA4_MEASUREMENT_ID: ${self:custom.envFile.functionOnly.GA4_MEASUREMENT_ID}
+      GA4_API_SECRET: ${self:custom.envFile.functionOnly.GA4_API_SECRET}
+
+custom:
+  # Single reference per stage — config/env.local.yml (plain env vars) or
+  # config/env.prod.yml (SSM). Only the file matching the active stage is
+  # ever loaded, so `--stage local` never touches SSM/AWS credentials.
+  envFile: ${file(./config/env.${sls:stage}.yml)}
+  # Aggregate stage-level throttling (all endpoints). Per-IP limits are
+  # handled by the Express rate-limit middleware; this is the blunt outer cap.
+  apiGatewayThrottling:
+    maxRequestsPerSecond: 50
+    maxConcurrentRequests: 100
+  serverless-offline:
+    host: 0.0.0.0
+    httpPort: ${env:OFFLINE_HTTP_PORT, 3000}
+    lambdaPort: ${env:OFFLINE_LAMBDA_PORT, 3002}
+  # provider/function environment is now assigned explicitly from
+  # custom.envFile (see above), so the plugin's own auto-inject-into-
+  # provider.environment feature is disabled (include: []). It still loads
+  # .env into process.env for ${env:X} resolution — that part is unaffected
+  # by `include`. Auto-inject is not just redundant here: with
+  # provider.environment set to a single `${self:custom.envFile.provider}`
+  # reference, the plugin tries to write into it before that reference is
+  # resolved (sync for local, deferred async for prod's SSM lookups) and
+  # throws "Cannot create property ... on string" for the prod stage.
+  dotenv:
+    include: []
+
+resources:
+  Outputs:
+    ServiceEndpoint:
+      Export:
+        Name: !Sub ${AWS::StackName}-ServiceEndpoint

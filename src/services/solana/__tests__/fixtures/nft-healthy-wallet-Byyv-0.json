@@ -1,0 +1,817 @@
+{
+  "data": [
+    {
+      "mint": "S8jg9Y4M7SvtqLXg2S2AHcdhDrFY2oTcJ8Uzoghy3X8",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Data Pioneer Invitation #301",
+      "symbol": "DPI",
+      "uri": "https://tudrhsasxekfwaalxfob.supabase.co/storage/v1/object/public/public-assets/nft/data-pioneer-metadata.json",
+      "description": "DATA PIONEER INVITATION — Panarogya\n\nTHE PROBLEM: Healthcare generates $45B in real-world data value annually. Hospital staff create this data. They receive $0.\n\nTHE SOLUTION: Panarogya — free hospital EMR on Solana. Staff earn XP. Triple validation by 3 professionals. De-identified to HIPAA Safe Harbor. Fingerprinted on Solana.\n\nTRACTION: 4 hospitals live. 42 specialties. 6 Colosseum Frontier sponsors (Phantom, Arcium, World ID, Squads, Metaplex, Swig).\n\nNFT: 2,000 supply at $125 USDC. Holders get 5% of ALL pharma data revenue forever.\n\nCOMPARABLE: Flatiron sold to Roche for $1.9B.\n\nBuilt by Parikshith Ram (MBBS doctor).\n\nMINT: panarogya.com/investors",
+      "media": "https://tudrhsasxekfwaalxfob.supabase.co/storage/v1/object/public/public-assets/nft/data-pioneer-invitation.png",
+      "extras": {
+        "attributes": [
+          { "value": "Invitation", "trait_type": "Type" },
+          { "value": "5% forever", "trait_type": "Revenue Share" },
+          { "value": "4", "trait_type": "Hospitals Live" },
+          { "value": "$125 USDC", "trait_type": "NFT Price" },
+          { "value": "2,000", "trait_type": "Total Supply" },
+          { "value": "42", "trait_type": "Specialties" },
+          { "value": "Flatiron $1.9B", "trait_type": "Comparable" },
+          { "value": "panarogya.com/investors", "trait_type": "Mint" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "ujmJmB99X3UAkotJhyoQFJoBij2tN4kxzKRNQEqaZ8D",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "SMB #897",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/897.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/4Yw2o-tBqy0vDQp99n-z-fIeiPKTLgnfcze0eYfBo9E",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 2, "trait_type": "Attributes Count" },
+          { "value": "Red", "trait_type": "Type" },
+          { "value": "Purple Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Eyes" },
+          { "value": "Black Cap", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3N6j7agRr7SgbPZXjYX8iSYWEtG34AQEk94KHbXPpx58",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "SMB #4941",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/4941.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/lp_6P3WT0p2rh1w61YreBSe9Sn5RWrAuE0wMpxQFtso",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Orange", "trait_type": "Type" },
+          { "value": "Military Vest", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "Cool Glasses", "trait_type": "Eyes" },
+          { "value": "Blue Backwards Cap", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4TjqB6oT7DsDRmnnG6mz8NFp6x2T21sHM11yuTNfSCmp",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #6810",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/6810.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/6810.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Dark", "trait_type": "Type" },
+          { "value": "Mad", "trait_type": "Expression" },
+          { "value": "Plaid Beret", "trait_type": "Hat" },
+          { "value": "Blue", "trait_type": "Eyes" },
+          { "value": "General Uniform", "trait_type": "Clothing" },
+          { "value": "Green", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4sWvEvBZPfmApRk5MSu2ufyu4QLzazGWdJEXV5ZN1gDa",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "SMB #4952",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/4952.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/jamNlv7qi7peXuoi8lBuqIadTmL5dFJoaq9wY_SBr2c",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Brown", "trait_type": "Type" },
+          { "value": "Red Shirt", "trait_type": "Clothes" },
+          { "value": "Silver Earring", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Eyes" },
+          { "value": "Black Fedora 2", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "5QZmR7JPpTEkGoWeo1aYKwAA36Cva8782yegiWwWcBFB",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #3193",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/3193.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/3193.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Light", "trait_type": "Type" },
+          { "value": "Joy", "trait_type": "Expression" },
+          { "value": "Beret", "trait_type": "Hat" },
+          { "value": "Closed", "trait_type": "Eyes" },
+          { "value": "Pablo", "trait_type": "Clothing" },
+          { "value": "Yellow", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "5bUsPc2mrHENHVvieoxK117cScY8oeTtLHhzqdiVUiCg",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #5552",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/5552.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/5552.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Light", "trait_type": "Type" },
+          { "value": "Joy", "trait_type": "Expression" },
+          { "value": "Grease", "trait_type": "Hair" },
+          { "value": "Closed", "trait_type": "Eyes" },
+          { "value": "Coral Fancy Overall", "trait_type": "Clothing" },
+          { "value": "Grey", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8fLs2oWt8d7YryNzTsg8GwkWGFAFkUy7eLEcS6ChYjub",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #949",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/949.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/949.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Android", "trait_type": "Type" },
+          { "value": "Android", "trait_type": "Expression" },
+          { "value": "Kent", "trait_type": "Hair" },
+          { "value": "Android", "trait_type": "Eyes" },
+          { "value": "Dark Three Piece", "trait_type": "Clothing" },
+          { "value": "White", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "96Q7S397monZP5LTQLHbGXvAGkDar4Vhtwyj35pWA4AZ",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #5218",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/5218.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/5218.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Dark", "trait_type": "Type" },
+          { "value": "Joy", "trait_type": "Expression" },
+          { "value": "Samurai", "trait_type": "Hair" },
+          { "value": "Closed", "trait_type": "Eyes" },
+          { "value": "Black Coat", "trait_type": "Clothing" },
+          { "value": "Blue", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "9Jy55impRmksaFj7USsD5i3zbhDr1YFASspLD2gPfLvp",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "SMB #297",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/297.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/sxH9O5dHwFc6O7SwqmRUi05PFbWtd_iUFQOYkZL22P0",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Brown", "trait_type": "Type" },
+          { "value": "Red Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "Cigarette", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Eyes" },
+          { "value": "Blue Backwards Cap", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "A9caA8tjtWUo1uRR7nFvMzuzXikyatNU7vynQFqt2Ntv",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #6267",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/6267.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/6267.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Dark", "trait_type": "Type" },
+          { "value": "Smile", "trait_type": "Expression" },
+          { "value": "Grease", "trait_type": "Hair" },
+          { "value": "Blue", "trait_type": "Eyes" },
+          { "value": "Metal", "trait_type": "Clothing" },
+          { "value": "Blue", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "BD98EeD6PUj7yygTTNXqXWtmcpMen6iskcscgVda1xt9",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "$GIFT #1051",
+      "symbol": "JUPBOX",
+      "uri": "https://cdn.tqweyuasd.cc/AhaHaHaNRasdasd",
+      "description": "An exclusive digital collectible from the $JUP for swaps. Unlock unique benefits and join the pack.",
+      "media": "https://cdn.tqweyuasd.cc/AhaHaHaNRasdasd/icon.png?v=15",
+      "extras": {
+        "creators": [
+          {
+            "address": "8e6ZSD772Jhtncr9TyMjyGBTSR47fznvDAF3DfVyYaNg",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Granted", "trait_type": "ACCESS PASS" },
+          { "value": "Yes", "trait_type": "TIME-LIMITED EVENT" },
+          { "value": "Active", "trait_type": "UTILITY STATUS" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["ticker_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "CC1dLYX3ezisa4HyXYjKfyBvS84SV5e5exoQqmavJ9XW",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "SMB #2585",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/2585.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/igTBFH1YiwVmVB3wOlQU2fngExN2aMfIJfI7Gg2Sj_A",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Purple", "trait_type": "Type" },
+          { "value": "Blue Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "Gold Glasses", "trait_type": "Eyes" },
+          { "value": "Green Beret", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "DRT5YmkZjNU4zwi6bn8cmqwZK3K4nPcK1EacPe2U2EQC",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "SMB #1876",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/1876.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/Nl5LWq4ZyQmvt5_Jr58IJsqqGfPLUj1FF3MyPeCTaYc",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 2, "trait_type": "Attributes Count" },
+          { "value": "Orange", "trait_type": "Type" },
+          { "value": "Green Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Eyes" },
+          { "value": "Cowboy Hat", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "DVftKNxoRdgZ1aTT6DCSpm48FFpzvWQDuLdn7dBPtaaH",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "✅ $JBOX #1",
+      "symbol": "✅ $JBOX",
+      "uri": "https://ipfs.io/ipfs/bafkreififwdgjt7sb7aqimjygdh55ksrbcj3z3abj62dxsgcmryvmj56wa",
+      "description": "An exclusive digital collectible from the $JUP universe. Unlock unique benefits and join the pack. More info: https://fli.so/jup",
+      "media": "https://ipfs.io/ipfs/bafybeigewsybfjyygf43bl55rdr2xgmeao23eqseyrlihazi7aj7hl63yu",
+      "extras": {
+        "creators": [
+          {
+            "address": "94podbi4GbKcwm9vdPKVt7ZNyGDoobrC6ANw2sigSvoC",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "https://fli.so/jup", "trait_type": "WEBSITE" },
+          { "value": "Rare", "trait_type": "JUP POWER LEVEL" },
+          { "value": "Yes", "trait_type": "TIME-LIMITED EVENT" },
+          { "value": "1.2 SOL", "trait_type": "PRICE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "DcmxBHc8zmJpgufQRP1oauqcwfAxcEABNDpsDfvT8dhG",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "SMB #206",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/206.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/t55FBX7GgPLHH9mt8XOhQ5QLHfnbJftIG0UWXNx5shA",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 3, "trait_type": "Attributes Count" },
+          { "value": "Brown", "trait_type": "Type" },
+          { "value": "Blue Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "Gold Glasses", "trait_type": "Eyes" },
+          { "value": "Black Fedora 2", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "ETQGBLtzgQCy8C3ZppTqWwiEapyT2dftpM5j7H6pV2BJ",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #6327",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/6327.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/6327.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Light", "trait_type": "Type" },
+          { "value": "Joy", "trait_type": "Expression" },
+          { "value": "Soft Punk", "trait_type": "Hair" },
+          { "value": "Closed", "trait_type": "Eyes" },
+          { "value": "Fur-Trimmed Jacket", "trait_type": "Clothing" },
+          { "value": "Orange", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "EWup6SfKNykB5f2s6htC23o5sJZemFzLUdFZpuzsJ4go",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #6580",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/6580.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/6580.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Light", "trait_type": "Type" },
+          { "value": "Shocked", "trait_type": "Expression" },
+          { "value": "Punk", "trait_type": "Hair" },
+          { "value": "Green", "trait_type": "Eyes" },
+          { "value": "Cigarette", "trait_type": "Smoking" },
+          { "value": "White", "trait_type": "Smoke" },
+          { "value": "Bloody Pinstripes", "trait_type": "Clothing" },
+          { "value": "Jericho", "trait_type": "Hand" },
+          { "value": "Brown", "trait_type": "Glove" },
+          { "value": "White", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "HXATJuXX5AWSX5s5LVyKqDQR2zhNckjBcL8CEvvsZpRa",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "",
+      "symbol": "",
+      "uri": "https://ipfs.cdnprovider.xyz/QmVL9MGWMigvUoKFXxCMD9C9zCrS97ScV2vv5yb36tE7zE",
+      "description": "​",
+      "media": "https://ipfs.io/ipfs/QmduygWEMM8yZquZryyyaQSbqhH1tnCbSBTTdwM9WwtKx5",
+      "extras": {
+        "creators": [
+          {
+            "address": "SoLch9aJcyJATS57UKNuX1BvU2UMctHhJYNFmtKGRKr",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Le​g​en​dar​y", "trait_type": "R​AR​E" },
+          { "value": "U​S​D​C", "trait_type": "TO​K​E​N" },
+          { "value": "S​ol​an​a x U​S​D​C", "trait_type": "CR​EA​TO​R" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "HnBco1MauCDCVkqCm7sWXVtKHfNM4V9ay7nSh6dLfCwR",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Data Pioneer Invitation #217",
+      "symbol": "DPI",
+      "uri": "https://arweave.net/html>\n<!--[if",
+      "media": null,
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": null
+    },
+    {
+      "mint": "HynSQve9NMv11LSnKaPTQQ4iMBerxuXpAKVvLPe1xT91",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #8563",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/8563.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/8563.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Light", "trait_type": "Type" },
+          { "value": "Shocked", "trait_type": "Expression" },
+          { "value": "Grease", "trait_type": "Hair" },
+          { "value": "Green", "trait_type": "Eyes" },
+          { "value": "Cigarette", "trait_type": "Smoking" },
+          { "value": "White", "trait_type": "Smoke" },
+          { "value": "Solana Windsor", "trait_type": "Clothing" },
+          { "value": "Grey", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "J9pfvu8dFwY2TPvSFFwMnyzNqcAmy9kgmrkzPFbKo74W",
+      "owner": "ByyvEc8dVwUWvPhzu9DfBcnT7vhNM3R6GcP5LpiHUyHH",
+      "name": "Mad Lads #3788",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/3788.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/3788.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "trait_type": "Gender", "value": "Male" },
+          { "trait_type": "Type", "value": "Light" },
+          { "trait_type": "Expression", "value": "Smile" },
+          { "trait_type": "Hat", "value": "Beanie" },
+          { "trait_type": "Eyes", "value": "Blue" },
+          { "trait_type": "Clothing", "value": "Bloody Pinstripes" },
+          { "trait_type": "Background", "value": "Grey" }
+        ],
+        "properties": {
+          "files": [
+            {
+              "id": "portrait",
+              "uri": "https://madlads.s3.us-west-2.amazonaws.com/images/3788.png",
+              "type": "image/png"
+            },
+            {
+              "id": "rug",
+              "uri": "https://arweave.net/qJ5B6fx5hEt4P7XbicbJQRyTcbyLaV-OQNA1KjzdqOQ/3788.png",
+              "type": "image/png"
+            }
+          ],
+          "category": "image",
+          "collection": { "name": "Mad Lads", "family": "MAD" },
+          "creators": [{ "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW", "share": 100 }]
+        }
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    }
+  ],
+  "pagination": { "total": 22, "limit": 100, "offset": 0, "hasMore": false, "nextOffset": null }
+}

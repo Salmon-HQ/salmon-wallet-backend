@@ -1,0 +1,31 @@
+{
+  "name": "@4m/health-check",
+  "version": "0.0.3",
+  "description": "Check the healthy of your service.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=14.17.1"
+  },
+  "scripts": {
+    "test": "jest --detectOpenHandles",
+    "linter": "eslint ./ --fix",
+    "publish:patch": "npm version patch && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salmonw/4m-modules.git#health-check"
+  },
+  "keywords": [
+    "health-check"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/salmonw/4m-modules/maintenace/health-check/issues"
+  },
+  "homepage": "https://github.com/salmonw/4m-modules/tree/health-check#readme",
+  "devDependencies": {
+    "jest": "^27.0.6",
+    "node-notifier": "^10.0.0"
+  }
+}

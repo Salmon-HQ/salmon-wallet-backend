@@ -1,0 +1,70 @@
+# External-provider integration tests: everything the PR gate deliberately
+# excludes (Helius / Jupiter / Triton / public Solana RPC — flaky, rate
+# limited, secret-needing). Runs nightly and on demand, never on PRs, so
+# provider secrets are never exposed to fork runs.
+#
+# A failure here means provider drift or a real regression against live
+# services — it is a signal for maintainers, not a merge blocker. Suites
+# probe their provider first and skip with a logged reason when unreachable
+# or unconfigured, so this workflow degrades gracefully while secrets are
+# not yet loaded (see docs/REPO-SETTINGS.md for the secret list).
+#
+# Spec: specs/003-integration-external/spec.md
+name: Integration (external providers)
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # daily 06:17 UTC — off the top-of-hour spike
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: integration-external
+  cancel-in-progress: false
+
+jobs:
+  integration-external:
+    name: external integration suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Integration tests (live providers)
+        run: npm run test:integration
+        env:
+          REDIS_HOST: localhost
+          # Public endpoints — plain values, not secrets.
+          JUPITER_PRICE_URL: https://api.jup.ag/price/v3
+          JUPITER_SWAP_URL: https://api.jup.ag/ultra/v1
+          # Provider credentials — repository secrets; empty until loaded,
+          # which makes the corresponding suites probe-skip.
+          HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+          JUPITER_API_KEY: ${{ secrets.JUPITER_API_KEY }}
+          TRITON_RPC_URL: ${{ secrets.TRITON_RPC_URL }}
+          TRITON_API_TOKEN: ${{ secrets.TRITON_API_TOKEN }}
+          JUPITER_SWAP_REFERRAL_FEE_BPS: ${{ secrets.JUPITER_SWAP_REFERRAL_FEE_BPS }}
+          JUPITER_SWAP_REFERRAL_ACCOUNT: ${{ secrets.JUPITER_SWAP_REFERRAL_ACCOUNT }}

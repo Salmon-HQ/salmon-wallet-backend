@@ -1,0 +1,49 @@
+# Dependency directories
+node_modules/
+
+# Package manager logs
+yarn-error.log
+
+# macOS metadata
+.DS_Store
+
+# dotenv environment variables file — ignore all real .env files, keep the template
+.env
+.env.*
+!.env.example
+
+# Local analytics sink (ANALYTICS_SINK=file) — telemetry, never commit
+.analytics-local/
+
+# NPM credentials — may carry a registry auth token
+.npmrc
+
+# Serverless directories
+.serverless/
+
+# Serverless WarmUp Plugin
+.warmup
+
+# Private agent memory — never commit
+AGENTS.local.md
+CLAUDE.local.md
+**/AGENTS.local.md
+**/CLAUDE.local.md
+
+# Local planning notes — not part of the repo contract
+docs/plans/
+
+# Claude Code personal settings (per-user, never shared)
+.claude/settings.local.json
+
+# Agent worktrees (local tooling; a git add -A once captured these as
+# bogus gitlinks and broke every CI checkout — never track them)
+.claude/worktrees/
+
+# Jest coverage output
+coverage/
+
+# Backups and key material — never commit
+*.bak
+*.pem
+*.key

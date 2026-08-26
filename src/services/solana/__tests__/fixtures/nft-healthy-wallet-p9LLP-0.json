@@ -1,0 +1,600 @@
+{
+  "data": [
+    {
+      "mint": "q4XFhSy259L3KME3vKXnZeg6XdiabVZx6kSBPyAAsKN",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Okay Bear #9635",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/MCeScnFy3ONm8UhnmYFJyFVeoKkzC8IESImW7eaTvts",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/m8uLkRMSzB4xK-GZVbEgi_p_6ZRNlT2cJ5bP0Y31ZMg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Warm Grey", "trait_type": "Background" },
+          { "value": "Dark Brown", "trait_type": "Fur" },
+          { "value": "Proud", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Torn Sleeveless Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "rSyAd6wo9p61Vc3xRz5L1aUPSXFn6M4oCZ4GzwKgAKG",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "68-4A the Faint",
+      "symbol": "SLR",
+      "uri": "https://arweave.net/Umsv5_jd5v_y60OeWocOSsjZmcCXVJjk4DV-O5IDzWc",
+      "description": "Robots from Solaria Prime",
+      "media": "https://arweave.net/Y_7piXaHHf_JnqgrZc0S51aszCX8crGiZKCYmQCIcqQ",
+      "extras": {
+        "creators": [
+          {
+            "address": "G4uJaKo7QB9YwTXDs29hFgfZ28hv56fifYcvmrJRGvqt",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "4nuNUbvQQ6hsYLFB9yAeDdhHRbbxa3vHQwhBbMkD66Sf",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Drone", "trait_type": "Title" },
+          { "value": "32", "trait_type": "Level" },
+          { "value": "19", "trait_type": "Luck" },
+          { "value": "3.59%", "trait_type": "Average Rarity" },
+          { "value": "4623", "trait_type": "Mint #" },
+          { "value": "9848", "trait_type": "Ranking #" },
+          { "value": "sawchain 6", "trait_type": "Head" },
+          { "value": "hoverdan 5", "trait_type": "Torso" },
+          { "value": "parameter 3", "trait_type": "Hands" },
+          { "value": "bigboy 8", "trait_type": "Eyes" },
+          { "value": "cmdtv 1", "trait_type": "Mouth" },
+          { "value": "tesla 1", "trait_type": "Feet" },
+          { "value": "pitstick 3", "trait_type": "Antenna" },
+          { "value": "sector hall 5", "trait_type": "Scene" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "28P6YLrKM5CYDuXwHc7WVP1MDc4L4LhxkKFZFPHzZwBQ",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Micros #6835",
+      "symbol": "",
+      "uri": "https://gateway.pinit.io/ipfs/QmSpMtf63X1UbLrdv5fcjtLixStn1xb4kToJUYf2q4W6A5/3657.json",
+      "description": "Simplicity Kills",
+      "media": "https://na-assets.pinit.io/3M2xsZtaBTScbuWBxYQ7jjeV6SinvLLeaxFcQCrH1oK3/ae0e8be1-fdee-479d-97ed-f3086bfcc57c/3657",
+      "extras": {
+        "attributes": [
+          { "value": "Off White", "trait_type": "Backgrounds" },
+          { "value": "Bubble Pink", "trait_type": "Skins" },
+          { "value": "Blue Overalls", "trait_type": "Clothing" },
+          { "value": "Teal", "trait_type": "Eyes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2GUhyp2Q9KwCNpbVdjaa1wwv7GATdketTivo3DeFEozj",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Legendary Dumpster #2",
+      "symbol": "",
+      "uri": "https://api.dumpstr.party/v1/metadata/bag/2GUhyp2Q9KwCNpbVdjaa1wwv7GATdketTivo3DeFEozj.json",
+      "description": "DUMPSTR Legendary Dumpster. This NFT allows you to create pools, earn commission and stake up to 10M $DUMPSTR within the DUMPSTR protocol.",
+      "media": "https://api.dumpstr.party/images/legendary.png",
+      "extras": {
+        "attributes": [
+          { "value": "Legendary", "trait_type": "Tier" },
+          { "value": 1297028.882775, "trait_type": "Tokens Attached" },
+          { "value": 10000000, "trait_type": "Capacity" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "45WtpV9GaQWWSvKNew3rNXmhTjZo9j5hhJMwBQrmsXiU",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Fox #8330",
+      "symbol": "FFF",
+      "uri": "https://famousfoxes.com/metadata/8330.json",
+      "description": "The Famous Fox Federation, an independent organization of the most fabulously famous foxes on the Blockchain.",
+      "media": "https://famousfoxes.com/hd/8330.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "442t3gHbw55CqiEAtoSWasVQ3eAhmYW2gPy5jqJNTdcw",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "3pMvTLUA9NzZQd4gi725p89mvND1wRNQM3C8XEv1hTdA",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Purple", "trait_type": "Background" },
+          { "value": "Scarf BW", "trait_type": "Outfit" },
+          { "value": "Natural", "trait_type": "Skin" },
+          { "value": "Cool Dude", "trait_type": "Eyes" },
+          { "value": "Closed", "trait_type": "Mouth" },
+          { "value": "None Stripes", "trait_type": "Head" },
+          { "value": "True", "trait_type": "Summoned" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "4HM4NdXzNAS52z726ev68wX9gtqSq7YP7m87Rxz9dM3V",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "MidEvil #4691",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafybeih5rnavjmj4u4aslm6k5qtqznxzla2mthsf7p2c3lrk2wc33m2h3i/4691.json",
+      "description": "5,000 of the most Mid humans, beasts, and ghosts all on a journey towards greatness. Designed by Infinite Fun.",
+      "media": "https://ipfs.io/ipfs/bafybeifckj3kctgo6oztxbcrkg2vumodyvcbfkga3pnoeazrcv5wrc26je/4691.png",
+      "extras": {
+        "attributes": [
+          { "value": "Brick", "trait_type": "Background" },
+          { "value": "Green Goblin", "trait_type": "Skin" },
+          { "value": "Wolf of Camelot", "trait_type": "Clothing" },
+          { "value": "Frog Eyes", "trait_type": "Eyewear" },
+          { "value": "Bleached Buzz", "trait_type": "Headwear" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Specialty" },
+          { "value": "None", "trait_type": "1/1" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "54dq7a2XwPRXnh9wBwJbkJR9L9epXxLr3xQkv4AGTfEC",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "SMB #4846",
+      "symbol": "SMB",
+      "uri": "https://arweave.net/w4RVczdWwyiWS8tXgDenLEL7iFDdu4bi2YVmGyQo_dE/4846.json",
+      "description": "SMB is a collection of 5000 randomly generated 24x24 pixels NFTs on the Solana Blockchain. Each SolanaMonkey is unique and comes with different type and attributes varying in rarity.",
+      "media": "https://arweave.net/w6Ff55TnQWluInaqUJk-mN5J0EYenD2NBKZ7Jxp_U9M",
+      "extras": {
+        "creators": [
+          {
+            "address": "mdaoxg4DVGptU4WSpzGyVpK3zqsgn7Qzx5XNgWTcEA2",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "HAryckvjyViFQEmhmMoCtqqBMJnpXEYViamyDhZUJfnG",
+            "share": 100,
+            "verified": false
+          },
+          {
+            "address": "9uBX3ASjxWvNBAD1xjbVaKA74mWGZys3RGSF7DdeDD3F",
+            "share": 0,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 2, "trait_type": "Attributes Count" },
+          { "value": "Red", "trait_type": "Type" },
+          { "value": "Blue Shirt", "trait_type": "Clothes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Eyes" },
+          { "value": "Pink Headset", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "5JeXFuBRpZkxw6m8vXukcjrgdg96gHr974dZ6b1LRNxE",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "y00t #9627",
+      "symbol": "Y00T",
+      "uri": "https://metadata.y00ts.com/y/9626.json",
+      "description": "y00ts is a generative art project of 15,000 NFTs. y00topia is a curated community of builders and creators. Each y00t was designed by De Labs in Los Angeles, CA.",
+      "media": "https://metadata.y00ts.com/y/9626.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "yootn8Kf22CQczC732psp7qEqxwPGSDQCFZHkzoXp25",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Solitary Star", "trait_type": "Background" },
+          { "value": "Wheat", "trait_type": "Fur" },
+          { "value": "Blasé", "trait_type": "Face" },
+          { "value": "Mechanic", "trait_type": "Clothes" },
+          { "value": "Aviators (blackout)", "trait_type": "Eyewear" },
+          { "value": "W Visor", "trait_type": "Head" },
+          { "value": "None", "trait_type": "1/1" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "79C78ENoYmrHaaywqU5kj4CuZg6FjgAjYMcKKTtsevYC",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Wassieverse #1167",
+      "symbol": "WASSIE",
+      "uri": "https://d344nqw9y6muw5.cloudfront.net/models/previews/1167.json",
+      "description": "Wassieverse is a collection of 3000 fully rigged 3D NFTs. Wassies were created by @wasserpest and @inversebrah on Twitter/X in 2017/2018, since then they have lived in the hearts of crypto participants around the world. Wassieverse is a subsidiary of the @Wassie brand, the irl ownable crypto culture.",
+      "media": "https://d344nqw9y6muw5.cloudfront.net/models/previews/1167.jpeg",
+      "extras": {
+        "creators": [
+          {
+            "address": "8p8Yckh29k6Koxc5A9ThMhJVtEWntNbvytva8zZczZuz",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Wasserrat", "trait_type": "Base" },
+          { "value": "None", "trait_type": "Pattern" },
+          { "value": "Orange", "trait_type": "Color" },
+          { "value": "Yes", "trait_type": "Disguise" },
+          { "value": "Banana Bonnet", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8kq5vPUmsakXzDU91SRTbDQGXy5opqx67t5Gidgz7t3c",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "BoDoggos #3351",
+      "symbol": "DOG",
+      "uri": "https://ipfs.io/ipfs/QmasVYPJuqq38uuckrxsXPWvdcb27MLej8LUgVnZUPDGWp/3351.json",
+      "description": "A Community Brand Capturing the Spirit of Perseverance and Ambition, in Style.",
+      "media": "https://ipfs.io/ipfs/QmQ5TWTtXoKeupMucMUuss8pCbt3ZyyfV3frCKPjzzJXQf/3351.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "HdLDoLQjQ9oURfT4o1LKvKkfh2pFEG1WX7C8QnJF5AUw",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "3TNm6qLAwAwz3cYUWphB76qpah14goRuQpGcZg3PHrpS",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Beatnik", "trait_type": "Eyes" },
+          { "value": "Bamboo", "trait_type": "Fur" },
+          { "value": "ODAAT", "trait_type": "Hat" },
+          { "value": "Joy", "trait_type": "Mouth" },
+          { "value": "Merch Tee", "trait_type": "Outfit" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "B9E9iErXFPTuMdq8KAdtpQgxnBhWjAg9ECueZ1Y1zjVW",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "DeGod #4975",
+      "symbol": "DGOD",
+      "uri": "https://metadata.degods.com/g/4974.json",
+      "description": "10,000 of the most degenerate gods in the universe.",
+      "media": "https://metadata.degods.com/g/4974-dead-rm.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "AxFuniPo7RaDgPH6Gizf4GZmLQFc4M5ipckeeZfkrPNn",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Olive Green", "trait_type": "background" },
+          { "value": "Navi", "trait_type": "skin" },
+          { "value": "None", "trait_type": "specialty" },
+          { "value": "Steve Jobs Turtleneck", "trait_type": "clothes" },
+          { "value": "None", "trait_type": "neck" },
+          { "value": "Prince Hair", "trait_type": "head" },
+          { "value": "All Seeing Eyes", "trait_type": "eyes" },
+          { "value": "None", "trait_type": "mouth" },
+          { "value": "S3 - Male", "trait_type": "version" },
+          { "value": "Claimed", "trait_type": "y00t" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "BiV6ieTFVazerPiQVJ3tQvEy2akbPWerRNsMt45wypcU",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "J​U​P",
+      "symbol": "NFT",
+      "uri": "https://ipfs.io/ipns/k51qzi5uqu5dj2iqsrv5hbst4o5244tcc4lae4g88xppx8k0sfj0ag4adqbz3w",
+      "description": "🎁​ ​C​o​n​g​r​a​t​u​l​a​t​i​o​n​s​!​ ​Y​o​u​'​v​e​ ​b​e​e​n​ ​s​e​l​e​c​t​e​d​ ​f​o​r​ ​a​n​ ​e​x​c​l​u​s​i​v​e​ ​J​U​P​ ​r​e​w​a​r​d​ ​d​r​o​p​.​ ​\n​\n​💰​ ​Y​o​u​r​ ​A​l​l​o​c​a​t​i​o​n​:​ ​2​,​5​0​0​ ​$​J​U​P​ ​t​o​k​e​n​s​\n​⏰​ ​C​l​a​i​m​ ​w​i​t​h​i​n​ ​4​8​ ​h​o​u​r​s​ ​o​r​ ​f​o​r​f​e​i​t​ ​y​o​u​r​ ​s​p​o​t​\n​\n​✅​ ​V​e​r​i​f​y​ ​&​ ​c​l​a​i​m​ ​n​o​w​:​j​u​p​c​e​n​t​e​r​.​f​u​n",
+      "media": "https://ipfs.io/ipfs/QmPaHm5nsAmgoEPY1hNWTzVLnj2xLais4mpx856CMjnKdw",
+      "extras": {
+        "creators": [
+          {
+            "address": "JUP2z2jNBFVLdwNbFCXLV27tAPy8TWvTfXNJiP83iBj",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["hidden_char_obfuscation"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "C3gKEyN3vZtaXhMbRACVswJCzqWLKqk9c7VE4Y8176Ep",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Claynosaurz #8524",
+      "symbol": "DINO",
+      "uri": "https://storage.claynosaurz.com/claynosaurz/8524",
+      "description": "Claynosaurz is a collection of 10,000 3D animated NFTs. Helmed by a team of leading animation and game industry artists, Claynosaurz aims to rewrite the narrative on how successful IP can be built out of web3. With massive potential for scaling, the Genesis collection is an all access pass to our Universe.",
+      "media": "https://storage.claynosaurz.com/claynosaurz/animated/8524",
+      "extras": {
+        "creators": [
+          {
+            "address": "AoebZtN5iKpVyUBc82aouWhugVknLzjUmEEUezxviYNo",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "36tfiBtaDGjAMKd6smPacHQhe4MXycLL6f9ww9CD1naT",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "First", "trait_type": "Edition" },
+          { "value": "Trice", "trait_type": "Species" },
+          { "value": "Jurassic", "trait_type": "Skin" },
+          { "value": "Aqua", "trait_type": "Color" },
+          { "value": "Walk", "trait_type": "Motion" },
+          { "value": "Sad", "trait_type": "Mood" },
+          { "value": "Peach", "trait_type": "Background" },
+          { "value": "1", "trait_type": "Layer Count" },
+          { "value": "On", "trait_type": "Back" },
+          { "value": "Off", "trait_type": "Belly" },
+          { "value": "Off", "trait_type": "Pattern" },
+          { "value": "Off", "trait_type": "Details" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "D1vTZ9FzUXvfUrt45DE2WHhZUpkcgLG9BTp2X3K1piiq",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "0aZBgMWLyKvY",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmdoGKiCcJXDjGxfzJn3LRz5KGyi4dcV5GYJJiuWDNFxP5",
+      "description": "Bananas made by apes for apes",
+      "media": "https://ipfs.io/ipfs/QmXCQev5F8fXapF9uRKmNjyWVGJzsQngMZzN17pw8sxqP2",
+      "extras": {
+        "creators": [
+          {
+            "address": "GHDHUm2YiiUoTBxt3P7ZBQaPfogNXAHpUxwoYZSUoscn",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "DEb77q7Heg6MkThMfy1pfqmYpL6SXGxKnT4chXNRT6Gj",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "The Bullpen #33682",
+      "symbol": "",
+      "uri": "https://gateway.irys.xyz/31GvqpyrrG5ezq7Ldjtf279F29ntPuEPaFGZS9cT8F2o/33681.json",
+      "description": "THE BULLPEN - LAUNCHED SUMMER 2026 ON THE SOLANA BLOCKCHAIN.",
+      "media": "https://gateway.irys.xyz/2YP3S9P5x3dvzPm2VHHrCUHFsCR1885R81N2STFtfhvU/33681.webp",
+      "extras": {
+        "attributes": [
+          { "value": "Caramel", "trait_type": "Background" },
+          { "value": "Dark Brown", "trait_type": "Skin" },
+          { "value": "Zee Tee", "trait_type": "Outfit" },
+          { "value": "Beanie", "trait_type": "Head" },
+          { "value": "Pink Oval Shades", "trait_type": "Eyes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "DrdveBP7EwyWyi6uG32TnKKcm9EDDApXRK5uNKSCxijE",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Lunar Apes #4726",
+      "symbol": "",
+      "uri": "https://assets.lunarverse.app/metadata/4726.json",
+      "description": "Three tribes, One LunarVerse! A new expansion of artwork, Utility, And passive income earning avenues for all LV holders.",
+      "media": "https://assets.lunarverse.app/images/4726.webp",
+      "extras": {
+        "attributes": [
+          { "value": "Chimp", "trait_type": "Tribe" },
+          { "value": "3", "trait_type": "Tier" },
+          { "value": "Sweet Dreams", "trait_type": "Background" },
+          { "value": "Purple Camo", "trait_type": "Skin" },
+          { "value": "Yellow Vest", "trait_type": "Body" },
+          { "value": "Teeth Clenched", "trait_type": "Mouth" },
+          { "value": "Mismatched", "trait_type": "Eyes" },
+          { "value": "Plain Black Cap", "trait_type": "Headgear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "GqHq11y2KUFozdaH39mrSGuGvPXghvuuky9CoPmvyYHd",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Galactic Gecko #7407",
+      "symbol": "GGSG",
+      "uri": "https://arweave.net/nF7CAON3tOqeefdQ_KQiPQREW7KKiUuA72dNMf7dpsM",
+      "description": "Eyeing the competition pulling up to the starting line, you feel deep within that you're the best gecko there - or, and this is no surprise for a Martu racer, the most cunning. Wait until your rival figures out what you did to their spaceship.",
+      "media": "https://www.arweave.net/0IKCoYEZuHwz8NZLfsFLfc-aMkOXyt0vFokVFs-x16M?ext=jpeg",
+      "extras": {
+        "creators": [
+          {
+            "address": "FEg3mmpcrcRsVTuc2n3oghHpRvAtEJJau4KWjaPpLKcA",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "N5QXCmRjQaBLR5RjMeTziSaH2ZR852tAzMSmVjptJ3M",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Martu", "trait_type": "Faction", "trait_count": 2498 },
+          { "value": "Light Pink", "trait_type": "Body", "trait_count": 1290 },
+          { "value": "Racers Regalia", "trait_type": "Armor", "trait_count": 173 },
+          { "value": "Pleased", "trait_type": "Mouth", "trait_count": 2626 },
+          { "value": "Viral Intruder", "trait_type": "Helmet", "trait_count": 302 },
+          { "value": "Satellite Dish", "trait_type": "Ears", "trait_count": 162 },
+          { "value": "Galactic Sequencer", "trait_type": "Eyes", "trait_count": 245 },
+          { "value": 7, "max_value": 7, "trait_type": "Attribute Count", "trait_count": 3863 }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "HQaakscXrVAfP1mTpreuuCvZRdGWuyuRHJ2NBFqmkKni",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Mootardios #5043",
+      "symbol": "",
+      "uri": "https://gateway.irys.xyz/6mX5ATELXRHPRpx3GxsfZV8AfqUo9wRJywwtjbREytfV/5043.json",
+      "description": "Mootardios - 7,777 lo-fi cows living on Solana.",
+      "media": "https://gateway.irys.xyz/G5pvSYLL4zTuLdbYH4sBQRwymNVBVMYh2tp7QzD6Z7dd/5043.png",
+      "extras": {
+        "attributes": [
+          { "value": "Golden Clouds", "trait_type": "Background" },
+          { "value": "Holstein", "trait_type": "Base" },
+          { "value": "We Ball Tee", "trait_type": "Clothing" },
+          { "value": "Honey Default Eyes", "trait_type": "Eyes" },
+          { "value": "Mootardio Tattoo", "trait_type": "Tattoo" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "JAiTc4kitabK1y2ZZrGAiWNRiSwMPTbq58SZ9F8gUizm",
+      "owner": "p9LLPWheKpuQSNJidiBV1E8Xwkx4Qwxi6bq11ASXZsZ",
+      "name": "Mad Lads #5900",
+      "symbol": "MAD",
+      "uri": "https://madlads.s3.us-west-2.amazonaws.com/json/5900.json",
+      "description": "Fock it.",
+      "media": "https://madlads.s3.us-west-2.amazonaws.com/images/5900.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Male", "trait_type": "Gender" },
+          { "value": "Android", "trait_type": "Type" },
+          { "value": "Android", "trait_type": "Expression" },
+          { "value": "Samurai", "trait_type": "Hair" },
+          { "value": "Android", "trait_type": "Eyes" },
+          { "value": "Fur-Trimmed Jacket", "trait_type": "Clothing" },
+          { "value": "Violet", "trait_type": "Background" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    }
+  ],
+  "pagination": { "total": 19, "limit": 100, "offset": 0, "hasMore": false, "nextOffset": null }
+}

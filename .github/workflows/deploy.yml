@@ -1,0 +1,98 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - prod/*
+
+permissions: {}
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use Node.js 20
+        # v7.0.0. Cache is safe here: verify publishes nothing — it only gates.
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # zizmor: ignore[cache-poisoning]
+        with:
+          node-version: 20
+          cache: npm
+
+      # GET /status reports package.json's version, so a tag that disagrees with
+      # it ships a deploy that misreports itself. This has happened: every tag
+      # from prod/v0.7.5 to prod/v0.9.0 shipped while package.json sat at 0.7.4.
+      - name: Tag matches package.json version
+        run: |
+          tag_version="${GITHUB_REF_NAME#prod/v}"
+          pkg_version="$(node -p "require('./package.json').version")"
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} declares ${tag_version} but package.json says ${pkg_version}."
+            echo "Bump package.json and retag, or delete the tag and push the right one."
+            exit 1
+          fi
+          echo "Tag and package.json agree on ${pkg_version}."
+
+      - name: Install node modules
+        run: npm ci
+
+      - name: Lint
+        run: npm run linter
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      # No AWS credentials configured in this job. Confirms the local-stage
+      # config resolves entirely from env vars/defaults and never reaches
+      # for SSM, before we trust the same serverless.yml with the prod stage.
+      - name: Serverless config sanity check (local stage, no AWS creds)
+        run: npx serverless print --stage local > /dev/null
+
+  deploy:
+    name: Deploy Serverless PROD
+    needs: verify
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use Node.js 20
+        # v7.0.0. Deliberately NO dependency cache: this job publishes to
+        # prod, and a poisoned cache entry could reach the shipped artifact.
+        # Slower install is the accepted cost. (v4 only caches when asked;
+        # zizmor can't tell the version from the SHA, hence the ignore.)
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # zizmor: ignore[cache-poisoning]
+        with:
+          node-version: 20
+
+      - name: Install node modules
+        run: npm ci
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: arn:aws:iam::228067885724:role/GithubActionsRole
+          role-session-name: gha-${{ github.run_id }}
+          aws-region: us-east-1
+
+      - name: Deploy serverless PROD stack
+        run: npm run serverless:deploy
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}

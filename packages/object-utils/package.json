@@ -1,0 +1,32 @@
+{
+  "name": "@4m/object-utils",
+  "version": "0.0.1",
+  "description": "Useful object utility functions",
+  "main": "index.js",
+  "engines": {
+    "node": ">=14.17.1"
+  },
+  "scripts": {
+    "test": "jest --detectOpenHandles",
+    "linter": "eslint ./ --fix",
+    "publish:patch": "npm run test && npm version patch && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salmonw/4m-modules.git#object-utils"
+  },
+  "keywords": [
+    "object",
+    "utility"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/salmonw/4m-modules/issues"
+  },
+  "homepage": "https://github.com/salmonw/4m-modules/tree/utils/object-utils#readme",
+  "devDependencies": {
+    "jest": "^27.0.6",
+    "node-notifier": "^10.0.0"
+  }
+}

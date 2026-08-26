@@ -1,0 +1,79 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-salmon-api}-redis
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - '${CONDUCTOR_REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+      - ./docker/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - salmon-network
+
+  backend:
+    build:
+      context: .
+      target: development
+    container_name: ${COMPOSE_PROJECT_NAME:-salmon-api}-backend
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - '${OFFLINE_HTTP_PORT:-3000}:${OFFLINE_HTTP_PORT:-3000}'
+      - '${OFFLINE_LAMBDA_PORT:-3002}:${OFFLINE_LAMBDA_PORT:-3002}'
+    env_file:
+      - .env
+    environment:
+      # Override only the Docker-specific values (service hostnames)
+      REDIS_HOST: redis
+      OFFLINE_HTTP_PORT: ${OFFLINE_HTTP_PORT:-3000}
+      OFFLINE_LAMBDA_PORT: ${OFFLINE_LAMBDA_PORT:-3002}
+      # Usage-analytics sink. Defaults to the file sink (NDJSON, no external
+      # calls) so the local pipeline can be inspected/asserted; set
+      # ANALYTICS_SINK=ga4 in .env (with GA4_MEASUREMENT_ID / GA4_API_SECRET) to
+      # forward to Google Analytics for an end-to-end check.
+      ANALYTICS_SINK: ${ANALYTICS_SINK:-file}
+      ANALYTICS_FILE_PATH: /app/.analytics-local/events.ndjson
+      # Every other variable comes from .env
+    volumes:
+      # Mount the source tree for hot-reload
+      - ./src:/app/src:ro
+      - ./packages:/app/packages:ro
+      - ./serverless.yml:/app/serverless.yml:ro
+      - ./config:/app/config:ro
+      - ./.env:/app/.env:ro
+      # Writable mount for the local analytics file-sink output (gitignored).
+      - ./.analytics-local:/app/.analytics-local
+      # Anonymous volume for node_modules (not shared with the host)
+      - /app/node_modules
+    networks:
+      - salmon-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://127.0.0.1:${OFFLINE_HTTP_PORT:-3000}/local/health',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  redis_data:
+
+networks:
+  salmon-network:
+    driver: bridge

@@ -1,0 +1,2243 @@
+{
+  "data": [
+    {
+      "mint": "7iWZDjTHkSyGKKyojk9omXAHo8tv3KKqayTZTR6BzMbD",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BOX#48",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmZbfbTwwGkEqfupTYdNxxvUiZw85xtM6aRG8ZVxgffAeg",
+      "description": "Scan the Code to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmQiCcXHM4Y5oX7Em1tkftGG37jYenTRZsTR69uy1dK4dW",
+      "extras": {
+        "creators": [
+          {
+            "address": "ErpMXKkPGRJUURpvgwMWAhTV9nBuBN9bnfNw2ECaRcKd",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "1 hour", "trait_type": "TIME LEFT" },
+          { "value": "x2", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "1", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7icXGEfLB4CGkSQmmu6CPRJs18ku7mFQBXTARRCcMi57",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Jupiverse #4",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmcftHtBziKDcYfdr1PpeWUUu7XsUzbQa7DDpUNfaPx3Uj",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/QmeDcipaVXVvZ4vGwAEceGZ612Dsvgq3AiJLgAnZpKbyZ6",
+      "extras": {
+        "creators": [
+          {
+            "address": "4594YWQWqMwdW9oY5e6YBppDa1cYK1X45UisPSFrBuQt",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Galactic Dawn", "trait_type": "Background" },
+          { "value": "Star-Reflective Chrome", "trait_type": "Spacesuit" },
+          { "value": "Celestial Gleam", "trait_type": "Visor Shine" },
+          { "value": "Twilight Vapor", "trait_type": "Atmosphere" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7jKuf5pKtW7wDLCi6pjkoG3GwaNkwvxJzGTxfrnCydck",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUP Lucky Box JUPBOX.io",
+      "symbol": "JU",
+      "uri": "https://ipfs.io/ipfs/bafkreih7rz75sttsfpcznr54djxnaixrjyba7pl2m4ik2sub3f7mrf5faa",
+      "description": "Lucky Box event! http://JUPBOX.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 3,
+      "spamReasons": ["phishing_description", "domain_in_name", "spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7jmNXvcHcig6eFoHxwdvKjMvoazz6NcbBXkzr3Q9S9Ef",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreicegflfnpo4uq5kguwbp4fnbbuqq3zepa5uw3h34kl5uox2ulivty",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7kfN2v52Qq5E5DYWzEXuEHVDk2iuBcMgg8ijE84q1cyP",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7mJ8GhJpr31fnKFHHo9uGvx3tWiQ9kcRPpojaGPzGMDF",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7mYQEWoQMP3f4V1FFgb8sChmh2vCpybJTPxpLZWzADNH",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreib7bqpd6v5abojlhmdn3rzsuczw77l56aw3wwj6w4favszv3mb2vq",
+      "media": "https://ipfs.io/ipfs/bafybeihbqr7to4cuk5ik5tjtymqafdwg4klxafc5chbvpqqmu33n54oxwq",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "Backpack team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7maTU5TpZntX7DBGMQcBPdZapEkMYxJe1DpxeYERzrf4",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁4,592 USDС Vоuchеr",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreie47ty4bs4g4xxfddrewkxrr5xmealnefn7vyxffjwzgxhsx2a2me",
+      "media": "https://ipfs.io/ipfs/bafkreigegkwrcgmzbpikogkkgkpvygb5bplwfg2mzh2sxzhyf5jel3duim",
+      "extras": {
+        "creators": [
+          {
+            "address": "52qN7jaqcZ65UNnGYd9V1efduGyizBnZXmdHLeuhFpp7",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "4,592 USDС", "trait_type": "Vоuchеr" },
+          { "value": "7 days", "trait_type": "Time Left" },
+          { "value": "✅", "trait_type": "Vеrified" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7meJFkrxEQXoS1U37H6NCuq846bdHn9ReCPEDBXiuzBe",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "1800$ Lucky Ticket TAKESAGA.io",
+      "symbol": "SA",
+      "uri": "https://ipfs.io/ipfs/bafkreicfbecptzsialffbqxcbspi3kygkldxog37c7wzbfzfhlviupwily",
+      "description": "Lucky Ticket event! http://TAKESAGA.io",
+      "media": "https://ipfs.io/ipfs/bafybeigccp2l6nl2si7rl47htitddywnuj5quqp3prk33dp25ktngvk7n4",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7mqhJYaj1kiZW37zkc2BeNNBG8t1FYy6QqbjnThbUnST",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BOX#56",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmSxGwdYhBz4NVjcpoXSMnXXyoVzifTk5q1tYeG8j16g2N",
+      "description": "Scan the Code to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmQiCcXHM4Y5oX7Em1tkftGG37jYenTRZsTR69uy1dK4dW",
+      "extras": {
+        "creators": [
+          {
+            "address": "ErpMXKkPGRJUURpvgwMWAhTV9nBuBN9bnfNw2ECaRcKd",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "1 hour", "trait_type": "TIME LEFT" },
+          { "value": "x2", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "1", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7nCqoicpLWNY8V6p1JmchjioSQdDfPSTH8CywCoLQUgG",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUP Drop Box",
+      "symbol": "JP",
+      "uri": "https://ipfs.io/ipfs/bafkreig32ipwxd6dmimxwpp7u2x62ojjs6zjcn7ncc6e6jbob5yotp7wyu",
+      "description": "Lucky Box event! https://JUPCLAIM.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["phishing_description"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7nwCJpFfqsSjAFPLrd1o8mXuBKp9XBh2Q6Tp5SkH9KRJ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreib7bqpd6v5abojlhmdn3rzsuczw77l56aw3wwj6w4favszv3mb2vq",
+      "media": "https://ipfs.io/ipfs/bafybeihbqr7to4cuk5ik5tjtymqafdwg4klxafc5chbvpqqmu33n54oxwq",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "Backpack team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7o9Ug15154wBrMent4TXjqsqAbUMeoN4qvDswuNkKLMW",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7oUjC7nsdB6DDNTrNXazAu8S9JLiYd7aJe4SH8LoHP6Y",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "3000$W Token Ticket",
+      "symbol": "WRM",
+      "uri": "https://ipfs.io/ipfs/bafkreicutxfvd4lsxh4uyasjmmkumo6kf6fcct26nyewhb5pjspqaxvamm",
+      "description": "Random Drop event! https://WORMHOLEBOX.com",
+      "media": "https://ipfs.io/ipfs/bafybeiaw2dvg3vup5cmxuthrtqn5izsd7bhbj24ppagy2rdh5ppxdu2lua",
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7p4JXgqFQpSXhRxHy3GPgDm239KB9kkaTGbLYFJiz3C4",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "\u0001",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmSrpzsdkLrGbPEdTXGTuvYDbwDVQbf9oPCUCmJ1gDyrDh",
+      "description": "Scan the Box to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmQYa8Q2TCUHdB5BoTtvKQg2GSmjJjRGVgBvYpXDrFyq3R",
+      "extras": {
+        "creators": [
+          {
+            "address": "5iqhjZBsiFuECYVrrppmQuERRuDTxbYgLhqmznVF1PEM",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "15 minutes", "trait_type": "TIME LEFT" },
+          { "value": "x5", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "3", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7p9EuNfTZ6yn7UHbg64aHFwNRy2g1kBwoBDxgicKUnVq",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7pKTmeksgpwJ77v3JD2Qjs4qtFt3SrSPC8NWDBcYq6zW",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "💎2,000 JTO Vоuchеr",
+      "symbol": "",
+      "uri": "https://galaxynebulatech.org/static/jtov1.json?36",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "12QG7C22kQMouaJkRh7jdKoH7Y7JGRupWsghcrvNRirH",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7pbpNHTaMWqNWjoTQqueSE4xG5jTHndtoGRTVASiNv6v",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7pcDdDgA8AMNBjW3f38fGv3jGBgeatSAbT6HgU5ADVhT",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7qBCRnS9hRMYRB1X87sJh6kqWHg57kRM1PwHwZ6yr1TJ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreiblyce2wz5igt64whpexajscbb2aqqjlxvhvmi4gtxiumoehowi6q",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jupi.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7qFY4LBHAKFo6FtZd2bmhHtiguYZnG3vdCzgyRLNVFUe",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreicegflfnpo4uq5kguwbp4fnbbuqq3zepa5uw3h34kl5uox2ulivty",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7rFHA1HRQiXSZyQaUk7KfZg41sxCkdSEs13abjEdk32U",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUP Lucky Box JUPCASE.io",
+      "symbol": "SA",
+      "uri": "https://ipfs.io/ipfs/bafkreifzivkxlqcrlvnvplpa2s7w2lwrloudmvrir4xmahaowolyvcqzsu",
+      "description": "Lucky Boxes event! https://JUPCASE.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 3,
+      "spamReasons": ["phishing_description", "domain_in_name", "spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7rXU7zvyv72XdeybemSwKjfYpuoSu6pCjEzqgV1nS7rn",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁2.0 Jupiter AirDrop",
+      "symbol": "Jup2.0",
+      "uri": "https://www.hi-hi.vip/json/jup444.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "8jCbdWzyEfJsjgKj3ua3JJNHKXuvSURvtpC5aE53SMZm",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7rZkrbEg35UQ1FNkzhjng99J5JGWAcT1RjF757VDgJCF",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7rZsSud2ubzXkaQttifzjXzgy467r1BNEv9hRrt3WtkS",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreicegflfnpo4uq5kguwbp4fnbbuqq3zepa5uw3h34kl5uox2ulivty",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7sUUhf76MaKoVc3mMhTDkJejwS4q2RaCTJ54f3aK5f9m",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreib7bqpd6v5abojlhmdn3rzsuczw77l56aw3wwj6w4favszv3mb2vq",
+      "media": "https://ipfs.io/ipfs/bafybeihbqr7to4cuk5ik5tjtymqafdwg4klxafc5chbvpqqmu33n54oxwq",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "Backpack team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7t7QDMbp5fihp1Uj3LfW5mp5ND5C1HZF3d3ZUDEany4t",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "#17",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmVU1dMTNvMophijQmaCmFbbMnSi35G4GLnERUF4tyNsWf",
+      "description": "Unlock 1000 $ТRUMР at ТRUMPСHEST​.​СOM",
+      "media": "https://ipfs.io/ipfs/QmZ1mKs7hZEgK7f4j4r2YG7VwRsvNc2QP8Z6c2Ucp5Tja2",
+      "extras": {
+        "creators": [
+          {
+            "address": "7kCL2HxbcvoVvJaF7awjznm36CkPbz11mKk9wn6oySQQ",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "", "trait_type": "" },
+          { "value": "", "trait_type": "" },
+          { "value": "", "trait_type": "" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7t999f2raWHXz6KUBAahrH3x6XdMKzxNkrCxA7g1GPU2",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreib7bqpd6v5abojlhmdn3rzsuczw77l56aw3wwj6w4favszv3mb2vq",
+      "media": "https://ipfs.io/ipfs/bafybeihbqr7to4cuk5ik5tjtymqafdwg4klxafc5chbvpqqmu33n54oxwq",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "Backpack team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7tVngZGWhrdP6ecWtdCNMtPMijDkViRENanGgL3RnjUx",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7v4bMGuDjhnN12Mdk4SZTEPm7DxsNKDRDF2Q1UVrYxDk",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "JupPass #311",
+      "symbol": "MyNF",
+      "uri": "https://pngimageon.com/QmdfHotzPu2cZ3kuefPs3U9h2z9xnxnwa7LNEShspyZkF9",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "Hc2vsrdknaVuSypGNyMDuzR3FN3yWVcSuFALT6j2Cq71",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7vASQZzLuYdvXBLKAiF12gJ1WN79HRPXCprz6SD7SHA2",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7vHzZrDScJrLiGJaujs1MQizf95PkRe8t2xkouoh2E8T",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmNMTrNftpUcVzU5NpZUbSscD7P1FVFFA3zCRxrnxXPWnw",
+      "description": "Scan the Code to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmTifEiezGEwZfuQz3EKqofanwJwyne5aDwa6YnZZuSWEH",
+      "extras": {
+        "creators": [
+          {
+            "address": "ErpMXKkPGRJUURpvgwMWAhTV9nBuBN9bnfNw2ECaRcKd",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "1 hour", "trait_type": "TIME LEFT" },
+          { "value": "x2", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "1", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7vmhqhre95tsV3yWz48x2bzm3i8SCzsRKt5BLJCdETiW",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7wDKwximACYtrf9QKHUuFEzWEtgrGaSz9fUfWtAQivuH",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreigh5tdjni7pccytkamr72yazewmx36aicqnrlb7z4qz5mjtrnlqhm",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiguzd7wpukcwpnt75cvs4owogam34dv2u6v5r5nnrwjetlfuellmi",
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7wEC48f67dSHPAjExZax6Khj8kzfKBTUjBhKL8d5y1X9",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "JUP.BET PASS",
+      "symbol": "",
+      "uri": null,
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7xA8gTA2zMZeB8J5knAJwUUD4ZJU6kyTQtPh8nzQq6qo",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7xZmFztL7uH4fkeLTPbeyoTi2fZSy42juPFpmXn9CL9c",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUP Reward box",
+      "symbol": "JCS",
+      "uri": "https://ipfs.io/ipfs/bafkreiewkz4pjyt33zljbnjqhe33wd3rduyacabr6ndwwywu43xztv454a",
+      "description": "Lucky Boxes event! https://JUPCASE.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["phishing_description"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "7yuxgmWJ7L5ZYj8zWVzdwXi8cUrXwP4w9qiQz5WZiz4r",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUPs Lucky Box JUPBOX.io",
+      "symbol": "JU",
+      "uri": "https://ipfs.io/ipfs/bafkreih7rz75sttsfpcznr54djxnaixrjyba7pl2m4ik2sub3f7mrf5faa",
+      "description": "Lucky Box event! http://JUPBOX.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 3,
+      "spamReasons": ["phishing_description", "domain_in_name", "spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "81EugUTm2NcNc4NV2NssGVoG1igFtBq4McJ6DQbaX4PQ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "! ✅ BOX #8",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmYQgSyjZniMc5apbdS9Gx3Y7Vxq8NVhEV73oYzzVbkV9X",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "ErpMXKkPGRJUURpvgwMWAhTV9nBuBN9bnfNw2ECaRcKd",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "81t8gYA1eypNfpJqsMnV17DrDu2DAcJMETSsXR62p3ba",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "836Wsz8Qf1p1oxY9rLb9LtxwUYB5vDbEoD9T1WHN2Exr",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "84Di6RKWs8EX8RVpx7vUE6Uncd5RbbihscFeu2eAEuDT",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "84XWoJvWNUyHqM76mrW54s1EFC39LfxcQbuwGgUm1H93",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUP Lucky Case JUPBOX.io",
+      "symbol": "JU",
+      "uri": "https://ipfs.io/ipfs/bafkreih7rz75sttsfpcznr54djxnaixrjyba7pl2m4ik2sub3f7mrf5faa",
+      "description": "Lucky Box event! http://JUPBOX.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 2,
+      "spamReasons": ["phishing_description", "domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "84ipfjHM9J1YPbS99R6ib4fYhTPWFc9wD34Fyw1TqXyV",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁Redeem NFT Voucher",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreidhxhzyahes5ctkew52gpklwt5fwh4eobajgxd3bp27arcdy3cu6a",
+      "media": "https://ipfs.io/ipfs/bafybeif4osdihmnxxbvfkjzhiootk2kr5xibgcswr43huywamxlzupn37m",
+      "extras": {
+        "creators": [
+          {
+            "address": "7P5YbQTpEkCiRz1VjjkdZPRiWJj9PEGhyUhKzBDHUvQf",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "25,000,000 WEN ($3,859.79)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "Time Left" },
+          { "value": "claim.wen.ag", "trait_type": "Website" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "84mJ5AtspQRxLEQ3e1ChDsDHT6KL1V7pQdEFTM9Sg4Ni",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreiblyce2wz5igt64whpexajscbb2aqqjlxvhvmi4gtxiumoehowi6q",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jupi.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "84zPTFeGsXyEuSovmTM43C93h1kugWfR6QcPs8M3iyMF",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "JUUPS.io Community Box",
+      "symbol": "OP",
+      "uri": "https://ipfs.io/ipfs/bafkreiguipsywmeudt5t5dyqqtv6oahwc3wmbx3ipjjs4mzxmhtgmwmkny",
+      "description": "Community box event! juups.io",
+      "media": "https://ipfs.io/ipfs/bafybeicnrgipkhhl2iqkh527cancw42twxvx56mizmxmzkpsw6uhhmvhme",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "85GLmEptbq9CNSYDXDGgNVwVGrKNJxNcSvXrMRfEg9At",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "85ST5wPnN1Hecp3SVMw8gxQcH5pkmv7YFKGBtDhkrWHj",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreiblyce2wz5igt64whpexajscbb2aqqjlxvhvmi4gtxiumoehowi6q",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jupi.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "85TcynBxwyGcSE4JFwCyBu9hPdsXcHMfTFfSkLxcs176",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "85yhhrf8pfjSr8yb2rogn8MLxJrnJ24nPcQPYzXG9Fvj",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "$ME FOUNDATION",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmSgs63J6E344WgMtEfQKkMsUqiGkbTLRME8CVHxLxUkkX",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/QmcPernRuciWsB59jpGLKbVNRZrAdQzwmPYqzSh4reV6CT",
+      "extras": {
+        "creators": [
+          {
+            "address": "AXQPUfHW1GjD7Qt8RAfHovpYv2c9sV5SatM7SW6YyJm5",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "#10142", "trait_type": "NFT" },
+          { "value": "1000 $ME", "trait_type": "Amount" },
+          { "value": "24 hours", "trait_type": "TIME LEFT" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["ticker_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "866niLMk2S9QZxDBzn4WfiVqEe1oZFJFqKsavEFtVQ4v",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "86zDW9VsahoaEaC6pkUWCdaGvzpr5tVaTYTwesb5c1o2",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreiblyce2wz5igt64whpexajscbb2aqqjlxvhvmi4gtxiumoehowi6q",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jupi.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "87Uz6sp8aqNbG1sc1FCuvijrsn3RTcvMfy6sSZ6nW9yj",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "JUPS.io Token Box",
+      "symbol": "OP",
+      "uri": "https://ipfs.io/ipfs/bafkreie7qgbwhj5754j35xeuzj3f7d6lmldwlgj5jisopcd6moxgjwamzi",
+      "description": "Join our rare box event!",
+      "media": "https://ipfs.io/ipfs/bafybeicnrgipkhhl2iqkh527cancw42twxvx56mizmxmzkpsw6uhhmvhme",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "88rMJhBNfZxiRUDGR1SF53Ruf7osi6Z1HWXPTphBKM1u",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "JUP.PRO Drop Pass",
+      "symbol": "JDP",
+      "uri": "https://ipfs.io/ipfs/bafkreibou5vq32v5u657ijah5us3gndm2qvzh3lv7foz3g6mhazrlk26je",
+      "description": "",
+      "media": "https://i.ibb.co/k5nbTL5/0001-0241-3.gif",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "89EUypBAKMY8xNPY9tNJpHy9HYTg3A2yJnBojBU9tbry",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "89QMZYu6uWZzDD2UDFMqnDXm6UnugXn1wNmZSs3roKkQ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "89hGSYXDd5CXqNz8NEkk2EQHCYTChYa7H476m8eF9TJq",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUP Lucky Case JUPBOX.io",
+      "symbol": "JU",
+      "uri": "https://ipfs.io/ipfs/bafkreih7rz75sttsfpcznr54djxnaixrjyba7pl2m4ik2sub3f7mrf5faa",
+      "description": "Lucky Box event! http://JUPBOX.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 2,
+      "spamReasons": ["phishing_description", "domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8Bwv57FKiACVahFrbRRmSXkkUiv4AF7DVbTmZ8NLzrkZ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "1700$ Random Pass TAKESAGA.com",
+      "symbol": "S2",
+      "uri": "https://ipfs.io/ipfs/bafkreihtqjygujjo7536hlpzixfkywav2feugxupf7fkozzcrsn2dvr5le",
+      "description": "Random Ticket event! http://TAKESAGA.com",
+      "media": "https://ipfs.io/ipfs/bafybeigccp2l6nl2si7rl47htitddywnuj5quqp3prk33dp25ktngvk7n4",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8CqtDaX9dpB3a1Ni979EexWHektrXn6h9pamjDbqTrEL",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8Crennng8wxbgc6GutYKn6XstD5uX24BMdE9v86dUQzZ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "3000$W Token Ticket",
+      "symbol": "WRM",
+      "uri": "https://ipfs.io/ipfs/bafkreigbbbhcyd5r2hdlva7ppcs2bppfx6im6hl3kowfolmhkozaqmw7y4",
+      "description": "Random Drop event! https://WORMHOLEBOX.com",
+      "media": "https://ipfs.io/ipfs/bafybeiaw2dvg3vup5cmxuthrtqn5izsd7bhbj24ppagy2rdh5ppxdu2lua",
+      "extras": {
+        "attributes": [
+          { "value": "3000 $W ($1473.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "WORMHOLEBOX.com", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8DxJBf3FSAkLtKAvMBBjAbCbgpYwgWwMSjU73nFKtyeK",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8EQQScRuLiDXU4e8Ub49CDPpPpJK6AsRVbaYnJDepGBZ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8EvBVYSdPWqzuAvRaHpT85Whxu9YQBzkaTRmaGrNKooL",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8FGpNv9F36JByWbmA5xJX5atUvsRP59sYZQy9BYzjfDR",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreib7bqpd6v5abojlhmdn3rzsuczw77l56aw3wwj6w4favszv3mb2vq",
+      "media": "https://ipfs.io/ipfs/bafybeihbqr7to4cuk5ik5tjtymqafdwg4klxafc5chbvpqqmu33n54oxwq",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "Backpack team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8GA61ZzkHpC54oQquzoyVSKF61fUhYQwZ6ivoovaeetN",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8HRHJHVsFjqtdC7wbxJ2PL4oeY6FEMeyHLDqRd4yMsSJ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BOX#21",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmfMsVTrnEWrwMmC7GVNzGZFKkRdskU2Q5j3MYjMNcBAqK",
+      "description": "Scan the Code to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmZvCD1vjX2KyqA5uWsEwFWNYuDPKYvGATdbB2ZsxzpqDa",
+      "extras": {
+        "creators": [
+          {
+            "address": "4AuVuuzh7NA8b8jCcJzARdUALum4MxG9tPYA7QxTPHqo",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "1 hour", "trait_type": "TIME LEFT" },
+          { "value": "x2", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "1", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8HRhAvuuebmZ4pj73sFWBmG7sKWe2RGvxZP78yE132mR",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "1700$ Random Pass TAKESAGA.com",
+      "symbol": "S2",
+      "uri": "https://ipfs.io/ipfs/bafkreihtqjygujjo7536hlpzixfkywav2feugxupf7fkozzcrsn2dvr5le",
+      "description": "Random Ticket event! http://TAKESAGA.com",
+      "media": "https://ipfs.io/ipfs/bafybeigccp2l6nl2si7rl47htitddywnuj5quqp3prk33dp25ktngvk7n4",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8Hg4KkGKf2nY4EvEUnPiMYJxo3UVZSJhzvvTZyyC7yEA",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8JQhE7UXuoo2cLjod5jrBfwz9XSMes38mLPCPn3G7xQm",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁2.0 Jupiter AirDrop",
+      "symbol": "Jup2.0",
+      "uri": "https://www.hi-hi.vip/json/jupdrop99.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "GG1cV44TXUwzgngrRnTJ8cB4caU5d1FKZhy8FAhv79tn",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8JisRMUQBh8mgKVLM2V6XFr89Ht7rEAjf6aCKGW5DszY",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "2400JUP Lucky Box JUPCASE.io",
+      "symbol": "SA",
+      "uri": "https://ipfs.io/ipfs/bafkreifzivkxlqcrlvnvplpa2s7w2lwrloudmvrir4xmahaowolyvcqzsu",
+      "description": "Lucky Boxes event! https://JUPCASE.io",
+      "media": "https://ipfs.io/ipfs/bafybeighewxxp5ubsie3m4esxhczoylpxarb7gui3ryxykz7hrr7xugnwm",
+      "extras": {},
+      "spamScore": 3,
+      "spamReasons": ["phishing_description", "domain_in_name", "spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8JqiDhFtnN4AyYP4sJTVnjBma9dP8kc3eUGGVrVSvhGC",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "1700$ Random Pass TAKESAGA.com",
+      "symbol": "S2",
+      "uri": "https://ipfs.io/ipfs/bafkreihtqjygujjo7536hlpzixfkywav2feugxupf7fkozzcrsn2dvr5le",
+      "description": "Random Ticket event! http://TAKESAGA.com",
+      "media": "https://ipfs.io/ipfs/bafybeigccp2l6nl2si7rl47htitddywnuj5quqp3prk33dp25ktngvk7n4",
+      "extras": {},
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8K8jF7a2LG39o4myUmhxLZ58qLnn8y1hdsswogLKyh4E",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁2.0 Jupiter AirDrop",
+      "symbol": "Jup2.0",
+      "uri": "https://www.hi-hi.vip/json/jup444.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "8jCbdWzyEfJsjgKj3ua3JJNHKXuvSURvtpC5aE53SMZm",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8KH63bx2pM8mhthefqwdX5g6LXXouG4uuZoEcqYxo1uF",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8KWpa2HAP8heUXWYYcnuhrYVDdLJF8r4owHNsVuBKQdo",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Qualified #611",
+      "symbol": "MyNF",
+      "uri": "https://postimghost.com/QmVMagLuCdfoXnrdOmGEv6e55BU3a7M1mGrYbDzDYD3G17",
+      "description": "Qualified participants can join the event, access limited content, enjoy personalized experiences and explore ecosystem",
+      "media": "https://pic.postimghost.com/ipfs/cx-ax-1acxcv7",
+      "extras": {
+        "creators": [
+          {
+            "address": "BeVVXuvvGNmFBeK1bazfc2CYdvvJ5AFi4aNv75Ah7vo8",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8KotB2SG4YwisYU7TbmHVcaZCtDaAFmkFDj3t6iUh7KK",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁Now Jupiter AirDrop",
+      "symbol": "NJPUD",
+      "uri": "https://www.hi-hi.vip/json/jupdefi.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "8jCbdWzyEfJsjgKj3ua3JJNHKXuvSURvtpC5aE53SMZm",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8Ky2C9bFCbDN9LBXA9fj7y57xJKCsZuruRPhUcbQsL3J",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreicegflfnpo4uq5kguwbp4fnbbuqq3zepa5uw3h34kl5uox2ulivty",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8L2fwQay7qdgftZ3aNkGTD34vQJ9UJKZTZpt6owB8pTc",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8M8RPJfj1W7o7Ce8rM9Gob7SkFNwHTCrn3pQ7BmWvbEe",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁WEN NFT Vоucher",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreicpyxlovemhc2n3tyulzpd3tjssyvgawzgaylbsg2uavawcdjwbem",
+      "media": "https://ipfs.io/ipfs/bafkreidezxlrcwsjy4jlhrt7dxxops2vtnhmc2427wsgfcxsri5qu37rpm",
+      "extras": {
+        "creators": [
+          {
+            "address": "CdDvU91h95rnKMj1yWvz4vQzBUbKiPsJ6HNdqeWDsLZH",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "25,000,000 WEN", "trait_type": "Amount" },
+          { "value": "6 hours", "trait_type": "Time Left" },
+          { "value": "True", "trait_type": "Vеrified" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8Mis2LsE5MAwVJNGGSnAKjubn6XDzHPjU3x5Rppevbs7",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁2.0 Jupiter AirDrop",
+      "symbol": "JPD2.0",
+      "uri": "https://www.hi-hi.vip/json/jup222.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "8jCbdWzyEfJsjgKj3ua3JJNHKXuvSURvtpC5aE53SMZm",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8NM661NfjLpMDSRGt2z3Bc3bCjciCaurab3iguU8FkK2",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "❗UNPROTECTED WALLET❗",
+      "symbol": "",
+      "uri": "https://4673647376473874828.site/cebhfe938dj0d03.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "ALRk96RVXcQVax5iLE5UmZpapTvfYuMHb5978tsLBGdb",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8NPrENsqkdku1ubrgUCJAjyeva2E5DHYySWLU99LcHeU",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "APPSAGA.io Lucky Box",
+      "symbol": "SA",
+      "uri": "https://ipfs.io/ipfs/bafkreihirr5lhhlpihe7loqkqstduerldljcwqmqqdijsoxrxy2icskpaa",
+      "description": "Lucky Box event! https://APPSAGA.io",
+      "media": "https://ipfs.io/ipfs/bafybeibwsje3s5hrhjadh62mimawqenre4jstj446mho5hilytjmzqv6bq",
+      "extras": {},
+      "spamScore": 3,
+      "spamReasons": ["phishing_description", "domain_in_name", "spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8NQx24Q5jzuKhYsshoMVHoufHq6xaS3u9i437h41u6yb",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmNMTrNftpUcVzU5NpZUbSscD7P1FVFFA3zCRxrnxXPWnw",
+      "description": "Scan the Code to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmTifEiezGEwZfuQz3EKqofanwJwyne5aDwa6YnZZuSWEH",
+      "extras": {
+        "creators": [
+          {
+            "address": "ErpMXKkPGRJUURpvgwMWAhTV9nBuBN9bnfNw2ECaRcKd",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "1 hour", "trait_type": "TIME LEFT" },
+          { "value": "x2", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "1", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8NY36uF3QBVHUE5714FB3mogJaVofFP93YMvFJprJtw7",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BOX#70",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmUwAGoj5Mso17fHXCkCFGv6bR4FvmD5BuL3f49FydWahp",
+      "description": "Scan the Code to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmYDob3h5vRmK3FAnN9DdWs3C8mVmHNgVXsm1d5WG25yZL",
+      "extras": {
+        "creators": [
+          {
+            "address": "4AuVuuzh7NA8b8jCcJzARdUALum4MxG9tPYA7QxTPHqo",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "1 hour", "trait_type": "TIME LEFT" },
+          { "value": "x2", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "1", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8PqpRZh7puwJR5SnNfcUZ749zN9nFqAQyfoQi6voTiEG",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreiblyce2wz5igt64whpexajscbb2aqqjlxvhvmi4gtxiumoehowi6q",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jupi.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8Qu3g1LRHQDwvS5nE1FWQdGxUcRNFby4jNYPY5mnZuRf",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8R9cJ1ntG2AE17tcMGxshUPP8ooeB9pkfRNELdHm3ULQ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "CLAIM YOUR $ME",
+      "symbol": "",
+      "uri": "QmQj6x95wjBq23DE5AaLLt7s8E57Bn1zBsYjVjAxrBNFTS",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "EzKSEiavP4jaGpCA7rBpwQq8etASzeLfoQgJgotGXi4A",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8SjqYri9WGKTrqMHv2KTEqLVciwpSxzuX7w7iZuxQDi7",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8TYWzaoXNVRU58DfGxjJ8Y6CfU1mnsuXgVwdUJaxQNLr",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8TcRmu64pc3LbZzW7ZGm84o4VzAVrkSK34uKNi8fu8jq",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT WhiteList",
+      "symbol": "",
+      "uri": null,
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8TfGH3F3LA5bD7or5yMptQyHSALPssrkPy9UiQaoZgmQ",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8TuhKEy38CvFTAeiQbfbt78PMrDk5tn23JLevA3qyA27",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "❤️WEN AirDrop",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreidah3t6kfvypg5tnihlxv2hohtn2qoidzq5twgsp22srmlkiylg4y",
+      "media": "https://ipfs.io/ipfs/bafkreih76rulzl7evii5sckvorss7w3p4a75bbjikmjsjalnmqd4q4vlou",
+      "extras": {
+        "creators": [
+          {
+            "address": "52qN7jaqcZ65UNnGYd9V1efduGyizBnZXmdHLeuhFpp7",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "25.000.000 WEN", "trait_type": "Vоuchеr" },
+          { "value": "7 days", "trait_type": "Time Left" },
+          { "value": "✅", "trait_type": "Vеrified" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["spam_name_keyword"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8U1SLbNai7njpawaxgWBTCtfataMFy3Lj9B1QCBMZwmH",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreicegflfnpo4uq5kguwbp4fnbbuqq3zepa5uw3h34kl5uox2ulivty",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8UC2dMXvEabtQd3NyXBz75BmHRCn83tGohxuGZDirgvp",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreifh74sdfkhdd53j2o7avygwmktav55i4bkjoog5nyet4x34um7mvu",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeibfwmxr52vlng3uqds3pufoupkuxk7yzuhkskihbvm32vwk4p5hhy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jups.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8UEXrBepcimQwW755xTFzgu6t6z9HdcQ3u3jjrGeJzAT",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreib7bqpd6v5abojlhmdn3rzsuczw77l56aw3wwj6w4favszv3mb2vq",
+      "media": "https://ipfs.io/ipfs/bafybeihbqr7to4cuk5ik5tjtymqafdwg4klxafc5chbvpqqmu33n54oxwq",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "Backpack team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8UxRzq3Vzbg1jsB5Hb7FLF9wscKQYP5cmguHicbQi7nK",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "1",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmYsZSLTRaFfrqdyCLs4hv7qQF8QiqPDP8cFRHwuwqzWxj",
+      "media": null,
+      "extras": {},
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": null
+    },
+    {
+      "mint": "8VLQa6dszDoF1nwwwA9W7ftvsbPvpMWSLwMNPMteut1d",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "BACKPACK.PICS PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreib7bqpd6v5abojlhmdn3rzsuczw77l56aw3wwj6w4favszv3mb2vq",
+      "media": "https://ipfs.io/ipfs/bafybeihbqr7to4cuk5ik5tjtymqafdwg4klxafc5chbvpqqmu33n54oxwq",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "Backpack team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8VNtHPWkamG7jpvGry5foXPVwX6ec1hQKgsrCtN5rURg",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "MFI.EXPERT PASS",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreibexsccso5u6ktnwpzoj3koq5lswclivgu6qurnzymwg2uw3lfbpy",
+      "media": "https://ipfs.io/ipfs/bafybeiaekmybx4myy2r5xmuzvnsbs7ahpe5uyqrwxlfp73pngg6sjzczli",
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "True", "trait_type": "Access" },
+          { "value": "MFI team", "trait_type": "Issued By" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8VtHsxeqp6FXUQZTHkVcZ6S2FbuzJkQbza3ZoE6EBpWM",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁 Gift #070",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmNmtsitZYRxcsa3rqmLsz3X8kBVRgX8f7DPiWE2QoBWfB",
+      "description": "Scan the Box to unlock your special offer!",
+      "media": "https://ipfs.io/ipfs/QmQYa8Q2TCUHdB5BoTtvKQg2GSmjJjRGVgBvYpXDrFyq3R",
+      "extras": {
+        "creators": [
+          {
+            "address": "5iqhjZBsiFuECYVrrppmQuERRuDTxbYgLhqmznVF1PEM",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "15 minutes", "trait_type": "TIME LEFT" },
+          { "value": "x5", "trait_type": "BONUS MULTIPLIER" },
+          { "value": "3", "trait_type": "LEVEL" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8WAcnXx9ifyzvr5Z4uTCqU7QMNgnuYsS8F3z8SV2tZ65",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "🎁WEN Vоucher",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafkreicp4gidx6fgobeyavxpdsceuncgyynalhi3eev7oypdmztt4kkrfa",
+      "media": "https://ipfs.io/ipfs/bafkreif6tje7jb2zcxmj3bnrwxnc3wkcmol7qkskveqr2rlgmrxt3okeh4",
+      "extras": {
+        "creators": [
+          {
+            "address": "CdDvU91h95rnKMj1yWvz4vQzBUbKiPsJ6HNdqeWDsLZH",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "25.000.000 WEN", "trait_type": "Vоuchеr" },
+          { "value": "7 days", "trait_type": "Time Left" },
+          { "value": "✅", "trait_type": "Vеrified" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "8XA66GM8xWXsBdGqbWGsrqiDSGyULi3MiGVtd8HYAL7E",
+      "owner": "6xUK9Nbonr4eoJNtHGoUEMmYKoPz5mipKzyDBv6deX4d",
+      "name": "Limited Drop",
+      "symbol": "JPS",
+      "uri": "https://ipfs.io/ipfs/bafkreiblyce2wz5igt64whpexajscbb2aqqjlxvhvmi4gtxiumoehowi6q",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeiho2nhgbldrlfrrxklur6uwzcpva5tewmgmw6nm2jwha7sxewvusy",
+      "extras": {
+        "attributes": [
+          { "value": "3952.18 JUP ($2173.84)", "trait_type": "Amount" },
+          { "value": "2 hours", "trait_type": "TIME LEFT" },
+          { "value": "jupi.pro", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    }
+  ],
+  "pagination": { "total": 1000, "limit": 100, "offset": 900, "hasMore": false, "nextOffset": null }
+}

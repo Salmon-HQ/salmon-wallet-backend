@@ -1,0 +1,31 @@
+{
+  "name": "@4m/network-utils",
+  "version": "0.0.1",
+  "description": "Useful network utility functions",
+  "main": "index.js",
+  "engines": {
+    "node": ">=14.17.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "linter": "eslint ./ --fix",
+    "publish:patch": "npm version patch && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salmonw/4m-modules.git#network-utils"
+  },
+  "keywords": [
+    "network",
+    "utility"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/salmonw/4m-modules/issues"
+  },
+  "homepage": "https://github.com/salmonw/4m-modules/tree/utils/network-utils#readme",
+  "dependencies": {
+    "qs": "^6.10.3"
+  }
+}

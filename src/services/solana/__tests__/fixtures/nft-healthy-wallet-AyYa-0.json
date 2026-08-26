@@ -1,0 +1,3013 @@
+{
+  "data": [
+    {
+      "mint": "1LxJRa17tWCNfEp535vRdsW4rM9S7R2yKjrPUXmWNen",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "SolPunk_#7497",
+      "symbol": "SolPunks",
+      "uri": "https://arweave.net/siIQvi1BfhtYDS5xxSo5uikuKe1mVQBBYQ8LDN6rT9o",
+      "description": "SolPunk #7497 - Female",
+      "media": "https://arweave.net/ViPqf3ABrxVAAfUFVu1EZWEb7Oq9nUFT_yf5ZtTE3lw",
+      "extras": {
+        "creators": [
+          {
+            "address": "F5FKqzjucNDYymjHLxMR2uBT43QmaqBAMJwjwkvRRw4A",
+            "share": 50,
+            "verified": true
+          },
+          {
+            "address": "4AromPUc8LzZPwgxtARtxf29s924LLYCokuhM8B8vEcd",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 5508, "trait_type": "Rank" },
+          { "value": "Light", "trait_type": "Skin" },
+          { "value": "Female", "trait_type": "Type" },
+          { "value": "Blue Eye Shadow", "trait_type": "Attribute 1" },
+          { "value": "Wild Hair", "trait_type": "Attribute 2" },
+          { "value": 2, "trait_type": "Attribute Count" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "149LRA7Q6gWToMU7cg5tDaPKBMDNrdU4wRQcSe9v8p9N",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "5YDDiowuNjyG1Gtxq1P6SADRFXDePYmHXzSM7ArqV3V",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs #5623",
+      "symbol": "SMORC",
+      "uri": "https://metadata.smorc.io/nft/5623.json",
+      "description": "8888 Orcs from the Genesis Collection invaded the Solana.",
+      "media": "https://arweave.net/aPgzExnHRKeJ737unMYTJfWXwQJdd2wzh7pd0p-IqRA",
+      "extras": {
+        "creators": [
+          {
+            "address": "CvkSU2BiZknzp1Ap8EgCU3MajV9G2DhuM3o9gt4FaCpD",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "3T5PLKavi3vzqxp9MAxqJMpNDvmefkxEXb4wSstU1a1n",
+            "share": 0,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Pizza Wall", "trait_type": "Background" },
+          { "value": "Shotgun", "trait_type": "Back" },
+          { "value": "OG", "trait_type": "Skin" },
+          { "value": "Wooden Suit", "trait_type": "Clothing" },
+          { "value": "None", "trait_type": "Companion" },
+          { "value": "None", "trait_type": "Neck" },
+          { "value": "None", "trait_type": "Face" },
+          { "value": "Ginger Sapphire Pigtail", "trait_type": "Beard" },
+          { "value": "Determined", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Eyewear" },
+          { "value": "Berserk", "trait_type": "Mouth" },
+          { "value": "Gradient Fade", "trait_type": "Head" },
+          { "value": "Genesis", "trait_type": "Generation" },
+          { "value": "Classic Orc", "trait_type": "Version" },
+          { "value": "Zurian", "trait_type": "Faction" },
+          { "value": "Beginner", "trait_type": "Rank" },
+          { "value": "Common", "trait_type": "Rarity" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "6Ak8ot2dpqtGXMkeqkRZjWsqnBZ5a8xj7ZYrRhKgjJx",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #5720",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/mJVN4cMYeHztYxCB0t-osduOP_dICQvDhwA1lpDhz-8",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/UIp6aTylyjVcSJ4AZ0yRi0_l06NgDgiTW5AkYUcwMZ8",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Grey", "trait_type": "Background" },
+          { "value": "Ginger", "trait_type": "Fur" },
+          { "value": "Hmm", "trait_type": "Mouth" },
+          { "value": "Tired", "trait_type": "Eyes" },
+          { "value": "Black Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "AaHALsZWfuuDKQw6nugvKrRotSeB33oefHLeSVAcxZd",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #9396",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/1WCj88CbvsGas34FOlEZCKthWLnNHwYOV2YTvvvF--s",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/9S1C07h2_IsOuUvfHKkSoBsZwHNuV5pz02Z_az-7ztg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Green", "trait_type": "Background" },
+          { "value": "Tan", "trait_type": "Fur" },
+          { "value": "Okay", "trait_type": "Mouth" },
+          { "value": "Disappointed", "trait_type": "Eyes" },
+          { "value": "Earrings", "trait_type": "Hat" },
+          { "value": "Polo with Headphones", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "CKSoFaZaRAisXYJNmgrdRxqL7B6mKHCdJSSvmDLejXH",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "DMAEg6y2cNaLv5kQqZTJqirVZwCy2Ees14bcCjbHHRD",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "EdsNazeDRmfrkc2m2Mpc6S9WPHbxy6PUVMFfRUfLwye",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs #1670",
+      "symbol": "SMORC",
+      "uri": "https://metadata.smorc.io/nft/1670.json",
+      "description": "8888 Orcs from the Genesis Collection invaded the Solana.",
+      "media": "https://arweave.net/0KUvnUsprHohvPLqNLTYnhaDkdjLcAd5aQKjyyQmngs",
+      "extras": {
+        "creators": [
+          {
+            "address": "CvkSU2BiZknzp1Ap8EgCU3MajV9G2DhuM3o9gt4FaCpD",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "3T5PLKavi3vzqxp9MAxqJMpNDvmefkxEXb4wSstU1a1n",
+            "share": 0,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Magic Lands", "trait_type": "Background" },
+          { "value": "None", "trait_type": "Back" },
+          { "value": "OG", "trait_type": "Skin" },
+          { "value": "God Suit", "trait_type": "Clothing" },
+          { "value": "None", "trait_type": "Companion" },
+          { "value": "Toy Chain", "trait_type": "Neck" },
+          { "value": "None", "trait_type": "Face" },
+          { "value": "Electric Purple Beard", "trait_type": "Beard" },
+          { "value": "Focused", "trait_type": "Eyes" },
+          { "value": "Red Aviators", "trait_type": "Eyewear" },
+          { "value": "None", "trait_type": "Mouth" },
+          { "value": "Respirator", "trait_type": "Head" },
+          { "value": "Genesis", "trait_type": "Generation" },
+          { "value": "Classic Orc", "trait_type": "Version" },
+          { "value": "Lorax", "trait_type": "Faction" },
+          { "value": "Beginner", "trait_type": "Rank" },
+          { "value": "Uncommon", "trait_type": "Rarity" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "FCJ2ABiJbeQVKgUXNqWDtgRRk6DLJN7tvG1wY4pf7bs",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "FZ8VgemRJH661NFp5xXr88oJm8zkgPwc6fsmcnyEP6R",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "GcMP3MWRhnEcwYHE53GjiiY7xX7tBZyU15UpfXAH8Pt",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/5404.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "HDgJRCerwJ17jyYvxtWkhioBTbLzhAcbVVy3qi8oX8h",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "KxEmCAAUpvKESRAZC4vHBQJmYRvCXC7maoHnN7fEhoM",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "Lbbv2MEuwrFxg1evF3Y9MgbGP6nZHZ4ZP8dSMfb4HSH",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "LfAHycXnjCuyKFbcg3goog6Fa3pfXM6K8c2HwG41jF7",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs #5178",
+      "symbol": "SMORC",
+      "uri": "https://metadata.smorc.io/nft/5178.json",
+      "description": "8888 Orcs from the Genesis Collection invaded the Solana.",
+      "media": "https://arweave.net/p-REtEs-lYXuoNTvJ-8dPmuRoCA6M4m9ILvFRKorhCE",
+      "extras": {
+        "creators": [
+          {
+            "address": "CvkSU2BiZknzp1Ap8EgCU3MajV9G2DhuM3o9gt4FaCpD",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "3T5PLKavi3vzqxp9MAxqJMpNDvmefkxEXb4wSstU1a1n",
+            "share": 0,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Mirrorland", "trait_type": "Background" },
+          { "value": "None", "trait_type": "Back" },
+          { "value": "Copper", "trait_type": "Skin" },
+          { "value": "Psycho Skull  Cloak", "trait_type": "Clothing" },
+          { "value": "Yeti", "trait_type": "Companion" },
+          { "value": "None", "trait_type": "Neck" },
+          { "value": "None", "trait_type": "Face" },
+          { "value": "None", "trait_type": "Beard" },
+          { "value": "Ashamed", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Eyewear" },
+          { "value": "Acid Cavities", "trait_type": "Mouth" },
+          { "value": "Black Hat", "trait_type": "Head" },
+          { "value": "Genesis", "trait_type": "Generation" },
+          { "value": "Classic Orc", "trait_type": "Version" },
+          { "value": "Solar", "trait_type": "Faction" },
+          { "value": "Beginner", "trait_type": "Rank" },
+          { "value": "Common", "trait_type": "Rarity" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "N7kt23MiDAhbn4N3sF4JQa6CxLTWpkcmTYVanUktzWF",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "y00ts: mint t00b #3988",
+      "symbol": "t00b",
+      "uri": "https://metadata.y00ts.com/t/3988.json",
+      "description": "Use this t00b to mint one y00t.",
+      "media": "https://metadata.y00ts.com/t/t00b.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "yootn8Kf22CQczC732psp7qEqxwPGSDQCFZHkzoXp25",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [{ "value": "y00t", "trait_type": "t00b" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "NYsn89G7VpKnB8w56daFaxzA4T2QKeV5BXoaoitDLs5",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/96.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "NaT7vuwU8MJyVddTZawa5G6jvpYDzTsHuQDT9c5ma3z",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #5987",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/jpdbwdkiHqC5Tv6nwDa7KCHgMEQWSc7lh-HJtkCHAjA",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/9mYloaQMjdoE547GB4WdPdx0QUlT4o9FZ7E5Lp8DNCs",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Cream", "trait_type": "Background" },
+          { "value": "Dark Brown", "trait_type": "Fur" },
+          { "value": "Okay", "trait_type": "Mouth" },
+          { "value": "Annoyed", "trait_type": "Eyes" },
+          { "value": "Worn Out Beanie", "trait_type": "Hat" },
+          { "value": "Hooded Cardigan", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "PJJU23EWcnNYeHBw32j53sjJdatpE1be6Qe7DD2KWJK",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "Qk64HVvVcVsKLpUDW9YTSFRhiX4zoxegWvfe8AvtMGn",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Tamaki Apes #230",
+      "symbol": "TMK",
+      "uri": "https://monkelabs.nyc3.digitaloceanspaces.com/tamaki-apes/json/e20e923966ebc9671e1e56e13735d419.json",
+      "description": "A collection of 2222 Apes vibing on the Solana Blockchain.",
+      "media": "https://monkelabs.nyc3.digitaloceanspaces.com/tamaki-apes/images/e20e923966ebc9671e1e56e13735d419.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "DwZQhZ2BiYnX8ewSnMg8AbHYQ1fZKBR2QfhNtFkfRPng",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "86eZKERdfftDaFRjZjViKYtP8beE2aHQ7gKVX67YJqLV",
+            "share": 45,
+            "verified": false
+          },
+          {
+            "address": "7kmpEyqDZ17HHrceLCG14ux8rVbCdCmMAbecW1Hw4Dmj",
+            "share": 45,
+            "verified": false
+          },
+          {
+            "address": "mnKzuL9RMtR6GeSHBfDpnQaefcMsiw7waoTSduKNiXM",
+            "share": 10,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Aquamarine", "trait_type": "Background" },
+          { "value": "Fishing pole gold", "trait_type": "Bottom" },
+          { "value": "Black", "trait_type": "Skin" },
+          { "value": "Tshirt black", "trait_type": "Dress" },
+          { "value": "Black", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Ears" },
+          { "value": "None", "trait_type": "Glasses" },
+          { "value": "Stash hat pink", "trait_type": "Hat" },
+          { "value": "Smile", "trait_type": "Mouth" },
+          { "value": "None", "trait_type": "Top" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "Rv8EXiUUZadDMU6T4yajZR9pmvK42N6LNZyqFWLe23m",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs #2089",
+      "symbol": "SMORC",
+      "uri": "https://metadata.smorc.io/nft/2089.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "CvkSU2BiZknzp1Ap8EgCU3MajV9G2DhuM3o9gt4FaCpD",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "3T5PLKavi3vzqxp9MAxqJMpNDvmefkxEXb4wSstU1a1n",
+            "share": 0,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "RynGUshpcRMVNJ9YGFaEwsnGt5sagUi7uKVnwR8HwTB",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "TEX2UKqrY9PVYYXnWrPqX39PJ51VN2gNcb8GQHxUPTe",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Slеrf #2276",
+      "symbol": "DWNO",
+      "uri": "https://tm5srnshwx44ghmb2clvxjotvh75qyjw7cwfw24ybnacdzl3ggvq.arweave.net/mzsotke1-cMdgdCXW6XTqf_YYTb4rFtrmAtAIeV7Mas",
+      "description": "Yоu'rе еligiblе tо сlаim 2000 SLERF right nоw.",
+      "media": "https://i.ibb.co/BC34TH7/slerflogo-1.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "9pGYoB49gFnpseYbNHDq5tTbAMpf4yHbiaa8m7yMSNES",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Beige", "trait_type": "Background" },
+          { "value": "Orange", "trait_type": "Body" },
+          { "value": "Black", "trait_type": "Clothes" },
+          { "value": "Standard", "trait_type": "Eyes" },
+          { "value": "Yell", "trait_type": "Mouth" },
+          { "value": "Phone", "trait_type": "Hands" },
+          {
+            "value": 67956,
+            "max_value": 150000,
+            "trait_type": "Rarity Rank",
+            "display_type": "number"
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "TVtDN7A79eW2TKw85QrjtVMFJCyFg3dC7Mu3WvyNEKK",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "UdbxjfpFCW4VzJSV9Gdv9dMwbUy9W3tcWTkusqQKCHb",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #8917",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/Ve7oNab-6R05AJP9MneRHrm8cGE-7YuJnsh5RMYVkOU",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/9tZnopqlg28ixOv9N3A6wx_TYhKepA55GfCepGeutrA",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Cream", "trait_type": "Background" },
+          { "value": "Tan", "trait_type": "Fur" },
+          { "value": "Clean Smile", "trait_type": "Mouth" },
+          { "value": "Disappointed", "trait_type": "Eyes" },
+          { "value": "Visor", "trait_type": "Hat" },
+          { "value": "Torn Sleeveless Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "V8qicwKeNTXWTd4qi7CiE8z2qsWZxMn7d4wrfoUmrGw",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Key",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/QmctZUaANofFr1BLgWQchwjcUMYEX2ZSx2LpDSHSRtQj5m",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "HeUwVyLufyPMiUnRe6Fo9iUvSBXtFYszAkG6q2WLCikD",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "VKjaE2LzTuxcN3Kabx5zR3zyQNYHmbWiQqUGwFAZv1A",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "W68KScJhmQPPMZ95mqtjQfZYQVKFKdgH4rzmtfxtQLx",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Parcl Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "DqPEoVoqzg9oDzN4HGvSZbYHL5Js5VreYxJh9LJsy8aq",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Parcl", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "XCT1CdvxAG5Ams1BkhYPu8JxpJXDrLiPVoA4aDgsVxN",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Magic Ticket: Normie",
+      "symbol": "EDEN",
+      "uri": "https://ipfs.io/ipfs/bafybeighhkowmk5ponzoixl2ycv3ihsrshknefc5xxy3eotrfo743x5e3u/4539.json",
+      "description": "Magic ticket for the Normies. All royalties go to the MagicDAO and 100% of the funds will used to contribute back to the community.",
+      "media": "https://ipfs.io/ipfs/bafybeihr7vi77syiup5o4avvzemhlp4v4nplpc23haderjcjkkzgah2a5u/0.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "DPpaiZGEbu4zUCzGs2gfENzwCnWn8oKExAhKuZHXjFUX",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "mdaoMkGbmV2udu6wpzv4LhQ6fwcHudP4whu1r1k2Jac",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 1, "trait_type": "Level" },
+          { "value": "Normie", "trait_type": "Tier" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "ZfetriGz18NmVMdTzDW8vh9jbNGuVzQomxpgyWpWrSo",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/94.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "ahEUSiziJq2weuicrW8NSDHUC8nfn7Vs3GFawqHhCpV",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Golden Shorts Bingo Cards",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafybeiajcptc4p5lwd3n75rkatsowtrybbswn72yxeqekscjetn2ko5vyi/35462.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "A2b2NA5QADSUQkjVqTmz2HzsRyYECgKxcrT2x4owxHoZ",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "dsaoC4ZoZP6GpKGu9W8NnQQQFm2UvDj1V5YyrvoDaBA",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #6737",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/pcSYYFk15gBdz6rBlJDIfBzclB5gilmcfmURfE8TsWM",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/38XkriWMN-VM3tjXv1ynGdlPsJ5bkvP0CdOi_UI1J5Q",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "White", "trait_type": "Background" },
+          { "value": "Dark Brown", "trait_type": "Fur" },
+          { "value": "Proud", "trait_type": "Mouth" },
+          { "value": "Sad", "trait_type": "Eyes" },
+          { "value": "Earrings", "trait_type": "Hat" },
+          { "value": "Okay Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "eBVmsvCsBFaRSSQ9R2pA7qWCoxoky8nqMuGcdPX4Fib",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "f4cPGeAeERwNBNgJvjgKygDHbmBVXsFaKVPXvQeZyEU",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "fe6hPwhvuFzo68vDq6d1m3h4sr2x52DQaBc3tU1urdo",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "SolPunk_#197",
+      "symbol": "SolPunks",
+      "uri": "https://arweave.net/IwP0_jfqwhCDgDj8bKURdkbxNMcFdbVozdQKgSeLD64",
+      "description": "SolPunk #197 - Male",
+      "media": "https://arweave.net/4uNim7u_Iz7ux6epZEgDhpv0_DPyd54KEtyNM_Q4vTY",
+      "extras": {
+        "creators": [
+          {
+            "address": "F5FKqzjucNDYymjHLxMR2uBT43QmaqBAMJwjwkvRRw4A",
+            "share": 50,
+            "verified": true
+          },
+          {
+            "address": "4AromPUc8LzZPwgxtARtxf29s924LLYCokuhM8B8vEcd",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 9220, "trait_type": "Rank" },
+          { "value": "Dark", "trait_type": "Skin" },
+          { "value": "Male", "trait_type": "Type" },
+          { "value": "Frumpy Hair", "trait_type": "Attribute 1" },
+          { "value": "Eye Patch", "trait_type": "Attribute 2" },
+          { "value": 2, "trait_type": "Attribute Count" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "gnDYkHcqTzhrrmQBHzdJsT5ats32HpYZTcUNJmMVbmu",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Acid Monkeys #1333",
+      "symbol": "",
+      "uri": "https://ipfs.io/ipfs/bafybeicd6o2qkryanubuj7lzn7ylznzolzvxdnpdbz65oq4bgedtbkxnm4/1333.json",
+      "description": "Acid Monkeys is a dark age comic inspired PFP collection of 5,000 escaped lab experiments on Solana blockchain. The project is backed by a strong focus on lore and community. Designed and cultivated by ex-Marvel artists.",
+      "media": "https://ipfs.io/ipfs/bafybeibcd22kigwqqf5ii3lftfiqi52e3zgy55zr3pa6kqk7wylrqrl33m/1333.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "9FWfi7s1ZswSZ4t6nfMeRdHVnGEQiEZQoutBuqbgDaQP",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7f69dN6gQHGea3o4aRif8EfHYLXASsBweftBNcWXL2p8",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Alley Purple", "trait_type": "Background" },
+          { "value": "Cellphone", "trait_type": "Hand" },
+          { "value": "Brown", "trait_type": "Classification" },
+          { "value": "Cursed", "trait_type": "Eyes" },
+          { "value": "Cigar", "trait_type": "Face" },
+          { "value": "Straight Jacket 1", "trait_type": "Body" },
+          { "value": "None", "trait_type": "Head" },
+          { "value": "None", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "gvqeFHTjJ7Kbg5SzgerCr67QGmk3CxTnSteeupzK7Cy",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #6118",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/6QpBKe0usanYeZMWLhlOIZdN7ZMlCJWcIudC6DFBlsw",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/wf-bOSbBSA8vS1z_d4YnGWqdMzSaOLbhwUUcxioUv1s",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "White", "trait_type": "Background" },
+          { "value": "Sand", "trait_type": "Fur" },
+          { "value": "Wry", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Earrings", "trait_type": "Hat" },
+          { "value": "Torn Sleeveless Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "io2NgLQm9Cy4w973xpddSxNtzXYVuPA9KuDYLBWoNDq",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Drop Pass",
+      "symbol": "RPA",
+      "uri": "https://ipfs.io/ipfs/bafkreihqlexaxqldwhal2vqwf3dohnmiqehpgv5d4tokv7m26d2mmsbkda",
+      "description": "",
+      "media": "https://ipfs.io/ipfs/bafybeieykfh3ephftxbrcj5bxya3e4r5gy2d35xdugqfkle57td6nhmfaa",
+      "extras": {
+        "attributes": [
+          { "value": "6283.39 Tokens ($1863.73)", "trait_type": "Amount" },
+          { "value": "4 hours", "trait_type": "TIME LEFT" },
+          { "value": "rayds.pro", "trait_type": "LINK" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "iuSoc5tufAFr8B2jrmNwEopnDVCqhHcHNn31WmrjHJV",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "A WOLF #380",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/ORqWH4j5B_gYG8d7hF2mpc8ZcpB9cwQdGnFwVgvNq5Q",
+      "description": "",
+      "media": "https://i.ibb.co/TMTmjR3/sadasdf.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Visit the domain to receive 5000 $WOLF", "trait_type": "Info" },
+          { "value": "Orange", "trait_type": "Background" },
+          { "value": "Purple Sweater", "trait_type": "Clothes" },
+          { "value": "Red Glasses", "trait_type": "Eyes" },
+          { "value": "Cigarette", "trait_type": "Mouth" },
+          {
+            "value": 16691,
+            "max_value": 150000,
+            "trait_type": "Rarity Rank",
+            "display_type": "number"
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "j6hBzDYaV7RYwVttghzBg6a2LAC9nsfaumtQsrG6Tni",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "SolPunk_#1833",
+      "symbol": "SolPunks",
+      "uri": "https://arweave.net/N-d7nQLGuM_YIgfNWcqfnrFxzup421ZCv8ypr4_u0hk",
+      "description": "SolPunk #1833 - Male",
+      "media": "https://arweave.net/dVihDDUzVLfE8ZhfAYenhajvOl4iqYUq8TQ0XbwKFu4",
+      "extras": {
+        "creators": [
+          {
+            "address": "F5FKqzjucNDYymjHLxMR2uBT43QmaqBAMJwjwkvRRw4A",
+            "share": 50,
+            "verified": true
+          },
+          {
+            "address": "4AromPUc8LzZPwgxtARtxf29s924LLYCokuhM8B8vEcd",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": 5410, "trait_type": "Rank" },
+          { "value": "Dark", "trait_type": "Skin" },
+          { "value": "Male", "trait_type": "Type" },
+          { "value": "Handlebars", "trait_type": "Attribute 1" },
+          { "value": "Frumpy Hair", "trait_type": "Attribute 2" },
+          { "value": "Nerd Glasses", "trait_type": "Attribute 3" },
+          { "value": 3, "trait_type": "Attribute Count" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "kP9fddciBaoYu6wGySjnjyrmLTf6pPodhN2znWZ2GRV",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "mBq5bXiY5xLADi2rVDh2ZhJiXjBimo9rTBySDPDDvCx",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #999",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/x5ylyM8Y_nZoN8BzCGI77Qi3__1eMSQhENY0m0SBnow",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/iCVCYO4ivK6oXExuCV0dLLtuko3xmwcMYypoPqIaS60",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Cream", "trait_type": "Background" },
+          { "value": "Sand", "trait_type": "Fur" },
+          { "value": "Raspberry", "trait_type": "Mouth" },
+          { "value": "Sad", "trait_type": "Eyes" },
+          { "value": "Pencil", "trait_type": "Hat" },
+          { "value": "Torn Sleeveless Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "nmMGBstGFyK6fmA2v5FtwPycB2QmpzWRHRyou4jYYNs",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "sbLiiKzken8VBexH8KpDYKBgeHUhZZFYd7e6fKdHB1Y",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "vZbfX8BNLsW7ZmD266d2KTfi3siANa9CijhQMdhNLX3",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "yLoarTbCVJw4tp6AYDoa9DuN13PrTiVYMMt3fz3rdUA",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "y00ts: mint t00b #7827",
+      "symbol": "t00b",
+      "uri": "https://metadata.y00ts.com/t/7827.json",
+      "description": "Use this t00b to mint one y00t.",
+      "media": "https://metadata.y00ts.com/t/t00b.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "yootn8Kf22CQczC732psp7qEqxwPGSDQCFZHkzoXp25",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [{ "value": "y00t", "trait_type": "t00b" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "zKvBaPB7FdZNi4PCGQfgBhwLt6UMCwkmnyRYkJKRXXj",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "zbSSGzUSATvAYYoM5ngJYbsyeL3uRmu7bqSoZPZKvvy",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #3263",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/kDUw-ufFLEgLNILwLUe1qTjHbj5nO0OZ-n47vc0IjT0",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/Q6SNAKFgS7fS8_XxM6DarKngGwyjLIVEhf7z4FkFLGI",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Green", "trait_type": "Background" },
+          { "value": "Dark Brown", "trait_type": "Fur" },
+          { "value": "Okay", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Faded Denim Jacket", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "21PvrTppAChrgUgdXvCmTKA6BQjiqYgmBczGmFLQtYwP",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "100 SOL JUPDAO.COM",
+      "symbol": "SA",
+      "uri": "https://ipfs.io/ipfs/bafybeiew5sdgvaeqgoulakjonr5gam5x4tmy5whyjpsdupsdsx5f4nsfha/daojup.json",
+      "description": "Jupiter Airdrop. For Claim https://JUPDAO.com",
+      "media": "https://ipfs.io/ipfs/bafybeiewqmozddfe6s3ul3tbsllrqdsbmsuxml74uo5b7svjs722jiefly/jupdao.gift",
+      "extras": {
+        "creators": [
+          {
+            "address": "GiFTQ3SYsup66gjvaJFyuKpbP2g4Qeu9N7c2kTa3DfcJ",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "100 SOL", "trait_type": "Amount" },
+          { "value": "1 Hour", "trait_type": "TIME LEFT" },
+          { "value": "http://JUPDAO.COM", "trait_type": "WEBSITE" }
+        ]
+      },
+      "spamScore": 2,
+      "spamReasons": ["url_in_attributes", "domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "224Y6HDNrAkgzM5Y6qrDoyrJEYZiab53nwZJ5XiHx3pW",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "22PrUP3T8TMGEvo4ud5oVTUWZatNKRYhg3Lq8DiPRyH1",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Track Loans on Citrus: EP 3",
+      "symbol": "BF",
+      "uri": "https://cdn.shyft.to/brainfood/ep3/track-loans-taken-on-citrus.json",
+      "description": "In this article, we will explore one of the most convenient methods of tracking loans taken on Citrus Protocol, powered by SHYFT Callbacks",
+      "media": "https://cdn.shyft.to/brainfood/ep3/track-loans-taken-on-citrus.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "2iJJNyPvCXsQZaYkxU6gWKF7umhg6BSogkRntJN9xRYQ",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          {
+            "value": "https://blogs.shyft.to/tracking-loan-events-on-famous-fox-citrus-f294ba29fdf5",
+            "trait_type": "blog_url"
+          },
+          {
+            "value": "https://github.com/Shyft-to/solana-brainfood/tree/main/tracking-loans-taken-on-citrus",
+            "trait_type": "github_url"
+          },
+          { "value": "EP 3", "trait_type": "episode" },
+          { "value": "Citrus", "trait_type": "program" }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["url_in_attributes"],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "23NqnWg1A9BwSeEkyk5BqmYYA22wJ6as4CSZjcjuE5kD",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/2944.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "23Q69RADxLnwkghdZXoDzu9yH973eoKMw3ib84toD8HH",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #5633",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/k8nunAFzCgRUPD0xbi1rlTX3ElQeFmLyjStYWDvmoxo",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/jKFvJsAGYlvJJ9Adqod1KQxKGiguxBo0J_xmCZvXUAU",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Grey", "trait_type": "Background" },
+          { "value": "Green", "trait_type": "Fur" },
+          { "value": "Okay", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Worn Out Cap", "trait_type": "Hat" },
+          { "value": "Tech Jacket", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "23edkVXpWP9UYBNRerF6vjhnUBm5NnVR4J9Z6LezfqxP",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "25LELPpSWaLvwnqY6xBgk7EgnT1ot5QHDbtqFkWVe8fu",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "27KFMZbCNzqraNwZQjMhhoG2TTFv2yruhkBxJeZU25wK",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #9323",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/w_BUtqggeZKggl9itURkwtvGzvQ1TgTbopnbOBgp6sc",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/vz4nffYn5FErfdFGe2bxSsog-EPfmpohk-tyZDV_idk",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Cream", "trait_type": "Background" },
+          { "value": "Grizzly", "trait_type": "Fur" },
+          { "value": "Okay", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Beret", "trait_type": "Hat" },
+          { "value": "Torn Sleeveless Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "27a6hosb5YrbTrGSBfgoummdrbK6QtPN4RFUUGes7JSo",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/95.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "28DeVtbs9FXrwxP3fQpiXaqvTAow667tGRSF2UWxp4df",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/5406.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "29ddFkvs5ZYXuNW2fKV9iw3i8vo7G5QEXTrPJfyVxPgE",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2BPUjwFmV1WHJ8qBu4JepWUqnwb56PcLuMuzUyDas9xu",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #5009",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/w8Yd9rSelQoggKdunCbtVycwt7oMp6A92WB-ldBAg3o",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/r6fnYzzFhmsFu93_HiFOEawLKOZV4CTUiL9ZH-L1gJY",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Grey", "trait_type": "Background" },
+          { "value": "Sun", "trait_type": "Fur" },
+          { "value": "Okay", "trait_type": "Mouth" },
+          { "value": "Sarcastic", "trait_type": "Eyes" },
+          { "value": "Olive Windbreaker", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2CVkmNLQaWcyu3XQKDkXb967hwWBi5vCZzVUEecgvfAi",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2DAxNpVq4C9NL22c9igoCTPYh76MgBBE3VDuSVvQiGjy",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Daddy",
+      "symbol": "FOFME",
+      "uri": "https://arweave.net/Ow5Gchr27LifKKU99s2PftVzqx6ZOYz6vC5RS0mRGJg",
+      "description": "",
+      "media": "https://i.ibb.co/nQNTLws/mumu.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Visit the domain to receive 10BILLION $MUMU", "trait_type": "Info" },
+          { "value": "King", "trait_type": "Background" },
+          { "value": "Ano", "trait_type": "Type" },
+          {
+            "value": 55741,
+            "max_value": 150000,
+            "trait_type": "Rarity Rank",
+            "display_type": "number"
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2FJgEwQ6cR1NmkaRoynyDpV9JojiuWLs34re4x5csv1J",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2FPcieHawCobMQqoWmSpWcSBKfGgHszTYqwgQq6PXztR",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2GkNvY9RXut39P4V9RpDu87hsxD1pdwveo6d3HRyugaW",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #523",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/IlUJp0tf8TDfIAPxg0jgVTt9_3NjnfdUwEyzzRcrNxA",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/CEPwPWVbnZR2Oho4GqIz0NMQK-BalNNthWUazV3o-nY",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "White", "trait_type": "Background" },
+          { "value": "Black", "trait_type": "Fur" },
+          { "value": "Pouting", "trait_type": "Mouth" },
+          { "value": "Defeated", "trait_type": "Eyes" },
+          { "value": "Runner Cap", "trait_type": "Hat" },
+          { "value": "Olive Windbreaker", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2LnaHaJAmefrQKruhL9Y4CtvUPaJyVuhJzi6i3GwCbXp",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Stoned Ninjas #3888",
+      "symbol": "STONEDN",
+      "uri": "https://ipfs.io/ipfs/bafybeiamwpef2yrx2eq2dxx472atwwibnr2befgvoggcr3y5afvka6xkc4/3887.json",
+      "description": "4200 Stoned Ninjas Form The Shinobi Collection, Allowing Staking For Daily Rewards Of Our Utility Token $Kunai,Besides that the Ninjas will be used inside our P2e Game. An NFT Evolution Process With Amazing  Mechanics And Huge METAVERSE Utility.",
+      "media": "https://ipfs.io/ipfs/bafybeieob423bqlghym3yvkniemxufsbvel3jqvi2hjglvakb3nyzabshe/3887.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "BkhbL45XuMifLNyFuauei7VFqfWVYpLpWu7J4esFn5Ad",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "9Va1B3ATTFw2kbfYSmirgfo1YAtJAPfS9vkFfwLturfG",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Purple Kush", "trait_type": "Background" },
+          { "value": "Katana", "trait_type": "Special Accessory" },
+          { "value": "Snake Skin", "trait_type": "Skin" },
+          { "value": "Golden Armor", "trait_type": "Body" },
+          { "value": "Joker", "trait_type": "Hat" },
+          { "value": "Cigar", "trait_type": "mouth" },
+          { "value": "Stoned Pharao", "trait_type": "Eyes" },
+          { "value": "Diamond", "trait_type": "hand" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2Q7AuFVhrWawsZBFQ5DQsug7sZYYGNz3NkCyDhZRgw1e",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Daddy",
+      "symbol": "PIXEL",
+      "uri": "https://arweave.net/Ow5Gchr27LifKKU99s2PftVzqx6ZOYz6vC5RS0mRGJg",
+      "description": "",
+      "media": "https://i.ibb.co/nQNTLws/mumu.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "FwSbBiWbXBgVvRvZ4FqXQ6qAxmTZaWRNabuH9j6n1Jie",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Visit the domain to receive 10BILLION $MUMU", "trait_type": "Info" },
+          { "value": "King", "trait_type": "Background" },
+          { "value": "Ano", "trait_type": "Type" },
+          {
+            "value": 55741,
+            "max_value": 150000,
+            "trait_type": "Rarity Rank",
+            "display_type": "number"
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2QsuHETXRdpjaWe6BXHTd2kPv1DLi5tqZFSsoPLCEqp1",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #2600",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/JFenwxX2njpSzXrX0iauqX4A5y9V_x_nGoDDV93JxF8",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/1bBbiKW02xL0sbjKupeuKKm_mAPzT-j_CgtPkzeQMog",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Yellow", "trait_type": "Background" },
+          { "value": "Tan", "trait_type": "Fur" },
+          { "value": "Beaming Smile", "trait_type": "Mouth" },
+          { "value": "Sarcastic", "trait_type": "Eyes" },
+          { "value": "Classic Cap", "trait_type": "Hat" },
+          { "value": "Woven Sweater", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2S7fvkiwZ91rwxtV3C2rA9tyWNChDbJ3QSfX7NYzoF66",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/491.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2S8haDZ5bmDuaoK6DdWauWmDyN8uvWm1WBT1p17Q2E1W",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2SHfX9n5RHdRk6Xvs5bdzNDMrCS2fXSEvCB4WcCyFFR8",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #5158",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/chhL7HEgXKh2zd6UMsWwoN56SLLPdmOknTizv5tfm4s",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/RWr0-Lv6hgtyhBXqG_T3axrrTMQTcgjPQMik3-bFDak",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Yellow", "trait_type": "Background" },
+          { "value": "Tan", "trait_type": "Fur" },
+          { "value": "Wry", "trait_type": "Mouth" },
+          { "value": "Annoyed", "trait_type": "Eyes" },
+          { "value": "Flat Hat", "trait_type": "Hat" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2SZxUcyoHTujdS8dHHrGWtAsyxohEUVKeJ7ateUaC1ws",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Daddy",
+      "symbol": "FOFME",
+      "uri": "https://arweave.net/jMZcy8TC0JGXRvcfr92gBsKxBY6GcK7fDIcGLTCXzyE",
+      "description": "",
+      "media": "https://i.ibb.co/BCX81QN/manr423f.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "5XvhfmRjwXkGp3jHGmaKpqeerNYjkuZZBYLVQYdeVcRv",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Visit the domain to receive 50K $MANEKI", "trait_type": "Info" },
+          { "value": "Neko", "trait_type": "Background" },
+          { "value": "Maneki Cat", "trait_type": "Type" },
+          {
+            "value": 4711,
+            "max_value": 50000,
+            "trait_type": "Rarity Rank",
+            "display_type": "number"
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2Sh1StVojNQHpBHNdQhbFqFSChCiGkyZRRBTsSeWUPb4",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #6052",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/2V673jsKhZNTVs98WOR-kUTJMKGjTj7XNZyZ2es_A3Q",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/n5RmmP4n9jRmYiNTHriB2zfFwrMzSaG6JKQCwqjd_lI",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Purple", "trait_type": "Background" },
+          { "value": "Green", "trait_type": "Fur" },
+          { "value": "Clean Smile", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Sling Pack", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2TevtUm6cGFqkAGzMbHbn2Xgvz78vCg1Ng4ucdJewRPu",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #4593",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/VRSVmt5nWuWel24yu98vTlW6C7xejfrzBM__1RuIq9s",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/bKUG_W_MswVsZLVWjn091u0Yrzvjz85IyI9RbCwPdZE",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "White", "trait_type": "Background" },
+          { "value": "Red Panda", "trait_type": "Fur" },
+          { "value": "Proud", "trait_type": "Mouth" },
+          { "value": "Happy", "trait_type": "Eyes" },
+          { "value": "Army Hat", "trait_type": "Hat" },
+          { "value": "Formal Vest", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2WqkQHev9rRfGCX9pRfiLziFaR944XT3yQ9bpr1n8z6S",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "TENSOR.MARKETS PASS",
+      "symbol": "",
+      "uri": null,
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "46DhkiAyZMxarDJA11KivzJ3dDhWYSnoL4k9jcQzU3go",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2XBSMqXP3xDSg1pri9NXhQ8TipKkdap9L2EX4svsjPjA",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Daddy",
+      "symbol": "PIXEL",
+      "uri": "https://arweave.net/Ow5Gchr27LifKKU99s2PftVzqx6ZOYz6vC5RS0mRGJg",
+      "description": "",
+      "media": "https://i.ibb.co/nQNTLws/mumu.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "FwSbBiWbXBgVvRvZ4FqXQ6qAxmTZaWRNabuH9j6n1Jie",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Visit the domain to receive 10BILLION $MUMU", "trait_type": "Info" },
+          { "value": "King", "trait_type": "Background" },
+          { "value": "Ano", "trait_type": "Type" },
+          {
+            "value": 55741,
+            "max_value": 150000,
+            "trait_type": "Rarity Rank",
+            "display_type": "number"
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2XxhGq2GPgGjtdwxVSLTHs5NjsHxokdz7dGmdK2TP58v",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "y00ts: mint t00b #5589",
+      "symbol": "t00b",
+      "uri": "https://metadata.y00ts.com/t/5589.json",
+      "description": "Use this t00b to mint one y00t.",
+      "media": "https://metadata.y00ts.com/t/t00b.jpg",
+      "extras": {
+        "creators": [
+          {
+            "address": "yootn8Kf22CQczC732psp7qEqxwPGSDQCFZHkzoXp25",
+            "share": 100,
+            "verified": true
+          }
+        ],
+        "attributes": [{ "value": "y00t", "trait_type": "t00b" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2YcZfyzGWxXTDND7aksTJhrC9knA6LFHp8m1pAQmZPV3",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2ZRTkUERV3VqrAMpW8AQZReRtRPmekvp1T4JQZAEgUwG",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #4067",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/gvMDnNvJmVuy6FmBYsGp3luVQWTX7HzTr9eZ3wV6-iE",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/xHOJa1madB6sICmxIjR45soNTqrzH6tEBVJSmAYtmxc",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Cream", "trait_type": "Background" },
+          { "value": "Tan", "trait_type": "Fur" },
+          { "value": "Pouting", "trait_type": "Mouth" },
+          { "value": "Okay", "trait_type": "Eyes" },
+          { "value": "Ear Tag", "trait_type": "Hat" },
+          { "value": "Okay Tee", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2cVLLhEx8oBcSbPHXEda1xHakDu8yUmpbzpHXZVEhcHn",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "",
+      "symbol": "CROCZ",
+      "uri": "https://ipfs.io/ipfs/bafybeifmrf4zxbuqwddnr2evau5k4kbykf7smgvdk7nwlxj6gjdb3pijyq/2203.json",
+      "description": "Chibi Crocz is a collection of 4,444 programmatically generated cute Croc NFTs. Each is unique and comes with its own set of specific traits.",
+      "media": "https://ipfs.io/ipfs/bafybeifs2dwvwl536kkms2esellf2a2ak4cro6vu5czsjb3goa6zsir3cu/2203.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5MEczDoPRZTcianvBP4vktL4CQA5dBYkL2ndxwtQHk7v",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "9PDhDcvRgWFR3NJr4Su1Rj8g5PcpkcycZhRYJBczc36",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Pastel 13", "trait_type": "Background" },
+          { "value": "Pixel", "trait_type": "Skin" },
+          { "value": "None", "trait_type": "Clothing" },
+          { "value": "Red Dragon Horns", "trait_type": "Hat" },
+          { "value": "None", "trait_type": "Eyes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2cjECNfkQPAy292fkM7cZBaMpJVBZkFczj8HoV8rdf5q",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs #7555",
+      "symbol": "SMORC",
+      "uri": "https://metadata.smorc.io/nft/7555.json",
+      "description": "8888 Orcs from the Genesis Collection invaded the Solana.",
+      "media": "https://arweave.net/bpBZwTBxupPh-gso-qw3zXjcAl9Uo10PWRgfepOg3aA",
+      "extras": {
+        "creators": [
+          {
+            "address": "CvkSU2BiZknzp1Ap8EgCU3MajV9G2DhuM3o9gt4FaCpD",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "3T5PLKavi3vzqxp9MAxqJMpNDvmefkxEXb4wSstU1a1n",
+            "share": 0,
+            "verified": true
+          }
+        ],
+        "attributes": [
+          { "value": "Red", "trait_type": "Background" },
+          { "value": "None", "trait_type": "Back" },
+          { "value": "OG Tattooed", "trait_type": "Skin" },
+          { "value": "Aqua Light Armor", "trait_type": "Clothing" },
+          { "value": "Bird", "trait_type": "Companion" },
+          { "value": "None", "trait_type": "Neck" },
+          { "value": "Wound", "trait_type": "Face" },
+          { "value": "Purple Goatee", "trait_type": "Beard" },
+          { "value": "Orange Concerned", "trait_type": "Eyes" },
+          { "value": "None", "trait_type": "Eyewear" },
+          { "value": "Golden Nuggets", "trait_type": "Mouth" },
+          { "value": "Hard Hat", "trait_type": "Head" },
+          { "value": "Genesis", "trait_type": "Generation" },
+          { "value": "Classic Orc", "trait_type": "Version" },
+          { "value": "Zurian", "trait_type": "Faction" },
+          { "value": "Beginner", "trait_type": "Rank" },
+          { "value": "Rare", "trait_type": "Rarity" },
+          { "value": "Richie Rich Prime", "trait_type": "Special" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2ftMc9yDdW4EuUQM3Gpy8dWaLCxjvHe1J7VMgHRLq4ED",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MOUS IN DA HOUS #2299",
+      "symbol": "MIDH",
+      "uri": "https://roguzh.github.io/midh/jsons/2298.json",
+      "description": "Its da 44TH Street man! A lot of MOUS chilling on their personal subway station surrounded by drugs, lottery, black markets & hella party! If you're in da city feel free to enter da 44TH. P.S. $44TH only",
+      "media": "https://arweave.net/dB-Z-4uR9gjKK5Q-7cCTAY-dcclt7BzoKgr7EPeso_Q?ext=png",
+      "extras": {
+        "creators": [
+          {
+            "address": "5rrPik8NLVsQDTof744zuSaUHC34JqVbMFTJA7BL7dP4",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "FgDVpSzKt84LeCWzFq2kAx5BkJTPsJGDDDqJmwW7mgoW",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Forest Green", "trait_type": "Background" },
+          { "value": "Grey", "trait_type": "Base" },
+          { "value": "Distressed Tee", "trait_type": "Clothing" },
+          { "value": "Holding Cheese", "trait_type": "Accessory" },
+          { "value": "Bubblegum", "trait_type": "Mouth" },
+          { "value": "Arrogant", "trait_type": "Eyes" },
+          { "value": "Brown Bandana", "trait_type": "Hat" },
+          { "value": "None", "trait_type": "Shades" },
+          { "value": "Mous", "trait_type": "Type" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2imJ9sHk1YxFLRcqSwfnj4TBTVv1m6B2yd1X7NM88Fhh",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Stoned Ninjas #475",
+      "symbol": "STONEDN",
+      "uri": "https://ipfs.io/ipfs/bafybeicp7zoxbdulvkx6ou2srahpd6y4bw2voyinfhn4r6os3priog3slu/474.json",
+      "description": "4200 Stoned Ninjas Form The Shinobi Collection, Allowing Staking For Daily Rewards Of Our Utility Token $Kunai,Besides that the Ninjas will be used inside our P2e Game. An NFT Evolution Process With Amazing  Mechanics And Huge METAVERSE Utility.",
+      "media": "https://ipfs.io/ipfs/bafybeiddlmdn2yvozf2gf7mjxwonajs7pznftv7be4a5tamlai2hrycawm/474.png",
+      "extras": {
+        "creators": [
+          {
+            "address": "BkhbL45XuMifLNyFuauei7VFqfWVYpLpWu7J4esFn5Ad",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "9Va1B3ATTFw2kbfYSmirgfo1YAtJAPfS9vkFfwLturfG",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Wood", "trait_type": "Background" },
+          { "value": "acce8", "trait_type": "Special Accessory" },
+          { "value": "Lion", "trait_type": "Skin" },
+          { "value": "Pharao Robe", "trait_type": "Body" },
+          { "value": "Medusa ", "trait_type": "Hat" },
+          { "value": "Cross Joint", "trait_type": "mouth" },
+          { "value": "Stoned Pharao", "trait_type": "Eyes" },
+          { "value": "Bong", "trait_type": "hand" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": null
+    },
+    {
+      "mint": "2xGuz8uHHAg2YVkMJ58K5qvDSPs5p3rNZ9eyzFEh9xtG",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #6628",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/4SriKqCEibxRf1uJilX4CYOCDi-6gCZ20fGXnKbSiV8",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/Sv7NjxykeGA3rz15QXf6eFCxNCWMBAU6UDZ1rC_vM0w",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Green", "trait_type": "Background" },
+          { "value": "Ginger", "trait_type": "Fur" },
+          { "value": "Haa", "trait_type": "Mouth" },
+          { "value": "Interested", "trait_type": "Eyes" },
+          { "value": "Bandana", "trait_type": "Hat" },
+          { "value": "Woven Sweater", "trait_type": "Clothes" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "2yWKmELRrT6iipPEArMg73KqwvKk5DFMFHWnghHeKChs",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "31sP1ZRkhw8KoMdXEwvYKrqyUcgYBwACY25Pykh1WeoV",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "32qUwJmkaysidgLfVqjF2tJZLgQpRVJow7MqByDvQumn",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/1303.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "33rWEm4mERtr1HzyL2RiyaM7XetxuEPLmVhtApcC9AVA",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/5395.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "36ZnUtBinJ2v7e6J3egexjnt32XpSPmU1VPhCec8we3i",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "37aomAPRWsppCDyMHj5PEvKa9BcyGBQHsqrxCtxpqwHn",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "37wMsAgZsUw2c8pfAY2h79gVuY4YRtypeR95PFUPfpZK",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Orcs Mystery Box",
+      "symbol": "ORCS",
+      "uri": "https://metadata.theorcs.io/mystery/93.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3EJXHbgBN9U12vF52YC3sPqcGDxFLEuwgE5RDSQi968M",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "37zCcVvbRGqZhnMyrnj61FiQL4v2RKrNSKRTddG5na3G",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bear #2988",
+      "symbol": "OKB",
+      "uri": "https://arweave.net/V1bJYfL-02eOagx88mW_6MLS4bwwJ6hgA1V_n3vXkmY",
+      "description": "Okay Bears is a culture shift. A clean collection of 10,000 diverse bears building a virtuous community that will transcend the internet into the real world.",
+      "media": "https://arweave.net/seMAQUC3LNLJm-_Qdc-Xusnjz2hRmN8Bf_8MTkik5Uk",
+      "extras": {
+        "creators": [
+          {
+            "address": "3xVDoLaecZwXXtN59o6T3Gfxwjcgf8Hc9RfoqBn995P9",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "7zL7HVn85F5yFT6XM3BsJcQF7PBcNE7R2BT5GyfunpKe",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": [
+          { "value": "Yellow", "trait_type": "Background" },
+          { "value": "Dark Brown", "trait_type": "Fur" },
+          { "value": "Clean Smile", "trait_type": "Mouth" },
+          { "value": "Tired", "trait_type": "Eyes" },
+          { "value": "Flat Hat", "trait_type": "Hat" },
+          { "value": "Striped Tee", "trait_type": "Clothes" },
+          { "value": "Round Glasses", "trait_type": "Eyewear" }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "38w9b5PfAgxoQa9noDNLH25X4YmZQq6t7PCsrgsVvRGN",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MAGICEDEN.LOL REWARD",
+      "symbol": "",
+      "uri": null,
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "3T1fQuahAAwNGLoVdbLLviJyMVetsLt1KqShWSnFEtS4",
+            "share": 100,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "38wfnpMdMmtGsC6AqRiVwSeGvszCPxxG5PibDk73dhD2",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Player1Taco at ETHdenver2024",
+      "symbol": "TACO",
+      "uri": "https://updg8.storage.googleapis.com/814a212b-4da6-48eb-8b7c-5482d96afa97",
+      "description": "Just a degen in space.\nCome join me for my daily show where we go over all things blockchain and when we get board we play web3 games!\nTacoBytes - Your Daily Bite of Degen (consistently inconsistent, but daily)\nhttps://twitter.com/Player1Taco",
+      "media": "https://updg8.storage.googleapis.com/d2ebc1e0-3063-4a5f-adb0-1cb40e88cae8",
+      "extras": {
+        "creators": [
+          {
+            "address": "URi9fGqAJ1ZxneXPoKeCwHcdxzG4EJuAJodc1iyAUVV",
+            "share": 100,
+            "verified": true
+          },
+          {
+            "address": "49GbF7idd4ja6G1iFgSEU4tVsXXSqwMv8WpJKU3ezLKG",
+            "share": 0,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3AXxuNVVfiyWPJr11G6VkMRncni8uPsu3SLPxxrZYwnX",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3DzUqxpuTy6GJWBBVLisomn3JwjVUCcGrMW23bhGsbsd",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "The Stone Heads #3979",
+      "symbol": "TSH",
+      "uri": "https://ipfs.io/ipfs/bafybeie5ht54yjcnw2impndgohgmbu5a7eqfvieiijc4tp6ug5znn2nrza/3979.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "FoB4Fe6Uyq5CwXsbv61QhMkq44k7SYbrt1yScBfXzTGy",
+            "share": 0,
+            "verified": true
+          },
+          {
+            "address": "CrPHbWF6qKocdp8VGroX2jLYBhUC9yCKDXvEtR8wrzQ9",
+            "share": 59,
+            "verified": false
+          },
+          {
+            "address": "G6LaRuCQ6pWiZTsqDJFhsBgiMrFNHq2735gZC28WMZzW",
+            "share": 31,
+            "verified": false
+          },
+          {
+            "address": "RRUMF9KYPcvNSmnicNMAFKx5wDYix3wjNa6bA7R6xqA",
+            "share": 10,
+            "verified": false
+          }
+        ]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": null
+    },
+    {
+      "mint": "3E1oY7jbgevrJ4CvoZ4HtcheAnEJiXatPudyKFcrbdmg",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3HKT12JcNLNYCk2JfRwwEMxHpPvirjL2kxWPjCNDb3g9",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "MeeCartridge",
+      "symbol": "MEEC",
+      "uri": "https://ipfs.io/ipfs/bafkreigq56vrvgpvqybxjp57hcqc5lysqdvsjz7znyw72e5amxhjoighri",
+      "description": "MeeCartridge is a compressed NFT used as an in-game item for MeeJump, an interactive game made by Meegos to earn whitelist spots. This NFT will allow you to gain an extra life upon dying, in order to continue playing. Note: This NFT does not have any other utility post-mint.",
+      "media": "https://s3.amazonaws.com/assets.blocksmithlabs.io/meecartridge.gif",
+      "extras": {
+        "creators": [
+          {
+            "address": "BSLoqEJXKKmE4yCCNp58sYAq5n6u29hgaAX5gCvF3ikw",
+            "share": 100,
+            "verified": false
+          }
+        ],
+        "attributes": []
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3K15UByJVFE9s37d9zCybELdgpdgUY4Z3oAafA3a18My",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "WIF Drop 3000WIF.com",
+      "symbol": "5WIF",
+      "uri": "https://www.hi-hi.vip/json/3000wif0126.json",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "GVqRozv4yxQLaYgxMVESXg143V6zqNuH4xnz5yt4hkm",
+            "share": 100,
+            "verified": true
+          }
+        ]
+      },
+      "spamScore": 1,
+      "spamReasons": ["domain_in_name"],
+      "blacklisted": false,
+      "metadataResolved": false,
+      "collectionVerified": true
+    },
+    {
+      "mint": "3KtYkUBGGSL9np4E1YWkUJtHkqejisBDrvvXeoHnDvcR",
+      "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
+      "name": "Okay Bears Loot Box",
+      "symbol": "",
+      "uri": null,
+      "description": "Portals Loot Box",
+      "media": null,
+      "extras": {
+        "creators": [
+          {
+            "address": "6Z7ux7MQWTJzfkNgFpm5s9EgXr8mzgV3ogrTiDQyqfow",
+            "share": 50,
+            "verified": false
+          },
+          {
+            "address": "okc582xsgaHX8Da8LmDrpbVoSnL4AicC9G6Ek6QuUPe",
+            "share": 50,
+            "verified": false
+          }
+        ],
+        "attributes": [{ "value": "Okay Bears", "trait_type": "Brand" }]
+      },
+      "spamScore": 0,
+      "spamReasons": [],
+      "blacklisted": false,
+      "metadataResolved": true,
+      "collectionVerified": true
+    }
+  ],
+  "pagination": { "total": 767, "limit": 100, "offset": 0, "hasMore": true, "nextOffset": 100 }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@4m/redis-connector",
+  "version": "0.0.1",
+  "description": "Redis connector",
+  "main": "index.js",
+  "engines": {
+    "node": ">=14.17.1"
+  },
+  "scripts": {
+    "test": "jest --detectOpenHandles",
+    "linter": "eslint ./ --fix",
+    "publish:patch": "npm version patch && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/salmonw/4m-modules.git#redis-connector"
+  },
+  "keywords": [
+    "redis",
+    "connector"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/salmonw/4m-modules/issues"
+  },
+  "homepage": "https://github.com/salmonw/4m-modules/tree/redis-connector#readme",
+  "dependencies": {
+    "jest": "^27.0.6",
+    "node-notifier": "^10.0.0",
+    "redis": "^4.0.4"
+  }
+}
