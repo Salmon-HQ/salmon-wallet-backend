@@ -2,6 +2,17 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.15.2 — 2026-08-26
+
+- Bridge: migrated StealthEX from API v2 to v4. Added `POST /v1/bridge/exchange` (creates the exchange server-side so a retried request cannot open duplicate orders) and an optional refund address forwarded to StealthEX.
+- Swap: order fee is now denominated in the input token (previously mislabeled as SOL for non-SOL inputs); the service also detects when Jupiter drops the referral fee. Removed the unused `slippage` parameter from the swap order service.
+- Bitcoin: transaction responses emit the UTXO field names the wallet reads.
+- NFT listing: ownership check before building a print-edition burn, malformed metadata URLs no longer fail the whole listing, exposes `creators` and real `collection.verified`, weighted spam score with corroborating signals, per-page hidden counts in pagination, and a `?debug=1` flag.
+- Errors: every endpoint reports what actually failed; transport failures no longer echo provider addresses.
+- Rate limiting: the per-IP limit is enforced in production.
+- Outbound connections get more than 250ms to complete; security hardening (rate-limit coverage, address validation, SSRF pinning, dependency updates).
+- OpenAPI synced with the code: bridge status enum, `/transaction` 404, `noCache`.
+
 ## 0.15.1 — 2026-08-13
 
 - No API changes. Renames the scheduled-job EventBridge rules (`listTokensJobBtc-*`, `refreshPricesJobBtc-*`): removing the Solana schedules in 0.15.0 shifted the named BTC rules to new CloudFormation logical IDs, and create-before-delete collided with the existing rule names, failing the `prod/v0.15.0` deploy (stack rolled back cleanly; 0.15.0 never went live — its changes ship with this tag).
