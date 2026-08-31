@@ -36,7 +36,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "dotenv": "^17.4.2",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.0",
     "jest": "^30.4.2",
     "prettier": "^3.9.6",
     "serverless": "^3",
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@metaplex-foundation/digital-asset-standard-api": "^2.0.0",
-    "@metaplex-foundation/mpl-bubblegum": "^5.0.2",
+    "@metaplex-foundation/mpl-bubblegum": "^5.1.0",
     "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
     "@metaplex-foundation/umi": "^1.5.1",
     "@metaplex-foundation/umi-bundle-defaults": "^1.5.1",
