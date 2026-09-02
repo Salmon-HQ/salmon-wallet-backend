@@ -23,6 +23,5 @@ describe('solana index router', () => {
     expect(mockRouter.use).toHaveBeenCalledWith('/ft', 'solana-ft-router');
     expect(mockRouter.use).toHaveBeenCalledWith('/account', 'solana-account-router');
     expect(mockRouter.use).toHaveBeenCalledWith('/nft', 'solana-nft-router');
-    expect(mockRouter.use).not.toHaveBeenCalledWith('/bridge', expect.anything());
   });
 });

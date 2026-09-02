@@ -10,7 +10,7 @@ The repo follows a layered structure with an extra vertical cut by
 blockchain. Each chain (`bitcoin`, `solana`, `ethereum`) lives as a
 parallel slice inside `routes/`, `controllers/`, `services/` and
 `resources/`. Cross-chain endpoints live in a `multichain/` slice.
-Services with no chain affinity (bridge, CoinGecko, network catalog /
+Services with no chain affinity (CoinGecko, network catalog /
 capabilities, dapp metadata, scam list, Trustwallet) live in `shared/`
 inside each layer.
 
@@ -107,7 +107,7 @@ Important subfolders:
   - skeleton: empty router mounted by the loop with no endpoints
     registered
 - `src/routes/shared/`
-  - chain-agnostic routers (`bridge`, `coingecko`, `dapp`, `network`,
+  - chain-agnostic routers (`coingecko`, `dapp`, `network`,
     `info`) plus the `network-route-path.js` helper used by
     multichain routes
 
@@ -138,8 +138,8 @@ Important subfolders:
 - `src/controllers/ethereum/`
   - skeleton
 - `src/controllers/shared/`
-  - chain-agnostic controllers (`bridge`, `coingecko`, `dapp`,
-    `network`, `info`)
+  - chain-agnostic controllers (`coingecko`, `dapp`, `network`,
+    `info`)
 
 #### `src/services/`
 
@@ -169,7 +169,7 @@ Important subfolders:
     (registry for per-chain balance overrides; default: Blockdaemon
     Universal)
 - `src/services/shared/`
-  - chain-agnostic services: `bridge-service`, `coingecko-service`,
+  - chain-agnostic services: `coingecko-service`,
     `dapp-service`, `network-capabilities-service`,
     `network-catalog-service`, `scam-service`, `trustwallet-service`
 - `src/services/ethereum/`
@@ -198,8 +198,8 @@ Should NOT contain:
 Important subfolders:
 
 - `src/repositories/shared/`
-  - chain-agnostic repositories: `bridge-repository`,
-    `coingecko-repository`, `scam-repository`, `trustwallet-repository`
+  - chain-agnostic repositories: `coingecko-repository`,
+    `scam-repository`, `trustwallet-repository`
 - `src/repositories/solana/`
   - Solana-specific data access
 
@@ -226,7 +226,6 @@ Important subfolders:
   - Bitcoin transaction and UTXO shapes
 - `src/resources/shared/`
   - cross-chain shapes (`account-balance-resource`,
-    `bridge-exchange-resource`, `bridge-token-resource`,
     `network-resource`) and the cross-cutting
     `resource-includes.js` (`includeLogo` / `includeBlacklisted`)
 

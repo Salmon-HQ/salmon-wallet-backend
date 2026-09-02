@@ -4,11 +4,12 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## Unreleased
 
+- **Breaking**: removed the cross-chain Bridge surface — every `/v1/bridge/*` endpoint now answers the standard 404 envelope. The flow routed user funds through a centralized exchange, which the published Terms no longer offer; the wallet ships without a Bridge tab.
 - **Breaking**: removed `POST /v1/bitcoin-{env}/account/{address}/transactions` (signed-transaction broadcast relay). The wallet broadcasts its signed Bitcoin transaction directly to a public endpoint; the backend never receives signed bytes. The Bitcoin slice is now read-only (history + UTXO).
 
 ## 0.15.2 — 2026-08-26
 
-- Bridge: migrated StealthEX from API v2 to v4. Added `POST /v1/bridge/exchange` (creates the exchange server-side so a retried request cannot open duplicate orders) and an optional refund address forwarded to StealthEX.
+- Bridge: migrated the bridge provider's API from v2 to v4. Added `POST /v1/bridge/exchange` (creates the exchange server-side so a retried request cannot open duplicate orders) and an optional refund address forwarded to the provider.
 - Swap: order fee is now denominated in the input token (previously mislabeled as SOL for non-SOL inputs); the service also detects when Jupiter drops the referral fee. Removed the unused `slippage` parameter from the swap order service.
 - Bitcoin: transaction responses emit the UTXO field names the wallet reads.
 - NFT listing: ownership check before building a print-edition burn, malformed metadata URLs no longer fail the whole listing, exposes `creators` and real `collection.verified`, weighted spam score with corroborating signals, per-page hidden counts in pagination, and a `?debug=1` flag.
@@ -27,8 +28,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 - Added `GET /v1/coin/{platform}/contract/{address}`: coin detail (Info/About sections — market cap, rank, ATH/ATL, supply, volume, description) by token contract address, same response shape as `/v1/coin/{coinId}` including the resolved CoinGecko `id` so clients can cache it and switch to the coin-id paths. 404 `info_not_found` for unlisted contracts.
 - Runtime dependency updates (@solana/web3.js 1.98, @solana/spl-token 0.4.15, umi 1.5, express 5.2, bs58 6 — behavior preserved, covered by a new base58 regression test) and removal of three unused runtime dependencies. No observable API changes.
 
-- `GET /v1/bridge/minimal` now resolves the pair minimum from StealthEX's fee _range_ endpoint — the previous upstream endpoint is deprecated by StealthEX — and additionally returns `max_amount` when the pair has an upstream cap (additive; `min_amount` unchanged).
-- **Breaking / bug fix**: `GET /v1/bridge/exchange` and `GET /v1/bridge/transaction` now return the camelCase public shape (`payinAddress`, `amountExpectedTo`, …) instead of the raw snake_case StealthEX payload. This fixes bridge-exchange creation: the wallet reads `payinAddress` as the deposit address, which previously arrived undefined.
+- `GET /v1/bridge/minimal` now resolves the pair minimum from the provider's fee _range_ endpoint — the previous upstream endpoint is deprecated upstream — and additionally returns `max_amount` when the pair has an upstream cap (additive; `min_amount` unchanged).
+- **Breaking / bug fix**: `GET /v1/bridge/exchange` and `GET /v1/bridge/transaction` now return the camelCase public shape (`payinAddress`, `amountExpectedTo`, …) instead of the raw snake_case provider payload. This fixes bridge-exchange creation: the wallet reads `payinAddress` as the deposit address, which previously arrived undefined.
 
 - **Breaking**: removed `GET /v1/solana-{env}/ft/batch` (batch token lookup) — no consumers in the current frontend and near-zero traffic in 30 days of prod. `/ft/verified`, `/ft/search` and the swap endpoints are unchanged; the internal batch lookup still backs balances and swaps.
 - **Breaking**: removed `GET /v1/solana-{env}/ft` (full token list) — zero traffic in 30 days of prod and no consumers in the current frontend. `/ft/verified`, `/ft/search` and the swap endpoints are unchanged.

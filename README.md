@@ -1,6 +1,6 @@
 # Salmon API
 
-Salmon API is the backend that powers the Salmon wallet across mobile, web, and extension. It exposes multi-chain endpoints (Solana, Bitcoin), token / price / bridge / swap / NFT services.
+Salmon API is the backend that powers the Salmon wallet across mobile, web, and extension. It exposes multi-chain endpoints (Solana, Bitcoin), token / price / swap / NFT services.
 
 ## Stack
 

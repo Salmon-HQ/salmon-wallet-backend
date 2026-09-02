@@ -9,7 +9,7 @@
 ## Rules
 
 - Keep controllers thin.
-- Cross-chain / chain-agnostic controllers live in `shared/` (`bridge`, `coingecko`, `dapp`, `network`, `info`). The folder root only holds subfolders.
+- Cross-chain / chain-agnostic controllers live in `shared/` (`coingecko`, `dapp`, `network`, `info`). The folder root only holds subfolders.
 - Do not embed provider logic, cache policy, or multi-step business flow here.
 - Put response contract shaping in resources when the payload is public and structured.
 

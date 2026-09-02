@@ -40,7 +40,7 @@ For Metaplex/NFT work (burn, transfer, Bubblegum, DAS), agents can install the o
 
 ## Route map
 
-Entry `src/index.js` (Express → serverless-http; CORS: `*.salmonwallet.io` + localhost). Dynamic per-chain mounting at `/v1/<chain>-<env>`: `routes/solana/index.js` (`/ft` verified/search/swap, `/account`, `/nft` incl. burn), `routes/bitcoin/`, `routes/ethereum/`. Also: coingecko market data (`/v1/exchange-rates`, `/v1/chart/:coinId`, `/v1/coin/:coinId`), StealthEX bridge (`/v1/bridge/*`), dapp metadata, internal allowlist (auth `allowlistAdmin`).
+Entry `src/index.js` (Express → serverless-http; CORS: `*.salmonwallet.io` + localhost). Dynamic per-chain mounting at `/v1/<chain>-<env>`: `routes/solana/index.js` (`/ft` verified/search/swap, `/account`, `/nft` incl. burn), `routes/bitcoin/`, `routes/ethereum/`. Also: coingecko market data (`/v1/exchange-rates`, `/v1/chart/:coinId`, `/v1/coin/:coinId`), dapp metadata, internal allowlist (auth `allowlistAdmin`).
 
 ## Security
 

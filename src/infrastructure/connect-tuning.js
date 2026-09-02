@@ -12,7 +12,7 @@
  *
  * Node's default for that per-attempt budget is 250ms, and it silently
  * outranks every request timeout in this service. `blockdaemon-client` asks
- * for 6000ms and `stealthex-client` for 15000ms, but those are response
+ * for 6000ms, but those are response
  * timeouts armed on a socket that already connected — a handshake slower than
  * 250ms never gets that far. Observed here as a 500 raised 518ms into a
  * request nominally allowed 6000: two IPv4 attempts abandoned at 250ms each,
