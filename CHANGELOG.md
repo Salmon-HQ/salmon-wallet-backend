@@ -2,6 +2,10 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## Unreleased
+
+- **Breaking**: removed `POST /v1/bitcoin-{env}/account/{address}/transactions` (signed-transaction broadcast relay). The wallet broadcasts its signed Bitcoin transaction directly to a public endpoint; the backend never receives signed bytes. The Bitcoin slice is now read-only (history + UTXO).
+
 ## 0.15.2 — 2026-08-26
 
 - Bridge: migrated StealthEX from API v2 to v4. Added `POST /v1/bridge/exchange` (creates the exchange server-side so a retried request cannot open duplicate orders) and an optional refund address forwarded to StealthEX.

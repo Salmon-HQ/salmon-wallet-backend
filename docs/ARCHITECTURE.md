@@ -99,7 +99,7 @@ Important subfolders:
 - `src/routes/solana/`
   - Solana HTTP surface (account, FT, NFT)
 - `src/routes/bitcoin/`
-  - Bitcoin HTTP surface (transactions + utxo + broadcast)
+  - Bitcoin HTTP surface (transactions + utxo; read-only)
 - `src/routes/multichain/`
   - cross-chain routes that dispatch on
     `locals.network.blockchain` (today `account/:address/balance`)
@@ -161,7 +161,7 @@ Important subfolders:
   - groups transactions, NFTs, FT, swaps, burn, and Helius/Jupiter
     wrappers
 - `src/services/bitcoin/`
-  - Bitcoin vertical slice: transactions, UTXO, broadcast; HTTP client
+  - Bitcoin vertical slice: transactions, UTXO (read-only); HTTP client
     at `src/infrastructure/blockdaemon-client.js`
 - `src/services/multichain/`
   - endpoints that dispatch on `locals.network.blockchain`. Today
@@ -413,10 +413,10 @@ Bitcoin follows the same vertical structure as Solana, with a smaller
 surface:
 
 - `src/routes/bitcoin/` — `bitcoin-account-router.js` (transactions,
-  utxo, POST broadcast)
+  utxo; the wallet broadcasts signed transactions itself)
 - `src/controllers/bitcoin/` — `bitcoin-account-controller.js`
 - `src/services/bitcoin/` — `bitcoin-transaction-service`,
-  `bitcoin-utxo-service`, `bitcoin-broadcast-service`
+  `bitcoin-utxo-service`
 - `src/resources/bitcoin/` — `bitcoin-transaction-resource`,
   `bitcoin-utxo-resource`
 

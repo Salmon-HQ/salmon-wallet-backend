@@ -2,8 +2,7 @@
 
 ## Responsibility
 
-- own Bitcoin-specific business logic: transactions, UTXO walking,
-  broadcast
+- own Bitcoin-specific business logic: transactions and UTXO walking
 - delegate Blockdaemon HTTP construction to
   `src/infrastructure/blockdaemon-client.js` rather than wiring axios
   directly
@@ -20,6 +19,9 @@
   `src/services/shared`.
 - If a helper is genuinely Bitcoin-only, keep it close to this slice
   rather than promoting it to `shared/`.
+- This slice is read-only. The wallet signs and broadcasts Bitcoin
+  transactions itself, directly to a public broadcast endpoint; the
+  backend never receives a signed transaction. Do not add a relay.
 
 ## Hotspots
 
@@ -27,9 +29,6 @@
   cache key (`bitcoin-transactions`). Renaming the key or changing
   the partition causes cache misses for every Bitcoin user — change
   with intent.
-- `bitcoin-broadcast-service.js` is the only path that POSTs signed
-  transactions upstream. Validation belongs at the controller layer;
-  upstream errors are returned as-is.
 
 ## Testing
 

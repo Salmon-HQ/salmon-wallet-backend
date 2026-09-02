@@ -8,7 +8,9 @@
  * Endpoints:
  *   - GET  /:address/transactions         — tx history (no-cache).
  *   - GET  /:address/utxo                 — UTXO set (no-cache).
- *   - POST /:address/transactions         — broadcast a signed tx (no-cache).
+ *
+ * Read-only by design: the wallet broadcasts its signed transaction
+ * directly to a public endpoint; the backend never receives signed bytes.
  *
  * No auth middleware; network resolution happens upstream in the chain
  * mount, not per-route here.
@@ -35,7 +37,5 @@ router.param('address', (req, res, next, address) => {
 router.get('/:address/transactions', cacheControl('no-cache'), safe(controller.listTransactions));
 
 router.get('/:address/utxo', cacheControl('no-cache'), safe(controller.listUtxo));
-
-router.post('/:address/transactions', cacheControl('no-cache'), safe(controller.sendTransaction));
 
 module.exports = router;
