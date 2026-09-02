@@ -3,7 +3,6 @@
 const { decorator } = require('../../../packages/api-utils');
 const transactionService = require('../../services/bitcoin/bitcoin-transaction-service');
 const utxoService = require('../../services/bitcoin/bitcoin-utxo-service');
-const broadcastService = require('../../services/bitcoin/bitcoin-broadcast-service');
 const decorateTransaction = require('../../resources/bitcoin/bitcoin-transaction-resource');
 const decorateUtxo = require('../../resources/bitcoin/bitcoin-utxo-resource');
 
@@ -43,30 +42,7 @@ const listUtxo = async (req, res) => {
   return res.status(200).send({ ...resource, data: resource.data.filter(Boolean) });
 };
 
-/**
- * Broadcasts a signed Bitcoin transaction.
- *
- * @param {import('express').Request} req - Reads `body.tx` (required, raw signed
- *   transaction string). Uses `res.locals` for network.
- * @param {import('express').Response} res - Responds 200 with the broadcast result on
- *   success; 400 with `{ error: 'bad_request', error_description }` when `tx` is
- *   missing or not a string.
- * @returns {Promise<void>}
- */
-const sendTransaction = async (req, res) => {
-  const { tx } = req.body || {};
-  if (!tx || typeof tx !== 'string') {
-    return res.status(400).json({
-      error: 'bad_request',
-      error_description: 'tx body parameter is required and must be a string.',
-    });
-  }
-  const data = await broadcastService.sendTransaction(tx, res.locals);
-  return res.status(200).send(data);
-};
-
 module.exports = {
   listTransactions,
   listUtxo,
-  sendTransaction,
 };

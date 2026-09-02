@@ -18,7 +18,6 @@ jest.mock('../../../../packages/middleware', () => ({
 jest.mock('../../../controllers/bitcoin/bitcoin-account-controller', () => ({
   listTransactions: 'listTransactions',
   listUtxo: 'listUtxo',
-  sendTransaction: 'sendTransaction',
 }));
 
 describe('bitcoin-account-router', () => {
@@ -46,7 +45,7 @@ describe('bitcoin-account-router', () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it('exposes the Bitcoin account surface (transactions, utxo, broadcast)', () => {
+  it('exposes the read-only Bitcoin account surface (transactions, utxo)', () => {
     require('../bitcoin-account-router');
 
     expect(mockRouter.get).toHaveBeenCalledWith(
@@ -59,10 +58,8 @@ describe('bitcoin-account-router', () => {
       { type: 'cacheControl', value: 'no-cache' },
       { type: 'safe', handler: 'listUtxo' }
     );
-    expect(mockRouter.post).toHaveBeenCalledWith(
-      '/:address/transactions',
-      { type: 'cacheControl', value: 'no-cache' },
-      { type: 'safe', handler: 'sendTransaction' }
-    );
+    // The wallet broadcasts signed transactions itself; the backend never
+    // receives one.
+    expect(mockRouter.post).not.toHaveBeenCalled();
   });
 });

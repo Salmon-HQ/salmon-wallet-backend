@@ -5,6 +5,7 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 ## Unreleased
 
 - **Breaking**: removed the cross-chain Bridge surface — every `/v1/bridge/*` endpoint now answers the standard 404 envelope. The flow routed user funds through a centralized exchange, which the published Terms no longer offer; the wallet ships without a Bridge tab.
+- **Breaking**: removed `POST /v1/bitcoin-{env}/account/{address}/transactions` (signed-transaction broadcast relay). The wallet broadcasts its signed Bitcoin transaction directly to a public endpoint; the backend never receives signed bytes. The Bitcoin slice is now read-only (history + UTXO).
 
 ## 0.15.2 — 2026-08-26
 

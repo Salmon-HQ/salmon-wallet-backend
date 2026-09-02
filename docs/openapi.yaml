@@ -883,48 +883,6 @@ paths:
           $ref: '#/components/responses/InvalidNetwork'
         '500':
           $ref: '#/components/responses/ServerError'
-    post:
-      tags: [bitcoin]
-      operationId: broadcastBitcoinTransaction
-      summary: Broadcast a signed Bitcoin transaction
-      description: |
-        Broadcasts the raw signed transaction. The upstream node/provider
-        response is passed through on success (documented pass-through per
-        the bitcoin slice conventions).
-      parameters:
-        - $ref: '#/components/parameters/BitcoinEnv'
-        - name: address
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                tx:
-                  type: string
-                  description: Raw signed transaction (hex string)
-              required: [tx]
-      responses:
-        '200':
-          description: Upstream broadcast result (pass-through)
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-        '400':
-          description: '`bad_request` when `tx` is missing or not a string (or invalid network env)'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          $ref: '#/components/responses/ServerError'
 
   /v1/bitcoin-{env}/account/{address}/utxo:
     get:
