@@ -15,8 +15,7 @@ Mirrors the `src/services/` layout:
   (heaviest slice; consumes both `helius-transaction-resource.js` and
   the Triton-parsed canonical shape).
 - `shared/` — chain-agnostic resources backing `services/shared/`:
-  `account-balance-resource`, `bridge-exchange-resource`,
-  `bridge-token-resource`, `network-resource`,
+  `account-balance-resource`, `network-resource`,
   `resource-includes` (cross-cutting `includeLogo` /
   `includeBlacklisted` helpers).
 - `ethereum/` — skeleton (no shapes yet).

@@ -3,7 +3,7 @@
 ## Responsibility
 
 - own persistence for chain-agnostic services in
-  `src/services/shared/`: bridge, coingecko, scam, trustwallet
+  `src/services/shared/`: coingecko, scam, trustwallet
 - wrap Redis cache (via `../helper.js`) calls behind a service-shaped
   API
 

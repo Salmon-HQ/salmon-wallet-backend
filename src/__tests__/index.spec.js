@@ -33,7 +33,6 @@ jest.mock('../routes/multichain', () => 'multichain-router');
 jest.mock('../routes/shared/coingecko-router', () => 'coingecko-router');
 jest.mock('../routes/shared/dapp-router', () => 'dapp-router');
 jest.mock('../routes/shared/network-router', () => 'network-router');
-jest.mock('../routes/shared/bridge-router', () => 'bridge-router');
 jest.mock('../routes/bitcoin', () => 'bitcoin-router');
 jest.mock('../routes/solana', () => 'solana-router');
 jest.mock('../routes/ethereum', () => 'ethereum-router');
@@ -61,7 +60,6 @@ describe('src/index route wiring', () => {
     expect(mockApp.use).toHaveBeenCalledWith('/v1', 'coingecko-router');
     expect(mockApp.use).toHaveBeenCalledWith('/v1/dapp', 'dapp-router');
     expect(mockApp.use).toHaveBeenCalledWith('/v1/networks', 'network-router');
-    expect(mockApp.use).toHaveBeenCalledWith('/v1/bridge', 'bridge-router');
   });
 
   it('applies the global rate limiter app-wide, ahead of the info router', () => {

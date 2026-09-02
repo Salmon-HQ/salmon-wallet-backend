@@ -3,7 +3,6 @@
 ## Responsibility
 
 - own services that have no blockchain affinity:
-  - `bridge-service` (StealthEX bridge aggregator)
   - `coingecko-service` (market data, prices, history)
   - `dapp-service` (OpenGraph dApp metadata)
   - `geo-service` (caller IP geolocation via ip-api.com, backs `GET /ip`)

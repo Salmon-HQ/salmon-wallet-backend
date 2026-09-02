@@ -17,10 +17,11 @@ description: How this API is deployed and run (Serverless Framework v3, AWS Lamb
 
 - `serverless-import-config-plugin` and `serverless-plugin-warmup` were removed from devDependencies (never listed in `serverless.yml#plugins`; import-config was incompatible with v3 and carried an unfixable `lodash.set` advisory). Do not re-add without wiring them in.
 - There is no SQL database. The former MySQL layer was fully removed (prod RDS decommissioned): no `packages/mysql-connector`, no `migrations/`, no `DB_*` env vars.
+- The bridge surface was removed, so the SSM parameters `/salmon-api/prod/STEALTHEX_URL` and `/salmon-api/prod/STEALTHEX_API_KEY` are now unused and can be deleted by ops. Nothing in this repo reads them; leaving them in place is harmless.
 
 ## Env vars (groups in serverless.yml)
 
-Redis · Jupiter (`JUPITER_*`) · Solana (`TRITON_*`, `HELIUS_API_KEY`, `SOLANA_FALLBACK_MAX_RPS`) · StealthEX · GA4 · rate limiting (`RATE_LIMIT_*`). Secrets are never committed in the yml. Per-stage indirection via `config/env.<stage>.yml` (`custom.envFile` in `serverless.yml`): `local` reads from `.env` (`serverless-dotenv-plugin`, only to populate `process.env` — its auto-inject is off via `dotenv.include: []`), `prod` reads from AWS SSM Parameter Store (`/salmon-api/prod/*`, SecureString). To add/rotate a prod secret: edit the param in SSM (or run `scripts/ssm-put-params.sh --execute` to re-seed from the live Lambda + `.env` fallback for new vars) and re-deploy. The development `.env` intentionally diverges from prod — it is never a source of truth for SSM except that fallback exception. See `docs/DEPLOY.md`.
+Redis · Jupiter (`JUPITER_*`) · Solana (`TRITON_*`, `HELIUS_API_KEY`, `SOLANA_FALLBACK_MAX_RPS`) · GA4 · rate limiting (`RATE_LIMIT_*`). Secrets are never committed in the yml. Per-stage indirection via `config/env.<stage>.yml` (`custom.envFile` in `serverless.yml`): `local` reads from `.env` (`serverless-dotenv-plugin`, only to populate `process.env` — its auto-inject is off via `dotenv.include: []`), `prod` reads from AWS SSM Parameter Store (`/salmon-api/prod/*`, SecureString). To add/rotate a prod secret: edit the param in SSM (or run `scripts/ssm-put-params.sh --execute` to re-seed from the live Lambda + `.env` fallback for new vars) and re-deploy. The development `.env` intentionally diverges from prod — it is never a source of truth for SSM except that fallback exception. See `docs/DEPLOY.md`.
 
 ## Local
 

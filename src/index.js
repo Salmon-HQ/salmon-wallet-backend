@@ -6,7 +6,7 @@
  *
  * Wiring order: global middleware (JSON/urlencoded parsing, compression,
  * CORS, request logging) → cross-chain routers (`info`, `multichain`,
- * `coingecko`, `dapp`, `network`, `bridge`) → one router per
+ * `coingecko`, `dapp`, `network`) → one router per
  * entry in `BLOCKCHAINS`, mounted at `/v1/<chain>-:env` (see the mount-loop
  * comment below for the per-chain resolver) → a catch-all 404 handler → the
  * final error-handling middleware (`middlewares/error-handler`), which logs
@@ -80,7 +80,6 @@ app.use('/v1', require('./routes/multichain'));
 app.use('/v1', require('./routes/shared/coingecko-router'));
 app.use('/v1/dapp', require('./routes/shared/dapp-router'));
 app.use('/v1/networks', require('./routes/shared/network-router'));
-app.use('/v1/bridge', require('./routes/shared/bridge-router'));
 // Mount one chain-specific router per entry in BLOCKCHAINS. Each mount uses a
 // chain-prefixed path (`/v1/<chain>-:env`) so a request like
 // `/v1/solana-mainnet/...` only matches the solana mount — slice routers all

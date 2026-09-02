@@ -2,6 +2,10 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## Unreleased
+
+- **Breaking**: removed the cross-chain Bridge surface — every `/v1/bridge/*` endpoint now answers the standard 404 envelope. The flow routed user funds through a centralized exchange, which the published Terms no longer offer; the wallet ships without a Bridge tab.
+
 ## 0.15.2 — 2026-08-26
 
 - Bridge: migrated StealthEX from API v2 to v4. Added `POST /v1/bridge/exchange` (creates the exchange server-side so a retried request cannot open duplicate orders) and an optional refund address forwarded to StealthEX.
