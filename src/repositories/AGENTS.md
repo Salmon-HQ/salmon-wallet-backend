@@ -10,7 +10,7 @@
 Mirrors the `src/services/` layout:
 
 - `shared/` — chain-agnostic repositories that back services in
-  `src/services/shared/`: `bridge`, `coingecko`, `scam`, `trustwallet`.
+  `src/services/shared/`: `coingecko`, `scam`, `trustwallet`.
 - `solana/` — Solana-specific repositories.
 - `data-source.js`, `helper.js`, `index.js` at the root are shared
   infrastructure consumed by every slice. `helper.js` is a re-export

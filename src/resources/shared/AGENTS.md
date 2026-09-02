@@ -3,7 +3,7 @@
 ## Responsibility
 
 - shape payloads served by chain-agnostic endpoints (multichain balance,
-  bridge, coingecko, network catalog)
+  coingecko, network catalog)
 - own cross-cutting include helpers (`resource-includes.js`) used by
   per-chain resources for `logo` / `blacklisted` side-loads
 

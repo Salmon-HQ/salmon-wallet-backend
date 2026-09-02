@@ -95,7 +95,7 @@ describe('error-handler middleware', () => {
     });
   });
 
-  it("reads the reason out of StealthEX's {err: {kind, details}} body", () => {
+  it('reads the reason out of a nested {err: {kind, details}} body', () => {
     const res = buildRes();
     const err = Object.assign(new Error('Request failed with status code 400'), {
       response: {
