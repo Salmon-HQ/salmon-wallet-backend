@@ -17,7 +17,6 @@ description: How this API is deployed and run (Serverless Framework v3, AWS Lamb
 
 - `serverless-import-config-plugin` and `serverless-plugin-warmup` were removed from devDependencies (never listed in `serverless.yml#plugins`; import-config was incompatible with v3 and carried an unfixable `lodash.set` advisory). Do not re-add without wiring them in.
 - There is no SQL database. The former MySQL layer was fully removed (prod RDS decommissioned): no `packages/mysql-connector`, no `migrations/`, no `DB_*` env vars.
-- The bridge surface was removed, so the SSM parameters `/salmon-api/prod/STEALTHEX_URL` and `/salmon-api/prod/STEALTHEX_API_KEY` are now unused and can be deleted by ops. Nothing in this repo reads them; leaving them in place is harmless.
 
 ## Env vars (groups in serverless.yml)
 
