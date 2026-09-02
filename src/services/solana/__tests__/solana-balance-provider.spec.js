@@ -4,11 +4,16 @@ jest.mock('../../multichain/balance-providers/blockdaemon-balance-provider', () 
   getBalance: jest.fn(),
 }));
 
+jest.mock('../solana-rpc-balance-provider', () => ({
+  getBalance: jest.fn(),
+}));
+
 jest.mock('../solana-ft-service', () => ({
   getByMints: jest.fn(),
 }));
 
 const blockdaemon = require('../../multichain/balance-providers/blockdaemon-balance-provider');
+const rpc = require('../solana-rpc-balance-provider');
 const tokenService = require('../solana-ft-service');
 const provider = require('../solana-balance-provider');
 
@@ -207,5 +212,67 @@ describe('solana-balance-provider', () => {
     const token = out.find((it) => it.currency?.type === 'token');
     expect(token).toBeDefined();
     expect(token).not.toHaveProperty('_tags');
+  });
+
+  describe('Blockdaemon fallback to RPC', () => {
+    const rpcItems = [buildSolNative('42'), buildSplToken('rpc-mint', '10')];
+    let warn;
+
+    beforeEach(() => {
+      rpc.getBalance.mockResolvedValue(rpcItems);
+      warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => warn.mockRestore());
+
+    it('falls back to the RPC when Blockdaemon times out (no response)', async () => {
+      const timeout = Object.assign(new Error('timeout of 6000ms exceeded'), {
+        code: 'ECONNABORTED',
+        request: {},
+      });
+      blockdaemon.getBalance.mockRejectedValue(timeout);
+
+      const out = await provider.getBalance('sol-address', undefined, { includeSpam: true });
+
+      expect(rpc.getBalance).toHaveBeenCalledWith('sol-address', undefined, { includeSpam: true });
+      expect(out.map((it) => it.confirmed_balance)).toEqual(['42', '10']);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('ECONNABORTED'));
+    });
+
+    it('falls back to the RPC when Blockdaemon answers 5xx', async () => {
+      blockdaemon.getBalance.mockRejectedValue(
+        Object.assign(new Error('502'), { request: {}, response: { status: 502 } })
+      );
+
+      const out = await provider.getBalance('sol-address', undefined, { includeSpam: true });
+
+      expect(rpc.getBalance).toHaveBeenCalledTimes(1);
+      expect(out).toHaveLength(2);
+    });
+
+    it('propagates a Blockdaemon 4xx without calling the RPC', async () => {
+      const notFound = Object.assign(new Error('404'), { request: {}, response: { status: 404 } });
+      blockdaemon.getBalance.mockRejectedValue(notFound);
+
+      await expect(provider.getBalance('bad-address', undefined, {})).rejects.toBe(notFound);
+      expect(rpc.getBalance).not.toHaveBeenCalled();
+    });
+
+    it('propagates an RPC failure instead of returning an empty balance', async () => {
+      blockdaemon.getBalance.mockRejectedValue(
+        Object.assign(new Error('timeout'), { request: {} })
+      );
+      rpc.getBalance.mockRejectedValue(new Error('rpc down'));
+
+      await expect(provider.getBalance('sol-address', undefined, {})).rejects.toThrow('rpc down');
+    });
+
+    it('does not touch the RPC when Blockdaemon succeeds', async () => {
+      blockdaemon.getBalance.mockResolvedValue([buildSolNative('1')]);
+
+      await provider.getBalance('sol-address', undefined, {});
+
+      expect(rpc.getBalance).not.toHaveBeenCalled();
+    });
   });
 });

@@ -29,7 +29,35 @@
  */
 
 const blockdaemonBalanceProvider = require('../multichain/balance-providers/blockdaemon-balance-provider');
+const rpcBalanceProvider = require('./solana-rpc-balance-provider');
 const tokenService = require('./solana-ft-service');
+
+/**
+ * True for failures the caller cannot act on: a transport error (timeout,
+ * no response — axios sets `request` without `response`) or an upstream
+ * 5xx. Upstream 4xx are the caller's input and must propagate unchanged.
+ * Same heuristic as `middlewares/error-handler.js#describe`.
+ */
+const isUpstreamUnavailable = (error) =>
+  Boolean(error?.request && !error?.response) || error?.response?.status >= 500;
+
+/**
+ * Blockdaemon first; on timeout/5xx fall back to the bare RPC. Blockdaemon
+ * answers large wallets in 9–21 s against a 6 s budget, which made every
+ * mainnet balance a 500. The RPC answers the same question in ~1 s. A 4xx
+ * or an RPC failure propagates — never an empty balance.
+ */
+const fetchBalanceItems = async (address, tokens, locals) => {
+  try {
+    return await blockdaemonBalanceProvider.getBalance(address, tokens, locals);
+  } catch (error) {
+    if (!isUpstreamUnavailable(error)) throw error;
+    console.warn(
+      `[solana-balance-provider] Blockdaemon unavailable (${error.code || error.response?.status || error.message}), falling back to RPC`
+    );
+    return rpcBalanceProvider.getBalance(address, tokens, locals);
+  }
+};
 
 // Blockdaemon Universal returns Solana SPL items with
 // `asset_path: "solana/mint/<mint>"`. Some upstream/fixture variants use
@@ -133,7 +161,7 @@ const filterSpamTokens = (items) => {
  *   with `_logo`/`_name`/`_symbol`/`_coingeckoId`/`_tags` where available.
  */
 const getBalance = async (address, tokens, locals) => {
-  const items = await blockdaemonBalanceProvider.getBalance(address, tokens, locals);
+  const items = await fetchBalanceItems(address, tokens, locals);
 
   const tokenMints = [...new Set(items.map(extractTokenMint).filter(Boolean))];
 
