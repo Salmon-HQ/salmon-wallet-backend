@@ -168,10 +168,7 @@
     {
       "Sid": "ApiGatewayReadOnly",
       "Effect": "Allow",
-      "Action": [
-        "apigateway:List*",
-        "apigateway:Describe*"
-      ],
+      "Action": ["apigateway:List*", "apigateway:Describe*"],
       "Resource": "*"
     },
     {
@@ -199,10 +196,7 @@
     {
       "Sid": "EventBridgeReadOnly",
       "Effect": "Allow",
-      "Action": [
-        "events:ListRules",
-        "events:DescribeEventBus"
-      ],
+      "Action": ["events:ListRules", "events:DescribeEventBus"],
       "Resource": "*"
     },
     {

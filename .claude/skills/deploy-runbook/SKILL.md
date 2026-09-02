@@ -15,7 +15,7 @@ description: How this API is deployed and run (Serverless Framework v3, AWS Lamb
 
 ## Known quirks (do not "fix" these without knowing this)
 
-- `serverless-import-config-plugin` is disabled: incompatible with v3.
+- `serverless-import-config-plugin` and `serverless-plugin-warmup` were removed from devDependencies (never listed in `serverless.yml#plugins`; import-config was incompatible with v3 and carried an unfixable `lodash.set` advisory). Do not re-add without wiring them in.
 - There is no SQL database. The former MySQL layer was fully removed (prod RDS decommissioned): no `packages/mysql-connector`, no `migrations/`, no `DB_*` env vars.
 
 ## Env vars (groups in serverless.yml)
