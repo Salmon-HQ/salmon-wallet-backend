@@ -2,10 +2,12 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
-## Unreleased
+## 0.16.0 — 2026-09-03
 
 - **Breaking**: removed the cross-chain Bridge surface — every `/v1/bridge/*` endpoint now answers the standard 404 envelope. The flow routed user funds through a centralized exchange, which the published Terms no longer offer; the wallet ships without a Bridge tab.
 - **Breaking**: removed `POST /v1/bitcoin-{env}/account/{address}/transactions` (signed-transaction broadcast relay). The wallet broadcasts its signed Bitcoin transaction directly to a public endpoint; the backend never receives signed bytes. The Bitcoin slice is now read-only (history + UTXO).
+- Solana balance: when the Blockdaemon lookup fails on transport or an upstream 5xx, the multichain balance endpoint now falls back to the bare RPC (native + Token + Token-2022 aggregated per mint, same item shape). An upstream 4xx still propagates; a failing fallback still propagates — never an empty balance.
+- Dependency and security maintenance: redis 5→6, js-yaml 4→5, axios 1.20, mpl-bubblegum 5.1, transitive overrides to clear the npm audit and license blockers. No observable API changes.
 
 ## 0.15.2 — 2026-08-26
 
