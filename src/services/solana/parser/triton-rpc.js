@@ -24,7 +24,9 @@ const tritonClient = require('../../../infrastructure/triton-client');
 
 const DEFAULT_COMMITMENT = 'confirmed';
 const DEFAULT_TIMEOUT_MS = 15000;
-const MAX_TX_VERSION = 0;
+// Integer 1, never the string "1": opts every reader into v1 (4096-byte)
+// transactions. Without it the RPC answers -32015 for any page containing one.
+const MAX_TX_VERSION = 1;
 const DEFAULT_HISTORY_LIMIT = 10;
 
 const buildRequest = (id, method, params) => ({

@@ -202,7 +202,7 @@ describe('Solana Transaction Service - unit tests', () => {
     expect(getSignaturesForAddress).toHaveBeenCalled();
     expect(getParsedTransaction).toHaveBeenCalledWith('sig-1', {
       commitment: 'confirmed',
-      maxSupportedTransactionVersion: 0,
+      maxSupportedTransactionVersion: 1,
     });
     expect(result).toEqual({
       data: [

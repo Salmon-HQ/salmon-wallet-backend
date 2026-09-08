@@ -43,6 +43,7 @@ const buildRawTx = ({
   slot = 100,
   fee = 5000,
   accountKeys = [],
+  version = 0,
 } = {}) => ({
   blockTime,
   slot,
@@ -61,7 +62,7 @@ const buildRawTx = ({
     },
     signatures: ['SIG'],
   },
-  version: 0,
+  version,
 });
 
 describe('parser orchestrator', () => {
@@ -92,6 +93,39 @@ describe('parser orchestrator', () => {
     expect(result.fee).toBe(5000);
     expect(result.feePayer).toBe('fee-payer');
     expect(result.signature).toBe('SIG');
+  });
+
+  it('parses a version 1 transaction the same way as v0 (inline keys, no lookup tables)', () => {
+    // v1 (SIMD-0296) carries every account inline and its compute/priority
+    // settings in `transactionConfig` rather than ComputeBudget instructions;
+    // the parser reads neither, and `meta.fee` already includes the priority
+    // fee, so the enriched shape must not change.
+    const rawTx = buildRawTx({
+      version: 1,
+      fee: 128456,
+      instructions: [
+        {
+          programId: SYSTEM,
+          parsed: { type: 'transfer', info: { source: 'A', destination: 'B', lamports: 1000 } },
+        },
+      ],
+    });
+    rawTx.transaction.message.transactionConfig = {
+      computeUnitLimit: 200000,
+      loadedAccountsDataSizeLimit: 65536,
+      priorityFee: 123456,
+      heapSize: null,
+    };
+
+    const result = parseTransaction(rawTx);
+
+    expect(result.type).toBe('TRANSFER');
+    expect(result.source).toBe('SYSTEM_PROGRAM');
+    expect(result.nativeTransfers).toEqual([
+      { fromUserAccount: 'A', toUserAccount: 'B', amount: 1000 },
+    ]);
+    expect(result.fee).toBe(128456);
+    expect(result.feePayer).toBe('fee-payer');
   });
 
   it('parses an SPL Token transfer as TRANSFER with tokenStandard=Fungible', () => {
