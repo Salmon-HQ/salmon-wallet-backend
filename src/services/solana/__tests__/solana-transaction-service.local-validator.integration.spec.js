@@ -73,7 +73,7 @@ const probeValidator = async () => {
 const memoInstruction = (text) => ({
   programAddress: MEMO_PROGRAM,
   accounts: [],
-  data: new TextEncoder().encode(text),
+  data: Buffer.from(text, 'utf8'),
 });
 
 /** System-program `Transfer` (index 2) without pulling in @solana-program/system. */
