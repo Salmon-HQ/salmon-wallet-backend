@@ -65,7 +65,7 @@ describe('getSignaturesForAddress', () => {
 });
 
 describe('getParsedTransaction', () => {
-  it('uses jsonParsed encoding + maxSupportedTransactionVersion=0', async () => {
+  it('uses jsonParsed encoding + maxSupportedTransactionVersion=1 (integer, opts into v1)', async () => {
     axios.post.mockResolvedValue({ data: { result: { slot: 1 } } });
 
     const result = await tritonRpc.getParsedTransaction('sig-1', 'mainnet');
@@ -78,7 +78,7 @@ describe('getParsedTransaction', () => {
           'sig-1',
           expect.objectContaining({
             commitment: 'confirmed',
-            maxSupportedTransactionVersion: 0,
+            maxSupportedTransactionVersion: 1,
             encoding: 'jsonParsed',
           }),
         ],
@@ -160,7 +160,7 @@ describe('getTransactionsForAddress', () => {
             limit: 5,
             sortOrder: 'desc',
             commitment: 'confirmed',
-            maxSupportedTransactionVersion: 0,
+            maxSupportedTransactionVersion: 1,
             encoding: 'jsonParsed',
             transactionDetails: 'full',
           }),

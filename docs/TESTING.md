@@ -388,6 +388,17 @@ the hermetic set (extend the `test:integration:hermetic` pattern); anything
 that touches a live provider or needs a real key stays external and must
 probe-skip, mirroring `triton-provider.integration.spec.js`.
 
+A third, local-only tier exists for behaviour that only a real Solana node
+can prove: `npm run test:integration:local-validator` runs the
+`*.local-validator.integration.spec.js` suites against a
+`solana-test-validator` (Agave ≥ 4.2, https://docs.anza.xyz/cli/install)
+on `SOLANA_LOCAL_RPC_URL` (default `http://127.0.0.1:8899`). No secrets and
+no external network — a validator is a single binary with unlimited local
+airdrops — and the suites skip when nothing answers on that port. Today it
+holds the bare-RPC history path reading a real version 1 (4096-byte)
+transaction through the pinned `@solana/web3.js`. Not yet in `ci.yml`;
+wiring a validator step into the PR gate is tracked separately.
+
 ## Testing policy for contributions
 
 What reviewers (human and AI) check when a PR adds or changes behavior. The deterministic gates catch naming, formatting and regressions; this section is the judgment layer they cannot automate.

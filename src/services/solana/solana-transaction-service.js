@@ -26,9 +26,12 @@ const { list: listTokens } = require('./solana-ft-service');
 const { loadRpcEnrichment } = require('./solana-rpc-enrichment');
 
 const COMMITMENT = 'confirmed';
+// Integer 1, never the string "1": opts this reader into v1 (4096-byte)
+// transactions. Without it the RPC answers -32015 for any page that contains
+// one once the feature is live on mainnet.
 const TRANSACTION_CONFIG = {
   commitment: COMMITMENT,
-  maxSupportedTransactionVersion: 0,
+  maxSupportedTransactionVersion: 1,
 };
 
 const { buildTokenLookup } = heliusTransactionResource;

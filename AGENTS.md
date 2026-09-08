@@ -96,6 +96,7 @@ and turns small edits into cross-cutting ones.
   var is missing, add a dummy there instead of making unit tests need a real
   `.env`.
 - `npm run test:integration` runs `--runInBand` and needs a real `.env`.
+- `npm run test:integration:local-validator` runs the `*.local-validator.integration.spec.js` suites against a `solana-test-validator` (Agave ≥ 4.2; install: https://docs.anza.xyz/cli/install) on `SOLANA_LOCAL_RPC_URL` (default `http://127.0.0.1:8899`). No secrets, no external network; skips when no validator answers. This is where behaviour that only a real node can prove lives (e.g. the bare-RPC path reading a real v1 transaction through the pinned `@solana/web3.js`).
 - Full guide: `docs/TESTING.md`.
 
 ## Tooling
@@ -145,7 +146,7 @@ These are the public-facing API contracts and their invariants. Changing the
 behavior of any documented capability is a contract change — treat it as such
 (check consumers, cover with tests, review):
 
-- `solana-transaction-enrichment` — tx history shape, `_source` enum, provider routing + fallback policy
+- `solana-transaction-enrichment` — tx history shape, `_source` enum, provider routing + fallback policy. Every RPC reader (`parser/triton-rpc.js`, the bare-RPC path in `solana-transaction-service.js`) passes the integer `maxSupportedTransactionVersion: 1` (never the string `"1"`) so pages containing a v1 / 4096-byte transaction (SIMD-0296) are read instead of failing with `-32015`; `@solana/web3.js` is pinned to `1.99.0-beta.0`, the first 1.x that accepts `version: 1` in a parsed response (read-only — the backend never builds v1). The npm `overrides` entry that makes the pin resolve is repo-wide, so Metaplex/umi and spl-token (NFT burn/transfer builders) run on the same beta — accepted deliberately; replace with the stable `1.99.x` as soon as it ships. Backend readers do not surface compute/priority settings, so nothing here reads `transactionConfig`; `meta.fee` already includes the v1 priority fee
 - `solana-source-catalog` — program-ID → source-name map, priority bands, source-add convention
 - `solana-fungible-token-catalog` — `/ft/verified`, `/ft/search` shapes + fungibility filter
 - `solana-swap-orchestration` — Jupiter Ultra `/order` + `/execute` shapes; 404 on no-route / failed-execution (the provider's own reason travels in `error_description`, because the wallet classifies swap failures by matching that text); server-side referral. `input.amount` and `fee` come from the order's top-level `inAmount`, never from `routePlan[0]`, which is only the first leg.
