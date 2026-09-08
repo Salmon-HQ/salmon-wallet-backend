@@ -793,3 +793,37 @@ describe('collectInstructionMetadata', () => {
     ]);
   });
 });
+
+describe('real version 1 transaction (devnet)', () => {
+  // `getTransaction` (jsonParsed, maxSupportedTransactionVersion: 1) response
+  // for 59yqrkEWnukeNduX7aFzU6C8vqdhAdAUkRyvFUMRyAP6b2cHn4LtHXYspV1cXWbWv8E1t7V4Cm9qFRCC1UVCM6Ku,
+  // a 2172-byte v1 transfer + memo sent on devnet on 2026-09-08 with
+  // priorityFeeLamports: 1000. Regenerate by re-sending with @solana/kit 8 and
+  // dumping the parsed response.
+  const rawTx = require('./fixtures/v1-devnet-transfer-memo.json');
+
+  it('is a v1 response with the config the node exposes', () => {
+    expect(rawTx.version).toBe(1);
+    expect(rawTx.transaction.message.transactionConfig).toEqual({
+      computeUnitLimit: 1400000,
+      heapSize: null,
+      loadedAccountsDataSizeLimit: 262144,
+      priorityFee: 1000,
+    });
+  });
+
+  it('parses like any other transfer, with the priority fee already inside meta.fee', () => {
+    const result = parseTransaction(rawTx);
+
+    expect(result.type).toBe('TRANSFER');
+    expect(result.fee).toBe(6000);
+    expect(result.feePayer).toBe('4SLPz1KMRTcu878P45JRfekegjTbU3NzXX6nRHD5Gr9Q');
+    expect(result.nativeTransfers).toEqual([
+      {
+        fromUserAccount: '4SLPz1KMRTcu878P45JRfekegjTbU3NzXX6nRHD5Gr9Q',
+        toUserAccount: 'HCRPYbq4bsfmCng6A7t3QkP3kwW2vcgp4tu8VbMgrTnC',
+        amount: 1000000,
+      },
+    ]);
+  });
+});

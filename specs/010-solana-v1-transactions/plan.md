@@ -57,7 +57,7 @@ Wallet Standard. No Salmon-built transaction moves to v1.
 
 1. Backend: `npm run test:unit` (978 → 979), `lint:check`, `format:check`.
 2. Frontend: `pnpm turbo run typecheck lint test`, `pnpm check:i18n`, `pnpm format:check`; `RUN_SOLANA_LIVE=1` live devnet simulation of a 1.8 KB v1 transaction.
-3. Pending (needs a funded devnet key): send a real v1 transaction from the approval path and capture its `jsonParsed` response as a backend parser fixture.
+3. Done 2026-09-08 on devnet: a 2172-byte v1 transaction sent with kit (`59yqrkEW…M6Ku`) is the parser fixture `parser/__tests__/fixtures/v1-devnet-transfer-memo.json`; a second one was previewed, signed and sent through the wallet approval path (`dapp-approval.live.test.ts`) and read back with `maxSupportedTransactionVersion: 1`.
 
 ## Rollout / rollback
 

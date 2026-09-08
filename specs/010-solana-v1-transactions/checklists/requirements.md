@@ -32,4 +32,4 @@
 ## Notes
 
 - Backfilled after implementation from Linear DEV-42; the spec records the decisions taken rather than driving them.
-- The "send a real v1 transaction on devnet" acceptance item is open pending a funded devnet key.
+- The "send a real v1 transaction on devnet" acceptance item was closed on 2026-09-08 (`dapp-approval.live.test.ts` in the frontend; fixture in `parser/__tests__/fixtures/`).
