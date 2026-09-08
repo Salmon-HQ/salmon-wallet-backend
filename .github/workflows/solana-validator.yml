@@ -1,0 +1,118 @@
+# Solana node checks: what only a real validator or a real cluster can prove.
+#
+# `local-validator` runs the `*.local-validator.integration.spec.js` suites
+# against a `solana-test-validator` on the runner — hermetic (no secrets,
+# unlimited local airdrops), so it sits in the PR gate. The CLI release is
+# pinned and cached; the only network use is the one-time download.
+#
+# `mainnet-feature-status` runs nightly and FAILS ON PURPOSE the day the v1
+# transaction feature (SIMD-0296) activates on mainnet: that is the cue to
+# revisit the `@solana/web3.js` prerelease pin and anything else that was
+# sized for "v1 exists only on devnet". Acknowledge it by removing the job.
+#
+# Same security model as ci.yml: empty top-level permissions, actions pinned
+# to full SHAs, `persist-credentials: false`.
+name: Solana node checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '41 6 * * *' # daily 06:41 UTC — off the top-of-hour spike
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: solana-node-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Agave release with the v1 transaction feature active by default on a
+  # test validator. Bump deliberately: the local suite pins behaviour to it.
+  SOLANA_CLI_VERSION: v4.2.2
+
+jobs:
+  local-validator:
+    name: local validator (v1 transactions)
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Cache Solana CLI
+        id: solana-cache
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ~/.local/share/solana/install
+          key: solana-cli-${{ runner.os }}-${{ env.SOLANA_CLI_VERSION }}
+
+      - name: Install Solana CLI
+        if: steps.solana-cache.outputs.cache-hit != 'true'
+        run: sh -c "$(curl -sSfL "https://release.anza.xyz/${SOLANA_CLI_VERSION}/install")"
+
+      - name: Start test validator
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+          solana-test-validator --quiet --reset --ledger "${RUNNER_TEMP}/ledger" &
+          for _ in $(seq 1 60); do
+            if curl -sf -X POST -H 'content-type: application/json' \
+                 -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}' \
+                 http://127.0.0.1:8899 | grep -q '"ok"'; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "validator did not become healthy" >&2
+          exit 1
+
+      - name: Local-validator integration tests
+        run: npm run test:integration:local-validator
+        env:
+          SOLANA_LOCAL_RPC_URL: http://127.0.0.1:8899
+
+  mainnet-feature-status:
+    name: mainnet v1 feature status
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+    steps:
+      - name: Cache Solana CLI
+        id: solana-cache
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ~/.local/share/solana/install
+          key: solana-cli-${{ runner.os }}-${{ env.SOLANA_CLI_VERSION }}
+
+      - name: Install Solana CLI
+        if: steps.solana-cache.outputs.cache-hit != 'true'
+        run: sh -c "$(curl -sSfL "https://release.anza.xyz/${SOLANA_CLI_VERSION}/install")"
+
+      # Public mainnet RPC, read-only, no key. `status` is `inactive` today;
+      # `active` (or `pending`) turns this job red until someone removes it.
+      - name: Check SIMD-0296 (transaction v1) on mainnet
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          status=$(solana feature status txv1aq4pp281K9um3tnPgkfX8UqtFT6wcVW3hNezGLL \
+            --url mainnet-beta --output json | jq -r '.features[0].status')
+          echo "transaction v1 on mainnet: ${status}"
+          if [ "${status}" != "inactive" ]; then
+            echo "::error::Transaction v1 is '${status}' on mainnet — revisit the web3.js prerelease pin and remove this job once acknowledged."
+            exit 1
+          fi

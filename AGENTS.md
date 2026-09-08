@@ -96,7 +96,7 @@ and turns small edits into cross-cutting ones.
   var is missing, add a dummy there instead of making unit tests need a real
   `.env`.
 - `npm run test:integration` runs `--runInBand` and needs a real `.env`.
-- `npm run test:integration:local-validator` runs the `*.local-validator.integration.spec.js` suites against a `solana-test-validator` (Agave ≥ 4.2; install: https://docs.anza.xyz/cli/install) on `SOLANA_LOCAL_RPC_URL` (default `http://127.0.0.1:8899`). No secrets, no external network; skips when no validator answers. This is where behaviour that only a real node can prove lives (e.g. the bare-RPC path reading a real v1 transaction through the pinned `@solana/web3.js`).
+- `npm run test:integration:local-validator` runs the `*.local-validator.integration.spec.js` suites against a `solana-test-validator` (Agave ≥ 4.2; install: https://docs.anza.xyz/cli/install) on `SOLANA_LOCAL_RPC_URL` (default `http://127.0.0.1:8899`). No secrets, no external network; skips when no validator answers. This is where behaviour that only a real node can prove lives (e.g. the bare-RPC path reading a real v1 transaction through the pinned `@solana/web3.js`). CI runs it on every PR via `.github/workflows/solana-validator.yml`, which also carries the nightly mainnet feature-status check that goes red when v1 activates.
 - Full guide: `docs/TESTING.md`.
 
 ## Tooling
