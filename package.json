@@ -21,7 +21,8 @@
     "serverless:start:local": "serverless offline --stage local --disableCookieValidation",
     "serverless:print": "serverless print --stage prod -v",
     "serverless:build": "serverless package --stage prod",
-    "serverless:deploy": "serverless deploy --stage prod"
+    "serverless:deploy": "serverless deploy --stage prod",
+    "test:integration:local-validator": "jest --testPathPatterns=\"local-validator.integration.spec.js$\" --detectOpenHandles --runInBand"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
   "homepage": "https://github.com/Salmon-HQ/salmon-wallet-backend#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@solana/kit": "8.2.0",
     "dotenv": "^17.4.2",
     "eslint": "^10.9.1",
     "jest": "^30.4.2",
