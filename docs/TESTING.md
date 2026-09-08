@@ -396,8 +396,15 @@ on `SOLANA_LOCAL_RPC_URL` (default `http://127.0.0.1:8899`). No secrets and
 no external network — a validator is a single binary with unlimited local
 airdrops — and the suites skip when nothing answers on that port. Today it
 holds the bare-RPC history path reading a real version 1 (4096-byte)
-transaction through the pinned `@solana/web3.js`. Not yet in `ci.yml`;
-wiring a validator step into the PR gate is tracked separately.
+transaction through the pinned `@solana/web3.js`.
+
+- **`solana-validator.yml`** (PRs + `main` + nightly): the `local-validator`
+  job installs a pinned Solana CLI (cached by version), boots a
+  `solana-test-validator` on the runner and runs the tier above, so it is
+  part of the PR gate. The nightly `mainnet-feature-status` job asks the
+  public mainnet RPC whether the v1 transaction feature (SIMD-0296) has
+  activated and **fails on purpose when it has** — the cue to revisit the
+  `@solana/web3.js` prerelease pin; acknowledge by removing that job.
 
 ## Testing policy for contributions
 
