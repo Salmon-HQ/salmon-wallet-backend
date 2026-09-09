@@ -107,7 +107,8 @@ const buildRpcTransaction = (address, signature, transaction) => ({
 });
 
 const logEnhancedHistoryFallback = (address, error) => {
-  console.error(`Enhanced provider error for address ${address}:`, error.message);
+  // `address` is caller input: keep it out of the format-string argument.
+  console.error('Enhanced provider error for address', address, error.message);
   console.log('Falling back to standard RPC');
 };
 

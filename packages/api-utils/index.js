@@ -17,6 +17,10 @@ const safe = (action) => {
   return handleError(action);
 };
 
+// `?include=` keys become object keys: refuse the ones that would rewrite the
+// prototype chain instead of describing a relation.
+const UNSAFE_INCLUDE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 const parseInclude = (req) => {
   const { include } = req.query;
   if (!include) {
@@ -34,6 +38,7 @@ const parseInclude = (req) => {
     let obj = result;
 
     for (const key of keys) {
+      if (UNSAFE_INCLUDE_KEYS.has(key)) break;
       if (!obj.hasOwnProperty(key)) {
         obj[key] = {};
       }

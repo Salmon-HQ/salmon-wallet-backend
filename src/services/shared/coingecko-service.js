@@ -187,8 +187,10 @@ const getMarketChart = async (params, locals) => {
   return getCachedOrFetch({
     loadShortTerm: () => repository.getShortTermChart(cacheKey, locals),
     fetchAndMap: async () => {
+      // Path segments come from the caller: encode them so `a/../b` cannot
+      // walk the CoinGecko path (CodeQL js/request-forgery).
       const data = await fetchFromCoinGecko(
-        `${MARKET_CHART_ENDPOINT}/${coinId}/market_chart`,
+        `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(coinId)}/market_chart`,
         { vs_currency: currency, days },
         5000,
         `CoinGecko getMarketChart (${coinId}, ${days} days)`
@@ -223,7 +225,7 @@ const getCoinInfo = async (params, locals) => {
     loadShortTerm: () => repository.getShortTermCoinInfo(cacheKey, locals),
     fetchAndMap: async () => {
       const data = await fetchFromCoinGecko(
-        `${BASE_ENDPOINT}/api/v3/coins/${coinId}`,
+        `${BASE_ENDPOINT}/api/v3/coins/${encodeURIComponent(coinId)}`,
         {
           localization: false,
           tickers: false,
@@ -292,7 +294,7 @@ const getContractMarketChart = async (params, locals) => {
     loadShortTerm: () => repository.getShortTermChart(cacheKey, locals),
     fetchAndMap: async () => {
       const data = await fetchFromCoinGecko(
-        `${MARKET_CHART_ENDPOINT}/${platform}/contract/${contractAddress}/market_chart`,
+        `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(platform)}/contract/${encodeURIComponent(contractAddress)}/market_chart`,
         { vs_currency: currency, days },
         5000,
         `CoinGecko getContractMarketChart (${platform}:${contractAddress}, ${days} days)`
@@ -335,7 +337,7 @@ const getContractCoinInfo = async (params, locals) => {
       // No query params: the contract endpoint returns the full coin object
       // (market_data included) and accepts no field-selection options.
       const data = await fetchFromCoinGecko(
-        `${MARKET_CHART_ENDPOINT}/${platform}/contract/${contractAddress}`,
+        `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(platform)}/contract/${encodeURIComponent(contractAddress)}`,
         {},
         5000,
         `CoinGecko getContractCoinInfo (${platform}:${contractAddress})`
