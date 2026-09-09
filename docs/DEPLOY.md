@@ -20,6 +20,41 @@ npx serverless rollback --stage prod --timestamp <t>
 
 Only two stages exist: `local` (dev, no AWS) and `prod` (tag-triggered deploy).
 
+## Provisioned but unused: Solana Actions / Blinks infrastructure
+
+The Blinks design (`docs/plans/2026-05-05-solana-actions-blinks.md`, a local
+planning note) was never merged: there is no `/v1/solana/actions/*` route, no
+`ACTIONS_ICON_BASE_URL` / `STAKE_*` env wiring. Its AWS side, however, was
+provisioned and is still live in the prod account (verified 2026-09-09):
+
+| Resource                                                                            | What it is                                                               | Effect today                                                                                                       |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| API Gateway custom domain `actions.salmonwallet.io` (EDGE, ACM cert in `us-east-1`) | Base-path mapping `(none)` → the prod REST API, stage `prod`             | **A second public hostname for the entire prod API**, bypassing the main CloudFront distribution. Nothing uses it. |
+| CloudFront distribution with alias `cdn.salmonwallet.io`                            | Origin: a private S3 icon bucket ("CDN for Solana Actions/Blinks icons") | Serves 3 icon files (~18 KB). Nothing references them.                                                             |
+| The icon bucket                                                                     | Icon bucket, created 2026-05-11                                          | Idle.                                                                                                              |
+
+Both hostnames resolve at the registrar (name.com, managed by the tech lead).
+Cost is negligible; the concern is an undocumented hostname in front of prod.
+
+If Blinks is built, reuse these (the design note has the intended layout). If
+it is dropped, decommission in this order so nothing dangles:
+
+```bash
+# 1. detach the API from the custom domain, then delete the domain
+aws apigateway delete-base-path-mapping --domain-name actions.salmonwallet.io --base-path '(none)'
+aws apigateway delete-domain-name --domain-name actions.salmonwallet.io
+# 2. disable, wait for Deployed, then delete the CDN distribution (needs the ETag)
+aws cloudfront get-distribution-config --id <distribution-id>   # set Enabled=false, update, wait
+aws cloudfront delete-distribution --id <distribution-id> --if-match <etag>
+# 3. empty and delete the bucket
+aws s3 rm s3://<icon-bucket> --recursive && aws s3 rb s3://<icon-bucket>
+# 4. ask the tech lead to delete the two CNAMEs (actions, cdn) and the ACM
+#    validation CNAME for actions.salmonwallet.io; then delete the ACM cert.
+```
+
+Resource IDs (distribution, bucket, certificate) are deliberately not in this public doc; they live in the maintainers' private ops notes and are one `aws cloudfront list-distributions` / `aws s3 ls` away. Every step is a prod-account mutation: confirm with the owner first, one step
+at a time.
+
 ## Secrets: SSM Parameter Store
 
 Prod env values live in **AWS SSM Parameter Store** under `/salmon-api/prod/*`, type `SecureString`, region `us-east-1`.
