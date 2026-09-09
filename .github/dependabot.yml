@@ -38,3 +38,11 @@ updates:
     groups:
       actions:
         patterns: ['*']
+
+  # Dockerfile base image is pinned by digest (Scorecard Pinned-Dependencies);
+  # this keeps the digest moving with the node:20 tag instead of by hand.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
