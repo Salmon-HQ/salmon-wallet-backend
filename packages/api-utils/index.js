@@ -18,8 +18,10 @@ const safe = (action) => {
 };
 
 // `?include=` keys become object keys: refuse the ones that would rewrite the
-// prototype chain instead of describing a relation.
-const UNSAFE_INCLUDE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+// prototype chain instead of describing a relation. Spelled as direct
+// comparisons because that is the guard CodeQL's taint model recognises.
+const isUnsafeIncludeKey = (key) =>
+  key === '__proto__' || key === 'constructor' || key === 'prototype';
 
 const parseInclude = (req) => {
   const { include } = req.query;
@@ -38,7 +40,7 @@ const parseInclude = (req) => {
     let obj = result;
 
     for (const key of keys) {
-      if (UNSAFE_INCLUDE_KEYS.has(key)) break;
+      if (isUnsafeIncludeKey(key)) break;
       if (!obj.hasOwnProperty(key)) {
         obj[key] = {};
       }
