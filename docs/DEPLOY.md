@@ -27,11 +27,11 @@ planning note) was never merged: there is no `/v1/solana/actions/*` route, no
 `ACTIONS_ICON_BASE_URL` / `STAKE_*` env wiring. Its AWS side, however, was
 provisioned and is still live in the prod account (verified 2026-09-09):
 
-| Resource                                                                            | What it is                                                             | Effect today                                                                                                       |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| API Gateway custom domain `actions.salmonwallet.io` (EDGE, ACM cert in `us-east-1`) | Base-path mapping `(none)` → REST API `te4x28v8e0`, stage `prod`       | **A second public hostname for the entire prod API**, bypassing the main CloudFront distribution. Nothing uses it. |
-| CloudFront `E30Y9GUU6X06OA`, alias `cdn.salmonwallet.io`                            | Origin: S3 `salmon-blinks-cdn` ("CDN for Solana Actions/Blinks icons") | Serves 3 icon files (~18 KB). Nothing references them.                                                             |
-| S3 `salmon-blinks-cdn`                                                              | Icon bucket, created 2026-05-11                                        | Idle.                                                                                                              |
+| Resource                                                                            | What it is                                                               | Effect today                                                                                                       |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| API Gateway custom domain `actions.salmonwallet.io` (EDGE, ACM cert in `us-east-1`) | Base-path mapping `(none)` → the prod REST API, stage `prod`             | **A second public hostname for the entire prod API**, bypassing the main CloudFront distribution. Nothing uses it. |
+| CloudFront distribution with alias `cdn.salmonwallet.io`                            | Origin: a private S3 icon bucket ("CDN for Solana Actions/Blinks icons") | Serves 3 icon files (~18 KB). Nothing references them.                                                             |
+| The icon bucket                                                                     | Icon bucket, created 2026-05-11                                          | Idle.                                                                                                              |
 
 Both hostnames resolve at the registrar (name.com, managed by the tech lead).
 Cost is negligible; the concern is an undocumented hostname in front of prod.
@@ -44,15 +44,15 @@ it is dropped, decommission in this order so nothing dangles:
 aws apigateway delete-base-path-mapping --domain-name actions.salmonwallet.io --base-path '(none)'
 aws apigateway delete-domain-name --domain-name actions.salmonwallet.io
 # 2. disable, wait for Deployed, then delete the CDN distribution (needs the ETag)
-aws cloudfront get-distribution-config --id E30Y9GUU6X06OA   # set Enabled=false, update, wait
-aws cloudfront delete-distribution --id E30Y9GUU6X06OA --if-match <etag>
+aws cloudfront get-distribution-config --id <distribution-id>   # set Enabled=false, update, wait
+aws cloudfront delete-distribution --id <distribution-id> --if-match <etag>
 # 3. empty and delete the bucket
-aws s3 rm s3://salmon-blinks-cdn --recursive && aws s3 rb s3://salmon-blinks-cdn
+aws s3 rm s3://<icon-bucket> --recursive && aws s3 rb s3://<icon-bucket>
 # 4. ask the tech lead to delete the two CNAMEs (actions, cdn) and the ACM
 #    validation CNAME for actions.salmonwallet.io; then delete the ACM cert.
 ```
 
-Every step is a prod-account mutation: confirm with the owner first, one step
+Resource IDs (distribution, bucket, certificate) are deliberately not in this public doc; they live in the maintainers' private ops notes and are one `aws cloudfront list-distributions` / `aws s3 ls` away. Every step is a prod-account mutation: confirm with the owner first, one step
 at a time.
 
 ## Secrets: SSM Parameter Store
