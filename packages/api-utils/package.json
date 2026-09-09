@@ -28,7 +28,5 @@
   "devDependencies": {
     "jest": "^27.0.6"
   },
-  "dependencies": {
-    "express-validator": "^6.12.1"
-  }
+  "dependencies": {}
 }
