@@ -19,6 +19,35 @@ const {
   rateLimiter,
 } = require('../../infrastructure/rate-limiting/helius-rate-limiter');
 
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+/**
+ * Runs one Helius HTTP call under the shared rate limiter + retry policy
+ * and unwraps `response.data`.
+ * @param {string} operationName - label for retry logs.
+ * @param {() => Promise<import('axios').AxiosResponse>} send
+ * @returns {Promise<*>} the response body.
+ */
+const request = (operationName, send) =>
+  withRetry(
+    async () => {
+      await rateLimiter.waitAndConsume();
+      const response = await send();
+      return response.data;
+    },
+    { operationName }
+  );
+
+/**
+ * Maps a DAS asset `content` block to the `{name, symbol, image}` shape
+ * the NFT metadata readers return.
+ */
+const toNftMetadata = ({ metadata, links }) => ({
+  name: metadata?.name || null,
+  symbol: metadata?.symbol || null,
+  image: links?.image || null,
+});
+
 /**
  * Fetch one or more parsed transactions from the Helius Enhanced API.
  * @param {string|string[]} signatures
@@ -38,17 +67,8 @@ const getEnhancedTransactions = async (signatures, environment = 'mainnet') => {
     throw new Error(`Enhanced API not supported for environment: ${environment}`);
   }
 
-  const data = await withRetry(
-    async () => {
-      await rateLimiter.waitAndConsume();
-      const response = await http.post(
-        url,
-        { transactions: transactionArray },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
-      );
-      return response.data;
-    },
-    { operationName: 'Helius getEnhancedTransactions' }
+  const data = await request('Helius getEnhancedTransactions', () =>
+    http.post(url, { transactions: transactionArray }, { headers: JSON_HEADERS, timeout: 10000 })
   );
 
   // Single-signature input → return the single object, not the wrapping array.
@@ -88,16 +108,8 @@ const getEnhancedTransactionHistory = async (address, filters = {}, environment 
     throw new Error(`Enhanced API not supported for environment: ${environment}`);
   }
 
-  const data = await withRetry(
-    async () => {
-      await rateLimiter.waitAndConsume();
-      const response = await http.get(url, {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 10000,
-      });
-      return response.data;
-    },
-    { operationName: 'Helius getEnhancedTransactionHistory' }
+  const data = await request('Helius getEnhancedTransactionHistory', () =>
+    http.get(url, { headers: JSON_HEADERS, timeout: 10000 })
   );
 
   return {
@@ -128,31 +140,16 @@ const getNftMetadata = async (mint, environment = 'mainnet') => {
   try {
     const url = getRpcUrl(environment);
 
-    const data = await withRetry(
-      async () => {
-        await rateLimiter.waitAndConsume();
-        const response = await http.post(
-          url,
-          {
-            jsonrpc: '2.0',
-            id: 'nft-metadata',
-            method: 'getAsset',
-            params: { id: mint },
-          },
-          { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
-        );
-        return response.data;
-      },
-      { operationName: 'Helius getNftMetadata' }
+    const data = await request('Helius getNftMetadata', () =>
+      http.post(
+        url,
+        { jsonrpc: '2.0', id: 'nft-metadata', method: 'getAsset', params: { id: mint } },
+        { headers: JSON_HEADERS, timeout: 5000 }
+      )
     );
 
     if (data?.result?.content) {
-      const { metadata, links } = data.result.content;
-      return {
-        name: metadata?.name || null,
-        symbol: metadata?.symbol || null,
-        image: links?.image || null,
-      };
+      return toNftMetadata(data.result.content);
     }
 
     return null;
@@ -178,33 +175,23 @@ const getNftMetadataBatch = async (mints, environment = 'mainnet') => {
   try {
     const url = getRpcUrl(environment);
 
-    const data = await withRetry(
-      async () => {
-        await rateLimiter.waitAndConsume();
-        const response = await http.post(
-          url,
-          {
-            jsonrpc: '2.0',
-            id: 'nft-metadata-batch',
-            method: 'getAssetBatch',
-            params: { ids: mints },
-          },
-          { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
-        );
-        return response.data;
-      },
-      { operationName: 'Helius getNftMetadataBatch' }
+    const data = await request('Helius getNftMetadataBatch', () =>
+      http.post(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: 'nft-metadata-batch',
+          method: 'getAssetBatch',
+          params: { ids: mints },
+        },
+        { headers: JSON_HEADERS, timeout: 10000 }
+      )
     );
 
     if (data?.result && Array.isArray(data.result)) {
       data.result.forEach((asset) => {
         if (asset?.id && asset?.content) {
-          const { metadata, links } = asset.content;
-          results.set(asset.id, {
-            name: metadata?.name || null,
-            symbol: metadata?.symbol || null,
-            image: links?.image || null,
-          });
+          results.set(asset.id, toNftMetadata(asset.content));
         }
       });
     }

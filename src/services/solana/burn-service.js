@@ -208,6 +208,32 @@ const createCompressedBurnBuilder = (umi, ownerSigner, assetWithProof) => {
 };
 
 /**
+ * Builds the burn umi for `owner` and loads `mintAddress` together with the
+ * owner's associated token account. A missing token account surfaces as
+ * `UnsupportedSolanaNftBurnError` (the caller is not the current owner).
+ * Shared prefix of the master-edition and programmable-NFT burn builders.
+ */
+const loadOwnedDigitalAsset = async (mintAddress, owner, locals) => {
+  const { nodeUrl } = locals.network.config;
+  const ownerSigner = createNoopOwnerSigner(owner);
+  const umi = createBurnUmi(nodeUrl, ownerSigner);
+  const mintPublicKey = fromWeb3JsPublicKey(new PublicKey(mintAddress));
+
+  const digitalAsset = await fetchDigitalAssetWithAssociatedToken(
+    umi,
+    mintPublicKey,
+    ownerSigner.publicKey
+  ).catch(
+    rethrowAsOwnershipError(
+      UnsupportedSolanaNftBurnError,
+      'Only the current owner can burn this NFT.'
+    )
+  );
+
+  return { umi, ownerSigner, mintPublicKey, digitalAsset };
+};
+
+/**
  * Build an unsigned burn transaction for a Metaplex master-edition NFT.
  *
  * Uses Metaplex Umi's `burnV1` with the `NonFungible` token standard, which
@@ -230,20 +256,10 @@ const createCompressedBurnBuilder = (umi, ownerSigner, assetWithProof) => {
  *   does not fit in a single Solana transaction.
  */
 const burnMasterEditionTransaction = async (mintAddress, owner, locals) => {
-  const { nodeUrl } = locals.network.config;
-  const ownerSigner = createNoopOwnerSigner(owner);
-  const umi = createBurnUmi(nodeUrl, ownerSigner);
-  const mintPublicKey = fromWeb3JsPublicKey(new PublicKey(mintAddress));
-
-  const digitalAsset = await fetchDigitalAssetWithAssociatedToken(
-    umi,
-    mintPublicKey,
-    ownerSigner.publicKey
-  ).catch(
-    rethrowAsOwnershipError(
-      UnsupportedSolanaNftBurnError,
-      'Only the current owner can burn this NFT.'
-    )
+  const { umi, ownerSigner, mintPublicKey, digitalAsset } = await loadOwnedDigitalAsset(
+    mintAddress,
+    owner,
+    locals
   );
 
   const builder = prepareVersionedBurnBuilder(
@@ -366,20 +382,10 @@ const burnEditionsTransaction = async (mintAddress, mintAccount, owner, locals) 
  *   transaction does not fit in a single Solana transaction.
  */
 const burnProgrammableNftTransaction = async (mintAddress, owner, locals) => {
-  const { nodeUrl } = locals.network.config;
-  const ownerSigner = createNoopOwnerSigner(owner);
-  const umi = createBurnUmi(nodeUrl, ownerSigner);
-  const mintPublicKey = fromWeb3JsPublicKey(new PublicKey(mintAddress));
-
-  const digitalAsset = await fetchDigitalAssetWithAssociatedToken(
-    umi,
-    mintPublicKey,
-    ownerSigner.publicKey
-  ).catch(
-    rethrowAsOwnershipError(
-      UnsupportedSolanaNftBurnError,
-      'Only the current owner can burn this NFT.'
-    )
+  const { umi, ownerSigner, mintPublicKey, digitalAsset } = await loadOwnedDigitalAsset(
+    mintAddress,
+    owner,
+    locals
   );
 
   const tokenStandard = unwrapOption(digitalAsset.metadata.tokenStandard);

@@ -10,26 +10,10 @@
 const http = require('axios');
 const blockdaemonClient = require('../../infrastructure/blockdaemon-client');
 const { clampPageSize, READ_TIMEOUT } = require('./page-size');
+const { mapAddressItems } = require('./map-address-items');
 
 // 100 pages x 100 outputs is far past any realistic wallet address.
 const MAX_UTXO_PAGES = 100;
-
-/**
- * Decorates each upstream UTXO item with the requesting `address` and
- * (when provided) `blockchain`.
- *
- * @param {Array<Object>} items - raw items from Blockdaemon.
- * @param {string} address - requested account address.
- * @param {string} [blockchain] - value of `locals.network.blockchain`;
- *   omitted from output when falsy.
- * @returns {Array<Object>} items with `address` (+ optional `blockchain`) added.
- */
-const mapAddressItems = (items, address, blockchain) =>
-  items.map((item) => ({
-    ...item,
-    ...(blockchain ? { blockchain } : {}),
-    address,
-  }));
 
 /**
  * Walks every continuation page of Blockdaemon's universal
