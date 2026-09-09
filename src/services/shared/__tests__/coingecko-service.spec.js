@@ -45,6 +45,17 @@ describe('coingecko-service', () => {
     withRetry.mockImplementation(async (operation) => operation());
   });
 
+  it('encodes caller-supplied path segments so they cannot walk the CoinGecko path', async () => {
+    repository.getShortTermChart.mockResolvedValue(null);
+    http.get.mockResolvedValue({ data: { prices: [], market_caps: [], total_volumes: [] } });
+
+    await service.getMarketChart({ coinId: 'sol/../x?y', days: 7, currency: 'usd' }, locals);
+
+    expect(http.get.mock.calls[0][0]).toBe(
+      'https://api.coingecko.com/api/v3/coins/sol%2F..%2Fx%3Fy/market_chart'
+    );
+  });
+
   it('normalizes max market-chart requests to the free-tier limit and caches the raw timeframe', async () => {
     repository.getShortTermChart.mockResolvedValue(null);
     http.get.mockResolvedValue({
