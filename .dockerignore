@@ -14,3 +14,14 @@ coverage
 dist
 build
 .serverless
+
+# Local-only, gitignored material that must never reach an image: private
+# agent notes, planning drafts, spec-kit pointer, local analytics sink,
+# code-graph DB, per-user tool settings, agent worktrees.
+*.local.md
+docs/plans
+.specify
+.analytics-local
+.code-review-graph
+.claude/settings.local.json
+.worktrees

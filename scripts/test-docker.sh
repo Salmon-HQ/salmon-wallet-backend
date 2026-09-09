@@ -26,9 +26,9 @@ echo -e "${BLUE}========================================${NC}"
 echo ""
 
 # Verificar que Docker Compose esté corriendo
-if ! docker-compose ps | grep -q "salmon-api.*Up"; then
-    echo -e "${YELLOW}⚠️  Warning: salmon-api container no está corriendo${NC}"
-    echo -e "${YELLOW}   Ejecuta: docker-compose up -d${NC}"
+if ! docker compose ps --status running --services | grep -qx backend; then
+    echo -e "${YELLOW}⚠️  Warning: backend container no está corriendo${NC}"
+    echo -e "${YELLOW}   Ejecuta: docker compose up -d --build${NC}"
     echo ""
 fi
 
@@ -36,23 +36,23 @@ fi
 case $TEST_TYPE in
     all)
         echo -e "${GREEN}▶ Ejecutando TODOS los tests...${NC}"
-        docker-compose exec -T api npm test
+        docker compose exec -T backend npm test
         ;;
     unit)
         echo -e "${GREEN}▶ Ejecutando tests unitarios...${NC}"
-        docker-compose exec -T api npm run test:unit
+        docker compose exec -T backend npm run test:unit
         ;;
     integration)
         echo -e "${GREEN}▶ Ejecutando tests de integración...${NC}"
-        docker-compose exec -T api npm run test:integration
+        docker compose exec -T backend npm run test:integration
         ;;
     helius)
         echo -e "${GREEN}▶ Ejecutando tests de Helius...${NC}"
-        docker-compose exec -T api npm run test:helius
+        docker compose exec -T backend npm run test:helius
         ;;
     coverage)
         echo -e "${GREEN}▶ Ejecutando tests con coverage...${NC}"
-        docker-compose exec -T api npm run test:coverage
+        docker compose exec -T backend npm run test:coverage
         ;;
     *)
         echo -e "${YELLOW}Tipo de test desconocido: $TEST_TYPE${NC}"
