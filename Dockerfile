@@ -1,8 +1,9 @@
 # Stage 1: Base
 # Node.js 20.19+ required by serverless-offline 13.10 (ERR_REQUIRE_ESM below it)
-FROM node:20.19.5-alpine AS base
+# Pinned by digest (OpenSSF Scorecard Pinned-Dependencies). Refresh with:
+#   docker buildx imagetools inspect node:<tag> | grep Digest
+FROM node:20.19.5-alpine@sha256:6178e78b972f79c335df281f4b7674a2d85071aae2af020ffa39f0a770265435 AS base
 WORKDIR /app
-RUN npm install -g serverless@3.40.0
 
 # Stage 2: Dependencies
 FROM base AS dependencies
@@ -11,9 +12,10 @@ FROM base AS dependencies
 RUN apk add --no-cache python3 make g++ gcc
 
 COPY package.json package-lock.json ./
-RUN npm install --only=production && \
+# npm ci: install exactly what package-lock.json pins (no resolution at build time).
+RUN npm ci --omit=dev && \
     cp -R node_modules /prod_node_modules && \
-    npm install
+    npm ci
 
 # Rebuild native modules to ensure they use compiled bindings
 RUN npm rebuild
@@ -26,7 +28,7 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++ gcc
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 # Rebuild native modules to ensure they use compiled bindings
 RUN npm rebuild
