@@ -23,11 +23,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Use Node.js 20
+      - name: Use Node.js from .nvmrc
         # v7.0.0. Cache is safe here: verify publishes nothing — it only gates.
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # zizmor: ignore[cache-poisoning]
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
 
       # GET /status reports package.json's version, so a tag that disagrees with
@@ -47,8 +47,13 @@ jobs:
       - name: Install node modules
         run: npm ci
 
-      - name: Lint
-        run: npm run linter
+      # Same gate as ci.yml: `linter` is `eslint --fix` (mutates, never fails on
+      # warnings), so a tag could ship code the PR gate would have rejected.
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint (zero warnings)
+        run: npm run lint:check
 
       - name: Unit tests
         run: npm run test:unit
@@ -72,14 +77,17 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Use Node.js 20
+      - name: Use Node.js from .nvmrc
         # v7.0.0. Deliberately NO dependency cache: this job publishes to
         # prod, and a poisoned cache entry could reach the shipped artifact.
-        # Slower install is the accepted cost. (v4 only caches when asked;
-        # zizmor can't tell the version from the SHA, hence the ignore.)
+        # Slower install is the accepted cost. `package-manager-cache: false`
+        # is explicit because setup-node v7 auto-enables the npm cache the day
+        # package.json gains a `packageManager` field. (zizmor can't tell the
+        # version from the SHA, hence the ignore.)
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # zizmor: ignore[cache-poisoning]
         with:
-          node-version: 20
+          node-version-file: .nvmrc
+          package-manager-cache: false
 
       - name: Install node modules
         run: npm ci
@@ -96,3 +104,20 @@ jobs:
         env:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_ID: ${{ github.run_id }}
+
+      # Smoke the stack we just deployed on its execute-api URL, not through
+      # CloudFront (the CDN can answer a cached 200 and hide a broken deploy).
+      # This ALERTS only: a red step here does not roll back. Rollback stays a
+      # human command — see docs/DEPLOY.md. Retries absorb the first cold start.
+      # The response body is never printed.
+      - name: Smoke test /health
+        run: |
+          endpoint="$(npx serverless info --stage prod --verbose \
+            | awk '/ServiceEndpoint:/ {print $NF; exit}')"
+          if [ -z "$endpoint" ]; then
+            echo "::error::Could not read ServiceEndpoint from serverless info."
+            exit 1
+          fi
+          echo "Smoking ${endpoint}/health"
+          curl --fail --show-error --silent --retry 5 --retry-delay 5 \
+            --retry-all-errors --max-time 20 "${endpoint}/health" > /dev/null

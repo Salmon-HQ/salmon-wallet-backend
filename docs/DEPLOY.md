@@ -6,8 +6,15 @@ Prod deploys are tag-triggered: push a git tag `prod/vX.Y.Z` from `main`.
 
 `.github/workflows/deploy.yml` runs two jobs:
 
-- **`verify`** — no AWS credentials. `npm ci`, lint, `test:unit`, and a `serverless print --stage local` sanity check (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
-- **`deploy`** (`needs: verify`) — assumes the `GithubActionsRole` via GitHub OIDC (`aws-actions/configure-aws-credentials`), then runs `npm run serverless:deploy` (`serverless deploy --stage prod`).
+- **`verify`** — no AWS credentials. `npm ci`, the same `format:check` + `lint:check` gate as `ci.yml`, `test:unit`, and a `serverless print --stage local` sanity check (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
+- **`deploy`** (`needs: verify`) — assumes the `GithubActionsRole` via GitHub OIDC (`aws-actions/configure-aws-credentials`), runs `npm run serverless:deploy` (`serverless deploy --stage prod`), then smokes `GET /health` on the stack's execute-api URL (read from `serverless info --verbose`, not CloudFront, whose cache could mask a broken deploy). A red smoke step only alerts — nothing rolls back on its own.
+
+Rollback is a human step, run locally with prod credentials:
+
+```bash
+npx serverless deploy list --stage prod          # timestamps of stored artifacts
+npx serverless rollback --stage prod --timestamp <t>
+```
 
 `concurrency: deploy-prod` (`cancel-in-progress: false`) prevents two tags pushed close together from deploying in parallel.
 

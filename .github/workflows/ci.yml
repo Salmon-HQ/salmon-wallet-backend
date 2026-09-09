@@ -37,6 +37,12 @@ jobs:
       - name: Install
         run: npm ci
 
+      # Verifies registry signatures + provenance attestations of what npm ci
+      # actually installed. Orthogonal to Dependabot (known CVEs, not
+      # tampering). Exits non-zero on a mismatch.
+      - name: Verify dependency signatures
+        run: npm audit signatures
+
       - name: Format check
         run: npm run format:check
 
