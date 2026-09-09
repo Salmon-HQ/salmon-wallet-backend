@@ -13,14 +13,17 @@ Two active rulesets. Bypass is the **admin** role only (`actor_id: 5`,
 ### `Protect main` (branch, `refs/heads/main`, bypass mode `pull_request`)
 
 - **Require a pull request**: 1 approval, code-owner review, dismiss stale
-  approvals on push, all review threads resolved, **squash merge only**.
+  approvals on push, approval of the most recent reviewable push, all review
+  threads resolved, **squash merge only**.
 - **Required status checks** (strict: branch must be up to date):
   `lint / test / config`, `hermetic integration (redis)`,
   `workflow security lint`, `conventional PR title`,
   `local validator (v1 transactions)`. `mainnet v1 feature status` is
   schedule-only and deliberately not required.
 - **Require code scanning results**: CodeQL, security alerts `high_or_higher`,
-  other alerts `errors`.
+  other alerts `errors`. OpenSSF Scorecard also uploads SARIF (tool
+  "Scorecard", `.github/workflows/scorecard.yml`) but is deliberately not a
+  required tool: its findings are advisory and must never block a merge.
 - **Require linear history**, **block force pushes**, **block deletion**.
 
 ### `Protect prod tags` (tag, `refs/tags/prod/*`, bypass mode `always`)
@@ -79,14 +82,34 @@ feature; `dapp-url-guard.js` is the control), the `arweeve` typo fix in
 prototype-pollution sanitizer; guard `__proto__` / `constructor` /
 `prototype` with direct `===` comparisons.
 
-## 4. Actions secrets for the nightly integration workflow
+## 4. OpenSSF Scorecard
+
+`.github/workflows/scorecard.yml` runs on push to `main`, weekly, and on
+ruleset changes, and publishes to https://api.scorecard.dev (`publish_results:
+true`, OIDC-verified). Badge and per-check detail:
+https://scorecard.dev/viewer/?uri=github.com/Salmon-HQ/salmon-wallet-backend.
+Preview locally before relying on the number:
+
+```bash
+brew install scorecard
+GITHUB_AUTH_TOKEN="$(gh auth token)" scorecard \
+  --repo=github.com/Salmon-HQ/salmon-wallet-backend --show-details
+```
+
+Ceilings worth knowing: Branch-Protection tops out at 9 while any bypass
+actor exists (admin bypass forces `EnforceAdmins=false`); Code-Review counts
+approvals by someone other than the author, so admin self-merges score 0;
+Packaging / Signed-Releases are N/A (no releases) and excluded from the
+aggregate; Maintained is 0 until the repo is 90 days old.
+
+## 5. Actions secrets for the nightly integration workflow
 
 The external-provider integration suite (nightly workflow, separate from PR
 checks) needs real provider keys as repository secrets: `HELIUS_API_KEY`,
 `JUPITER_API_KEY` (optional), `TRITON_RPC_URL`, `TRITON_API_TOKEN`. Fork PRs
 never see these — the PR workflow uses plain `pull_request` and no secrets.
 
-## 5. Who can push
+## 6. Who can push
 
 The repo is public, so anyone can fork and open a PR, but only collaborators
 can push branches and only admins can bypass the rulesets or create a
