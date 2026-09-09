@@ -46,3 +46,9 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      # The Lambda runtime is nodejs20.x and .nvmrc pins 20: a Node major in
+      # the Dockerfile would diverge dev/CI from prod. Digest refreshes and
+      # 20.x patch/minor bumps still arrive.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
