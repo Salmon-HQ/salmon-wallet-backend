@@ -1,5 +1,7 @@
 # Salmon API
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Salmon-HQ/salmon-wallet-backend/badge)](https://scorecard.dev/viewer/?uri=github.com/Salmon-HQ/salmon-wallet-backend)
+
 Salmon API is the backend that powers the Salmon wallet across mobile, web, and extension. It exposes multi-chain endpoints (Solana, Bitcoin), token / price / swap / NFT services.
 
 ## Stack
