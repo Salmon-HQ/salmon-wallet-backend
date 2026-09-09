@@ -1,0 +1,76 @@
+# OpenSSF Scorecard: supply-chain posture, scored weekly and on every push to
+# main. Advisory only — findings land in the Security tab under the
+# "Scorecard" tool, which is deliberately NOT among the `Protect main`
+# ruleset's required code-scanning tools (docs/REPO-SETTINGS.md), so a
+# Scorecard regression never blocks a merge.
+#
+# The shape of this file is constrained by the OpenSSF publish API, not by
+# taste: with `publish_results: true` the API rejects the results (and fails
+# the run) if the workflow has top-level env/defaults, any workflow-level
+# write permission, `id-token: write` on another job, job-level env/defaults,
+# containers or services, a non-Ubuntu runner, or any step outside its
+# allowlist (actions/checkout, actions/upload-artifact,
+# github/codeql-action/upload-sarif, ossf/scorecard-action,
+# step-security/harden-runner). So: no setup-node, no `run:` steps.
+# https://github.com/ossf/scorecard-action#workflow-restrictions
+name: Scorecard
+
+on:
+  # Re-score when a ruleset changes: Branch-Protection is the check that
+  # moves. Default branch only.
+  branch_protection_rule:
+  # Keeps the published result (and the Maintained check) fresh.
+  schedule:
+    - cron: '30 5 * * 1' # Mondays 05:30 UTC, off the top-of-hour spike
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: scorecard
+  cancel-in-progress: false
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # publish_results only works from the default branch; a
+    # branch_protection_rule event on another ref would fail the publish.
+    if: github.event.repository.default_branch == github.ref_name
+    permissions:
+      security-events: write # upload results.sarif to the code-scanning dashboard
+      id-token: write # OIDC token: how api.scorecard.dev verifies the publisher
+      contents: read # with permissions: {} above, no grant = no token = checkout fails
+      actions: read # CI-Tests / SAST checks read workflow runs
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publishes to https://api.scorecard.dev: what makes the README badge
+          # work, and replaces the OpenSSF team's own weekly scan of this repo.
+          publish_results: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      # Scorecard's SARIF declares tool.driver.name "Scorecard", so this is a
+      # third-party upload, not a CodeQL analysis: CodeQL default setup only
+      # blocks "CodeQL analysis API uploads" and does not conflict here.
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          sarif_file: results.sarif
