@@ -1,44 +1,83 @@
 # Repository settings runbook (maintainers)
 
 GitHub settings that the repo's files reference but cannot enforce by
-themselves. Apply after the CI workflow (`.github/workflows/ci.yml`) has
-landed on `main`, so the required checks exist. Everything here is idempotent
-and takes effect immediately.
+themselves. Everything below was applied on 2026-09-09 and is idempotent;
+re-run a step if the UI ever drifts. Read state with the `GET` form of each
+call. Every mutation needs repo **admin**.
 
-## 1. Branch protection for `main` (ruleset)
+## 1. Rulesets
 
-Without this, CODEOWNERS is decorative, force-pushes to `main` are possible,
-and CI is advisory. Settings → Rules → Rulesets → New branch ruleset:
+Two active rulesets. Bypass is the **admin** role only (`actor_id: 5`,
+`RepositoryRole`), so a non-admin collaborator cannot merge around them.
 
-- **Target**: `main` (include default branch), enforcement **Active**.
-- **Require a pull request before merging**: 1 approval, **Require review
-  from Code Owners** ON, dismiss stale approvals ON.
-- **Require status checks to pass**: add `lint / test / config`,
-  `hermetic integration (redis)`, `conventional PR title`,
-  `workflow security lint`. Require branches to be up to date: OFF (solo
-  maintainer; turn on if the repo gains write collaborators).
-- **Block force pushes** and **Restrict deletions**: ON.
+### `Protect main` (branch, `refs/heads/main`, bypass mode `pull_request`)
 
-Note: the tag-triggered deploy (`prod/v*`) is unaffected — rulesets here
-target branches, not tags.
+- **Require a pull request**: 1 approval, code-owner review, dismiss stale
+  approvals on push, all review threads resolved, **squash merge only**.
+- **Required status checks** (strict: branch must be up to date):
+  `lint / test / config`, `hermetic integration (redis)`,
+  `workflow security lint`, `conventional PR title`,
+  `local validator (v1 transactions)`. `mainnet v1 feature status` is
+  schedule-only and deliberately not required.
+- **Require code scanning results**: CodeQL, security alerts `high_or_higher`,
+  other alerts `errors`.
+- **Require linear history**, **block force pushes**, **block deletion**.
 
-## 2. Squash-only merges
+### `Protect prod tags` (tag, `refs/tags/prod/*`, bypass mode `always`)
+
+A `prod/vX.Y.Z` tag triggers the production deploy
+(`.github/workflows/deploy.yml`), so tag creation is the real deploy
+permission. **Creation, update, deletion and force-update are blocked for
+everyone except admins.** Without this ruleset, anyone with push could deploy
+to prod without a PR.
+
+Read both: `gh api repos/Salmon-HQ/salmon-wallet-backend/rulesets` and
+`.../rulesets/<id>`; update with `PUT .../rulesets/<id>` and the same JSON
+shape the GET returns.
+
+## 2. Merge settings (squash only)
 
 The `conventional PR title` check exists because the PR title becomes the
 commit on `main`. That only holds with squash merges.
 
-Settings → General → Pull Requests:
+Applied: squash ON (commit title = PR title, message = PR body), merge
+commits OFF, rebase OFF, auto-delete head branches ON.
 
-- Allow squash merging: ON, default commit message **Pull request title**.
-- Allow merge commits: OFF. Allow rebase merging: OFF.
-- Automatically delete head branches: ON (keeps the branch list clean).
+```bash
+gh api -X PATCH repos/Salmon-HQ/salmon-wallet-backend \
+  -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false \
+  -F delete_branch_on_merge=true -F squash_merge_commit_title=PR_TITLE \
+  -F squash_merge_commit_message=PR_BODY
+```
 
-## 3. Private vulnerability reporting
+Admins merge with `gh pr merge <n> --squash --admin`.
 
-When the repo goes public, verify it is actually enabled: Settings →
-Advanced Security → **Private vulnerability reporting** ON. (It is not
-automatic on public repos.) Also enable **Secret scanning** and **Push
-protection** there — free on public repos.
+## 3. Code security (all free on a public repo)
+
+Applied: **CodeQL default setup** (languages `javascript-typescript` +
+`actions`, `default` query suite), **secret scanning**, **push protection**,
+**Dependabot security updates** (separate from the weekly version updates in
+`.github/dependabot.yml`), **private vulnerability reporting** (the channel
+`SECURITY.md` points to).
+
+```bash
+R=repos/Salmon-HQ/salmon-wallet-backend
+gh api $R/code-scanning/default-setup                   # state, languages, suite
+gh api -X PATCH $R/code-scanning/default-setup \
+  -f state=configured -f query_suite=default \
+  -f 'languages[]=javascript-typescript' -f 'languages[]=actions'
+gh api $R --jq .security_and_analysis                   # scanning toggles
+gh api $R/private-vulnerability-reporting --jq .enabled
+```
+
+CodeQL triage notes: dismiss false positives on the Security tab **with a
+written reason** (they stay dismissed while the flagged lines are unchanged).
+Known ones: the referral-account log in `solana-ft-swap-service.js` (public
+address, not a secret), the caller-URL fetch in `dapp-service.js` (the
+feature; `dapp-url-guard.js` is the control), the `arweeve` typo fix in
+`content-urls.js`. CodeQL does not recognise a `Set#has` lookup as a
+prototype-pollution sanitizer; guard `__proto__` / `constructor` /
+`prototype` with direct `===` comparisons.
 
 ## 4. Actions secrets for the nightly integration workflow
 
@@ -46,3 +85,10 @@ The external-provider integration suite (nightly workflow, separate from PR
 checks) needs real provider keys as repository secrets: `HELIUS_API_KEY`,
 `JUPITER_API_KEY` (optional), `TRITON_RPC_URL`, `TRITON_API_TOKEN`. Fork PRs
 never see these — the PR workflow uses plain `pull_request` and no secrets.
+
+## 5. Who can push
+
+The repo is public, so anyone can fork and open a PR, but only collaborators
+can push branches and only admins can bypass the rulesets or create a
+`prod/*` tag. Review the collaborator list periodically:
+`gh api repos/Salmon-HQ/salmon-wallet-backend/collaborators --jq '.[] | "\(.login) \(.role_name)"'`.
