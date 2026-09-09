@@ -2,7 +2,7 @@
 # Node.js 20.19+ required by serverless-offline 13.10 (ERR_REQUIRE_ESM below it)
 # Pinned by digest (OpenSSF Scorecard Pinned-Dependencies). Refresh with:
 #   docker buildx imagetools inspect node:<tag> | grep Digest
-FROM node:20.19.5-alpine@sha256:6178e78b972f79c335df281f4b7674a2d85071aae2af020ffa39f0a770265435 AS base
+FROM node:20.20.2-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS base
 WORKDIR /app
 
 # Stage 2: Dependencies
