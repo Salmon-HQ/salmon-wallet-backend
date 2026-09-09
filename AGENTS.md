@@ -105,6 +105,7 @@ and turns small edits into cross-cutting ones.
 - Runtime is Node 20 (`nodejs20.x` in `serverless.yml`). Develop and test on Node 20 — `package.json#engines` enforces a `>=20` floor.
 - Lint: `npm run linter` (ESLint with auto-fix) fixes locally; the PR gate runs `npm run lint:check` (zero warnings) — run it before finishing.
 - Format: Prettier is enforced in CI (`npm run format:check`). Fix with `npm run format`.
+- Merging is squash-only and gated by the `Protect main` ruleset (required checks, review, code scanning); an agent opens the PR and stops there — a repo admin merges with `gh pr merge <n> --squash --admin`, and the PR title becomes the commit on `main` (`docs/REPO-SETTINGS.md`).
 - Every PR runs the deterministic gate in `.github/workflows/ci.yml` (format, lint, unit tests, serverless config smoke, hermetic Redis integration, conventional PR title, zizmor). Live-provider integration suites run in the nightly `integration-external.yml`, never in the PR gate.
 
 ## Dependencies
