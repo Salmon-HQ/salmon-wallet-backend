@@ -3,6 +3,18 @@
 const service = require('../../services/shared/coingecko-service');
 
 /**
+ * Answers 404 for a contract CoinGecko does not list. The route sets a
+ * 5-minute Cache-Control for the success case; leaving it on lets CloudFront
+ * hold the 404 for as long, so a token that gets listed stays "unlisted" for
+ * the client. The error middleware strips it for the errors it handles — this
+ * path answers directly, so it strips it itself.
+ */
+const respondUnlisted = (res, error, error_description) => {
+  res.removeHeader('Cache-Control');
+  res.status(404).send({ error, error_description });
+};
+
+/**
  * Returns historical market chart data for a coin.
  *
  * @param {import('express').Request} req - Reads `params.coinId` and
@@ -40,17 +52,11 @@ const getContractMarketChart = async (req, res) => {
     res.status(200).send(data);
   } catch (error) {
     if (error?.response?.status === 404) {
-      // The route sets a 5-minute Cache-Control for the success case; leaving
-      // it on lets CloudFront hold the 404 for as long, so a token that gets
-      // listed stays "unlisted" for the client. The error middleware strips it
-      // for the errors it handles — this branch answers directly, so it has to
-      // strip it itself.
-      res.removeHeader('Cache-Control');
-      res.status(404).send({
-        error: 'chart_not_found',
-        error_description: `No CoinGecko chart for contract ${address} on ${platform}.`,
-      });
-      return;
+      return respondUnlisted(
+        res,
+        'chart_not_found',
+        `No CoinGecko chart for contract ${address} on ${platform}.`
+      );
     }
     throw error;
   }
@@ -93,17 +99,11 @@ const getContractCoinInfo = async (req, res) => {
     res.status(200).send(data);
   } catch (error) {
     if (error?.response?.status === 404) {
-      // The route sets a 5-minute Cache-Control for the success case; leaving
-      // it on lets CloudFront hold the 404 for as long, so a token that gets
-      // listed stays "unlisted" for the client. The error middleware strips it
-      // for the errors it handles — this branch answers directly, so it has to
-      // strip it itself.
-      res.removeHeader('Cache-Control');
-      res.status(404).send({
-        error: 'info_not_found',
-        error_description: `No CoinGecko coin info for contract ${address} on ${platform}.`,
-      });
-      return;
+      return respondUnlisted(
+        res,
+        'info_not_found',
+        `No CoinGecko coin info for contract ${address} on ${platform}.`
+      );
     }
     throw error;
   }

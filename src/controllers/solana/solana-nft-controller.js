@@ -4,8 +4,6 @@ const { decorator } = require('../../../packages/api-utils');
 const { findInvalidAddressParam } = require('../../utils/solana-address');
 const service = require('../../services/solana/solana-nft-service');
 const decorateToken = require('../../resources/solana/solana-nft-resource');
-const { SolanaNftBurnError } = require('../../services/solana/solana-nft-burn-errors');
-const { SolanaNftTransferError } = require('../../services/solana/nft-transfer-errors');
 
 const isTruthyQueryFlag = (raw) => raw === 'true' || raw === '1' || raw === true;
 
@@ -98,11 +96,10 @@ const list = async (req, res) => {
  * @param {import('express').Response} res - Responds 200 with the unsigned burn
  *   transaction payload; 400 with `{ error: 'bad_request', error_description }` when
  *   `owner` is missing; 500 with `{ error: 'burn_transaction', error_description }`
- *   when the service returns no data; on `SolanaNftBurnError`, responds with the
- *   error's own `statusCode`/`errorCode`/`message`.
+ *   when the service returns no data.
  * @returns {Promise<void>}
- * @throws Re-throws any error that is not a `SolanaNftBurnError`, so the global
- *   error handler produces the response.
+ * @throws Lets every service error propagate to the error middleware, which
+ *   renders a `SolanaNftBurnError` from its own `statusCode`/`errorCode`/`message`.
  */
 const burnTransaction = async (req, res) => {
   const { mintAddress } = req.params;
@@ -116,26 +113,15 @@ const burnTransaction = async (req, res) => {
 
   if (rejectInvalidAddresses(res, { owner, mintAddress })) return undefined;
 
-  try {
-    const data = await service.createBurnTransaction(mintAddress, owner, res.locals);
-    if (data) {
-      return res.status(200).send(data);
-    }
-
-    return res.status(500).json({
-      error: 'burn_transaction',
-      error_description: 'Unknown error trying to create burn transaction.',
-    });
-  } catch (error) {
-    if (error instanceof SolanaNftBurnError) {
-      return res.status(error.statusCode).json({
-        error: error.errorCode,
-        error_description: error.message,
-      });
-    }
-
-    throw error;
+  const data = await service.createBurnTransaction(mintAddress, owner, res.locals);
+  if (data) {
+    return res.status(200).send(data);
   }
+
+  return res.status(500).json({
+    error: 'burn_transaction',
+    error_description: 'Unknown error trying to create burn transaction.',
+  });
 };
 
 /**
@@ -144,7 +130,8 @@ const burnTransaction = async (req, res) => {
  * Returns an unsigned transfer transaction for the client to sign. Built with
  * Token Metadata's `transferV1` (or Bubblegum for compressed assets) so that
  * programmable NFTs work — a plain SPL transfer fails on those with
- * `Account is frozen`.
+ * `Account is frozen`. A `SolanaNftTransferError` propagates to the error
+ * middleware, which renders its `statusCode`/`errorCode`/`message`.
  */
 const transferTransaction = async (req, res) => {
   const { mintAddress } = req.params;
@@ -159,31 +146,15 @@ const transferTransaction = async (req, res) => {
 
   if (rejectInvalidAddresses(res, { owner, destination, mintAddress })) return undefined;
 
-  try {
-    const data = await service.createTransferTransaction(
-      mintAddress,
-      owner,
-      destination,
-      res.locals
-    );
-    if (data) {
-      return res.status(200).send(data);
-    }
-
-    return res.status(500).json({
-      error: 'transfer_transaction',
-      error_description: 'Unknown error trying to create transfer transaction.',
-    });
-  } catch (error) {
-    if (error instanceof SolanaNftTransferError) {
-      return res.status(error.statusCode).json({
-        error: error.errorCode,
-        error_description: error.message,
-      });
-    }
-
-    throw error;
+  const data = await service.createTransferTransaction(mintAddress, owner, destination, res.locals);
+  if (data) {
+    return res.status(200).send(data);
   }
+
+  return res.status(500).json({
+    error: 'transfer_transaction',
+    error_description: 'Unknown error trying to create transfer transaction.',
+  });
 };
 
 module.exports = {
