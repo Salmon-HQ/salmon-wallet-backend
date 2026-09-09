@@ -102,7 +102,7 @@ and turns small edits into cross-cutting ones.
 ## Tooling
 
 - Package manager: **npm**. `package-lock.json` is authoritative; install with `npm ci`. Do not add pnpm/yarn lockfiles — CI and the deploy workflow run npm, so a second lockfile silently drifts from what actually ships. (The sibling `../salmon-wallet-frontend` repo is a pnpm monorepo; that convention is that repo's, not this one's.)
-- Runtime is Node 20 (`nodejs20.x` in `serverless.yml`). Develop and test on Node 20 — `package.json#engines` enforces a `>=20` floor.
+- Runtime is Node 24 (`nodejs24.x` in `serverless.yml`; AWS deprecated `nodejs20.x` on 2026-04-30 and only ships runtimes for Active LTS releases, so a Node major moves only when Lambda lists it). Develop and test on Node 24 — `.nvmrc` pins it and `package.json#engines` enforces a `>=24` floor.
 - Lint: `npm run linter` (ESLint with auto-fix) fixes locally; the PR gate runs `npm run lint:check` (zero warnings) — run it before finishing.
 - Format: Prettier is enforced in CI (`npm run format:check`). Fix with `npm run format`.
 - Merging is squash-only and gated by the `Protect main` ruleset (required checks, review, code scanning); an agent opens the PR and stops there — a repo admin merges with `gh pr merge <n> --squash --admin`, and the PR title becomes the commit on `main` (`docs/REPO-SETTINGS.md`).

@@ -4,7 +4,7 @@ Thanks for contributing. This document is the human-facing summary of the repo's
 
 ## Getting started
 
-- **Node 20** (the Lambda runtime is `nodejs20.x`; `package.json#engines` enforces `>=20`).
+- **Node 24** (the Lambda runtime is `nodejs24.x`; `.nvmrc` pins it and `package.json#engines` enforces `>=24`).
 - **npm only.** `package-lock.json` is authoritative; install with `npm ci`. Do not add pnpm/yarn lockfiles.
 - Local stack: `cp .env.example .env`, fill in values, then `docker-compose up` or `npm run serverless:start:local`. serverless-offline prefixes routes with the stage: local paths look like `/local/health`.
 
