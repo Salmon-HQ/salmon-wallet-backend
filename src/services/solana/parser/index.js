@@ -96,7 +96,8 @@ const buildAccountMaps = (rawTx) => {
   const tokenAccountMints = new Map();
 
   for (const balance of [...pre, ...post]) {
-    const idx = balance.accountIndex;
+    const idx = balance?.accountIndex;
+    if (idx === undefined) continue;
     const key = accountKeys[idx]?.pubkey || accountKeys[idx];
     if (!key) continue;
     if (balance.owner) tokenAccountOwners.set(key, balance.owner);
@@ -147,9 +148,9 @@ const dispatchInstruction = (ix, ctx) => {
 const collectInstructionMetadata = (rawTx) => {
   const top = rawTx?.transaction?.message?.instructions || [];
   const innerGroups = rawTx?.meta?.innerInstructions || [];
-  const countByIndex = new Map(innerGroups.map((g) => [g.index, g.instructions?.length ?? 0]));
+  const countByIndex = new Map(innerGroups.map((g) => [g?.index, g?.instructions?.length ?? 0]));
   return top.map((ix, i) => ({
-    programId: ix.programId,
+    programId: ix?.programId,
     innerInstructionsCount: countByIndex.get(i) ?? 0,
   }));
 };

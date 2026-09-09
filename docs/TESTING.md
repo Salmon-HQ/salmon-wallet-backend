@@ -151,6 +151,22 @@ Service specs (`src/services/solana/__tests__/`):
   `solana-nft-service.spec.js`, `solana-transaction-service.spec.js`,
   `address-lookup-table-service.spec.js`
 
+Property-based specs (`*.property.spec.js`, [fast-check](https://fast-check.dev/)):
+
+- `src/services/solana/parser/__tests__/parser.property.spec.js` — the tx
+  parser never throws on any RPC-shaped or arbitrary-JSON input and always
+  answers a known `type`
+- `src/resources/solana/__tests__/content-urls.property.spec.js` — URL
+  normalizer is total, idempotent and strips query/fragment
+- `src/utils/__tests__/address-validation.property.spec.js` — address
+  validators are total and accept every well-formed key
+
+These generate hundreds of random inputs per run and shrink any failure to a
+minimal counterexample (fast-check prints it). They exist because the parser
+and the validators sit on attacker-controlled data; the first run found a
+real crash on a `null` entry in `postTokenBalances`. They run inside
+`test:unit` and are what OpenSSF Scorecard's Fuzzing check detects.
+
 **Characteristics:**
 
 - No calls to external APIs
