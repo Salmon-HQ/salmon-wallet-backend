@@ -251,18 +251,18 @@ describe('solana-nft-controller', () => {
     service.createBurnTransaction.mockRejectedValueOnce(
       new UnsupportedSolanaNftBurnError('Unsupported token')
     );
+    // Domain errors propagate untouched: the error middleware renders the
+    // 422 `burn_not_supported` envelope from the error's own fields.
     const errorRes = createRes();
-    await controller.burnTransaction(
-      {
-        params: { mintAddress: '2jmaywRjUsGyQf6qBaWn8PeFg4HrbavbVq1dqyRMM2FE' },
-        query: { owner: '7ZUYPJfyPj8gBvwCeCpq9EhDwB5x8kJK8S966NvwKKuR' },
-      },
-      errorRes
-    );
-    expect(errorRes.status).toHaveBeenCalledWith(422);
-    expect(errorRes.json).toHaveBeenCalledWith({
-      error: 'burn_not_supported',
-      error_description: 'Unsupported token',
-    });
+    await expect(
+      controller.burnTransaction(
+        {
+          params: { mintAddress: '2jmaywRjUsGyQf6qBaWn8PeFg4HrbavbVq1dqyRMM2FE' },
+          query: { owner: '7ZUYPJfyPj8gBvwCeCpq9EhDwB5x8kJK8S966NvwKKuR' },
+        },
+        errorRes
+      )
+    ).rejects.toMatchObject({ statusCode: 422, errorCode: 'burn_not_supported' });
+    expect(errorRes.status).not.toHaveBeenCalled();
   });
 });
