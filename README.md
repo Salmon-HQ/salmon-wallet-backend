@@ -6,7 +6,7 @@ Salmon API is the backend that powers the Salmon wallet across mobile, web, and 
 
 ## Stack
 
-- Node.js `>=20.0.0` (matches the `nodejs20.x` Lambda runtime)
+- Node.js `>=24.0.0` (matches the `nodejs24.x` Lambda runtime)
 - Express, deployed via the Serverless Framework (`serverless-offline` for local dev)
 - Redis (cache)
 - Jest for unit and integration tests
