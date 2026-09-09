@@ -1,23 +1,5 @@
 'use strict';
 
-const { validationResult } = require('express-validator');
-
-const validateAndExecute = (validations, action) => [
-  async (req, res, next) => {
-    // work-around to use locals in validations
-    req.locals = res.locals;
-    next();
-  },
-  validations,
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-    await action(req, res);
-  },
-];
-
 const handleError = (action) => async (req, res, next) => {
   try {
     await action(req, res, next);
@@ -33,26 +15,6 @@ const safe = (action) => {
     );
   }
   return handleError(action);
-};
-
-const unique = (items) => (items?.length > 1 ? [...new Set(items)] : items);
-
-const indexBy = (items, field) => {
-  const reducer = (object, item) => {
-    object[item[field]] = item;
-    return object;
-  };
-
-  return items.reduce(reducer, {});
-};
-
-const groupBy = (items, field) => {
-  const reducer = (object, item) => {
-    (object[item[field]] = object[item[field]] || []).push(item);
-    return object;
-  };
-
-  return items.reduce(reducer, {});
 };
 
 const parseInclude = (req) => {
@@ -122,41 +84,6 @@ const decorator = async (decorate, target, options) => {
   }
 };
 
-const includeRelation = async (
-  resource,
-  property,
-  decorate,
-  eagerLoad,
-  select,
-  include,
-  key,
-  context
-) => {
-  if (include.hasOwnProperty(property)) {
-    const childKey = `${key}.${property}`;
-
-    if (!context.hasOwnProperty(childKey)) {
-      context[childKey] = await eagerLoad(context[key]);
-    }
-
-    const items = context[childKey];
-    if (items) {
-      const children = select(items);
-      if (children) {
-        if (Array.isArray(children)) {
-          resource[property] = [];
-          for (const child of children) {
-            const item = await decorate(child, include[property], childKey, context);
-            resource[property].push(item);
-          }
-        } else {
-          resource[property] = await decorate(children, include[property], childKey, context);
-        }
-      }
-    }
-  }
-};
-
 const includeProperty = async (resource, property, eagerLoad, select, include, key, context) => {
   if (include.hasOwnProperty(property)) {
     const childKey = `${key}.${property}`;
@@ -173,13 +100,7 @@ const includeProperty = async (resource, property, eagerLoad, select, include, k
 };
 
 module.exports = {
-  validateAndExecute,
   safe,
-  unique,
-  indexBy,
-  groupBy,
-  parseInclude,
   decorator,
-  includeRelation,
   includeProperty,
 };
