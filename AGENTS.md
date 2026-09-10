@@ -75,10 +75,9 @@ signs on the device → the client broadcasts to its own RPC → the backend
 may read public status. `src/__tests__/signing-boundary.spec.js` enforces
 it: every non-GET route must be in its allowlist with a reason (only routes
 that BUILD an unsigned transaction qualify — NFT burn/transfer today), and
-no controller may mention a signed-transaction body field. The Jupiter
-Ultra `/ft/swap/order` + `/ft/swap/execute` relay was removed for this
-reason (the wallet's Apple 3.1.5(iii) answer rests on it); a replacement
-swap is build-only.
+no controller may mention a signed-transaction body field. The swap
+Powerup is build-only (`GET /ft/swap/build` on 0x): the wallet's Apple
+3.1.5(iii) answer rests on the backend never touching signed bytes.
 
 ## Error responses
 
@@ -166,7 +165,8 @@ before touching `serverless.yml`, env vars, or CI workflow files.
 
 - `src/services/solana` is the highest-risk area. Keep changes focused and backed by tests.
 - For Metaplex/NFT work (burn, transfer, Bubblegum, DAS), agents can install the official Metaplex skill: `npx skills add metaplex-foundation/skill`.
-- For Jupiter Price/Swap work, agents can install the official Jupiter skill: `npx skills add jup-ag/agent-skills`.
+- For Jupiter Price/Tokens work (balance pricing, token catalog), agents can install the official Jupiter skill: `npx skills add jup-ag/agent-skills`.
+- For 0x Solana Swap API work, read the raw docs (`https://docs.0x.org/svm/solana-swap-api/…` + `.md`) and the OpenAPI spec `https://docs.0x.org/openapi/solana-swap-apis.json`; the `0xProject/0x-ai` skill is EVM-only. Reference notes live in `specs/012-swap-v2-build/research-0x-solana-swap-api.md`.
 - For Helius RPC/DAS work, see the official Helius AI tooling repo: `https://github.com/helius-labs/core-ai`.
 - `src/resources/solana` defines transaction and asset response shapes consumed by clients. Be careful with field names and structures.
 - `packages/` contains internal shared utilities. Do not move feature code there unless it is truly cross-cutting — code in `packages/` escapes the chain-slice ownership model and is harder to trace back to a domain.

@@ -331,7 +331,8 @@ backend.
 
 - integration with Solana data providers (Triton primary, Helius
   fallback, bare RPC as last resort)
-- Jupiter integration
+- swap build on the 0x Solana Swap API (`swap/`): instructions → unsigned v0 transaction
+- Jupiter Price v3 / Tokens v2 integration (pricing, token catalog)
 - transaction orchestration
 - enrichment preloading for both transaction paths: the service batches
   the lookups each mapper needs (`loadEnrichment` for the enriched path,

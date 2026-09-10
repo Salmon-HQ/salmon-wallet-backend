@@ -1,6 +1,6 @@
 ---
 name: service-drift-audit
-description: Checks salmon-api's external service dependencies (Jupiter, Helius, Triton, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did Jupiter/Helius/Metaplex change anything", or similar drift-check requests.
+description: Checks salmon-api's external service dependencies (0x, Jupiter, Helius, Triton, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did Jupiter/Helius/Metaplex change anything", or similar drift-check requests.
 ---
 
 # Service Drift Audit — salmon-api
@@ -10,13 +10,23 @@ automation is wired up yet — running this skill is the whole audit.
 
 ## Watchlist & baseline (as of 2026-07-30)
 
-### Jupiter Swap
+### 0x Solana Swap API (swap build)
 
-- On the unified `api.jup.ag/swap/v2` endpoints (`order`/`execute`). The
-  older `ultra`/`v1` surface is deprecated with no announced shutdown date.
-- Pricing structure is in transition; Price v3 is current (see
-  `src/services/solana/jupiter-service.js`).
-- Sources: dev.jup.ag/updates, developers.jup.ag/docs/swap, portal.jup.ag.
+- `POST https://api.0x.org/solana/swap-instructions` + `GET /enabled-sources`,
+  header `0x-api-key`. Open beta: "interfaces may still change". Watch for
+  the announced split of `instructions[]` into `setupInstructions` /
+  `swapInstructions` (shape change for `zeroex-swap-provider.js`), fee
+  fields (`swap_fee_ppm`/`swap_fee_recipient`/`swap_fee_side`), and the
+  free-tier rate limit (`ZEROEX_MAX_RPS`).
+- Sources: docs.0x.org/svm/solana-swap-api (append `.md`),
+  docs.0x.org/openapi/solana-swap-apis.json, docs.0x.org/llms.txt.
+
+### Jupiter Price + Tokens
+
+- Price v3 (`JUPITER_PRICE_URL`) and Tokens v2 (`api.jup.ag/tokens/v2`)
+  back balance pricing, `/ft/verified`, `/ft/search` and swap-build token
+  hydration (`jupiter-service.js`, `jupiter-token-service.js`).
+- Sources: dev.jup.ag/updates, developers.jup.ag/docs, portal.jup.ag.
 
 ### Helius
 

@@ -1,6 +1,6 @@
 ---
 name: solana-rpc-context
-description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, Jupiter over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/swap/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
+description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, 0x swap build, Jupiter price/tokens over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/swap/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
 ---
 
 # Solana / RPC Context — salmon-api
