@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Swap v2 build
+# Specification Quality Checklist: Swap v2 — build on 0x
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-02
@@ -32,6 +32,13 @@
 ## Notes
 
 - Provider and endpoint names appear because the feature is an
-  integration with a named provider under its license terms.
-- Depends on specs 010 and 011 and on frontend spec 027; written
-  2026-09-02 for later implementation on a new branch from `main`.
+  integration with a named provider under its terms.
+- Written 2026-09-02 against Jupiter `/swap/v2/build`; owner switched the
+  provider to the 0x Solana Swap API on 2026-09-10 and the feature was
+  implemented that day on `feat/swap-0x-signing-boundary` (not merged;
+  owner holds the merge for a few days). Spec and plan re-synced to the
+  code; differences from the draft are under "Deviations" in both files.
+- Still open: spec 011 (region gating) must wrap the route before Swap is
+  enabled for end users; the nightly integration spec and the real-key
+  probes need a 0x key; owner decisions are listed under "Open decisions
+  (owner)" in the spec.

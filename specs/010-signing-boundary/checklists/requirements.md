@@ -35,3 +35,8 @@
   them.
 - Owner decision 2026-09-02: write now, implement later on a new branch
   from `main`.
+- Implemented 2026-09-10 on `feat/swap-0x-signing-boundary` (not merged;
+  owner holds the merge for a few days). Spec and plan re-synced to the
+  code the same day; the differences from the draft are listed under
+  "Deviations" in both files (static source scan, shorter field
+  denylist, `sections.swap` kept).
