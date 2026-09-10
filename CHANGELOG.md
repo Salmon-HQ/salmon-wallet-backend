@@ -2,6 +2,13 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.17.0 — 2026-09-10
+
+- Solana transaction history: every RPC reader (Triton JSON-RPC and the bare-RPC fallback) now opts into `maxSupportedTransactionVersion: 1`, so pages containing a v1 / 4096-byte transaction (SIMD-0296) are read instead of failing with `-32015`. Response shape unchanged: v1 carries every account inline and `meta.fee` already includes the priority fee. `@solana/web3.js` is pinned to `1.99.0-beta.0` (first 1.x that accepts `version: 1` in a parsed response; read-only, the backend never builds v1).
+- Runtime: Lambda moved from `nodejs20.x` (deprecated by AWS on 2026-04-30) to `nodejs24.x`. No observable API changes.
+- Hardening, no observable API changes: caller-supplied path segments are encoded before reaching the CoinGecko URL; `?include=` refuses `__proto__` / `constructor` / `prototype`; the transaction parser tolerates null RPC entries (found by the new property-based suites). NFT burn/transfer domain errors now render through the shared error middleware (same status, code and message as before).
+- Dependency maintenance: js-yaml 5.4.1 (merge-key CPU limit), digital-asset-standard-api 2.1.1, jest 30.5.
+
 ## 0.16.0 — 2026-09-03
 
 - **Breaking**: removed the cross-chain Bridge surface — every `/v1/bridge/*` endpoint now answers the standard 404 envelope. The flow routed user funds through a centralized exchange, which the published Terms no longer offer; the wallet ships without a Bridge tab.
