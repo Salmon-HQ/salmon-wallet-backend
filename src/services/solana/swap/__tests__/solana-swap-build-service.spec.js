@@ -5,6 +5,7 @@ const mockConnection = {
   getMultipleAccountsInfo: jest.fn(),
   getLatestBlockhash: jest.fn(),
   getRecentPrioritizationFees: jest.fn(),
+  simulateTransaction: jest.fn(),
 };
 jest.mock('@solana/web3.js', () => {
   const actual = jest.requireActual('@solana/web3.js');
@@ -73,6 +74,9 @@ describe('solana-swap-build-service', () => {
     mockConnection.getLatestBlockhash.mockResolvedValue({ blockhash: BLOCKHASH });
     mockConnection.getMultipleAccountsInfo.mockResolvedValue([]);
     mockConnection.getRecentPrioritizationFees.mockResolvedValue([]);
+    mockConnection.simulateTransaction.mockResolvedValue({
+      value: { err: null, unitsConsumed: 135497, logs: [] },
+    });
   });
 
   const compiledPrograms = (result) => {
@@ -94,12 +98,17 @@ describe('solana-swap-build-service', () => {
     expect(tx.version).toBe(0);
     expect(tx.signatures.every((sig) => sig.every((byte) => byte === 0))).toBe(true);
     expect(tx.message.staticAccountKeys[0].toBase58()).toBe(TAKER);
-    // compute-unit price (dynamic, min 1000 with no recent fees) + the swap
+    // CU limit (simulated 135497 * 1.15) + CU price (min 1000 with no recent fees) + the swap
     expect(compiledPrograms(result)).toEqual([
+      'ComputeBudget111111111111111111111111111111',
       'ComputeBudget111111111111111111111111111111',
       SETTLER,
     ]);
     expect(result.priorityFeeMicroLamports).toBe(1000);
+    expect(result.computeUnitLimit).toBe(155822);
+    // the simulated message is the bare swap, before any budget instruction
+    const [simulated] = mockConnection.simulateTransaction.mock.calls[0];
+    expect(simulated.message.compiledInstructions).toHaveLength(1);
     expect(tx.message.recentBlockhash).toBe(BLOCKHASH);
     expect(result).toMatchObject({
       provider: service.PROVIDER,
@@ -199,7 +208,7 @@ describe('solana-swap-build-service', () => {
     });
   });
 
-  it('follows the network: p75 of recent fees on the written accounts, clamped to [1000, 50000]', async () => {
+  it('follows the network: p75 of recent fees on the written accounts, clamped to [1000, 20000]', async () => {
     zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction([USDC])]));
     mockConnection.getRecentPrioritizationFees.mockResolvedValue(
       [0, 500, 2000, 8000, 100000].map((prioritizationFee) => ({ slot: 1, prioritizationFee }))
@@ -215,7 +224,7 @@ describe('solana-swap-build-service', () => {
     mockConnection.getRecentPrioritizationFees.mockResolvedValue([
       { slot: 1, prioritizationFee: 9e6 },
     ]);
-    expect((await service.build(params(), locals)).priorityFeeMicroLamports).toBe(50000);
+    expect((await service.build(params(), locals)).priorityFeeMicroLamports).toBe(20000);
   });
 
   it('pins the priority fee to SWAP_PRIORITY_FEE_MICROLAMPORTS and drops the instruction at 0', async () => {
@@ -229,7 +238,22 @@ describe('solana-swap-build-service', () => {
     process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS = '0';
     result = await service.build(params(), locals);
     expect(result.priorityFeeMicroLamports).toBe(0);
+    expect(result.computeUnitLimit).toBeNull();
     expect(compiledPrograms(result)).toEqual([SETTLER]);
+  });
+
+  it('falls back to a fixed CU limit when the simulation fails, still returning the quote', async () => {
+    zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction()]));
+    mockConnection.simulateTransaction.mockResolvedValue({
+      value: { err: { InstructionError: [0, 'Custom'] }, unitsConsumed: 0, logs: [] },
+    });
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = await service.build(params(), locals);
+
+    expect(result.computeUnitLimit).toBe(400000);
+    expect(result.transaction).toEqual(expect.any(String));
+    warn.mockRestore();
   });
 
   it('falls back to the minimum priority fee when the RPC read fails', async () => {

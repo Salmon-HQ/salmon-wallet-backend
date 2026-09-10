@@ -152,39 +152,28 @@ const requestSwapInstructions = async ({
     ...(DISABLED_SOURCES.length > 0 ? { disabled_sources: DISABLED_SOURCES } : {}),
   };
 
-  return withRetry(
-    async () => {
-      let data;
-      try {
-        ({ data } = await http.post(`${ZEROEX_API_URL}/swap-instructions`, body, {
+  let data;
+  try {
+    ({ data } = await withRetry(
+      () =>
+        http.post(`${ZEROEX_API_URL}/swap-instructions`, body, {
           timeout: REQUEST_TIMEOUT,
           headers: headers(),
-        }));
-      } catch (error) {
-        const status = error.response?.status;
-        // 0x answers 4xx with `{ code, error, zid }`: 400 for bad input or
-        // bad integrator config, 422 for a pair it cannot serve, 403 when its
-        // own sanctions screening refuses the taker. `ZEROEX_ERROR_MAP` turns
-        // the code into our envelope; unknown codes mean "no route here".
-        if (status === 400 || status === 403 || status === 422) {
-          console.warn('0x swap-instructions rejected the request:', error.response.data);
-          throw toSwapError(status, error.response.data);
-        }
-        throw error;
-      }
-
-      return {
-        instructions: data.instructions.map(toInstruction),
-        lookupTableAddresses: data.address_lookup_tables || [],
-        amountOut: String(data.amount_out),
-        minAmountOut: String(data.min_amount_out),
-        routePlan: data.route_plan || [],
-        zid: data.zid,
-      };
-    },
-    { operationName: `0x swap-instructions (${inputMint} → ${outputMint})` }
-  ).catch((error) => {
-    if (error.response?.status === 429) {
+        }),
+      { operationName: `0x swap-instructions (${inputMint} → ${outputMint})` }
+    ));
+  } catch (error) {
+    const status = error.response?.status;
+    // 0x answers 4xx with `{ code, error, zid }`: 400 for bad input or bad
+    // integrator config, 422 for a pair it cannot serve, 403 when its own
+    // sanctions screening refuses the taker. `ZEROEX_ERROR_MAP` turns the
+    // code into our envelope; unknown codes mean "no route here". withRetry
+    // only retries 429/5xx/network, so these arrive here on the first try.
+    if (status === 400 || status === 403 || status === 422) {
+      console.warn('0x swap-instructions rejected the request:', error.response.data);
+      throw toSwapError(status, error.response.data);
+    }
+    if (status === 429) {
       throw new SolanaSwapError(
         '0x rate limit exceeded; retry shortly',
         503,
@@ -192,7 +181,16 @@ const requestSwapInstructions = async ({
       );
     }
     throw error;
-  });
+  }
+
+  return {
+    instructions: data.instructions.map(toInstruction),
+    lookupTableAddresses: data.address_lookup_tables || [],
+    amountOut: String(data.amount_out),
+    minAmountOut: String(data.min_amount_out),
+    routePlan: data.route_plan || [],
+    zid: data.zid,
+  };
 };
 
 module.exports = { requestSwapInstructions, PPM_PER_BPS, ZEROEX_NATIVE_SOL, ZEROEX_ERROR_MAP };

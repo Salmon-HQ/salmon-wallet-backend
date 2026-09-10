@@ -50,16 +50,21 @@ const feeConfig = () => {
 
 /** Bounds for the dynamic priority fee (micro-lamports per compute unit). */
 const PRIORITY_FEE_MIN = 1000;
-const PRIORITY_FEE_MAX = 50000;
+const PRIORITY_FEE_MAX = 20000;
+/** Headroom over the simulated compute units; fallback when simulation is unavailable. */
+const COMPUTE_UNIT_HEADROOM = 1.15;
+const COMPUTE_UNIT_FALLBACK = 400000;
 /** getRecentPrioritizationFees accepts at most this many accounts. */
 const PRIORITY_FEE_MAX_ACCOUNTS = 128;
 
 /**
  * Priority fee in micro-lamports per compute unit. `SWAP_PRIORITY_FEE_MICROLAMPORTS`
  * pins it (0 disables); unset, it follows the network: the 75th percentile of
- * the recent fees paid on the accounts this swap writes to, clamped to
- * [PRIORITY_FEE_MIN, PRIORITY_FEE_MAX]. At ~300k CU the clamp range costs the
- * user 0.0003–0.015 SOL. A failed RPC read falls back to the minimum.
+ * the recent fees paid on the accounts this swap writes to (zeros included —
+ * an uncongested network must read as cheap), clamped to
+ * [PRIORITY_FEE_MIN, PRIORITY_FEE_MAX]. With the simulated CU limit (~150k
+ * for a typical swap) the clamp range costs the user 0.00015–0.003 SOL.
+ * A failed RPC read falls back to the minimum.
  */
 const resolvePriorityFee = async (connection, instructions) => {
   const pinned = process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS;
@@ -79,10 +84,7 @@ const resolvePriorityFee = async (connection, instructions) => {
     const recent = await connection.getRecentPrioritizationFees({
       lockedWritableAccounts: writable,
     });
-    const fees = recent
-      .map((entry) => entry.prioritizationFee)
-      .filter((fee) => fee > 0)
-      .sort((a, b) => a - b);
+    const fees = recent.map((entry) => entry.prioritizationFee).sort((a, b) => a - b);
     const p75 = fees.length > 0 ? fees[Math.floor(0.75 * (fees.length - 1))] : 0;
     return Math.min(PRIORITY_FEE_MAX, Math.max(PRIORITY_FEE_MIN, p75));
   } catch (error) {
@@ -201,6 +203,35 @@ const resolveFee = async (connection, fee, inputMint, outputMint) => {
   return null;
 };
 
+/**
+ * Compute-unit limit for the swap: simulate the unsigned message and add
+ * headroom. Without a limit the runtime budgets 200k CU per instruction and
+ * the priority fee is charged on that budget, not on what runs (probed: a
+ * 3-instruction swap consumed ~135k of a 785k default budget). A failed
+ * simulation (e.g. the taker cannot fund the swap yet) falls back to a fixed
+ * limit so a quote is still returned; the wallet simulates again before
+ * signing.
+ */
+const resolveComputeUnitLimit = async (connection, message) => {
+  try {
+    const { value } = await connection.simulateTransaction(new VersionedTransaction(message), {
+      sigVerify: false,
+      replaceRecentBlockhash: true,
+    });
+    if (value.err || !value.unitsConsumed) {
+      console.warn('Swap build: simulation did not yield compute units', {
+        err: value.err,
+        logs: (value.logs || []).slice(-3),
+      });
+      return COMPUTE_UNIT_FALLBACK;
+    }
+    return Math.ceil(value.unitsConsumed * COMPUTE_UNIT_HEADROOM);
+  } catch (error) {
+    console.warn(`Swap build: simulation unavailable (${error.message}); using fallback CU limit`);
+    return COMPUTE_UNIT_FALLBACK;
+  }
+};
+
 const fetchLookupTables = async (connection, addresses) => {
   if (addresses.length === 0) {
     return [];
@@ -278,20 +309,24 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     resolvePriorityFee(connection, quote.instructions),
   ]);
 
-  const instructions =
+  const compile = (instructions) =>
+    new TransactionMessage({
+      payerKey: new PublicKey(publicKey),
+      recentBlockhash: blockhash,
+      instructions,
+    }).compileToV0Message(lookupTables);
+
+  const computeUnitLimit = await resolveComputeUnitLimit(connection, compile(quote.instructions));
+  const budget =
     priorityFee > 0
       ? [
+          ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitLimit }),
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }),
-          ...quote.instructions,
         ]
-      : quote.instructions;
-
-  const message = new TransactionMessage({
-    payerKey: new PublicKey(publicKey),
-    recentBlockhash: blockhash,
-    instructions,
-  }).compileToV0Message(lookupTables);
-  const transaction = Buffer.from(new VersionedTransaction(message).serialize()).toString('base64');
+      : [];
+  const transaction = Buffer.from(
+    new VersionedTransaction(compile([...budget, ...quote.instructions])).serialize()
+  ).toString('base64');
 
   return {
     provider: PROVIDER,
@@ -305,6 +340,7 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     minAmountOut: quote.minAmountOut,
     slippageBps,
     priorityFeeMicroLamports: priorityFee,
+    computeUnitLimit: priorityFee > 0 ? computeUnitLimit : null,
     routePlan: quote.routePlan,
     salmonFee: fee
       ? {

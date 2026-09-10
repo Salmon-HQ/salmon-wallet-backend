@@ -4,6 +4,7 @@ jest.mock('axios', () => ({ post: jest.fn() }));
 jest.mock('../../../../infrastructure/rate-limiting/zeroex-rate-limiter', () => ({
   rateLimiter: { waitAndConsume: jest.fn().mockResolvedValue(undefined) },
   withRetry: jest.fn((fn) => fn()),
+  // a mapped 4xx must reach the caller unretried — asserted via call counts below
 }));
 
 const http = require('axios');

@@ -1412,7 +1412,11 @@ components:
           type: integer
         priorityFeeMicroLamports:
           type: integer
-          description: Compute-unit price prepended to the transaction (network-derived p75, clamped 1000–50000; 0 when pinned off)
+          description: Compute-unit price prepended to the transaction (network-derived p75, clamped 1000–20000; 0 when pinned off)
+        computeUnitLimit:
+          type: integer
+          nullable: true
+          description: Compute-unit limit prepended to the transaction (simulated usage +15%, 400000 when simulation is unavailable); null when the priority fee is pinned off
         inUsdValue:
           type: number
           nullable: true
