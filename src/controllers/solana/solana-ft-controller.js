@@ -19,7 +19,7 @@ const SWAP_NETWORK = 'solana-mainnet';
  *   optional `query.slippageBps`. Fee parameters are never read from the request.
  * @param {import('express').Response} res - Responds 200 with the swap-build resource;
  *   400 `{ error, error_description }` on missing/invalid params or a non-mainnet
- *   network. 404 `no_route`, 502 `provider_fee_mismatch` and 503 `fee_account_missing`
+ *   network. 404 `no_route`, 403 `wallet_restricted` and 502 `provider_fee_mismatch`
  *   reach the error middleware from the service.
  * @returns {Promise<void>}
  */

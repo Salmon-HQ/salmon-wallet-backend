@@ -62,7 +62,7 @@ describe('zeroex-swap-provider', () => {
       amount: '1000000',
       taker: TAKER,
       slippageBps: 50,
-      fee: { recipient: 'FeeRecipient111111111111111111111111111111', bps: 50 },
+      fee: { recipient: 'FeeRecipient111111111111111111111111111111', bps: 50, side: 'sell' },
       reserveBytes: 52,
     });
 
@@ -77,7 +77,7 @@ describe('zeroex-swap-provider', () => {
       reserve_transaction_bytes: 52,
       swap_fee_ppm: '5000',
       swap_fee_recipient: 'FeeRecipient111111111111111111111111111111',
-      swap_fee_side: 'buy',
+      swap_fee_side: 'sell',
     });
     expect(config.headers['0x-api-key']).toBe('test-key');
 

@@ -99,23 +99,23 @@ describe('solana-swap-build-service', () => {
     expect(mockConnection.getAccountInfo).not.toHaveBeenCalled();
   });
 
-  it('pays the fee to the owner ATA of the output mint and reports the fee line', async () => {
+  it('takes the fee from the OUTPUT token when the owner ATA for it exists (buy side)', async () => {
     process.env.SWAP_FEE_BPS = '50';
     process.env.SWAP_FEE_ACCOUNT_OWNER = FEE_OWNER;
     mockConnection.getAccountInfo
-      .mockResolvedValueOnce({ owner: TOKEN_PROGRAM_ID }) // mint
-      .mockResolvedValueOnce({ data: Buffer.alloc(165) }); // fee ATA exists
+      .mockResolvedValueOnce({ owner: TOKEN_PROGRAM_ID }) // USDC mint
+      .mockResolvedValueOnce({ data: Buffer.alloc(165) }); // owner USDC ATA exists
     zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction([feeAta])]));
 
     const result = await service.build(params(), locals);
 
     expect(zeroex.requestSwapInstructions).toHaveBeenCalledWith(
-      expect.objectContaining({ fee: { recipient: feeAta, bps: 50 } })
+      expect.objectContaining({ fee: { recipient: feeAta, bps: 50, side: 'buy' } })
     );
-    expect(result.salmonFee).toEqual({ amount: '4975', mint: USDC, bps: 50 });
+    expect(result.salmonFee).toEqual({ amount: '4975', mint: USDC, side: 'output', bps: 50 });
   });
 
-  it('pays a native-SOL fee to the owner wallet itself', async () => {
+  it('pays a native-SOL fee to the owner wallet itself without any RPC lookup', async () => {
     process.env.SWAP_FEE_BPS = '50';
     process.env.SWAP_FEE_ACCOUNT_OWNER = FEE_OWNER;
     zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction([FEE_OWNER])]));
@@ -124,22 +124,51 @@ describe('solana-swap-build-service', () => {
 
     expect(mockConnection.getAccountInfo).not.toHaveBeenCalled();
     expect(zeroex.requestSwapInstructions).toHaveBeenCalledWith(
-      expect.objectContaining({ fee: { recipient: FEE_OWNER, bps: 50 } })
+      expect.objectContaining({ fee: { recipient: FEE_OWNER, bps: 50, side: 'buy' } })
     );
   });
 
-  it('answers 503 fee_account_missing before calling the provider when the fee ATA does not exist', async () => {
+  it('falls back to the INPUT token (sell side) when only that fee account exists', async () => {
     process.env.SWAP_FEE_BPS = '50';
     process.env.SWAP_FEE_ACCOUNT_OWNER = FEE_OWNER;
+    // output USDC: mint found, owner ATA missing → input is native SOL → owner wallet
     mockConnection.getAccountInfo
       .mockResolvedValueOnce({ owner: TOKEN_PROGRAM_ID })
       .mockResolvedValueOnce(null);
+    zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction([FEE_OWNER])]));
 
-    await expect(service.build(params(), locals)).rejects.toMatchObject({
-      statusCode: 503,
-      errorCode: 'fee_account_missing',
-    });
-    expect(zeroex.requestSwapInstructions).not.toHaveBeenCalled();
+    const result = await service.build(params(), locals);
+
+    expect(zeroex.requestSwapInstructions).toHaveBeenCalledWith(
+      expect.objectContaining({ fee: { recipient: FEE_OWNER, bps: 50, side: 'sell' } })
+    );
+    // 1000000000 lamports * 5000 ppm / 1e6 = 5000000
+    expect(result.salmonFee).toEqual({ amount: '5000000', mint: SOL, side: 'input', bps: 50 });
+  });
+
+  it('builds WITHOUT a fee and logs [SWAP_FEE_SKIPPED] when neither fee account exists', async () => {
+    process.env.SWAP_FEE_BPS = '50';
+    process.env.SWAP_FEE_ACCOUNT_OWNER = FEE_OWNER;
+    const USDT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+    mockConnection.getAccountInfo
+      .mockResolvedValueOnce({ owner: TOKEN_PROGRAM_ID }) // USDC mint
+      .mockResolvedValueOnce(null) // owner USDC ATA missing
+      .mockResolvedValueOnce({ owner: TOKEN_PROGRAM_ID }) // USDT mint
+      .mockResolvedValueOnce(null); // owner USDT ATA missing
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction()]));
+
+    const result = await service.build({ ...params(), inputMint: USDT }, locals);
+
+    expect(zeroex.requestSwapInstructions).toHaveBeenCalledWith(
+      expect.objectContaining({ fee: null })
+    );
+    expect(result.salmonFee).toBeNull();
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('[SWAP_FEE_SKIPPED]'),
+      expect.objectContaining({ inputMint: USDT, outputMint: USDC })
+    );
+    error.mockRestore();
   });
 
   it('answers 502 provider_fee_mismatch when the instructions never touch the fee account', async () => {
@@ -183,11 +212,19 @@ describe('solana-swap-build-service', () => {
   });
 
   describe('estimateFeeAmount', () => {
-    it('grosses the net output back up and rounds the fee up', () => {
+    it('buy side: grosses the net output back up and rounds the fee up', () => {
       // net 990000 at 50 bps (5000 ppm): fee = ceil(990000 * 5000 / 995000) = 4975
-      expect(service.estimateFeeAmount('990000', 50)).toBe('4975');
-      expect(service.estimateFeeAmount('1', 50)).toBe('1');
-      expect(service.estimateFeeAmount('0', 50)).toBe('0');
+      const at = (amountOut) => service.estimateFeeAmount({ side: 'buy', amountOut, bps: 50 });
+      expect(at('990000')).toBe('4975');
+      expect(at('1')).toBe('1');
+      expect(at('0')).toBe('0');
+    });
+
+    it('sell side: takes the ppm share of the input, rounded up', () => {
+      const at = (amountIn) => service.estimateFeeAmount({ side: 'sell', amountIn, bps: 50 });
+      expect(at('1000000')).toBe('5000');
+      expect(at('1')).toBe('1');
+      expect(at('199')).toBe('1');
     });
   });
 

@@ -17,17 +17,6 @@ class SolanaSwapNoRouteError extends SolanaSwapError {
   }
 }
 
-/** Salmon's fee token account for the fee mint does not exist; never swap fee-less. */
-class SolanaSwapFeeAccountMissingError extends SolanaSwapError {
-  constructor(feeAccount, mint) {
-    super(
-      `Fee token account ${feeAccount} for mint ${mint} does not exist`,
-      503,
-      'fee_account_missing'
-    );
-  }
-}
-
 /** The built transaction does not carry the configured fee; refuse to return it. */
 class SolanaSwapFeeMismatchError extends SolanaSwapError {
   constructor(feeAccount) {
@@ -42,6 +31,5 @@ class SolanaSwapFeeMismatchError extends SolanaSwapError {
 module.exports = {
   SolanaSwapError,
   SolanaSwapNoRouteError,
-  SolanaSwapFeeAccountMissingError,
   SolanaSwapFeeMismatchError,
 };

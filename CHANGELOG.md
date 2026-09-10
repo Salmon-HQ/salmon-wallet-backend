@@ -4,7 +4,7 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## Unreleased
 
-- Added `GET /v1/solana-{env}/ft/swap/build` (`solana-swap-build`): builds an **unsigned** swap transaction on the 0x Solana Swap API with Salmon's fee inside, for the wallet to sign and broadcast itself. Response carries `provider` / `providerDisplayName` / `attribution`, `transaction`, `expiresAt`, `input` / `output` (with `minAmount`), `route`, `priceImpactPct`, `slippageBps`, USD values and `salmonFee` / `routeFee` objects. `solana-mainnet` only. Region gating is a follow-up.
+- Added `GET /v1/solana-{env}/ft/swap/build` (`solana-swap-build`): builds an **unsigned** swap transaction on the 0x Solana Swap API with Salmon's fee inside, for the wallet to sign and broadcast itself. Response carries `provider` / `providerDisplayName` / `attribution`, `transaction`, `expiresAt`, `input` / `output` (with `minAmount`), `route`, `priceImpactPct`, `slippageBps`, USD values and `salmonFee` (`side: input | output`, whichever Salmon fee account exists; fee-less with an error log when neither does) / `routeFee` objects. `solana-mainnet` only. Region gating is a follow-up.
 - **Breaking**: removed `GET /v1/solana-{env}/ft/swap/order` and `POST /v1/solana-{env}/ft/swap/execute` (Jupiter Ultra, deprecated upstream). `/execute` was the last endpoint that accepted a signed transaction; the backend now enforces in CI that it never receives signed bytes (signing boundary). `/ft/verified` and `/ft/search` are unchanged. The `exchange` capability section (Bridge, removed in 0.16.0) is gone from `/v1/networks`.
 
 ## 0.17.0 — 2026-09-10

@@ -47,7 +47,7 @@ src/services/solana/swap/
 │                                 #   requestSwapInstructions; assertFeeInstructionPresent (→ 502); fetch ALTs +
 │                                 #   blockhash; optional ComputeBudget price ix (+52 reserved bytes); compileToV0Message;
 │                                 #   serialize unsigned; estimateFeeAmount; expiresAt = now + 60 s
-└── solana-swap-errors.js         # SolanaSwapError { statusCode, errorCode }: no_route 404, fee_account_missing 503,
+└── solana-swap-errors.js         # SolanaSwapError { statusCode, errorCode }: no_route 404, wallet_restricted 403,
                                   #   provider_fee_mismatch 502
 src/infrastructure/rate-limiting/zeroex-rate-limiter.js   # 5 RPS default (ZEROEX_MAX_RPS), retry 429/5xx, honors Retry-After
 src/resources/solana/solana-swap-build-resource.js       # SwapBuild shape; Jupiter Tokens v2 metadata + Price v3 USD values
@@ -110,7 +110,7 @@ Response (`solana-swap-build` contract, `SwapBuild` in `docs/openapi.yaml`):
 Errors: 400 `missing_parameter` / `invalid_parameter` / `unknown_mint`
 (local validation before any upstream call; includes non-mainnet
 network); 404 `no_route` with 0x's reason (`error` or gateway `message`);
-502 `provider_fee_mismatch`; 503 `fee_account_missing`; 0x 401/429/5xx
+502 `provider_fee_mismatch`; 0x 401/429/5xx
 and RPC failures (e.g. an ALT the provider named is not on chain) → 500
 via `error-handler`. 403 `region_restricted` / `wallet_restricted` arrive
 with spec 011.
@@ -179,7 +179,7 @@ token accounts; **its private key is never in any system Salmon runs**),
 - Spec 011 must land before Swap is enabled for end users in production
   (owner decision on countries).
 - Rollback = remove the SSM key / revert; nothing custodial to unwind.
-- Watch: CloudWatch for `provider_fee_mismatch` / `fee_account_missing`
+- Watch: CloudWatch for `provider_fee_mismatch` / `[SWAP_FEE_SKIPPED]`
   rates, 0x 429s from the rate limiter, and `no_route` reasons.
 
 ## Ops checklist (outside the repo)

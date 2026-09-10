@@ -11,10 +11,12 @@
  * (root `AGENTS.md` "Signing boundary").
  *
  * Fee policy is server-side only (`SWAP_FEE_BPS`, `SWAP_FEE_ACCOUNT_OWNER`);
- * callers cannot influence it. The fee is taken from the OUTPUT token, so the
- * recipient is the owner's associated token account for the output mint (the
- * owner's wallet itself when the output is native SOL). 0x does not create
- * fee accounts, so a missing one is a 503, never a fee-less swap.
+ * callers cannot influence it. The fee is paid to the owner's associated
+ * token account for the fee mint (the owner's wallet itself for native SOL).
+ * 0x does not create fee accounts, so the side is chosen by which account
+ * exists: the OUTPUT token when its account exists (`buy`), else the INPUT
+ * token (`sell`), else the swap is built WITHOUT a fee and a greppable error
+ * is logged — the user is never blocked by Salmon's own ops gap.
  */
 
 const {
@@ -29,10 +31,7 @@ const { getAssociatedTokenAddressSync } = require('@solana/spl-token');
 const { SOL_ADDRESS, SOL_DECIMALS } = require('../../../constants/solana-constants');
 const { getByMints } = require('../solana-ft-service');
 const zeroex = require('./zeroex-swap-provider');
-const {
-  SolanaSwapFeeAccountMissingError,
-  SolanaSwapFeeMismatchError,
-} = require('./solana-swap-errors');
+const { SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
 
 const PROVIDER = { id: '0x', displayName: '0x', attribution: 'Powered by 0x' };
 const DEFAULT_SLIPPAGE_BPS = 50;
@@ -113,29 +112,50 @@ const resolveSlippage = (slippageBps) => {
 };
 
 /**
- * Salmon's fee recipient for `outputMint`, verified to exist on-chain.
- * Native SOL output pays the owner wallet directly; any token pays the
- * owner's ATA under the mint's own token program (SPL or Token-2022).
+ * Salmon's fee account for `mint`, or null when it does not exist on-chain.
+ * Native SOL pays the owner wallet directly; any token pays the owner's ATA
+ * under the mint's own token program (SPL or Token-2022).
  */
-const resolveFeeRecipient = async (connection, fee, outputMint) => {
+const existingFeeAccount = async (connection, owner, mint) => {
+  if (mint === SOL_ADDRESS) {
+    return owner;
+  }
+  const mintKey = new PublicKey(mint);
+  const mintInfo = await connection.getAccountInfo(mintKey, COMMITMENT);
+  if (!mintInfo) {
+    return null;
+  }
+  const ata = getAssociatedTokenAddressSync(mintKey, new PublicKey(owner), false, mintInfo.owner);
+  const ataInfo = await connection.getAccountInfo(ata, COMMITMENT);
+  return ataInfo ? ata.toBase58() : null;
+};
+
+/**
+ * Pick the fee side by which fee account exists: output (`buy`) first, then
+ * input (`sell`). Returns null (no fee, logged) when neither exists.
+ *
+ * @returns {Promise<{ recipient: string, bps: number, side: 'buy'|'sell', mint: string }|null>}
+ */
+const resolveFee = async (connection, fee, inputMint, outputMint) => {
   if (!fee) {
     return null;
   }
-  if (outputMint === SOL_ADDRESS) {
-    return fee.owner;
+  for (const [side, mint] of [
+    ['buy', outputMint],
+    ['sell', inputMint],
+  ]) {
+    const recipient = await existingFeeAccount(connection, fee.owner, mint);
+    if (recipient) {
+      return { recipient, bps: fee.bps, side, mint };
+    }
   }
-
-  const mint = new PublicKey(outputMint);
-  const mintInfo = await connection.getAccountInfo(mint, COMMITMENT);
-  if (!mintInfo) {
-    throw new SolanaSwapFeeAccountMissingError('(unknown mint program)', outputMint);
-  }
-  const ata = getAssociatedTokenAddressSync(mint, new PublicKey(fee.owner), false, mintInfo.owner);
-  const ataInfo = await connection.getAccountInfo(ata, COMMITMENT);
-  if (!ataInfo) {
-    throw new SolanaSwapFeeAccountMissingError(ata.toBase58(), outputMint);
-  }
-  return ata.toBase58();
+  console.error('[SWAP_FEE_SKIPPED] no fee token account for either side; swap built without fee', {
+    owner: fee.owner,
+    inputMint,
+    outputMint,
+    fix: 'create the owner ATA for one of these mints',
+  });
+  return null;
 };
 
 const fetchLookupTables = async (connection, addresses) => {
@@ -168,16 +188,21 @@ const assertFeeInstructionPresent = (instructions, recipient) => {
   }
 };
 
+const MILLION = 1000000n;
+const ceilDiv = (a, b) => (a + b - 1n) / b;
+
 /**
- * Fee 0x deducted from the output. `amountOut` is already net of the buy-side
- * fee, and 0x rounds the fee up, so gross = net + ceil(gross * ppm / 1e6)
+ * Fee 0x deducts, in the fee token's base units (0x rounds fees up).
+ * `sell`: taken from the input before routing ⇒ ceil(amountIn * ppm / 1e6).
+ * `buy`: `amountOut` is already net of it ⇒ gross = net + ceil(gross * ppm / 1e6)
  * ⇒ fee = ceil(net * ppm / (1e6 - ppm)).
  */
-const estimateFeeAmount = (amountOut, bps) => {
+const estimateFeeAmount = ({ side, amountIn, amountOut, bps }) => {
   const ppm = BigInt(bps * zeroex.PPM_PER_BPS);
-  const million = 1000000n;
-  const net = BigInt(amountOut);
-  return String((net * ppm + (million - ppm) - 1n) / (million - ppm));
+  if (side === 'sell') {
+    return String(ceilDiv(BigInt(amountIn) * ppm, MILLION));
+  }
+  return String(ceilDiv(BigInt(amountOut) * ppm, MILLION - ppm));
 };
 
 /**
@@ -190,8 +215,7 @@ const estimateFeeAmount = (amountOut, bps) => {
  */
 const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, locals) => {
   const connection = new Connection(locals.network.config.nodeUrl, COMMITMENT);
-  const fee = feeConfig();
-  const feeRecipient = await resolveFeeRecipient(connection, fee, outputMint);
+  const fee = await resolveFee(connection, feeConfig(), inputMint, outputMint);
   const priorityFee = priorityFeeMicroLamports();
 
   const quote = await zeroex.requestSwapInstructions({
@@ -200,11 +224,11 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     amount,
     taker: publicKey,
     slippageBps,
-    fee: feeRecipient ? { recipient: feeRecipient, bps: fee.bps } : null,
+    fee: fee ? { recipient: fee.recipient, bps: fee.bps, side: fee.side } : null,
     reserveBytes: priorityFee > 0 ? COMPUTE_BUDGET_RESERVE_BYTES : 0,
   });
 
-  assertFeeInstructionPresent(quote.instructions, feeRecipient);
+  assertFeeInstructionPresent(quote.instructions, fee?.recipient);
 
   const [lookupTables, { blockhash }] = await Promise.all([
     fetchLookupTables(connection, quote.lookupTableAddresses),
@@ -238,8 +262,18 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     minAmountOut: quote.minAmountOut,
     slippageBps,
     routePlan: quote.routePlan,
-    salmonFee: feeRecipient
-      ? { amount: estimateFeeAmount(quote.amountOut, fee.bps), mint: outputMint, bps: fee.bps }
+    salmonFee: fee
+      ? {
+          amount: estimateFeeAmount({
+            side: fee.side,
+            amountIn: amount,
+            amountOut: quote.amountOut,
+            bps: fee.bps,
+          }),
+          mint: fee.mint,
+          side: fee.side === 'sell' ? 'input' : 'output',
+          bps: fee.bps,
+        }
       : null,
   };
 };

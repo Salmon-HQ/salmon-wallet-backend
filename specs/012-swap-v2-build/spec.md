@@ -98,10 +98,12 @@ public key.
 1. **Given** a request that includes fee parameters in the query,
    **When** built, **Then** they are ignored and the configured fee is
    applied.
-2. **Given** the fee recipient for the output mint does not exist
-   on-chain, **When** a build is requested, **Then** 503
-   `fee_account_missing` before any provider call — never a swap that
-   silently pays no fee.
+2. **Given** Salmon's fee account for the output mint does not exist
+   on-chain, **When** a build is requested, **Then** the fee moves to the
+   input token; **and given** neither side has an account, **Then** the
+   swap is built fee-less and `[SWAP_FEE_SKIPPED]` is logged as an error
+   (owner decision 2026-09-10: an ops gap never blocks the user, and the
+   log — not a 503 — is what keeps a fee-less swap from being silent).
 3. **Given** 0x returned instructions that never reference the fee
    recipient (e.g. it dropped the fee), **When** the build is assembled,
    **Then** 502 `provider_fee_mismatch` and no transaction is returned.
@@ -190,10 +192,11 @@ attribution without provider-specific branches; the client-side enum is
   reason in `error_description`; any other upstream status (401/429/5xx)
   MUST propagate to `error-handler.js` (500) — it is our credentials or
   the provider being down.
-- **FR-005**: The fee recipient MUST be verified on-chain before the
-  provider call and answered 503 `fee_account_missing` when absent; a
-  build whose instructions never reference the recipient MUST answer 502
-  `provider_fee_mismatch`.
+- **FR-005**: The fee account MUST be verified on-chain before the
+  provider call: output token first (`salmonFee.side = 'output'`), else
+  input token (`'input'`), else no fee plus a `[SWAP_FEE_SKIPPED]` error
+  log; a build whose instructions never reference the chosen recipient
+  MUST answer 502 `provider_fee_mismatch`.
 - **FR-006**: The backend MUST NOT expose any endpoint that accepts the
   signed transaction or broadcasts it; confirmation is read-only via
   existing RPC/history paths.

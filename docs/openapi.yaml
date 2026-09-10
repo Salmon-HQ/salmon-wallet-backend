@@ -619,12 +619,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        '503':
-          description: "`fee_account_missing` — Salmon's fee token account for the output mint does not exist"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -1415,12 +1409,19 @@ components:
         salmonFee:
           type: object
           nullable: true
-          description: Salmon's fee, taken from the output token (estimated from `amount` and the configured bps)
+          description: |
+            Salmon's fee. Taken from the output token (`side: output`, `output.amount`
+            is already net of it) when Salmon's account for that token exists, else
+            from the input token (`side: input`, deducted before routing). Null when
+            no fee applies. `amount` is estimated from the configured bps.
           properties:
             amount:
               type: string
             mint:
               type: string
+            side:
+              type: string
+              enum: [input, output]
             bps:
               type: integer
             decimals:

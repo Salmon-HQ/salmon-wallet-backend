@@ -28,7 +28,7 @@ const build = () => ({
     { dex_label: 'Raydium', ppb: 600000000 },
     { dex_label: 'Orca', ppb: 1000000000 },
   ],
-  salmonFee: { amount: '4975000', mint: SOL, bps: 50 },
+  salmonFee: { amount: '4975000', mint: SOL, side: 'output', bps: 50 },
 });
 
 describe('solana-swap-build-resource', () => {
@@ -80,7 +80,14 @@ describe('solana-swap-build-resource', () => {
       slippageBps: 50,
       inUsdValue: 100,
       outUsdValue: 99,
-      salmonFee: { amount: '4975000', mint: SOL, bps: 50, decimals: 9, symbol: 'SOL' },
+      salmonFee: {
+        amount: '4975000',
+        mint: SOL,
+        side: 'output',
+        bps: 50,
+        decimals: 9,
+        symbol: 'SOL',
+      },
       routeFee: null,
     });
     expect(jupiterTokenService.getTokensByMints).toHaveBeenCalledWith([USDC, SOL], context.locals);
@@ -95,6 +102,23 @@ describe('solana-swap-build-resource', () => {
     expect(resource.inUsdValue).toBeNull();
     expect(resource.outUsdValue).toBeNull();
     expect(resource.priceImpactPct).toBeNull();
+  });
+
+  it('hydrates an input-side fee from the input token', async () => {
+    const resource = await decorate(
+      { ...build(), salmonFee: { amount: '500000', mint: USDC, side: 'input', bps: 50 } },
+      {},
+      'k',
+      context
+    );
+    expect(resource.salmonFee).toEqual({
+      amount: '500000',
+      mint: USDC,
+      side: 'input',
+      bps: 50,
+      decimals: 6,
+      symbol: 'USDC',
+    });
   });
 
   it('keeps salmonFee null when no fee was applied', async () => {

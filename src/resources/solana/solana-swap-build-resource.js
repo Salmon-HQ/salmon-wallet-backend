@@ -79,7 +79,7 @@ module.exports = async (build, _include, _key, context) => {
     slippageBps: build.slippageBps,
     inUsdValue,
     outUsdValue,
-    salmonFee: feeLine(build.salmonFee, outputToken),
+    salmonFee: feeLine(build.salmonFee, build.salmonFee && tokenFor(build.salmonFee.mint)),
     routeFee: null,
   };
 };

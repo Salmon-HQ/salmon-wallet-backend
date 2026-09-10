@@ -35,6 +35,11 @@ const PPM_PER_BPS = 100;
 const ZEROEX_NATIVE_SOL = 'So11111111111111111111111111111111111111111';
 
 const toZeroexMint = (mint) => (mint === SOL_ADDRESS ? ZEROEX_NATIVE_SOL : mint);
+/** DEX labels (from `GET /enabled-sources`) to exclude from routing, e.g. `PumpFun,PumpSwap`. */
+const DISABLED_SOURCES = (process.env.ZEROEX_DISABLED_SOURCES || '')
+  .split(',')
+  .map((label) => label.trim())
+  .filter(Boolean);
 
 const headers = () => ({
   'Content-Type': 'application/json',
@@ -67,8 +72,9 @@ const upstreamReason = (data) => (data && (data.error || data.message)) || 'No r
  * @param {string} params.amount - input amount in base units.
  * @param {string} params.taker - user's public key (signer + fee payer).
  * @param {number} params.slippageBps
- * @param {{ recipient: string, bps: number }|null} params.fee - Salmon's fee, taken from the
- *   output token (`buy` side). `recipient` must already exist (token account, or wallet for SOL).
+ * @param {{ recipient: string, bps: number, side: 'buy'|'sell' }|null} params.fee - Salmon's
+ *   fee: `buy` takes it from the output token, `sell` from the input token. `recipient` must
+ *   already exist (token account, or wallet for native SOL).
  * @param {number} params.reserveBytes - bytes 0x must leave free for instructions we add.
  * @returns {Promise<{ instructions: TransactionInstruction[], lookupTableAddresses: string[],
  *   amountOut: string, minAmountOut: string, routePlan: Object[], zid: string }>}
@@ -96,9 +102,10 @@ const requestSwapInstructions = async ({
       ? {
           swap_fee_ppm: String(fee.bps * PPM_PER_BPS),
           swap_fee_recipient: fee.recipient,
-          swap_fee_side: 'buy',
+          swap_fee_side: fee.side,
         }
       : {}),
+    ...(DISABLED_SOURCES.length > 0 ? { disabled_sources: DISABLED_SOURCES } : {}),
   };
 
   return withRetry(
