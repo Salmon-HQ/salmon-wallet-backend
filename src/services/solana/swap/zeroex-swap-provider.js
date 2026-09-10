@@ -18,12 +18,23 @@ const {
   withRetry,
   rateLimiter,
 } = require('../../../infrastructure/rate-limiting/zeroex-rate-limiter');
-const { SolanaSwapNoRouteError } = require('./solana-swap-errors');
+const { SOL_ADDRESS } = require('../../../constants/solana-constants');
+const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
 
 const ZEROEX_API_URL = process.env.ZEROEX_API_URL || 'https://api.0x.org/solana';
 const REQUEST_TIMEOUT = 10000;
 /** 0x fees are parts per million; 1 bps = 100 ppm. */
 const PPM_PER_BPS = 100;
+/**
+ * 0x's sentinel for NATIVE SOL. Probed live 2026-09-10: with `…111` the
+ * user's lamports move directly (no WSOL account for the user, fee to a
+ * wallet address works); with the WSOL mint `…112` 0x creates and fills the
+ * user's WSOL token account instead. The public contract keeps `SOL_ADDRESS`
+ * (`…112`), so it is translated at this boundary only.
+ */
+const ZEROEX_NATIVE_SOL = 'So11111111111111111111111111111111111111111';
+
+const toZeroexMint = (mint) => (mint === SOL_ADDRESS ? ZEROEX_NATIVE_SOL : mint);
 
 const headers = () => ({
   'Content-Type': 'application/json',
@@ -75,8 +86,8 @@ const requestSwapInstructions = async ({
   await rateLimiter.waitAndConsume();
 
   const body = {
-    token_in: inputMint,
-    token_out: outputMint,
+    token_in: toZeroexMint(inputMint),
+    token_out: toZeroexMint(outputMint),
     amount_in: Number(amount),
     taker,
     slippage_bps: slippageBps,
@@ -99,9 +110,20 @@ const requestSwapInstructions = async ({
           headers: headers(),
         }));
       } catch (error) {
-        if (error.response?.status === 400) {
+        const status = error.response?.status;
+        // 0x answers 400 for a malformed request and 422 for a pair/amount it
+        // cannot serve (probed: `{ code: 'TOKEN_NOT_FOUND', error: 'Token not found' }`).
+        // Either way the caller's input has no route on this provider.
+        if (status === 400 || status === 422) {
           console.warn('0x swap-instructions rejected the request:', error.response.data);
           throw new SolanaSwapNoRouteError(upstreamReason(error.response.data));
+        }
+        // 0x screens the taker against OFAC/EU/UK/UN lists itself and answers
+        // 403 TAKER_NOT_AUTHORIZED_FOR_TRADE (documented for EVM; Solana
+        // unverified). Same meaning as spec 011's wallet screening → same code.
+        if (status === 403) {
+          console.warn('0x refused the taker:', error.response.data);
+          throw new SolanaSwapError(upstreamReason(error.response.data), 403, 'wallet_restricted');
         }
         throw error;
       }
@@ -116,7 +138,16 @@ const requestSwapInstructions = async ({
       };
     },
     { operationName: `0x swap-instructions (${inputMint} → ${outputMint})` }
-  );
+  ).catch((error) => {
+    if (error.response?.status === 429) {
+      throw new SolanaSwapError(
+        '0x rate limit exceeded; retry shortly',
+        503,
+        'upstream_rate_limited'
+      );
+    }
+    throw error;
+  });
 };
 
-module.exports = { requestSwapInstructions, PPM_PER_BPS };
+module.exports = { requestSwapInstructions, PPM_PER_BPS, ZEROEX_NATIVE_SOL };

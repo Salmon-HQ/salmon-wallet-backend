@@ -601,6 +601,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: "`wallet_restricted` — the provider's sanctions screening refused the taker"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: "`no_route` — the provider's own reason travels in `error_description`"
           content:

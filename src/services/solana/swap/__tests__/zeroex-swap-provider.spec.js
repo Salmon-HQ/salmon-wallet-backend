@@ -8,7 +8,7 @@ jest.mock('../../../../infrastructure/rate-limiting/zeroex-rate-limiter', () => 
 
 const http = require('axios');
 const { PublicKey } = require('@solana/web3.js');
-const { requestSwapInstructions } = require('../zeroex-swap-provider');
+const { requestSwapInstructions, ZEROEX_NATIVE_SOL } = require('../zeroex-swap-provider');
 const { SolanaSwapNoRouteError } = require('../solana-swap-errors');
 
 const TAKER = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
@@ -70,7 +70,7 @@ describe('zeroex-swap-provider', () => {
     expect(url).toMatch(/\/swap-instructions$/);
     expect(body).toEqual({
       token_in: USDC,
-      token_out: SOL,
+      token_out: ZEROEX_NATIVE_SOL, // SOL_ADDRESS (WSOL mint) → 0x native-SOL sentinel
       amount_in: 1000000,
       taker: TAKER,
       slippage_bps: 50,
@@ -131,6 +131,63 @@ describe('zeroex-swap-provider', () => {
       errorCode: 'no_route',
       message: 'insufficient liquidity',
     });
+  });
+
+  it('maps a 0x 422 (TOKEN_NOT_FOUND) onto 404 no_route as well', async () => {
+    http.post.mockRejectedValue({
+      response: { status: 422, data: { code: 'TOKEN_NOT_FOUND', error: 'Token not found' } },
+    });
+
+    await expect(
+      requestSwapInstructions({
+        inputMint: USDC,
+        outputMint: SOL,
+        amount: '1',
+        taker: TAKER,
+        slippageBps: 50,
+        fee: null,
+        reserveBytes: 0,
+      })
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'no_route', message: 'Token not found' });
+  });
+
+  it('maps a 0x 403 (taker screened) onto 403 wallet_restricted', async () => {
+    http.post.mockRejectedValue({
+      response: {
+        status: 403,
+        data: { code: 'TAKER_NOT_AUTHORIZED_FOR_TRADE', error: 'Taker not authorized' },
+      },
+    });
+
+    await expect(
+      requestSwapInstructions({
+        inputMint: USDC,
+        outputMint: SOL,
+        amount: '1',
+        taker: TAKER,
+        slippageBps: 50,
+        fee: null,
+        reserveBytes: 0,
+      })
+    ).rejects.toMatchObject({ statusCode: 403, errorCode: 'wallet_restricted' });
+  });
+
+  it('answers 503 upstream_rate_limited when 0x keeps returning 429', async () => {
+    http.post.mockRejectedValue({
+      response: { status: 429, data: { message: 'Rate limit exceeded.' } },
+    });
+
+    await expect(
+      requestSwapInstructions({
+        inputMint: USDC,
+        outputMint: SOL,
+        amount: '1',
+        taker: TAKER,
+        slippageBps: 50,
+        fee: null,
+        reserveBytes: 0,
+      })
+    ).rejects.toMatchObject({ statusCode: 503, errorCode: 'upstream_rate_limited' });
   });
 
   it('lets a 0x 5xx/401 propagate untouched (our fault, not the caller)', async () => {
