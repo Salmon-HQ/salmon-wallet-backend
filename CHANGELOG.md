@@ -2,6 +2,10 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## Unreleased
+
+- **Breaking**: removed `GET /v1/solana-{env}/ft/swap/order` and `POST /v1/solana-{env}/ft/swap/execute` (Jupiter Ultra, deprecated upstream). `/execute` was the last endpoint that accepted a signed transaction; the backend now enforces in CI that it never receives signed bytes (signing boundary). `/ft/verified` and `/ft/search` are unchanged. The `exchange` capability section (Bridge, removed in 0.16.0) is gone from `/v1/networks`.
+
 ## 0.17.0 — 2026-09-10
 
 - Solana transaction history: every RPC reader (Triton JSON-RPC and the bare-RPC fallback) now opts into `maxSupportedTransactionVersion: 1`, so pages containing a v1 / 4096-byte transaction (SIMD-0296) are read instead of failing with `-32015`. Response shape unchanged: v1 carries every account inline and `meta.fee` already includes the priority fee. `@solana/web3.js` is pinned to `1.99.0-beta.0` (first 1.x that accepts `version: 1` in a parsed response; read-only, the backend never builds v1).

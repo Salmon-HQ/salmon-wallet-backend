@@ -27,8 +27,6 @@ These rules apply to Solana service code only.
   - FT-oriented read flows and token fetch orchestration
 - `jupiter-token-service.js`
   - Jupiter token catalog/search wrapper
-- `solana-ft-swap-service.js`
-  - Jupiter swap order/execute flow
 - `solana-nft-service.js`
   - NFT read flows
 - `burn-service.js`
@@ -36,7 +34,7 @@ These rules apply to Solana service code only.
 - `solana-address-service.js`
   - address validation and normalization helpers
 - `jupiter-service.js`
-  - Jupiter HTTP client used by token and swap services
+  - Jupiter Price v3 client used by token and balance enrichment
 - `address-lookup-table-service.js`
   - resolves Solana address lookup tables for transaction parsing
 - `solana-nft-burn-errors.js`
@@ -53,7 +51,7 @@ These rules apply to Solana service code only.
 
 - Transaction history/detail must keep frontend-compatible shape.
 - Burn flows are sensitive to asset type routing. Verify standard NFT, programmable NFT, and compressed NFT paths as applicable.
-- Swap flows must preserve quote/order/execute expectations used by frontend clients.
+- Swap is quote → unsigned transaction only (root `AGENTS.md` "Signing boundary"); never accept signed bytes or broadcast.
 
 ## Testing rules
 

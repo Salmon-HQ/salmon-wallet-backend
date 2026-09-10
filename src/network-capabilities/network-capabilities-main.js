@@ -1,7 +1,7 @@
 /**
  * Network-capability matrix for the `main` stage. Declares which
  * networks are enabled and which UI sections / features are active per
- * blockchain (overview, token_detail, collectibles, swap, exchange,
+ * blockchain (overview, token_detail, collectibles, swap,
  * transactions).
  *
  * Stage selection happens in `src/services/shared/network-capabilities-service.js`,
@@ -13,7 +13,7 @@
  * feature only in `main`) is a one-file edit, not a refactor.
  */
 
-const { BITCOIN, SOLANA } = require('../constants/blockchains');
+const { SOLANA } = require('../constants/blockchains');
 
 module.exports = {
   enable: [
@@ -48,9 +48,6 @@ module.exports = {
     },
     swap: {
       active: [SOLANA],
-    },
-    exchange: {
-      active: [SOLANA, BITCOIN],
     },
     transactions: {
       active: '*',

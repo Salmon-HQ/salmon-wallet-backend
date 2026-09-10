@@ -261,11 +261,8 @@ HELIUS_API_KEY=your-helius-api-key
 # Caps Helius fallback usage when Triton fails (req/s, default 8)
 SOLANA_FALLBACK_MAX_RPS=8
 
-# Required for Jupiter tests
-JUPITER_SWAP_URL=https://api.jup.ag/swap/v2
+# Required for Jupiter price / token-catalog tests
 JUPITER_API_KEY=your-api-key-here
-JUPITER_SWAP_REFERRAL_ACCOUNT=your-referral-account
-JUPITER_SWAP_REFERRAL_FEE_BPS=50
 
 # Optional
 SOLANA_FEE_ACCOUNT=9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3

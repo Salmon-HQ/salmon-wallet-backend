@@ -59,9 +59,7 @@ describe('network-catalog-service', () => {
     networkCapabilitiesService.get.mockReturnValue({
       'ethereum-mainnet': {
         enable: false,
-        sections: {
-          exchange: { active: false },
-        },
+        sections: {},
       },
     });
 
@@ -69,9 +67,7 @@ describe('network-catalog-service', () => {
       expect.objectContaining({
         id: 'ethereum-mainnet',
         enabled: false,
-        sections: {
-          exchange: { active: false },
-        },
+        sections: {},
       })
     );
   });

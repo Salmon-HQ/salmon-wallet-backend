@@ -15,11 +15,11 @@ description: RPC, provider, and caching architecture of this multichain (Solana-
 
 ## Jupiter — REST, not the SDK
 
-`@jup-ag/api` is in package.json but **unused** (0 imports). Jupiter is consumed over REST with axios against `JUPITER_PRICE_URL`/`JUPITER_SWAP_URL`:
+`@jup-ag/api` is in package.json but **unused** (0 imports). Jupiter is consumed over REST with axios against `JUPITER_PRICE_URL` and the Tokens v2 endpoints:
 
 - `src/services/solana/jupiter-service.js` — Price v3 with rate limiting + Redis cache.
 - `src/infrastructure/rate-limiting/jupiter-rate-limiter.js` — respect it; Jupiter bans on bursts.
-- Swap: `solana-ft-swap-service.js`; Jupiter transaction parser in `src/services/solana/parser/parsers/jupiter.js`.
+- Jupiter transaction parser in `src/services/solana/parser/parsers/jupiter.js` (reads on-chain history; no swap is offered through Jupiter any more — see "Signing boundary" in the root `AGENTS.md`).
 
 ## Cache layers — pick the right one
 
