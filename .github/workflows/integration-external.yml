@@ -59,12 +59,12 @@ jobs:
           REDIS_HOST: localhost
           # Public endpoints — plain values, not secrets.
           JUPITER_PRICE_URL: https://api.jup.ag/price/v3
-          JUPITER_SWAP_URL: https://api.jup.ag/ultra/v1
           # Provider credentials — repository secrets; empty until loaded,
           # which makes the corresponding suites probe-skip.
           HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
           JUPITER_API_KEY: ${{ secrets.JUPITER_API_KEY }}
           TRITON_RPC_URL: ${{ secrets.TRITON_RPC_URL }}
           TRITON_API_TOKEN: ${{ secrets.TRITON_API_TOKEN }}
-          JUPITER_SWAP_REFERRAL_FEE_BPS: ${{ secrets.JUPITER_SWAP_REFERRAL_FEE_BPS }}
-          JUPITER_SWAP_REFERRAL_ACCOUNT: ${{ secrets.JUPITER_SWAP_REFERRAL_ACCOUNT }}
+          ZEROEX_API_KEY: ${{ secrets.ZEROEX_API_KEY }}
+          SWAP_FEE_BPS: ${{ secrets.SWAP_FEE_BPS }}
+          SWAP_FEE_ACCOUNT_OWNER: ${{ secrets.SWAP_FEE_ACCOUNT_OWNER }}
