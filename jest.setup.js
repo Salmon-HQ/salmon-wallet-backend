@@ -13,4 +13,3 @@ require('dotenv').config({ quiet: true });
 
 process.env.HELIUS_API_KEY ||= 'test-helius-key';
 process.env.JUPITER_PRICE_URL ||= 'https://jupiter.test/price/v3';
-process.env.JUPITER_SWAP_URL ||= 'https://jupiter.test/ultra/v1';

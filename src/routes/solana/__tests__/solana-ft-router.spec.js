@@ -15,6 +15,7 @@ jest.mock('../../../../packages/middleware', () => ({
   cacheControl: jest.fn((value) => ({ type: 'cacheControl', value })),
 }));
 jest.mock('../../../controllers/solana/solana-ft-controller', () => ({
+  build: 'build',
   verified: 'verified',
   search: 'search',
 }));
@@ -34,9 +35,10 @@ describe('solana-ft-router', () => {
     expect(paths).toEqual(expect.arrayContaining(['/verified', '/search']));
   });
 
-  it('registers no swap order/execute routes (signing boundary)', () => {
+  it('registers the swap build as a GET and no execute route (signing boundary)', () => {
     require('../solana-ft-router');
 
+    expect(mockRouter.get).toHaveBeenCalledWith('/swap/build', { type: 'safe', handler: 'build' });
     expect(mockRouter.get).not.toHaveBeenCalledWith('/swap/order', expect.anything());
     expect(mockRouter.post).not.toHaveBeenCalled();
   });

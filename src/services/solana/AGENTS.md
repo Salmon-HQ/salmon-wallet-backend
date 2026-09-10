@@ -27,6 +27,7 @@ These rules apply to Solana service code only.
   - FT-oriented read flows and token fetch orchestration
 - `jupiter-token-service.js`
   - Jupiter token catalog/search wrapper
+- `swap/` — `solana-swap-build-service.js` (quote → unsigned v0 tx: fee recipient, ALTs, blockhash, priority fee, fee check), `zeroex-swap-provider.js` (0x wire format), `solana-swap-errors.js`
 - `solana-nft-service.js`
   - NFT read flows
 - `burn-service.js`

@@ -543,6 +543,85 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
 
+  /v1/solana-{env}/ft/swap/build:
+    get:
+      tags: [solana]
+      operationId: buildSolanaSwap
+      summary: Build an UNSIGNED swap transaction (0x)
+      description: |
+        `solana-swap-build` contract. Asks the 0x Solana Swap API for swap
+        instructions with Salmon's fee (server-configured, never from the
+        request), assembles a v0 transaction with the caller as fee payer and
+        returns it unsigned. The wallet signs and broadcasts on the device;
+        there is no execute/relay endpoint (root AGENTS.md "Signing
+        boundary"). `solana-mainnet` only. Not cached; rebuild after `expiresAt`.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - name: inputMint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: outputMint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: publicKey
+          in: query
+          required: true
+          description: Wallet public key that will sign the swap (taker + fee payer)
+          schema:
+            type: string
+        - name: amount
+          in: query
+          description: Input amount in base units (one of `amount` / `uiAmount` is required)
+          schema:
+            type: string
+        - name: uiAmount
+          in: query
+          description: Human-readable input amount; decimals resolved server-side
+          schema:
+            type: string
+        - name: slippageBps
+          in: query
+          description: 0–10000, default 50
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Unsigned swap transaction plus quote details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapBuild'
+        '400':
+          description: '`missing_parameter` / `invalid_parameter` / `unknown_mint`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "`no_route` — the provider's own reason travels in `error_description`"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: '`provider_fee_mismatch` — the built transaction does not carry the configured fee'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: "`fee_account_missing` — Salmon's fee token account for the output mint does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
   /v1/solana-{env}/nft:
     get:
       tags: [solana]
@@ -1270,6 +1349,99 @@ components:
           type: string
           description: Present on output legs
       additionalProperties: true
+
+    SwapBuild:
+      type: object
+      description: |
+        `src/resources/solana/solana-swap-build-resource.js`. Amounts are
+        base-unit strings. Provider attribution is data: render
+        `providerDisplayName` / `attribution`, no provider-specific branches.
+      properties:
+        provider:
+          type: string
+          enum: ['0x']
+        providerDisplayName:
+          type: string
+        attribution:
+          type: string
+        providerRequestId:
+          type: string
+          description: Provider-side request id (0x `zid`) for support
+        transaction:
+          type: string
+          description: Base64-encoded v0 VersionedTransaction, no signatures, fee payer = `publicKey`
+        expiresAt:
+          type: string
+          format: date-time
+          description: Request a fresh build after this instant (blockhash lifetime)
+        input:
+          $ref: '#/components/schemas/SwapBuildLeg'
+        output:
+          allOf:
+            - $ref: '#/components/schemas/SwapBuildLeg'
+            - type: object
+              properties:
+                minAmount:
+                  type: string
+                  description: Minimum output after slippage and fees
+        route:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              percent:
+                type: number
+                description: Share of the remaining amount routed through this leg
+        priceImpactPct:
+          type: number
+          nullable: true
+          description: USD value lost input→output, from Jupiter Price v3; null when a price is unknown
+        slippageBps:
+          type: integer
+        inUsdValue:
+          type: number
+          nullable: true
+        outUsdValue:
+          type: number
+          nullable: true
+        salmonFee:
+          type: object
+          nullable: true
+          description: Salmon's fee, taken from the output token (estimated from `amount` and the configured bps)
+          properties:
+            amount:
+              type: string
+            mint:
+              type: string
+            bps:
+              type: integer
+            decimals:
+              type: integer
+            symbol:
+              type: string
+        routeFee:
+          type: object
+          nullable: true
+          description: Always null for 0x (no separate route fee)
+      required: [provider, providerDisplayName, attribution, transaction, expiresAt, input, output, route, slippageBps]
+
+    SwapBuildLeg:
+      type: object
+      properties:
+        mint:
+          type: string
+        amount:
+          type: string
+        decimals:
+          type: integer
+        symbol:
+          type: string
+        name:
+          type: string
+        logo:
+          type: string
 
     UnsignedTransactionResponse:
       description: |

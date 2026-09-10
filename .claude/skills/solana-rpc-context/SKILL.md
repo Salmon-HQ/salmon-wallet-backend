@@ -19,6 +19,7 @@ description: RPC, provider, and caching architecture of this multichain (Solana-
 
 - `src/services/solana/jupiter-service.js` — Price v3 with rate limiting + Redis cache.
 - `src/infrastructure/rate-limiting/jupiter-rate-limiter.js` — respect it; Jupiter bans on bursts.
+- Swap: `src/services/solana/swap/` — 0x Solana Swap API (`POST /solana/swap-instructions`, 5 RPS free tier, `zeroex-rate-limiter`) returns instructions; the build service compiles the unsigned v0 tx (ALTs + blockhash from `locals.network.config.nodeUrl`).
 - Jupiter transaction parser in `src/services/solana/parser/parsers/jupiter.js` (reads on-chain history; no swap is offered through Jupiter any more — see "Signing boundary" in the root `AGENTS.md`).
 
 ## Cache layers — pick the right one
