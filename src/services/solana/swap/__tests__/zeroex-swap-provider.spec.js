@@ -129,14 +129,39 @@ describe('zeroex-swap-provider', () => {
       constructor: SolanaSwapNoRouteError,
       statusCode: 404,
       errorCode: 'no_route',
-      message: 'insufficient liquidity',
+      message: 'insufficient liquidity (NO_ROUTE)',
     });
   });
 
-  it('maps a 0x 422 (TOKEN_NOT_FOUND) onto 404 no_route as well', async () => {
-    http.post.mockRejectedValue({
-      response: { status: 422, data: { code: 'TOKEN_NOT_FOUND', error: 'Token not found' } },
-    });
+  it.each([
+    [422, 'TOKEN_NOT_FOUND', 'Token not found', 422, 'token_not_supported'],
+    [
+      400,
+      'TOKEN_HAS_UNSUPPORTED_EXTENSIONS',
+      'Token has unsupported extensions',
+      422,
+      'token_not_supported',
+    ],
+    [400, 'NULL_AMOUNT_IN', 'Amount in should be strictly positive', 400, 'invalid_parameter'],
+    [
+      400,
+      'INPUT_OUTPUT_SAME_TOKEN',
+      'Input and output tokens cannot be the same',
+      400,
+      'invalid_parameter',
+    ],
+    [400, 'ALL_SOURCES_DISABLED', 'All sources are disabled', 500, 'swap_misconfigured'],
+    [
+      400,
+      'INCOMPLETE_SWAP_FEE',
+      'swap_fee_ppm and swap_fee_recipient must both be provided',
+      500,
+      'swap_misconfigured',
+    ],
+    [400, 'INSUFFICIENT_LIQUIDITY', 'Not enough liquidity', 404, 'no_route'],
+  ])('maps 0x %i %s onto %i %s', async (status, code, error, expectedStatus, expectedCode) => {
+    http.post.mockRejectedValue({ response: { status, data: { code, error, zid: '0x1' } } });
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       requestSwapInstructions({
@@ -148,7 +173,12 @@ describe('zeroex-swap-provider', () => {
         fee: null,
         reserveBytes: 0,
       })
-    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'no_route', message: 'Token not found' });
+    ).rejects.toMatchObject({
+      statusCode: expectedStatus,
+      errorCode: expectedCode,
+      message: `${error} (${code})`,
+    });
+    consoleError.mockRestore();
   });
 
   it('maps a 0x 403 (taker screened) onto 403 wallet_restricted', async () => {

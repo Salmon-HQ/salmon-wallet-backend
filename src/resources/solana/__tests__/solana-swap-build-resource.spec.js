@@ -24,6 +24,7 @@ const build = () => ({
   amountOut: '990000000',
   minAmountOut: '980000000',
   slippageBps: 50,
+  priorityFeeMicroLamports: 1000,
   routePlan: [
     { dex_label: 'Raydium', ppb: 600000000 },
     { dex_label: 'Orca', ppb: 1000000000 },
@@ -78,6 +79,7 @@ describe('solana-swap-build-resource', () => {
       ],
       priceImpactPct: 1,
       slippageBps: 50,
+      priorityFeeMicroLamports: 1000,
       inUsdValue: 100,
       outUsdValue: 99,
       salmonFee: {

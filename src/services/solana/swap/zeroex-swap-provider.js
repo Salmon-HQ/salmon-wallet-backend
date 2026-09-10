@@ -64,6 +64,50 @@ const toInstruction = (raw) =>
 const upstreamReason = (data) => (data && (data.error || data.message)) || 'No route available';
 
 /**
+ * 0x error `code`s observed live (2026-09-10) and their public mapping.
+ * Anything else on a 4xx is "this provider cannot serve this swap".
+ */
+const ZEROEX_ERROR_MAP = {
+  // Caller input the controller should already have refused.
+  NULL_AMOUNT_IN: [400, 'invalid_parameter'],
+  INVALID_PUBKEY: [400, 'invalid_parameter'],
+  INPUT_OUTPUT_SAME_TOKEN: [400, 'invalid_parameter'],
+  INVALID_SLIPPAGE: [400, 'invalid_parameter'],
+  INVALID_REQUEST_BODY: [400, 'invalid_parameter'],
+  // The pair itself: unknown mint, Token-2022 with transfer fee/hook, or a
+  // token 0x will not trade for legal reasons.
+  TOKEN_NOT_FOUND: [422, 'token_not_supported'],
+  TOKEN_HAS_UNSUPPORTED_EXTENSIONS: [422, 'token_not_supported'],
+  BUY_TOKEN_NOT_AUTHORIZED_FOR_TRADE: [422, 'token_not_supported'],
+  SELL_TOKEN_NOT_AUTHORIZED_FOR_TRADE: [422, 'token_not_supported'],
+  // 0x's own sanctions screening of the taker.
+  TAKER_NOT_AUTHORIZED_FOR_TRADE: [403, 'wallet_restricted'],
+  // Our configuration (fee, disabled sources), never the caller's fault.
+  INVALID_SOURCE: [500, 'swap_misconfigured'],
+  ALL_SOURCES_DISABLED: [500, 'swap_misconfigured'],
+  INVALID_SWAP_FEE_PPM: [500, 'swap_misconfigured'],
+  INCOMPLETE_SWAP_FEE: [500, 'swap_misconfigured'],
+  INVALID_SWAP_FEE_RECIPIENT: [500, 'swap_misconfigured'],
+};
+
+/** Translate a 0x 4xx into the public error envelope; the 0x code rides in the message. */
+const toSwapError = (status, data) => {
+  const code = data?.code;
+  const reason = code ? `${upstreamReason(data)} (${code})` : upstreamReason(data);
+  const mapped = ZEROEX_ERROR_MAP[code];
+  if (mapped) {
+    if (mapped[0] === 500) {
+      console.error('[SWAP_MISCONFIGURED] 0x rejected our own request parameters', data);
+    }
+    return new SolanaSwapError(reason, mapped[0], mapped[1]);
+  }
+  if (status === 403) {
+    return new SolanaSwapError(reason, 403, 'wallet_restricted');
+  }
+  return new SolanaSwapNoRouteError(reason);
+};
+
+/**
  * Request swap instructions from 0x.
  *
  * @param {Object} params
@@ -78,7 +122,7 @@ const upstreamReason = (data) => (data && (data.error || data.message)) || 'No r
  * @param {number} params.reserveBytes - bytes 0x must leave free for instructions we add.
  * @returns {Promise<{ instructions: TransactionInstruction[], lookupTableAddresses: string[],
  *   amountOut: string, minAmountOut: string, routePlan: Object[], zid: string }>}
- * @throws {SolanaSwapNoRouteError} on a 0x 400 (no route / unsupported pair / bad amount).
+ * @throws {SolanaSwapError} on a 0x 4xx, mapped per `ZEROEX_ERROR_MAP`.
  */
 const requestSwapInstructions = async ({
   inputMint,
@@ -118,19 +162,13 @@ const requestSwapInstructions = async ({
         }));
       } catch (error) {
         const status = error.response?.status;
-        // 0x answers 400 for a malformed request and 422 for a pair/amount it
-        // cannot serve (probed: `{ code: 'TOKEN_NOT_FOUND', error: 'Token not found' }`).
-        // Either way the caller's input has no route on this provider.
-        if (status === 400 || status === 422) {
+        // 0x answers 4xx with `{ code, error, zid }`: 400 for bad input or
+        // bad integrator config, 422 for a pair it cannot serve, 403 when its
+        // own sanctions screening refuses the taker. `ZEROEX_ERROR_MAP` turns
+        // the code into our envelope; unknown codes mean "no route here".
+        if (status === 400 || status === 403 || status === 422) {
           console.warn('0x swap-instructions rejected the request:', error.response.data);
-          throw new SolanaSwapNoRouteError(upstreamReason(error.response.data));
-        }
-        // 0x screens the taker against OFAC/EU/UK/UN lists itself and answers
-        // 403 TAKER_NOT_AUTHORIZED_FOR_TRADE (documented for EVM; Solana
-        // unverified). Same meaning as spec 011's wallet screening → same code.
-        if (status === 403) {
-          console.warn('0x refused the taker:', error.response.data);
-          throw new SolanaSwapError(upstreamReason(error.response.data), 403, 'wallet_restricted');
+          throw toSwapError(status, error.response.data);
         }
         throw error;
       }
@@ -157,4 +195,4 @@ const requestSwapInstructions = async ({
   });
 };
 
-module.exports = { requestSwapInstructions, PPM_PER_BPS, ZEROEX_NATIVE_SOL };
+module.exports = { requestSwapInstructions, PPM_PER_BPS, ZEROEX_NATIVE_SOL, ZEROEX_ERROR_MAP };

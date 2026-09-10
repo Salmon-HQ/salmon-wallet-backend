@@ -608,7 +608,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
-          description: "`no_route` — the provider's own reason travels in `error_description`"
+          description: "`no_route` — the provider cannot route this pair/amount; its own reason travels in `error_description` with the 0x code in parentheses"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`token_not_supported` — unknown mint, Token-2022 with transfer fee/hook, or a token 0x will not trade'
           content:
             application/json:
               schema:
@@ -620,7 +626,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '500':
-          $ref: '#/components/responses/ServerError'
+          description: '`server_error`, or `swap_misconfigured` when 0x rejected Salmon-side parameters (fee, disabled sources)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /v1/solana-{env}/nft:
     get:
@@ -1400,6 +1410,9 @@ components:
           description: USD value lost input→output, from Jupiter Price v3; null when a price is unknown
         slippageBps:
           type: integer
+        priorityFeeMicroLamports:
+          type: integer
+          description: Compute-unit price prepended to the transaction (network-derived p75, clamped 1000–50000; 0 when pinned off)
         inUsdValue:
           type: number
           nullable: true

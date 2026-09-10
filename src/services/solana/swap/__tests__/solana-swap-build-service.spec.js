@@ -4,6 +4,7 @@ const mockConnection = {
   getAccountInfo: jest.fn(),
   getMultipleAccountsInfo: jest.fn(),
   getLatestBlockhash: jest.fn(),
+  getRecentPrioritizationFees: jest.fn(),
 };
 jest.mock('@solana/web3.js', () => {
   const actual = jest.requireActual('@solana/web3.js');
@@ -71,7 +72,15 @@ describe('solana-swap-build-service', () => {
     delete process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS;
     mockConnection.getLatestBlockhash.mockResolvedValue({ blockhash: BLOCKHASH });
     mockConnection.getMultipleAccountsInfo.mockResolvedValue([]);
+    mockConnection.getRecentPrioritizationFees.mockResolvedValue([]);
   });
+
+  const compiledPrograms = (result) => {
+    const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
+    return tx.message.compiledInstructions.map((ix) =>
+      tx.message.staticAccountKeys[ix.programIdIndex].toBase58()
+    );
+  };
 
   it('returns an UNSIGNED v0 transaction paid by the taker, no fee when none is configured', async () => {
     zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction()]));
@@ -79,13 +88,18 @@ describe('solana-swap-build-service', () => {
     const result = await service.build(params(), locals);
 
     expect(zeroex.requestSwapInstructions).toHaveBeenCalledWith(
-      expect.objectContaining({ fee: null, reserveBytes: 0, taker: TAKER })
+      expect.objectContaining({ fee: null, reserveBytes: 52, taker: TAKER })
     );
     const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
     expect(tx.version).toBe(0);
     expect(tx.signatures.every((sig) => sig.every((byte) => byte === 0))).toBe(true);
     expect(tx.message.staticAccountKeys[0].toBase58()).toBe(TAKER);
-    expect(tx.message.compiledInstructions).toHaveLength(1);
+    // compute-unit price (dynamic, min 1000 with no recent fees) + the swap
+    expect(compiledPrograms(result)).toEqual([
+      'ComputeBudget111111111111111111111111111111',
+      SETTLER,
+    ]);
+    expect(result.priorityFeeMicroLamports).toBe(1000);
     expect(tx.message.recentBlockhash).toBe(BLOCKHASH);
     expect(result).toMatchObject({
       provider: service.PROVIDER,
@@ -185,20 +199,48 @@ describe('solana-swap-build-service', () => {
     });
   });
 
-  it('prepends a compute-unit price instruction and reserves bytes when a priority fee is set', async () => {
-    process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS = '1000';
-    zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction()]));
+  it('follows the network: p75 of recent fees on the written accounts, clamped to [1000, 50000]', async () => {
+    zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction([USDC])]));
+    mockConnection.getRecentPrioritizationFees.mockResolvedValue(
+      [0, 500, 2000, 8000, 100000].map((prioritizationFee) => ({ slot: 1, prioritizationFee }))
+    );
 
     const result = await service.build(params(), locals);
 
-    expect(zeroex.requestSwapInstructions).toHaveBeenCalledWith(
-      expect.objectContaining({ reserveBytes: 52 })
-    );
-    const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
-    expect(tx.message.compiledInstructions).toHaveLength(2);
-    const budgetProgram =
-      tx.message.staticAccountKeys[tx.message.compiledInstructions[0].programIdIndex].toBase58();
-    expect(budgetProgram).toBe('ComputeBudget111111111111111111111111111111');
+    const [{ lockedWritableAccounts }] = mockConnection.getRecentPrioritizationFees.mock.calls[0];
+    expect(lockedWritableAccounts.map((k) => k.toBase58())).toEqual([TAKER, USDC]);
+    // non-zero fees sorted: 500, 2000, 8000, 100000 → p75 index floor(0.75*3)=2 → 8000
+    expect(result.priorityFeeMicroLamports).toBe(8000);
+
+    mockConnection.getRecentPrioritizationFees.mockResolvedValue([
+      { slot: 1, prioritizationFee: 9e6 },
+    ]);
+    expect((await service.build(params(), locals)).priorityFeeMicroLamports).toBe(50000);
+  });
+
+  it('pins the priority fee to SWAP_PRIORITY_FEE_MICROLAMPORTS and drops the instruction at 0', async () => {
+    zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction()]));
+
+    process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS = '777';
+    let result = await service.build(params(), locals);
+    expect(result.priorityFeeMicroLamports).toBe(777);
+    expect(mockConnection.getRecentPrioritizationFees).not.toHaveBeenCalled();
+
+    process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS = '0';
+    result = await service.build(params(), locals);
+    expect(result.priorityFeeMicroLamports).toBe(0);
+    expect(compiledPrograms(result)).toEqual([SETTLER]);
+  });
+
+  it('falls back to the minimum priority fee when the RPC read fails', async () => {
+    zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction()]));
+    mockConnection.getRecentPrioritizationFees.mockRejectedValue(new Error('rpc down'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = await service.build(params(), locals);
+
+    expect(result.priorityFeeMicroLamports).toBe(1000);
+    warn.mockRestore();
   });
 
   it('fails loudly when a lookup table the provider named is not on chain', async () => {
