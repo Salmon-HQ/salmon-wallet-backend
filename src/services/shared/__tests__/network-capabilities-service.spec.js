@@ -90,3 +90,60 @@ describe('network-capabilities-service', () => {
     );
   });
 });
+
+describe('network-capabilities-service powerups', () => {
+  let consoleErrorSpy;
+
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    process.env.NODE_ENV = 'local';
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+    process.env.NODE_ENV = ORIGINAL_NODE_ENV;
+  });
+
+  const stage = (powerups) =>
+    jest.doMock(
+      '../../../network-capabilities/network-capabilities-local',
+      () => ({ enable: ['solana-mainnet'], powerups }),
+      { virtual: true }
+    );
+
+  test('returns the validated powerups block and keeps it out of the network map', () => {
+    stage({ swap: { enabled: true }, stake: { enabled: false, reason: 'maintenance' } });
+
+    const service = loadService();
+
+    expect(service.getPowerups()).toEqual({
+      swap: { enabled: true },
+      stake: { enabled: false, reason: 'maintenance' },
+    });
+    expect(service.get()['solana-mainnet']).toEqual({ enable: true });
+  });
+
+  test('defaults to an empty block when the stage declares no powerups', () => {
+    stage(undefined);
+
+    expect(loadService().getPowerups()).toEqual({});
+  });
+
+  test.each([
+    ['an unknown reason', { swap: { enabled: false, reason: 'typo' } }],
+    ['a non-boolean enabled', { swap: { enabled: 'yes' } }],
+  ])('fails loudly on %s', (_label, powerups) => {
+    stage(powerups);
+
+    expect(loadService().getPowerups()).toBeUndefined();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid powerups config for swap')
+    );
+  });
+
+  test('returns undefined when the stage itself is misconfigured', () => {
+    process.env.NODE_ENV = 'staging';
+
+    expect(loadService().getPowerups()).toBeUndefined();
+  });
+});
