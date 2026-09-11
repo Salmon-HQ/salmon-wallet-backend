@@ -28,6 +28,17 @@ class PowerupProgramMismatchError extends PowerupError {
   }
 }
 
+/** The compiled message needs a signature besides the caller's; the wallet could never complete it. */
+class PowerupSignerMismatchError extends PowerupError {
+  constructor(id, requiredSignatures) {
+    super(
+      `Powerup ${id} built a transaction requiring ${requiredSignatures} signatures; only the caller may sign`,
+      502,
+      'provider_signer_mismatch'
+    );
+  }
+}
+
 /**
  * The simulation did not pass. A runtime rejection is the transaction's
  * fault (422 `simulation_failed`: the user must not pay to watch it fail); an
@@ -50,5 +61,6 @@ module.exports = {
   PowerupError,
   PowerupNotFoundError,
   PowerupProgramMismatchError,
+  PowerupSignerMismatchError,
   PowerupSimulationError,
 };

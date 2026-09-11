@@ -20,7 +20,8 @@
  *     errorCodes?: string[],                    // adapter-specific validation codes passed through as-is (400)
  *     providerProfile?: string,                 // the `profiles.js` row the adapter's upstream calls run under
  *     adapter?: {
- *       validate(query) → { params } | { error, error_description },   // codes: missing_parameter / invalid_parameter / one of errorCodes
+ *       validate(query) → { params } | { error, error_description },   // codes: missing_parameter / invalid_parameter / one of errorCodes;
+ *                                                                       // error_description reaches the client verbatim: never echo an upstream body or raw caller input
  *       build(params, { locals, connection }) → {
  *         instructions, lookupTableAddresses?,
  *         provider?: { id, displayName, attribution },               // data provider behind the build, if any

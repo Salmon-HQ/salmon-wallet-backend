@@ -34,6 +34,7 @@ const {
   PowerupError,
   PowerupNotFoundError,
   PowerupProgramMismatchError,
+  PowerupSignerMismatchError,
   PowerupSimulationError,
 } = require('./powerup-errors');
 
@@ -45,7 +46,8 @@ const {
  *   when the stage config is invalid
  */
 const resolve = (id, networkId) => {
-  const entry = POWERUPS[id];
+  // Own keys only: `__proto__` / `constructor` must never resolve to an entry.
+  const entry = Object.hasOwn(POWERUPS, id) ? POWERUPS[id] : undefined;
   if (!entry?.adapter || !powerupCatalog.isOffered(id, networkId)) {
     throw new PowerupNotFoundError(id, networkId);
   }
@@ -69,6 +71,20 @@ const assertDeclaredLookupTables = (id, entry, addresses) => {
       lookupTable: undeclared,
     });
     throw new PowerupProgramMismatchError(id, `lookup table ${undeclared}`);
+  }
+};
+
+/** The caller is the only signer: a second signature slot is a transaction the wallet cannot complete. */
+const assertSingleSigner = (id, requiredSignatures) => {
+  if (requiredSignatures !== 1) {
+    console.error(
+      '[POWERUP_SIGNER_MISMATCH] compiled message requires more than the payer signature',
+      {
+        powerup: id,
+        requiredSignatures,
+      }
+    );
+    throw new PowerupSignerMismatchError(id, requiredSignatures);
   }
 };
 
@@ -112,6 +128,7 @@ const build = async (id, query, locals) => {
     simulationFallback: false,
   });
   assertDeclaredPrograms(id, entry, built.programIds);
+  assertSingleSigner(id, built.requiredSignatures);
   if (built.simulation.err) {
     throw new PowerupSimulationError(built.simulation);
   }

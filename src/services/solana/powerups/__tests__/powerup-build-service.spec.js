@@ -235,6 +235,44 @@ describe('powerup-build-service', () => {
     expect(tx.message.staticAccountKeys.map((k) => k.toBase58())).not.toContain(OTHER);
   });
 
+  it('refuses a transaction that needs a signature besides the caller with 502 provider_signer_mismatch', async () => {
+    const cosigner = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
+    mockAdapter.build.mockResolvedValue({
+      instructions: [
+        new TransactionInstruction({
+          programId: new PublicKey(MEMO),
+          keys: [
+            { pubkey: new PublicKey(PAYER), isSigner: true, isWritable: true },
+            { pubkey: new PublicKey(cosigner), isSigner: true, isWritable: false },
+          ],
+          data: Buffer.from('hi'),
+        }),
+      ],
+      display: {},
+    });
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toMatchObject({
+      statusCode: 502,
+      errorCode: 'provider_signer_mismatch',
+    });
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('[POWERUP_SIGNER_MISMATCH]'),
+      expect.objectContaining({ powerup: 'fixture', requiredSignatures: 2 })
+    );
+    error.mockRestore();
+  });
+
+  it('never resolves a prototype key as a Powerup', async () => {
+    for (const id of ['__proto__', 'constructor', 'toString']) {
+      await expect(service.build(id, { publicKey: PAYER }, locals)).rejects.toMatchObject({
+        statusCode: 404,
+        errorCode: 'not_found',
+      });
+    }
+    expect(mockAdapter.build).not.toHaveBeenCalled();
+  });
+
   it('answers 422 simulation_failed with the runtime message instead of returning bytes', async () => {
     mockConnection.simulateTransaction.mockResolvedValue({
       value: { err: { InstructionError: [0, 'Custom'] }, logs: ['Program log: nope'] },
