@@ -6,6 +6,7 @@ const swapBuildService = require('../../services/solana/swap/solana-swap-build-s
 const decorateBatchToken = require('../../resources/solana/solana-ft-batch-resource');
 const decorateSwapBuild = require('../../resources/solana/solana-swap-build-resource');
 const { findInvalidAddressParam } = require('../../utils/solana-address');
+const powerupCatalog = require('../../services/solana/powerups/powerup-catalog-service');
 
 const BUILD_REQUIRED_PARAMS = ['inputMint', 'outputMint', 'publicKey'];
 const SWAP_NETWORK = 'solana-mainnet';
@@ -50,6 +51,14 @@ const build = async (req, res) => {
     return res.status(400).json({
       error: 'invalid_parameter',
       error_description: `Swap is available on ${SWAP_NETWORK} only`,
+    });
+  }
+  // The stage's Powerup switch is binding, not descriptive: an off Swap
+  // answers exactly what the catalog says (`community-powerups` contract).
+  if (!powerupCatalog.isOffered('swap', SWAP_NETWORK)) {
+    return res.status(404).json({
+      error: 'not_found',
+      error_description: `Powerup swap is not available on ${SWAP_NETWORK}`,
     });
   }
 

@@ -15,9 +15,13 @@ jest.mock('../../../services/solana/swap/solana-swap-build-service', () => ({
   resolveSlippage: jest.fn(),
 }));
 jest.mock('../../../resources/solana/solana-swap-build-resource', () => 'swap-build-resource');
+jest.mock('../../../services/solana/powerups/powerup-catalog-service', () => ({
+  isOffered: jest.fn(() => true),
+}));
 const controller = require('../solana-ft-controller');
 const swapBuildService = require('../../../services/solana/swap/solana-swap-build-service');
 const tokenService = require('../../../services/solana/solana-ft-service');
+const powerupCatalog = require('../../../services/solana/powerups/powerup-catalog-service');
 
 const createRes = () => ({
   locals: {
@@ -78,6 +82,21 @@ describe('solana-ft-controller', () => {
       swapBuildService.resolveSlippage.mockReturnValue({ slippageBps: 50 });
       swapBuildService.resolveAmount.mockResolvedValue({ amount: '5' });
       swapBuildService.build.mockResolvedValue({ transaction: 'AQID' });
+    });
+
+    it('answers 404 not_found when the stage switches the swap Powerup off', async () => {
+      powerupCatalog.isOffered.mockReturnValueOnce(false);
+      const res = createRes();
+
+      await controller.build({ query }, res);
+
+      expect(powerupCatalog.isOffered).toHaveBeenCalledWith('swap', 'solana-mainnet');
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'not_found',
+        error_description: 'Powerup swap is not available on solana-mainnet',
+      });
+      expect(swapBuildService.build).not.toHaveBeenCalled();
     });
 
     it('rejects missing required params before any service call', async () => {
