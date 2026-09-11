@@ -36,8 +36,11 @@ const COINS_MARKETS_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins/markets`;
 const MARKET_RANK_PAGES = 4;
 const MARKET_RANK_PAGE_SIZE = 250;
 const SOLANA_TOKEN_PRICE_ENDPOINT = `${BASE_ENDPOINT}/api/v3/simple/token_price/solana`;
-/** `simple/token_price` accepts at most this many contract addresses per call. */
-const MAX_ADDRESSES_PER_PRICE_CALL = 515;
+/**
+ * `simple/token_price` documents 515 addresses per call, but the GET URL 414s
+ * somewhere between 100 and 200 base58 mints (~8 KB); 100 (~4.6 KB) is safe.
+ */
+const MAX_ADDRESSES_PER_PRICE_CALL = 100;
 /** CoinGecko API Terms §6.1: cached Data must be refreshed at least every 24 hours. */
 const CATALOG_TTL_SECONDS = 24 * 60 * 60;
 /** Wording + link CoinGecko's attribution guide accepts; clients render it verbatim. */
