@@ -44,6 +44,40 @@ describe('token-catalog-service', () => {
     );
   });
 
+  it('serves CoinGecko logos in the large size and leaves other hosts untouched', async () => {
+    coingecko.getSolanaTokenList.mockResolvedValue([
+      {
+        address: USDC,
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        logoURI: 'https://assets.coingecko.com/coins/images/6319/thumb/USDC.png?1696506694',
+      },
+      {
+        address: BONK,
+        symbol: 'Bonk',
+        name: 'Bonk',
+        decimals: 5,
+        logoURI: 'https://assets.coingecko.com/coins/images/28600/small/bonk.jpg',
+      },
+      {
+        address: 'Cat111',
+        symbol: 'CAT',
+        name: 'Cat',
+        decimals: 6,
+        logoURI: 'https://cdn.example/thumb/cat.png',
+      },
+    ]);
+
+    const icons = new Map((await catalog.getVerified()).map((t) => [t.id, t.icon]));
+
+    expect(icons.get(USDC)).toBe(
+      'https://assets.coingecko.com/coins/images/6319/large/USDC.png?1696506694'
+    );
+    expect(icons.get(BONK)).toBe('https://assets.coingecko.com/coins/images/28600/large/bonk.jpg');
+    expect(icons.get('Cat111')).toBe('https://cdn.example/thumb/cat.png');
+  });
+
   it('builds the verified catalog in canonical shape, joined with coin ids, skipping malformed rows', async () => {
     const tokens = await catalog.getVerified();
 

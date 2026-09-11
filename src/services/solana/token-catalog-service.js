@@ -39,11 +39,28 @@ const toToken = (entry, coinIds, ranks) => {
     symbol: entry.symbol,
     name: entry.name,
     decimals: entry.decimals,
-    icon: entry.logoURI || null,
+    icon: toLargeLogo(entry.logoURI),
     tags: tagsFor(rank),
     coingeckoId,
     rank,
   };
+};
+
+/**
+ * CoinGecko's token list carries the 25×25 `thumb` logo; the wallet renders
+ * logos at 44–76pt on 3× screens, so ask its CDN for `large` instead.
+ * Other hosts are left alone.
+ */
+const toLargeLogo = (url) => {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== 'assets.coingecko.com') return url;
+    parsed.pathname = parsed.pathname.replace(/\/(thumb|small)\//, '/large/');
+    return parsed.toString();
+  } catch {
+    return url;
+  }
 };
 
 const byRankThenSymbol = (a, b) =>
