@@ -15,6 +15,7 @@
 
 const http = require('axios');
 const blockdaemonClient = require('../../../infrastructure/blockdaemon-client');
+const { providerCall } = require('../../../infrastructure/providers/provider-client');
 
 /**
  * Decorates each upstream balance item with the requesting `owner`
@@ -44,9 +45,14 @@ const getBalance = async (address, _tokens, locals) => {
   const { blockchain } = locals.network;
   const url = blockdaemonClient.getUniversalUrl(locals, `/account/${address}`);
 
-  const { data } = await http.get(
-    url,
-    blockdaemonClient.getRequestConfig({ params: {}, timeout: 6000 })
+  const { data } = await providerCall(
+    'blockdaemon',
+    ({ timeout, signal }) =>
+      http.get(url, {
+        ...blockdaemonClient.getRequestConfig({ params: {}, timeout: Math.min(6000, timeout) }),
+        signal,
+      }),
+    { locals, operationName: `Blockdaemon balance (${blockchain})` }
   );
 
   return mapOwnedItems(data, address, blockchain);

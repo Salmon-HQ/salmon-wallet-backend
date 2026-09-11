@@ -25,6 +25,7 @@ const compression = require('compression');
 const { logger } = require('../packages/middleware');
 const rateLimit = require('./middlewares/rate-limit');
 const errorHandler = require('./middlewares/error-handler');
+const { requestDeadline } = require('./infrastructure/providers/request-deadline');
 const handler = require('./handler');
 const NETWORKS = require('./constants/networks');
 const { BLOCKCHAINS } = require('./constants/blockchains');
@@ -51,6 +52,8 @@ app.use(
   })
 );
 app.use(logger);
+// Every provider call downstream reads `res.locals.deadline` (default 25 s).
+app.use(requestDeadline);
 
 // Per-IP rate limiting (fixed window in Redis, fail-open). One global
 // limiter over every route (the unversioned /health, /status and /ip info

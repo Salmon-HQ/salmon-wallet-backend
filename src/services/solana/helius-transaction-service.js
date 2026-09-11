@@ -14,29 +14,22 @@
 
 const http = require('axios');
 const { buildEnhancedApiUrl, getRpcUrl } = require('../../infrastructure/helius-client');
-const {
-  withRetry,
-  rateLimiter,
-} = require('../../infrastructure/rate-limiting/helius-rate-limiter');
+const { providerCall } = require('../../infrastructure/providers/provider-client');
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 /**
- * Runs one Helius HTTP call under the shared rate limiter + retry policy
- * and unwraps `response.data`.
+ * Runs one Helius HTTP call through `providerCall` (budget, breaker, shared
+ * limiter, retry) and unwraps `response.data`.
  * @param {string} operationName - label for retry logs.
- * @param {() => Promise<import('axios').AxiosResponse>} send
+ * @param {(ctx: {timeout: number, signal: AbortSignal}) => Promise<import('axios').AxiosResponse>} send
+ * @param {string} [environment] - breaker scope.
  * @returns {Promise<*>} the response body.
  */
-const request = (operationName, send) =>
-  withRetry(
-    async () => {
-      await rateLimiter.waitAndConsume();
-      const response = await send();
-      return response.data;
-    },
-    { operationName }
-  );
+const request = async (operationName, send, environment) => {
+  const response = await providerCall('helius', send, { operationName, environment });
+  return response.data;
+};
 
 /**
  * Maps a DAS asset `content` block to the `{name, symbol, image}` shape
@@ -67,8 +60,15 @@ const getEnhancedTransactions = async (signatures, environment = 'mainnet') => {
     throw new Error(`Enhanced API not supported for environment: ${environment}`);
   }
 
-  const data = await request('Helius getEnhancedTransactions', () =>
-    http.post(url, { transactions: transactionArray }, { headers: JSON_HEADERS, timeout: 10000 })
+  const data = await request(
+    'Helius getEnhancedTransactions',
+    ({ timeout, signal }) =>
+      http.post(
+        url,
+        { transactions: transactionArray },
+        { headers: JSON_HEADERS, timeout: Math.min(10000, timeout), signal }
+      ),
+    environment
   );
 
   // Single-signature input → return the single object, not the wrapping array.
@@ -108,8 +108,11 @@ const getEnhancedTransactionHistory = async (address, filters = {}, environment 
     throw new Error(`Enhanced API not supported for environment: ${environment}`);
   }
 
-  const data = await request('Helius getEnhancedTransactionHistory', () =>
-    http.get(url, { headers: JSON_HEADERS, timeout: 10000 })
+  const data = await request(
+    'Helius getEnhancedTransactionHistory',
+    ({ timeout, signal }) =>
+      http.get(url, { headers: JSON_HEADERS, timeout: Math.min(10000, timeout), signal }),
+    environment
   );
 
   return {
@@ -140,12 +143,15 @@ const getNftMetadata = async (mint, environment = 'mainnet') => {
   try {
     const url = getRpcUrl(environment);
 
-    const data = await request('Helius getNftMetadata', () =>
-      http.post(
-        url,
-        { jsonrpc: '2.0', id: 'nft-metadata', method: 'getAsset', params: { id: mint } },
-        { headers: JSON_HEADERS, timeout: 5000 }
-      )
+    const data = await request(
+      'Helius getNftMetadata',
+      ({ timeout, signal }) =>
+        http.post(
+          url,
+          { jsonrpc: '2.0', id: 'nft-metadata', method: 'getAsset', params: { id: mint } },
+          { headers: JSON_HEADERS, timeout: Math.min(5000, timeout), signal }
+        ),
+      environment
     );
 
     if (data?.result?.content) {
@@ -175,17 +181,20 @@ const getNftMetadataBatch = async (mints, environment = 'mainnet') => {
   try {
     const url = getRpcUrl(environment);
 
-    const data = await request('Helius getNftMetadataBatch', () =>
-      http.post(
-        url,
-        {
-          jsonrpc: '2.0',
-          id: 'nft-metadata-batch',
-          method: 'getAssetBatch',
-          params: { ids: mints },
-        },
-        { headers: JSON_HEADERS, timeout: 10000 }
-      )
+    const data = await request(
+      'Helius getNftMetadataBatch',
+      ({ timeout, signal }) =>
+        http.post(
+          url,
+          {
+            jsonrpc: '2.0',
+            id: 'nft-metadata-batch',
+            method: 'getAssetBatch',
+            params: { ids: mints },
+          },
+          { headers: JSON_HEADERS, timeout: Math.min(10000, timeout), signal }
+        ),
+      environment
     );
 
     if (data?.result && Array.isArray(data.result)) {

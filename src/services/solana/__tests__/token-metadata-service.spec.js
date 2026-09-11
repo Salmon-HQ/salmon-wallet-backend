@@ -6,8 +6,11 @@ jest.mock('../../../infrastructure/triton-client', () => ({
 }));
 jest.mock('../../../infrastructure/cache/cache-helper', () => ({
   getCacheKeyFor: jest.fn((e, p, v) => `${e}:${v}`),
-  getFromCache: jest.fn(),
-  storeInCache: jest.fn(),
+  getManyFromCache: jest.fn(async (keys) => new Map(keys.map((k) => [k, null]))),
+  storeManyInCache: jest.fn(),
+}));
+jest.mock('../../../infrastructure/providers/provider-client', () => ({
+  providerCall: jest.fn((name, fn) => fn({ timeout: 10000, signal: undefined })),
 }));
 
 const axios = require('axios');
@@ -61,7 +64,7 @@ const bernAsset = asset(BERN, {
 describe('token-metadata-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    cache.getFromCache.mockResolvedValue(null);
+    cache.getManyFromCache.mockImplementation(async (keys) => new Map(keys.map((k) => [k, null])));
   });
 
   it('maps DAS assets to the canonical token shape with the token program and swappability', async () => {
@@ -94,12 +97,19 @@ describe('token-metadata-service', () => {
     expect(tokens.get(PYUSD)).toMatchObject({ tokenProgram: 'token-2022', swappable: true });
     expect(tokens.get(BERN)).toMatchObject({ tokenProgram: 'token-2022', swappable: false });
     expect(tokens.has('Unknown111111111111111111111111111111111111')).toBe(false);
-    expect(cache.storeInCache).toHaveBeenCalledTimes(3);
+    expect(cache.storeManyInCache).toHaveBeenCalledTimes(1);
+    expect(cache.storeManyInCache.mock.calls[0][0]).toHaveLength(3);
   });
 
   it('short-circuits native SOL and serves cached mints without a DAS call', async () => {
-    cache.getFromCache.mockImplementation(async (key) =>
-      key.endsWith(USDC) ? { id: USDC, symbol: 'USDC', decimals: 6 } : null
+    cache.getManyFromCache.mockImplementation(
+      async (keys) =>
+        new Map(
+          keys.map((key) => [
+            key,
+            key.endsWith(USDC) ? { id: USDC, symbol: 'USDC', decimals: 6 } : null,
+          ])
+        )
     );
 
     const tokens = await service.getByMints([SOL, USDC, SOL]);

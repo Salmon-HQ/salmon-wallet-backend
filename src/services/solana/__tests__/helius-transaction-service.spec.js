@@ -1,9 +1,8 @@
 'use strict';
 
 jest.mock('axios');
-jest.mock('../../../infrastructure/rate-limiting/helius-rate-limiter', () => ({
-  withRetry: jest.fn(async (fn) => fn()),
-  rateLimiter: { waitAndConsume: jest.fn().mockResolvedValue(undefined) },
+jest.mock('../../../infrastructure/providers/provider-client', () => ({
+  providerCall: jest.fn((name, fn) => fn({ timeout: 10000, signal: undefined })),
 }));
 
 const http = require('axios');

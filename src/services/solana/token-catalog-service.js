@@ -16,8 +16,13 @@
  */
 
 const coingecko = require('../shared/coingecko-service');
+const { getCacheKey, withSingleFlight } = require('../../infrastructure/cache/cache-helper');
 
 const MAX_SEARCH_RESULTS = 50;
+const SNAPSHOT_KEY = 'solana_ft_catalog_snapshot';
+const SNAPSHOT_TTL_SECONDS = 24 * 60 * 60;
+const SNAPSHOT_STALE_TTL_SECONDS = 48 * 60 * 60;
+const REBUILD_LOCK_MS = 30000;
 
 let snapshot = null; // { builtAt, tokens, byMint }
 
@@ -46,15 +51,7 @@ const byRankThenSymbol = (a, b) =>
 
 const isFresh = (snap) => snap && Date.now() - snap.builtAt < 5 * 60 * 1000;
 
-/**
- * Catalog snapshot, rebuilt from the (cached) CoinGecko sources at most
- * every 5 minutes per process. Throws when the sources are down and no
- * cached copy exists — never an empty catalog.
- */
-const getSnapshot = async () => {
-  if (isFresh(snapshot)) {
-    return snapshot;
-  }
+const buildTokens = async () => {
   const [list, coinIds, ranks] = await Promise.all([
     coingecko.getSolanaTokenList(),
     coingecko.getSolanaCoinIds(),
@@ -65,10 +62,32 @@ const getSnapshot = async () => {
       return new Map();
     }),
   ]);
-  const tokens = list
+  return list
     .filter((entry) => entry && entry.address && entry.symbol && typeof entry.decimals === 'number')
     .map((entry) => toToken(entry, coinIds, ranks))
     .sort(byRankThenSymbol);
+};
+
+/**
+ * Catalog snapshot: memoised 5 minutes per process, held 24 h in Redis
+ * (48 h stale copy) and rebuilt single-flight so many containers expiring
+ * at once trigger one rebuild while the others serve the previous tokens —
+ * also when the provider's circuit is open. Throws when the sources are
+ * down and no copy exists — never an empty catalog.
+ *
+ * @param {Object} [locals] - bounds the wait for a rebuild in flight.
+ */
+const getSnapshot = async (locals) => {
+  if (isFresh(snapshot)) {
+    return snapshot;
+  }
+  const tokens = await withSingleFlight(getCacheKey(SNAPSHOT_KEY), {
+    ttl: SNAPSHOT_TTL_SECONDS,
+    staleTtl: SNAPSHOT_STALE_TTL_SECONDS,
+    lockMs: REBUILD_LOCK_MS,
+    rebuild: buildTokens,
+    locals,
+  });
   snapshot = { builtAt: Date.now(), tokens, byMint: new Map(tokens.map((t) => [t.id, t])) };
   return snapshot;
 };

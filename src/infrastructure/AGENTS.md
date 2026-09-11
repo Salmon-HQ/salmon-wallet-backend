@@ -22,11 +22,35 @@
   `src/analytics/handler.js`); the default silently outranks every
   request timeout in the service.
 - `cache/` — cache primitives (`cache-helper.js` with the shared Redis
-  key/get/set helpers, `transaction-history-cache.js`,
-  `price-cache.js`). `src/repositories/helper.js` re-exports
-  `cache-helper.js` for the repository layer.
-- `rate-limiting/` — token-bucket rate limiters and `with-retry.js`
-  factory shared by 0x, CoinGecko, Helius.
+  key/get/set helpers plus the batched `getManyFromCache` (MGET) /
+  `storeManyInCache` (MULTI) and `withSingleFlight` (SET NX lock, fresh
+  `key` + `key:stale` copy, stale served while one caller rebuilds or when
+  the rebuild fails), `transaction-history-cache.js`, `price-cache.js`).
+  `src/repositories/helper.js` re-exports `cache-helper.js` for the
+  repository layer. Resolve many keys with the batched helpers, never in a
+  per-key loop.
+- `providers/` — the one door to every upstream provider.
+  `provider-client.js#providerCall(name, fn, { locals, environment,
+operationName })` applies, in order: request budget (`request-deadline.js`,
+  `res.locals.deadline`, default 25 s via `REQUEST_BUDGET_MS`) → circuit
+  breaker (`circuit-breaker.js`, Redis state per provider + environment,
+  `503 upstream_unavailable` while open, one probe per cooldown,
+  `BREAKER_DISABLED=true` bypasses) → shared token bucket
+  (`shared-rate-limiter.js`, one Lua script on `ratelimit:<STAGE>:<provider>`,
+  in-memory `RateLimiter` fallback when Redis errors, `503
+upstream_rate_limited` when the wait does not fit 5 s or the budget) →
+  `fn({ timeout, signal })` with the profile timeout capped by the remaining
+  budget → classified retry (429/5xx/network, only when the next attempt fits
+  the budget) → one CloudWatch EMF line (`metrics.js`, namespace
+  `SalmonApi/Providers`, silent under Jest or `METRICS_DISABLED=true`).
+  Per-provider numbers live only in `profiles.js` (rps, burst, timeout, retry,
+  breaker; `<PROVIDER>_MAX_RPS` overrides). Adding a provider = adding a row.
+  `memory-store.js` is the Redis stand-in the fallbacks and the test fake
+  (`src/__tests__/helpers/fake-redis.js`) share.
+- `rate-limiting/` — pure helpers behind `providers/`: the in-process
+  `RateLimiter` bucket (fallback) and `with-retry.js` (`isRetryableError`,
+  `getRetryAfter`, `calculateBackoffDelay`). No provider-specific limiters
+  live here any more; call sites use `providerCall`.
 
 ## Rules
 
@@ -41,7 +65,12 @@
 
 ## Testing
 
-- Tests live flat in `src/infrastructure/__tests__/` (clients) and in
-  `src/infrastructure/rate-limiting/__tests__/` (rate limiters and
-  the `with-retry` factory). Mock the underlying network call; never
-  hit the real provider.
+- Tests live flat in `src/infrastructure/__tests__/` (clients,
+  `with-retry`), `src/infrastructure/providers/__tests__/` and
+  `src/infrastructure/cache/__tests__/`. Mock the underlying network call;
+  never hit the real provider. Mock Redis with `FakeRedis` from
+  `src/__tests__/helpers/fake-redis.js` (same commands, Lua bucket semantics
+  in JS, `failing = true` exercises the fallbacks). Service specs mock
+  `providers/provider-client` with `providerCall: (name, fn) => fn({ timeout,
+signal })`. `provider-resilience.integration.spec.js` proves atomicity and
+  single-flight against the real Redis.

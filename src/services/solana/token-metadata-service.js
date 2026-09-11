@@ -19,9 +19,10 @@ const axios = require('axios');
 const { getRpcUrl } = require('../../infrastructure/triton-client');
 const {
   getCacheKeyFor,
-  getFromCache,
-  storeInCache,
+  getManyFromCache,
+  storeManyInCache,
 } = require('../../infrastructure/cache/cache-helper');
+const { providerCall } = require('../../infrastructure/providers/provider-client');
 const {
   SOL_ADDRESS,
   SOL_SYMBOL,
@@ -83,16 +84,25 @@ const toToken = (asset) => {
   };
 };
 
-const fetchBatch = async (ids, environment) => {
-  const { data } = await axios.post(
-    getRpcUrl(environment),
-    {
-      jsonrpc: '2.0',
-      id: 'token-metadata',
-      method: 'getAssetBatch',
-      params: { ids, displayOptions: { showFungible: true } },
-    },
-    { headers: { 'Content-Type': 'application/json' }, timeout: REQUEST_TIMEOUT }
+const fetchBatch = async (ids, environment, locals) => {
+  const { data } = await providerCall(
+    'triton',
+    ({ timeout, signal }) =>
+      axios.post(
+        getRpcUrl(environment),
+        {
+          jsonrpc: '2.0',
+          id: 'token-metadata',
+          method: 'getAssetBatch',
+          params: { ids, displayOptions: { showFungible: true } },
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: Math.min(REQUEST_TIMEOUT, timeout),
+          signal,
+        }
+      ),
+    { locals, environment, operationName: 'Triton DAS getAssetBatch (token metadata)' }
   );
   if (data?.error) {
     throw new Error(
@@ -115,16 +125,15 @@ const cacheKey = (mint, locals) => getCacheKeyFor('token_metadata', 'mint', mint
 const getByMints = async (mints, locals = {}) => {
   const result = new Map();
   const wanted = [...new Set(mints)].filter(Boolean);
-  const misses = [];
+  if (wanted.includes(SOL_ADDRESS)) result.set(SOL_ADDRESS, NATIVE_SOL);
 
-  for (const mint of wanted) {
-    if (mint === SOL_ADDRESS) {
-      result.set(mint, NATIVE_SOL);
-      continue;
-    }
-    const cached = await getFromCache(cacheKey(mint, locals));
-    if (cached) {
-      result.set(mint, cached);
+  const lookups = wanted.filter((mint) => mint !== SOL_ADDRESS);
+  const cached = await getManyFromCache(lookups.map((mint) => cacheKey(mint, locals)));
+  const misses = [];
+  for (const mint of lookups) {
+    const token = cached.get(cacheKey(mint, locals));
+    if (token) {
+      result.set(mint, token);
     } else {
       misses.push(mint);
     }
@@ -132,14 +141,16 @@ const getByMints = async (mints, locals = {}) => {
 
   const environment = locals?.network?.environment || 'mainnet';
   for (let i = 0; i < misses.length; i += MAX_IDS_PER_BATCH) {
-    const assets = await fetchBatch(misses.slice(i, i + MAX_IDS_PER_BATCH), environment);
+    const assets = await fetchBatch(misses.slice(i, i + MAX_IDS_PER_BATCH), environment, locals);
+    const fresh = [];
     for (const asset of assets) {
       const token = toToken(asset);
       if (token) {
         result.set(token.id, token);
-        await storeInCache(cacheKey(token.id, locals), token, CACHE_TTL_SECONDS);
+        fresh.push([cacheKey(token.id, locals), token]);
       }
     }
+    await storeManyInCache(fresh, CACHE_TTL_SECONDS);
   }
 
   return result;

@@ -28,6 +28,7 @@ const axios = require('axios');
 const { Connection } = require('@solana/web3.js');
 
 const tritonClient = require('../../../infrastructure/triton-client');
+const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const { ProviderNotImplementedError } = require('./solana-data-provider');
 const tritonRpc = require('../parser/triton-rpc');
 const { parseTransaction } = require('../parser');
@@ -57,10 +58,19 @@ const getRpcUrl = (environment = 'mainnet') => tritonClient.getRpcUrl(environmen
  */
 const dasRpc = async (id, method, params, environment, { timeout = 10000 } = {}) => {
   const url = getRpcUrl(environment);
-  const { data } = await axios.post(
-    url,
-    { jsonrpc: '2.0', id, method, params },
-    { headers: { 'Content-Type': 'application/json' }, timeout }
+  const { data } = await providerCall(
+    'triton',
+    (ctx) =>
+      axios.post(
+        url,
+        { jsonrpc: '2.0', id, method, params },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: Math.min(timeout, ctx.timeout),
+          signal: ctx.signal,
+        }
+      ),
+    { environment, operationName: `Triton DAS ${method}` }
   );
   return data?.result;
 };

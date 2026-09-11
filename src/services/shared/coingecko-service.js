@@ -16,12 +16,9 @@
 
 const http = require('axios');
 const repository = require('../../repositories/shared/coingecko-repository');
-const {
-  withRetry,
-  rateLimiter,
-} = require('../../infrastructure/rate-limiting/coingecko-rate-limiter');
+const { providerCall } = require('../../infrastructure/providers/provider-client');
 
-const { readCachedQuotes, setCachedQuote } = require('../../infrastructure/cache/price-cache');
+const { readCachedQuotes, setCachedQuotes } = require('../../infrastructure/cache/price-cache');
 
 // Demo keys go to api.coingecko.com with `x-cg-demo-api-key`; paid plans go
 // to pro-api.coingecko.com with `x-cg-pro-api-key`. One variable picks both.
@@ -66,12 +63,17 @@ const SUPPORTED_FIAT_CURRENCIES = [
 const apiHeaders = () =>
   process.env.COINGECKO_API_KEY ? { [API_KEY_HEADER]: process.env.COINGECKO_API_KEY } : {};
 
-const fetchFromCoinGecko = async (url, params, timeout, operationName) => {
-  await rateLimiter.waitAndConsume();
-
-  const { data } = await withRetry(
-    async () => http.get(url, { params, timeout, headers: apiHeaders() }),
-    { operationName }
+const fetchFromCoinGecko = async (url, params, timeout, operationName, locals) => {
+  const { data } = await providerCall(
+    'coingecko',
+    (ctx) =>
+      http.get(url, {
+        params,
+        timeout: Math.min(timeout, ctx.timeout),
+        signal: ctx.signal,
+        headers: apiHeaders(),
+      }),
+    { locals, operationName }
   );
 
   return data;
@@ -218,7 +220,8 @@ const getMarketChart = async (params, locals) => {
         `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(coinId)}/market_chart`,
         { vs_currency: currency, days },
         5000,
-        `CoinGecko getMarketChart (${coinId}, ${days} days)`
+        `CoinGecko getMarketChart (${coinId}, ${days} days)`,
+        locals
       );
 
       return {
@@ -260,7 +263,8 @@ const getCoinInfo = async (params, locals) => {
           sparkline: false,
         },
         5000,
-        `CoinGecko getCoinInfo (${coinId})`
+        `CoinGecko getCoinInfo (${coinId})`,
+        locals
       );
 
       return mapCoinInfo(data, currency);
@@ -290,7 +294,8 @@ const getExchangeRates = async (locals) => {
         EXCHANGE_RATES_ENDPOINT,
         {},
         2000,
-        'CoinGecko exchange rates'
+        'CoinGecko exchange rates',
+        locals
       );
 
       return normalizeExchangeRates(data);
@@ -322,7 +327,8 @@ const getContractMarketChart = async (params, locals) => {
         `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(platform)}/contract/${encodeURIComponent(contractAddress)}/market_chart`,
         { vs_currency: currency, days },
         5000,
-        `CoinGecko getContractMarketChart (${platform}:${contractAddress}, ${days} days)`
+        `CoinGecko getContractMarketChart (${platform}:${contractAddress}, ${days} days)`,
+        locals
       );
 
       return {
@@ -365,7 +371,8 @@ const getContractCoinInfo = async (params, locals) => {
         `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(platform)}/contract/${encodeURIComponent(contractAddress)}`,
         {},
         5000,
-        `CoinGecko getContractCoinInfo (${platform}:${contractAddress})`
+        `CoinGecko getContractCoinInfo (${platform}:${contractAddress})`,
+        locals
       );
 
       return mapCoinInfo(data, currency);
@@ -507,19 +514,22 @@ const getTokenPrices = async (mints, locals = {}) => {
         include_24hr_change: true,
       },
       8000,
-      `CoinGecko token prices (${addresses.length} mints)`
+      `CoinGecko token prices (${addresses.length} mints)`,
+      locals
     );
     // CoinGecko lower-cases EVM addresses; Solana keys come back verbatim, but
     // match case-insensitively to be safe.
     const byLower = new Map(Object.entries(data || {}).map(([k, v]) => [k.toLowerCase(), v]));
+    const fresh = new Map();
     for (const mint of addresses) {
       const entry = byLower.get(mint.toLowerCase());
       if (entry && typeof entry.usd === 'number') {
         const quote = { usdPrice: entry.usd, priceChange24h: entry.usd_24h_change ?? null };
         hits.set(mint, quote);
-        await setCachedQuote(mint, quote, locals);
+        fresh.set(mint, quote);
       }
     }
+    await setCachedQuotes(fresh, locals);
   }
   return hits;
 };

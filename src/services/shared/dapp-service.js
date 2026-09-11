@@ -19,6 +19,7 @@
 
 const http = require('axios');
 const { assertFetchableUrl, DappUrlError } = require('./dapp-url-guard');
+const { providerCall } = require('../../infrastructure/providers/provider-client');
 
 const REQUEST_TIMEOUT = 5000;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
@@ -82,18 +83,25 @@ const fetchHtml = async (rawUrl) => {
     const { url: target, address, family } = pinned;
     let response;
     try {
-      response = await http.get(target.toString(), {
-        lookup: () => [{ address, family }],
-        timeout: REQUEST_TIMEOUT,
-        maxRedirects: 0,
-        maxContentLength: MAX_RESPONSE_BYTES,
-        responseType: 'text',
-        // 3xx must reach us as a response so the location can be validated
-        // before it is followed; anything else is the caller's problem.
-        validateStatus: (status) => status < 400,
-      });
+      response = await providerCall(
+        'dapp',
+        ({ timeout, signal }) =>
+          http.get(target.toString(), {
+            lookup: () => [{ address, family }],
+            timeout: Math.min(REQUEST_TIMEOUT, timeout),
+            signal,
+            maxRedirects: 0,
+            maxContentLength: MAX_RESPONSE_BYTES,
+            responseType: 'text',
+            // 3xx must reach us as a response so the location can be validated
+            // before it is followed; anything else is the caller's problem.
+            validateStatus: (status) => status < 400,
+          }),
+        { operationName: `dapp metadata (${target.hostname})` }
+      );
     } catch (error) {
-      if (error instanceof DappUrlError) throw error;
+      // Our own 503s (budget, throttle) already carry their envelope.
+      if (error instanceof DappUrlError || error.statusCode) throw error;
       throw new DappUrlError('The dapp could not be reached.', 'dapp_unreachable', 502);
     }
 

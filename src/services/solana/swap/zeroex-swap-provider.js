@@ -14,10 +14,7 @@
 
 const http = require('axios');
 const { PublicKey, TransactionInstruction } = require('@solana/web3.js');
-const {
-  withRetry,
-  rateLimiter,
-} = require('../../../infrastructure/rate-limiting/zeroex-rate-limiter');
+const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const { SOL_ADDRESS } = require('../../../constants/solana-constants');
 const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
 
@@ -133,8 +130,6 @@ const requestSwapInstructions = async ({
   fee,
   reserveBytes,
 }) => {
-  await rateLimiter.waitAndConsume();
-
   const body = {
     token_in: toZeroexMint(inputMint),
     token_out: toZeroexMint(outputMint),
@@ -154,10 +149,12 @@ const requestSwapInstructions = async ({
 
   let data;
   try {
-    ({ data } = await withRetry(
-      () =>
+    ({ data } = await providerCall(
+      'zeroex',
+      ({ timeout, signal }) =>
         http.post(`${ZEROEX_API_URL}/swap-instructions`, body, {
-          timeout: REQUEST_TIMEOUT,
+          timeout: Math.min(REQUEST_TIMEOUT, timeout),
+          signal,
           headers: headers(),
         }),
       { operationName: `0x swap-instructions (${inputMint} → ${outputMint})` }
@@ -167,7 +164,7 @@ const requestSwapInstructions = async ({
     // 0x answers 4xx with `{ code, error, zid }`: 400 for bad input or bad
     // integrator config, 422 for a pair it cannot serve, 403 when its own
     // sanctions screening refuses the taker. `ZEROEX_ERROR_MAP` turns the
-    // code into our envelope; unknown codes mean "no route here". withRetry
+    // code into our envelope; unknown codes mean "no route here". providerCall
     // only retries 429/5xx/network, so these arrive here on the first try.
     if (status === 400 || status === 403 || status === 422) {
       console.warn('0x swap-instructions rejected the request:', error.response.data);

@@ -25,13 +25,10 @@ jest.mock('../../../repositories/shared/coingecko-repository', () => ({
 
 jest.mock('../../../infrastructure/cache/price-cache', () => ({
   readCachedQuotes: jest.fn(async (mints) => ({ hits: new Map(), misses: mints })),
-  setCachedQuote: jest.fn(),
+  setCachedQuotes: jest.fn(),
 }));
-jest.mock('../../../infrastructure/rate-limiting/coingecko-rate-limiter', () => ({
-  rateLimiter: {
-    waitAndConsume: jest.fn().mockResolvedValue(undefined),
-  },
-  withRetry: jest.fn(async (operation) => operation()),
+jest.mock('../../../infrastructure/providers/provider-client', () => ({
+  providerCall: jest.fn((name, fn) => fn({ timeout: 10000, signal: undefined })),
 }));
 
 // jest.setup loads .env; a real key there would put a header on every call.
@@ -39,10 +36,7 @@ delete process.env.COINGECKO_API_KEY;
 
 const http = require('axios');
 const repository = require('../../../repositories/shared/coingecko-repository');
-const {
-  rateLimiter,
-  withRetry,
-} = require('../../../infrastructure/rate-limiting/coingecko-rate-limiter');
+const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const service = require('../coingecko-service');
 
 describe('coingecko-service', () => {
@@ -54,8 +48,7 @@ describe('coingecko-service', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    rateLimiter.waitAndConsume.mockResolvedValue(undefined);
-    withRetry.mockImplementation(async (operation) => operation());
+    providerCall.mockImplementation((name, fn) => fn({ timeout: 10000, signal: undefined }));
   });
 
   it('encodes caller-supplied path segments so they cannot walk the CoinGecko path', async () => {
@@ -154,7 +147,7 @@ describe('coingecko-service', () => {
     const cached = { coinId: 'solana', prices: [[1, 11]] };
     repository.getShortTermChart.mockResolvedValue(null);
     repository.getLongTermChart.mockResolvedValue(cached);
-    withRetry.mockRejectedValue(new Error('coingecko unavailable'));
+    providerCall.mockRejectedValue(new Error('coingecko unavailable'));
 
     const result = await service.getMarketChart(
       { coinId: 'solana', days: 7, currency: 'usd' },
@@ -296,7 +289,7 @@ describe('coingecko-service', () => {
     };
     repository.getShortTermExchangeRates.mockResolvedValue(null);
     repository.getLongTermExchangeRates.mockResolvedValue(cached);
-    withRetry.mockRejectedValue(new Error('coingecko unavailable'));
+    providerCall.mockRejectedValue(new Error('coingecko unavailable'));
 
     const result = await service.getExchangeRates(locals);
 
@@ -546,7 +539,11 @@ describe('coingecko-service', () => {
       );
       expect(prices.get(USDC)).toEqual({ usdPrice: 1.0001, priceChange24h: -0.01 });
       expect(prices.has(BONK)).toBe(false);
-      expect(priceCache.setCachedQuote).toHaveBeenCalledWith(USDC, prices.get(USDC), {});
+      // one batched write per chunk, carrying only the listed mint
+      expect(priceCache.setCachedQuotes).toHaveBeenCalledWith(
+        new Map([[USDC, prices.get(USDC)]]),
+        {}
+      );
     });
 
     it('sends the API key header when configured', async () => {

@@ -6,6 +6,11 @@ jest.mock('../../shared/coingecko-service', () => ({
   getSolanaMarketRanks: jest.fn(),
 }));
 
+jest.mock('../../../infrastructure/cache/cache-helper', () => ({
+  getCacheKey: jest.fn((suffix) => `test::${suffix}`),
+  withSingleFlight: jest.fn((key, { rebuild }) => rebuild()),
+}));
+
 const coingecko = require('../../shared/coingecko-service');
 const catalog = require('../token-catalog-service');
 
