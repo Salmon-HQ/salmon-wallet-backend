@@ -74,6 +74,11 @@ const getSolanaCoinIds = async () => getFromCache('solana:coingecko_coin_ids');
 const saveSolanaCoinIds = async (byMint, ttl) =>
   storeInCache('solana:coingecko_coin_ids', byMint, ttl);
 
+/** CoinGecko coin id → market-cap position among top Solana coins, same TTL. */
+const getSolanaMarketRanks = async () => getFromCache('solana:coingecko_market_ranks');
+const saveSolanaMarketRanks = async (ranks, ttl) =>
+  storeInCache('solana:coingecko_market_ranks', ranks, ttl);
+
 const getChartKey = (type, { coinId, days, currency }, locals) => {
   return getCacheKey(`${type}:${coinId}:${currency}:${days}`, locals);
 };
@@ -223,6 +228,8 @@ module.exports = {
   saveSolanaTokenList,
   getSolanaCoinIds,
   saveSolanaCoinIds,
+  getSolanaMarketRanks,
+  saveSolanaMarketRanks,
   saveTokensList,
   saveTokensPrices,
   getTokensList,

@@ -9,6 +9,8 @@ jest.mock('../../../repositories/shared/coingecko-repository', () => ({
   saveSolanaTokenList: jest.fn(),
   getSolanaCoinIds: jest.fn(),
   saveSolanaCoinIds: jest.fn(),
+  getSolanaMarketRanks: jest.fn(),
+  saveSolanaMarketRanks: jest.fn(),
   getTokensPrices: jest.fn(),
   getShortTermChart: jest.fn(),
   getLongTermChart: jest.fn(),
@@ -505,6 +507,25 @@ describe('coingecko-service', () => {
       await expect(service.getSolanaCoinIds()).rejects.toThrow('unexpected shape');
       http.get.mockResolvedValueOnce({ data: [{ id: 'bitcoin', platforms: {} }] });
       await expect(service.getSolanaCoinIds()).rejects.toThrow('no Solana platform');
+    });
+
+    it('ranks the top Solana coins by market cap across pages and stops at an empty page', async () => {
+      repository.getSolanaMarketRanks.mockResolvedValue(null);
+      http.get
+        .mockResolvedValueOnce({ data: [{ id: 'tether' }, { id: 'usd-coin' }] })
+        .mockResolvedValueOnce({ data: [] });
+
+      const ranks = await service.getSolanaMarketRanks();
+
+      expect(http.get.mock.calls[0][1].params).toEqual(
+        expect.objectContaining({ category: 'solana-ecosystem', order: 'market_cap_desc', page: 1 })
+      );
+      expect(http.get).toHaveBeenCalledTimes(2);
+      expect(ranks.get('usd-coin')).toBe(2);
+      expect(repository.saveSolanaMarketRanks).toHaveBeenCalledWith(
+        { tether: 1, 'usd-coin': 2 },
+        24 * 60 * 60
+      );
     });
 
     it('prices mints in chunks, leaves unlisted mints absent, and caches hits', async () => {

@@ -3,6 +3,7 @@
 jest.mock('../../shared/coingecko-service', () => ({
   getSolanaTokenList: jest.fn(),
   getSolanaCoinIds: jest.fn(),
+  getSolanaMarketRanks: jest.fn(),
 }));
 
 const coingecko = require('../../shared/coingecko-service');
@@ -23,7 +24,19 @@ describe('token-catalog-service', () => {
     jest.clearAllMocks();
     catalog.clearSnapshot();
     coingecko.getSolanaTokenList.mockResolvedValue(list);
-    coingecko.getSolanaCoinIds.mockResolvedValue(new Map([[USDC, 'usd-coin']]));
+    coingecko.getSolanaCoinIds.mockResolvedValue(
+      new Map([
+        [USDC, 'usd-coin'],
+        [BONK, 'bonk'],
+        ['Cat111', 'upside-down-cat'],
+      ])
+    );
+    coingecko.getSolanaMarketRanks.mockResolvedValue(
+      new Map([
+        ['usd-coin', 2],
+        ['bonk', 40],
+      ])
+    );
   });
 
   it('builds the verified catalog in canonical shape, joined with coin ids, skipping malformed rows', async () => {
@@ -38,8 +51,16 @@ describe('token-catalog-service', () => {
       icon: 'usdc.png',
       tags: ['verified'],
       coingeckoId: 'usd-coin',
+      rank: 2,
     });
-    expect(tokens[1].coingeckoId).toBeNull();
+    // ranked first (USDC 2, BONK 40), then the unranked alphabetically
+    expect(tokens.map((t) => t.name)).toEqual([
+      'USD Coin',
+      'Bonk',
+      'UpSide Down Cat',
+      'USD Coin (Wormhole)',
+    ]);
+    expect(tokens[3].coingeckoId).toBeNull();
     await catalog.getVerified();
     expect(coingecko.getSolanaTokenList).toHaveBeenCalledTimes(1);
   });
@@ -67,6 +88,16 @@ describe('token-catalog-service', () => {
     expect(await catalog.byMint('nope')).toBeNull();
     const many = await catalog.byMints([USDC, 'nope']);
     expect([...many.keys()]).toEqual([USDC]);
+  });
+
+  it('falls back to alphabetical order when market ranks are unavailable', async () => {
+    coingecko.getSolanaMarketRanks.mockRejectedValue(new Error('429'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const tokens = await catalog.getVerified();
+
+    expect(tokens.map((t) => t.symbol)).toEqual(['Bonk', 'USDC', 'USDC', 'USDCet']);
+    warn.mockRestore();
   });
 
   it('propagates a source failure instead of an empty catalog', async () => {

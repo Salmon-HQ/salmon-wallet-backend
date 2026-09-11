@@ -5,9 +5,12 @@
  * its coin ids, held as a 24 h snapshot (Redis, per CoinGecko's caching
  * terms) with an in-memory search index per process.
  *
- * "Verified" means "listed here". Search covers symbol, name and mint of
- * listed tokens only; unlisted mints are reached by address through
- * `token-metadata-service` (composed in `solana-ft-service`).
+ * "Verified" means "listed here". The list is ordered by market-cap rank
+ * (top Solana coins first, the rest alphabetically) so a client that keeps
+ * the first entry per symbol keeps the real token, not a look-alike. Search
+ * covers symbol, name and mint of listed tokens only; unlisted mints are
+ * reached by address through `token-metadata-service` (composed in
+ * `solana-ft-service`).
  */
 
 const coingecko = require('../shared/coingecko-service');
@@ -16,15 +19,24 @@ const MAX_SEARCH_RESULTS = 50;
 
 let snapshot = null; // { builtAt, tokens, byMint }
 
-const toToken = (entry, coinIds) => ({
-  id: entry.address,
-  symbol: entry.symbol,
-  name: entry.name,
-  decimals: entry.decimals,
-  icon: entry.logoURI || null,
-  tags: ['verified'],
-  coingeckoId: coinIds.get(entry.address) || null,
-});
+const UNRANKED = Number.MAX_SAFE_INTEGER;
+
+const toToken = (entry, coinIds, ranks) => {
+  const coingeckoId = coinIds.get(entry.address) || null;
+  return {
+    id: entry.address,
+    symbol: entry.symbol,
+    name: entry.name,
+    decimals: entry.decimals,
+    icon: entry.logoURI || null,
+    tags: ['verified'],
+    coingeckoId,
+    rank: (coingeckoId && ranks.get(coingeckoId)) || UNRANKED,
+  };
+};
+
+const byRankThenSymbol = (a, b) =>
+  a.rank - b.rank || (a.symbol || '').localeCompare(b.symbol || '');
 
 const isFresh = (snap) => snap && Date.now() - snap.builtAt < 5 * 60 * 1000;
 
@@ -37,13 +49,20 @@ const getSnapshot = async () => {
   if (isFresh(snapshot)) {
     return snapshot;
   }
-  const [list, coinIds] = await Promise.all([
+  const [list, coinIds, ranks] = await Promise.all([
     coingecko.getSolanaTokenList(),
     coingecko.getSolanaCoinIds(),
+    coingecko.getSolanaMarketRanks().catch((error) => {
+      console.warn(
+        `Token catalog: market ranks unavailable (${error.message}); alphabetical order`
+      );
+      return new Map();
+    }),
   ]);
   const tokens = list
     .filter((entry) => entry && entry.address && entry.symbol && typeof entry.decimals === 'number')
-    .map((entry) => toToken(entry, coinIds));
+    .map((entry) => toToken(entry, coinIds, ranks))
+    .sort(byRankThenSymbol);
   snapshot = { builtAt: Date.now(), tokens, byMint: new Map(tokens.map((t) => [t.id, t])) };
   return snapshot;
 };
@@ -91,7 +110,7 @@ const search = async (query) => {
   return tokens
     .map((token) => ({ token, score: rank(token, query.trim() === token.id ? token.id : q) }))
     .filter(({ score }) => score >= 0)
-    .sort((a, b) => a.score - b.score || a.token.symbol.localeCompare(b.token.symbol))
+    .sort((a, b) => a.score - b.score || byRankThenSymbol(a.token, b.token))
     .slice(0, MAX_SEARCH_RESULTS)
     .map(({ token }) => token);
 };

@@ -31,6 +31,10 @@ const MARKET_CHART_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins`;
 const EXCHANGE_RATES_ENDPOINT = `${BASE_ENDPOINT}/api/v3/exchange_rates`;
 const SOLANA_TOKEN_LIST_ENDPOINT = `${BASE_ENDPOINT}/api/v3/token_lists/solana/all.json`;
 const COINS_LIST_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins/list`;
+const COINS_MARKETS_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins/markets`;
+/** Top-N Solana-ecosystem coins by market cap: 4 pages of 250, once per catalog TTL. */
+const MARKET_RANK_PAGES = 4;
+const MARKET_RANK_PAGE_SIZE = 250;
 const SOLANA_TOKEN_PRICE_ENDPOINT = `${BASE_ENDPOINT}/api/v3/simple/token_price/solana`;
 /** `simple/token_price` accepts at most this many contract addresses per call. */
 const MAX_ADDRESSES_PER_PRICE_CALL = 515;
@@ -430,6 +434,48 @@ const getSolanaCoinIds = async () => {
   return new Map(Object.entries(byMint));
 };
 
+/**
+ * CoinGecko coin id → position (1-based) among the top Solana-ecosystem
+ * coins by market cap. Orders the catalog so the real USDC outranks a
+ * look-alike. Cached with the catalog; a failed read yields an empty map
+ * (ordering degrades, nothing else does).
+ *
+ * @returns {Promise<Map<string, number>>}
+ */
+const getSolanaMarketRanks = async () => {
+  const cached = await repository.getSolanaMarketRanks();
+  if (cached) {
+    return new Map(Object.entries(cached));
+  }
+  const ranks = {};
+  for (let page = 1; page <= MARKET_RANK_PAGES; page += 1) {
+    const data = await fetchFromCoinGecko(
+      COINS_MARKETS_ENDPOINT,
+      {
+        vs_currency: 'usd',
+        category: 'solana-ecosystem',
+        order: 'market_cap_desc',
+        per_page: MARKET_RANK_PAGE_SIZE,
+        page,
+      },
+      10000,
+      `CoinGecko Solana market ranks (page ${page})`
+    );
+    if (!Array.isArray(data) || data.length === 0) {
+      break;
+    }
+    data.forEach((coin, index) => {
+      if (coin?.id && ranks[coin.id] === undefined) {
+        ranks[coin.id] = (page - 1) * MARKET_RANK_PAGE_SIZE + index + 1;
+      }
+    });
+  }
+  if (Object.keys(ranks).length > 0) {
+    await repository.saveSolanaMarketRanks(ranks, CATALOG_TTL_SECONDS);
+  }
+  return new Map(Object.entries(ranks));
+};
+
 const chunk = (items, size) =>
   Array.from({ length: Math.ceil(items.length / size) }, (_, i) =>
     items.slice(i * size, (i + 1) * size)
@@ -478,6 +524,7 @@ const getTokenPrices = async (mints, locals = {}) => {
 module.exports = {
   getSolanaTokenList,
   getSolanaCoinIds,
+  getSolanaMarketRanks,
   getTokenPrices,
   ATTRIBUTION,
   MAX_ADDRESSES_PER_PRICE_CALL,
