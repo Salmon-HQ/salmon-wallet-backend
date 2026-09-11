@@ -36,22 +36,25 @@ const BURN_TYPES = new Set(['burn', 'burnChecked']);
  * `info` — checked variants report `tokenAmount`, unchecked variants report
  * a bare `amount` (+ optional `decimals`).
  * @param {object} info - `parsedIx.parsed.info`
- * @returns {{amount: string, decimals: number}}
+ * Unchecked variants carry no decimals: leave them `undefined` so the
+ * resource fills them from the token catalog instead of rendering a
+ * 6-decimal token as an integer.
+ * @returns {{amount: string, decimals: number|undefined}}
  */
 const extractAmount = (info) => {
   if (info.tokenAmount) {
     return {
       amount: info.tokenAmount.amount,
-      decimals: info.tokenAmount.decimals ?? 0,
+      decimals: info.tokenAmount.decimals,
     };
   }
   if (info.amount !== undefined) {
     return {
       amount: String(info.amount),
-      decimals: info.decimals ?? 0,
+      decimals: info.decimals,
     };
   }
-  return { amount: '0', decimals: 0 };
+  return { amount: '0', decimals: undefined };
 };
 
 /**

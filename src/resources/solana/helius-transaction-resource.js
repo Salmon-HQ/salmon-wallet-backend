@@ -383,6 +383,20 @@ const getFee = (address, transaction) => {
   return undefined;
 };
 
+/**
+ * What the wallet gained (+) or paid (−) in SOL over the whole transaction,
+ * excluding the network fee it paid as fee payer. Both providers report the
+ * per-account lamport delta (`accountData`); it is the only SOL figure that
+ * survives wrapped-SOL hops, rent locks and `closeAccount` refunds. Null when
+ * the transaction carries no account data.
+ */
+const nativeSwapLeg = (transaction, address) => {
+  const entry = (transaction.accountData || []).find((a) => a.account === address);
+  if (!entry || typeof entry.nativeBalanceChange !== 'number') return null;
+  const feePaid = transaction.feePayer === address ? Number(transaction.fee || 0) : 0;
+  return entry.nativeBalanceChange + feePaid;
+};
+
 const DIRECTIONS = {
   in: {
     tokensField: 'incomingTokens',
@@ -413,18 +427,27 @@ const getDirectional = (direction, type, address, transaction, tokens) => {
   const directional = getDirectionalTransfers(transfers, address);
 
   if (type === SWAP && hasAggregatorProgram(transaction)) {
-    // A router moves SOL as wrapped SOL, already in tokenTransfers; a native
-    // leg would count it twice. Routes settle from escrow, so when the user
-    // has no leg on this side the fee payer's transfers stand in.
+    // A router moves SOL through wrapped-SOL accounts it opens and closes;
+    // the transfers show hops, not what the wallet ended up with. The SOL
+    // leg is the wallet's own balance delta; token legs come from transfers.
+    // Routes settle from escrow, so when the user has no token leg on this
+    // side the fee payer's transfers stand in.
+    const solLeg = nativeSwapLeg(transaction, address);
     let directionalTokens = directional[dir.tokensField];
     if (directionalTokens.length === 0 && transaction.feePayer) {
       directionalTokens = transfers.tokenTransfers.filter((t) =>
         dir.feePayerMatch(t, transaction.feePayer)
       );
     }
-    directionalTokens.forEach((t) => {
-      items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
-    });
+    directionalTokens
+      .filter((t) => solLeg === null || t.mint !== SOL_ADDRESS)
+      .forEach((t) => {
+        items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
+      });
+    const signedLeg = direction === 'in' ? solLeg : solLeg === null ? null : -solLeg;
+    if (signedLeg !== null && signedLeg > 0) {
+      items.push(buildNativeItem({ amount: signedLeg }, dir.item, null));
+    }
   } else if (type === SWAP) {
     // Wallet-to-wallet swap inferred from the mint mix: SOL moves natively.
     directional[dir.tokensField].forEach((t) => {

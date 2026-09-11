@@ -140,6 +140,10 @@ describe('swapRoute integration', () => {
         transfer(POOL, USER, SOL_MINT, 0.010612719),
       ],
       nativeTransfers: [{ fromUserAccount: USER, toUserAccount: 'fee-wallet', amount: 53380 }],
+      // the wallet's own delta: output minus rent locked in a hop account,
+      // minus Salmon's fee, minus the network fee it paid
+      fee: 8463,
+      accountData: [{ account: USER, nativeBalanceChange: 8758608, tokenBalanceChanges: [] }],
     };
     const tokens = new Map([
       [USDC_MINT, { address: USDC_MINT, symbol: 'USDC', decimals: 6 }],
@@ -154,13 +158,14 @@ describe('swapRoute integration', () => {
     expect(item.outputs).toEqual([
       expect.objectContaining({ contract: USDC_MINT, symbol: 'USDC', amount: '1100000' }),
     ]);
+    // 8758608 + 8463 network fee: what the swap left in the wallet
     expect(item.inputs).toEqual([
-      expect.objectContaining({ contract: SOL_MINT, symbol: 'SOL', amount: '10676020' }),
+      expect.objectContaining({ contract: SOL_MINT, symbol: 'SOL', amount: '8767071' }),
     ]);
     expect(item.swapRoute.hops[0]).toMatchObject({
       dex: 'AGGREGATOR',
       inputToken: { symbol: 'USDC', amount: '1100000' },
-      outputToken: { symbol: 'SOL', amount: '10676020' },
+      outputToken: { symbol: 'SOL', amount: '8767071' },
     });
   });
 

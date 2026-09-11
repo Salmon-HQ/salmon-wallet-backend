@@ -605,4 +605,28 @@ describe('parser orchestrator', () => {
     expect(result.source).toBe('SANCTUM');
     expect(result.type).toBe('STAKE_TOKEN');
   });
+
+  describe('accountData', () => {
+    test('emits the per-account lamport delta for every key whose balance moved', () => {
+      const rawTx = {
+        slot: 1,
+        blockTime: 1,
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [{ pubkey: 'payer' }, { pubkey: 'untouched' }, { pubkey: 'receiver' }],
+            instructions: [],
+          },
+        },
+        meta: { fee: 5000, preBalances: [100000, 50, 0], postBalances: [80000, 50, 15000] },
+      };
+
+      const parsed = parseTransaction(rawTx);
+
+      expect(parsed.accountData).toEqual([
+        { account: 'payer', nativeBalanceChange: -20000, tokenBalanceChanges: [] },
+        { account: 'receiver', nativeBalanceChange: 15000, tokenBalanceChanges: [] },
+      ]);
+    });
+  });
 });

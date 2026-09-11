@@ -224,6 +224,26 @@ const cleanInternalKeys = (building) => {
 };
 
 /**
+ * Per-account lamport deltas in the Helius `accountData` shape. Transfers
+ * alone miss what a `closeAccount` refunds or rent locks, so the resource
+ * reads what the wallet actually gained or lost in SOL from here.
+ * @param {object} rawTx - Solana parsed RPC tx response
+ * @returns {Array<{account: string, nativeBalanceChange: number, tokenBalanceChanges: Array}>}
+ */
+const collectAccountData = (rawTx) => {
+  const keys = rawTx?.transaction?.message?.accountKeys || [];
+  const pre = rawTx?.meta?.preBalances || [];
+  const post = rawTx?.meta?.postBalances || [];
+  return keys
+    .map((key, index) => ({
+      account: key?.pubkey || key,
+      nativeBalanceChange: (post[index] ?? 0) - (pre[index] ?? 0),
+      tokenBalanceChanges: [],
+    }))
+    .filter((entry) => entry.account && entry.nativeBalanceChange !== 0);
+};
+
+/**
  * Convert a raw `getParsedTransaction` response to the enriched tx shape.
  *
  * The parser is intentionally **address-agnostic**: it extracts transfers
@@ -294,8 +314,9 @@ const parseTransaction = (rawTx, options = {}) => {
     }
   }
 
-  // 3. Instruction metadata for FE debug pane
+  // 3. Instruction metadata for FE debug pane + per-account SOL deltas
   ctx.building.instructions = collectInstructionMetadata(rawTx);
+  ctx.building.accountData = collectAccountData(rawTx);
 
   // 4. Post-process passes (aggregator swapRoute, etc.)
   for (const parser of POST_PROCESSORS) {
@@ -329,6 +350,7 @@ module.exports = {
   __testing: {
     deriveType,
     buildAccountMaps,
+    collectAccountData,
     collectInstructionMetadata,
   },
 };
