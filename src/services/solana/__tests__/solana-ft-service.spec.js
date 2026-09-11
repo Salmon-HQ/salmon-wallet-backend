@@ -114,13 +114,13 @@ describe('Solana FT Service - catalog + on-chain metadata', () => {
     ]);
   });
 
-  test('getVerified decorates the catalog with on-chain program/swappability and caches it', async () => {
+  test('getVerified serves the catalog as-is (no per-mint DAS call for ~7k entries) and caches it', async () => {
     catalog.getVerified.mockResolvedValue([listedUsdc]);
-    metadata.getByMints.mockResolvedValue(new Map([[USDC, onChainUsdc]]));
 
     const result = await service.getVerified(locals);
 
-    expect(result).toEqual([{ ...onChainUsdc, ...listedUsdc, icon: 'cg.png', swappable: true }]);
+    expect(result).toEqual([listedUsdc]);
+    expect(metadata.getByMints).not.toHaveBeenCalled();
     expect(repository.saveVerifiedTokens).toHaveBeenCalledWith(result, locals);
   });
 

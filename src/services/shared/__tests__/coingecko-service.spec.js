@@ -32,6 +32,9 @@ jest.mock('../../../infrastructure/rate-limiting/coingecko-rate-limiter', () => 
   withRetry: jest.fn(async (operation) => operation()),
 }));
 
+// jest.setup loads .env; a real key there would put a header on every call.
+delete process.env.COINGECKO_API_KEY;
+
 const http = require('axios');
 const repository = require('../../../repositories/shared/coingecko-repository');
 const {
@@ -497,6 +500,11 @@ describe('coingecko-service', () => {
         { [USDC]: 'usd-coin' },
         24 * 60 * 60
       );
+
+      http.get.mockResolvedValueOnce({ data: { status: { error_code: 429 } } });
+      await expect(service.getSolanaCoinIds()).rejects.toThrow('unexpected shape');
+      http.get.mockResolvedValueOnce({ data: [{ id: 'bitcoin', platforms: {} }] });
+      await expect(service.getSolanaCoinIds()).rejects.toThrow('no Solana platform');
     });
 
     it('prices mints in chunks, leaves unlisted mints absent, and caches hits', async () => {

@@ -63,7 +63,10 @@ const byMints = async (mints) => {
 const rank = (token, q) => {
   const symbol = (token.symbol || '').toLowerCase();
   const name = (token.name || '').toLowerCase();
-  if (symbol === q || token.id === q) return 0;
+  if (token.id === q) return 0;
+  // The list carries look-alikes (a "USDC" cat coin next to USDC): an exact
+  // symbol whose name also matches outranks an exact symbol alone.
+  if (symbol === q) return name.includes(q) ? 0 : 0.5;
   if (symbol.startsWith(q)) return 1;
   if (name.startsWith(q)) return 2;
   if (symbol.includes(q) || name.includes(q)) return 3;
@@ -71,8 +74,8 @@ const rank = (token, q) => {
 };
 
 /**
- * Free-text search over listed tokens: exact symbol/mint first, then
- * symbol prefix, name prefix, substring. Case-insensitive.
+ * Free-text search over listed tokens: exact mint, exact symbol (name match
+ * first), symbol prefix, name prefix, substring. Case-insensitive.
  *
  * @param {string} query
  * @returns {Promise<Object[]>} up to MAX_SEARCH_RESULTS tokens.

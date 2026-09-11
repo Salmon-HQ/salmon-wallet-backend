@@ -153,9 +153,10 @@ const getByMints = async (mintAddresses, locals) => {
 };
 
 /**
- * Return the verified-token list: the curated catalog, decorated with
- * on-chain program + swappability. Repository-cached (5 min); the catalog
- * itself is a 24 h snapshot.
+ * Return the verified-token list: the curated catalog as-is (≈7k entries;
+ * on-chain decoration is left to `search`/`getByMints`, where it costs one
+ * DAS call for a handful of mints instead of seven for the whole list).
+ * Repository-cached (5 min); the catalog itself is a 24 h snapshot.
  *
  * @param {Object} locals
  * @returns {Promise<Array<Object>>} Fungible tokens only.
@@ -169,12 +170,7 @@ const getVerified = async (locals) => {
     return filterFungibleTokens(cached);
   }
 
-  const listed = await catalog.getVerified();
-  const onChain = await metadata.getByMints(
-    listed.map((t) => t.id),
-    locals
-  );
-  const tokens = listed.map((token) => merge(token, onChain.get(token.id)));
+  const tokens = await catalog.getVerified();
   if (tokens.length > 0) {
     await repository.saveVerifiedTokens(tokens, locals);
   }

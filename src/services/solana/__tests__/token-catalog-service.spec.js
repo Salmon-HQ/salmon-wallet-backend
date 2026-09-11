@@ -14,6 +14,7 @@ const list = [
   { address: USDC, symbol: 'USDC', name: 'USD Coin', decimals: 6, logoURI: 'usdc.png' },
   { address: BONK, symbol: 'Bonk', name: 'Bonk', decimals: 5, logoURI: 'bonk.png' },
   { address: 'USDCet111', symbol: 'USDCet', name: 'USD Coin (Wormhole)', decimals: 6 },
+  { address: 'Cat111', symbol: 'USDC', name: 'UpSide Down Cat', decimals: 6 },
   { address: 'broken', symbol: null, decimals: 6 },
 ];
 
@@ -28,7 +29,7 @@ describe('token-catalog-service', () => {
   it('builds the verified catalog in canonical shape, joined with coin ids, skipping malformed rows', async () => {
     const tokens = await catalog.getVerified();
 
-    expect(tokens).toHaveLength(3);
+    expect(tokens).toHaveLength(4);
     expect(tokens[0]).toEqual({
       id: USDC,
       symbol: 'USDC',
@@ -45,7 +46,11 @@ describe('token-catalog-service', () => {
 
   it('ranks search: exact symbol, symbol prefix, name prefix, substring; case-insensitive', async () => {
     const bySymbol = await catalog.search('usdc');
-    expect(bySymbol.map((t) => t.symbol)).toEqual(['USDC', 'USDCet']);
+    expect(bySymbol.map((t) => t.name)).toEqual([
+      'USD Coin',
+      'UpSide Down Cat',
+      'USD Coin (Wormhole)',
+    ]);
 
     const byName = await catalog.search('usd coin');
     expect(byName.map((t) => t.symbol)).toEqual(['USDC', 'USDCet']);

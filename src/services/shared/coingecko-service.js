@@ -413,12 +413,18 @@ const getSolanaCoinIds = async () => {
     15000,
     'CoinGecko coins list (platforms)'
   );
+  if (!Array.isArray(data)) {
+    throw new Error('CoinGecko coins list came back in an unexpected shape');
+  }
   const byMint = {};
-  for (const coin of Array.isArray(data) ? data : []) {
+  for (const coin of data) {
     const mint = coin?.platforms?.solana;
     if (mint && coin.id) {
       byMint[mint] = coin.id;
     }
+  }
+  if (Object.keys(byMint).length === 0) {
+    throw new Error('CoinGecko coins list carried no Solana platform entries');
   }
   await repository.saveSolanaCoinIds(byMint, CATALOG_TTL_SECONDS);
   return new Map(Object.entries(byMint));

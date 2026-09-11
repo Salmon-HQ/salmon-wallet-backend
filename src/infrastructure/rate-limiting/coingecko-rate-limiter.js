@@ -32,7 +32,11 @@ const withRetry = createWithRetry({
   honorRetryAfter: true,
 });
 
-const isFreeTier = !process.env.COINGECKO_API_KEY;
+// A Demo key still runs on the public host at 30 req/min; only a paid plan
+// (pro-api host) gets the paid budget.
+const isFreeTier = !(
+  process.env.COINGECKO_API_KEY && (process.env.COINGECKO_API_URL || '').includes('pro-api')
+);
 const limits = isFreeTier ? RATE_LIMITS.FREE_TIER : RATE_LIMITS.PAID_TIER;
 const rateLimiter = new RateLimiter(limits.requestsPerSecond, limits.burstSize);
 
