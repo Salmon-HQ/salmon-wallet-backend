@@ -321,7 +321,7 @@ describe('solana-swap-build-service', () => {
       expect(result.intermediateAccountsClosed).toBe(0);
     });
 
-    it('drops the cleanup and logs [SWAP_CLEANUP_SKIPPED] when the simulation rejects it', async () => {
+    it('drops the cleanup and logs [CLEANUP_SKIPPED] when the simulation rejects it', async () => {
       zeroex.requestSwapInstructions.mockResolvedValue(quote([createAta(USD1), swapInstruction()]));
       mockConnection.getMultipleAccountsInfo.mockResolvedValue([null]);
       mockConnection.simulateTransaction
@@ -336,7 +336,7 @@ describe('solana-swap-build-service', () => {
       expect(result.computeUnitLimit).toBe(115000);
       expect(mockConnection.simulateTransaction).toHaveBeenCalledTimes(2);
       expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('[SWAP_CLEANUP_SKIPPED]'),
+        expect.stringContaining('[CLEANUP_SKIPPED]'),
         expect.objectContaining({ accounts: 1 })
       );
       warn.mockRestore();

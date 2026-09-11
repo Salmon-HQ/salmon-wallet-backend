@@ -13,7 +13,9 @@
  *
  * Optional `cleanup` instructions (a swap's intermediate-account closes) are
  * appended, then dropped when the simulation rejects them so the main
- * instructions still ship.
+ * instructions still ship. The result names every program the compiled
+ * message invokes (lookup tables resolved) so a caller can enforce an
+ * allowlist on what was actually compiled, not on what it was handed.
  */
 
 const {
@@ -25,6 +27,8 @@ const {
 } = require('@solana/web3.js');
 
 const COMMITMENT = 'confirmed';
+/** Programs every unsigned build may invoke on top of the caller's allowlist: the compute budget we prepend. */
+const ALWAYS_ALLOWED_PROGRAMS = [ComputeBudgetProgram.programId.toBase58()];
 /** A blockhash stays valid for ~150 slots; tell the client when to ask for a fresh build. */
 const BUILD_TTL_MS = 60 * 1000;
 
@@ -39,7 +43,8 @@ const PRIORITY_FEE_MAX_ACCOUNTS = 128;
 
 /**
  * Priority fee in micro-lamports per compute unit. `SWAP_PRIORITY_FEE_MICROLAMPORTS`
- * pins it (0 disables); unset, it follows the network: the 75th percentile of
+ * (named for the swap, now global to every unsigned build) pins it (0
+ * disables); unset, it follows the network: the 75th percentile of
  * the recent fees paid on the accounts this transaction writes to (zeros
  * included — an uncongested network must read as cheap), clamped to
  * [PRIORITY_FEE_MIN, PRIORITY_FEE_MAX]. With the simulated CU limit (~150k
@@ -69,16 +74,16 @@ const resolvePriorityFee = async (connection, instructions) => {
     return Math.min(PRIORITY_FEE_MAX, Math.max(PRIORITY_FEE_MIN, p75));
   } catch (error) {
     console.warn(
-      `Swap build: recent prioritization fees unavailable (${error.message}); using minimum`
+      `[BUILD] recent prioritization fees unavailable (${error.message}); using minimum`
     );
     return PRIORITY_FEE_MIN;
   }
 };
 
 /**
- * Simulate the unsigned message. `{ units }` on success, `{ err }` when the
- * runtime rejected it (logs kept for the caller's warning), `{ err }` with
- * the transport message when the RPC could not simulate at all.
+ * Simulate the unsigned message. `{ units }` on success, `{ err, logs }` when
+ * the runtime rejected it, `{ err, transport: true }` when the RPC could not
+ * simulate at all — the caller's transaction is not to blame for that one.
  */
 const simulate = async (connection, message) => {
   try {
@@ -91,7 +96,7 @@ const simulate = async (connection, message) => {
     }
     return { units: value.unitsConsumed };
   } catch (error) {
-    return { err: error.message, logs: [] };
+    return { err: error.message, transport: true, logs: [] };
   }
 };
 
@@ -99,17 +104,11 @@ const simulate = async (connection, message) => {
  * Compute-unit limit: the simulated units plus headroom. Without a limit the
  * runtime budgets 200k CU per instruction and the priority fee is charged on
  * that budget, not on what runs (probed: a 3-instruction swap consumed ~135k
- * of a 785k default budget). A failed simulation (e.g. the taker cannot fund
- * the swap yet) falls back to a fixed limit so a quote is still returned;
- * the wallet simulates again before signing.
+ * of a 785k default budget). A failed simulation falls back to a fixed limit
+ * (the caller decides whether that is acceptable — see `simulationFallback`).
  */
-const computeUnitLimitFrom = (simulation) => {
-  if (simulation.err) {
-    console.warn('Swap build: simulation did not yield compute units', simulation);
-    return COMPUTE_UNIT_FALLBACK;
-  }
-  return Math.ceil(simulation.units * COMPUTE_UNIT_HEADROOM);
-};
+const computeUnitLimitFrom = (simulation) =>
+  simulation.err ? COMPUTE_UNIT_FALLBACK : Math.ceil(simulation.units * COMPUTE_UNIT_HEADROOM);
 
 const fetchLookupTables = async (connection, addresses) => {
   if (addresses.length === 0) {
@@ -128,6 +127,12 @@ const fetchLookupTables = async (connection, addresses) => {
   });
 };
 
+/** Program id (base58) of every top-level instruction in `message`, lookup tables resolved. */
+const programIdsOf = (message, lookupTables) => {
+  const keys = message.getAccountKeys({ addressLookupTableAccounts: lookupTables });
+  return message.compiledInstructions.map((ix) => keys.get(ix.programIdIndex).toBase58());
+};
+
 /**
  * Compile `instructions` into a serialized, unsigned v0 transaction paid by
  * `payer`, with a compute budget (limit + price) prepended when the priority
@@ -140,9 +145,14 @@ const fetchLookupTables = async (connection, addresses) => {
  * @param {string[]} [input.lookupTableAddresses]
  * @param {import('@solana/web3.js').TransactionInstruction[]} [input.cleanup] - appended
  *   after `instructions`; dropped when the simulation rejects them
- * @returns {Promise<{ transaction: string, priorityFeeMicroLamports: number,
- *   computeUnitLimit: number|null, simulation: Object, cleanup: Array }>} base64
- *   bytes, the budget applied, the (final) simulation and the cleanup kept
+ * @param {boolean} [input.simulationFallback=true] - when the simulation fails, still
+ *   ship the bytes with a fixed compute-unit limit (the swap: the wallet simulates
+ *   again before signing). `false` returns `transaction: null` and the failed
+ *   `simulation` instead, so the caller can refuse without a warn-then-throw.
+ * @returns {Promise<{ transaction: string|null, priorityFeeMicroLamports: number,
+ *   computeUnitLimit: number|null, simulation: Object, cleanup: Array,
+ *   programIds: string[] }>} base64 bytes, the budget applied, the (final)
+ *   simulation, the cleanup kept, and every program the compiled message invokes
  */
 const compileUnsigned = async ({
   connection,
@@ -150,6 +160,7 @@ const compileUnsigned = async ({
   instructions,
   lookupTableAddresses = [],
   cleanup = [],
+  simulationFallback = true,
 }) => {
   const [lookupTables, { blockhash }, priorityFee] = await Promise.all([
     fetchLookupTables(connection, lookupTableAddresses),
@@ -165,15 +176,32 @@ const compileUnsigned = async ({
     }).compileToV0Message(lookupTables);
 
   let applied = cleanup;
-  let simulation = await simulate(connection, compile([...instructions, ...applied]));
+  let simulated = compile([...instructions, ...applied]);
+  let simulation = await simulate(connection, simulated);
   if (simulation.err && applied.length > 0) {
-    console.warn('[SWAP_CLEANUP_SKIPPED] intermediate account close rejected in simulation', {
+    console.warn('[CLEANUP_SKIPPED] intermediate account close rejected in simulation', {
       accounts: applied.length,
       err: simulation.err,
       logs: simulation.logs,
     });
     applied = [];
-    simulation = await simulate(connection, compile(instructions));
+    simulated = compile(instructions);
+    simulation = await simulate(connection, simulated);
+  }
+  const base = {
+    priorityFeeMicroLamports: priorityFee,
+    simulation,
+    cleanup: applied,
+    programIds: programIdsOf(simulated, lookupTables),
+  };
+  if (simulation.err) {
+    if (!simulationFallback) {
+      return { ...base, transaction: null, computeUnitLimit: null };
+    }
+    console.warn('[BUILD] simulation did not yield compute units; using the fallback limit', {
+      err: simulation.err,
+      logs: simulation.logs,
+    });
   }
   const computeUnitLimit = computeUnitLimitFrom(simulation);
   const budget =
@@ -183,20 +211,19 @@ const compileUnsigned = async ({
           ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }),
         ]
       : [];
-  const transaction = Buffer.from(
-    new VersionedTransaction(compile([...budget, ...instructions, ...applied])).serialize()
-  ).toString('base64');
+  const message = compile([...budget, ...instructions, ...applied]);
+  const transaction = Buffer.from(new VersionedTransaction(message).serialize()).toString('base64');
 
   return {
+    ...base,
     transaction,
-    priorityFeeMicroLamports: priorityFee,
     computeUnitLimit: priorityFee > 0 ? computeUnitLimit : null,
-    simulation,
-    cleanup: applied,
+    programIds: programIdsOf(message, lookupTables),
   };
 };
 
 module.exports = {
+  ALWAYS_ALLOWED_PROGRAMS,
   BUILD_TTL_MS,
   COMMITMENT,
   compileUnsigned,
