@@ -31,7 +31,14 @@ describe('network-resource', () => {
       sections: {
         swap: { active: true },
       },
+      powerups: [],
       attribution: null,
     });
+  });
+
+  test('passes the powerups list through, reason included', () => {
+    const powerups = [{ id: 'stake', enabled: false, reason: 'maintenance' }];
+
+    expect(resource({ id: 'solana-mainnet', powerups }).powerups).toEqual(powerups);
   });
 });

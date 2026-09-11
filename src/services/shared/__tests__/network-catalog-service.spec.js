@@ -19,6 +19,10 @@ jest.mock('../../../constants/networks', () => [
 
 jest.mock('../network-capabilities-service', () => ({
   get: jest.fn(),
+  getPowerups: jest.fn(() => ({ swap: { enabled: true } })),
+}));
+jest.mock('../../solana/powerups/registry', () => ({
+  POWERUPS: { swap: { tier: 'core', networks: ['solana-mainnet'], contributor: null } },
 }));
 
 const networkCapabilitiesService = require('../network-capabilities-service');
@@ -46,13 +50,23 @@ describe('network-catalog-service', () => {
         sections: {
           swap: { active: true },
         },
+        powerups: [{ id: 'swap', enabled: true }],
       }),
       expect.objectContaining({
         id: 'ethereum-mainnet',
         enabled: false,
         sections: {},
+        powerups: [],
       }),
     ]);
+  });
+
+  test('does not offer a Powerup on a network the stage disables', () => {
+    networkCapabilitiesService.get.mockReturnValue({
+      'solana-mainnet': { enable: false, sections: {} },
+    });
+
+    expect(service.show('solana-mainnet').powerups).toEqual([]);
   });
 
   test('finds a network by id from the merged catalog', () => {
@@ -84,6 +98,15 @@ describe('network-catalog-service', () => {
           statusCode: 503,
           errorCode: 'network_catalog_unavailable',
         })
+      );
+    });
+
+    it('fails with 503 when the powerups block is invalid', () => {
+      networkCapabilitiesService.get.mockReturnValue({ 'solana-mainnet': { enable: true } });
+      networkCapabilitiesService.getPowerups.mockReturnValueOnce(undefined);
+
+      expect(() => service.list()).toThrow(
+        expect.objectContaining({ statusCode: 503, errorCode: 'network_catalog_unavailable' })
       );
     });
   });
