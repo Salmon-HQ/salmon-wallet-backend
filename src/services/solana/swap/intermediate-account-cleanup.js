@@ -7,8 +7,8 @@
  * route needs, including the taker's ATA for an intermediate token
  * (USDC → USD1 → SOL creates a USD1 account). The account ends the swap
  * empty and stays open, and its rent deposit (~0.002 SOL, 17% of a 1 USDC
- * swap) reads to the user as a loss. Jupiter avoids it with program-owned
- * shared accounts; 0x does not, so we append a `CloseAccount` per
+ * swap) reads to the user as a loss. Aggregators that route through
+ * program-owned shared accounts avoid it; 0x does not, so we append a `CloseAccount` per
  * intermediate ATA the build itself creates: the taker owns the account and
  * signs the whole transaction, so the deposit comes back in the same block.
  *
