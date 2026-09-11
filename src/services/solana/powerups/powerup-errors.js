@@ -28,12 +28,20 @@ class PowerupProgramMismatchError extends PowerupError {
   }
 }
 
-/** The runtime rejected the transaction; the user must not pay to watch it fail. */
+/**
+ * The simulation did not pass. A runtime rejection is the transaction's
+ * fault (422 `simulation_failed`: the user must not pay to watch it fail); an
+ * RPC transport failure is ours (503 `simulation_unavailable`).
+ */
 class PowerupSimulationError extends PowerupError {
   constructor(simulation) {
     const reason =
       typeof simulation.err === 'string' ? simulation.err : JSON.stringify(simulation.err);
-    super(`Transaction simulation failed: ${reason}`, 422, 'simulation_failed');
+    if (simulation.transport) {
+      super(`Transaction simulation unavailable: ${reason}`, 503, 'simulation_unavailable');
+    } else {
+      super(`Transaction simulation failed: ${reason}`, 422, 'simulation_failed');
+    }
     this.logs = simulation.logs;
   }
 }

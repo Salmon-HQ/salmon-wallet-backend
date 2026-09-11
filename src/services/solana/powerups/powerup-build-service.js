@@ -4,28 +4,32 @@
  * Generic Powerup build — adapter instructions → UNSIGNED v0 transaction
  * (`community-powerups` contract).
  *
- * Resolves the id against the registry and the stage flags, validates the
- * caller's params through the adapter, asks the adapter for instructions,
- * refuses any instruction that reaches a program the Powerup did not
- * declare, then compiles through the same step the swap uses
- * (`unsigned-transaction-builder`: priority fee, compute-unit limit,
- * simulation) with the caller as fee payer. A simulation error is a 422:
- * the user never pays to watch a transaction fail. Nothing here signs or
- * broadcasts (root `AGENTS.md` "Signing boundary").
+ * Resolves the id through the catalog predicate (registry ∩ stage flags ∩
+ * declared + enabled network ∩ has an adapter), validates the caller's params
+ * through the adapter, asks the adapter for instructions, compiles through
+ * the same step the swap uses (`unsigned-transaction-builder`: lookup
+ * tables, priority fee, compute-unit limit, simulation) with the caller as
+ * fee payer, then refuses the bytes unless every top-level program of the
+ * COMPILED message (lookup tables resolved) is one the Powerup declared or
+ * the compute budget we prepend. A declared program is trusted with
+ * everything it can CPI into; simulation proves the transaction executes,
+ * not what it invoked. A runtime rejection is a 422 (the user never pays to
+ * watch a transaction fail); an RPC outage during simulation is a 503, not
+ * the caller's fault. Nothing here signs or broadcasts (root `AGENTS.md`
+ * "Signing boundary").
  *
- * Fee policy: `salmonFee` is whatever the adapter reports (or null). The
- * swap's recipient resolution moves here with the first transaction-building
- * Powerup that has a fee leg.
+ * Fees: `salmonFee` is forced to null in this feature (see `registry.js`).
  */
 
 const { Connection } = require('@solana/web3.js');
-const networkCapabilitiesService = require('../../shared/network-capabilities-service');
 const {
+  ALWAYS_ALLOWED_PROGRAMS,
   BUILD_TTL_MS,
   COMMITMENT,
   compileUnsigned,
 } = require('../swap/unsigned-transaction-builder');
 const { POWERUPS } = require('./registry');
+const powerupCatalog = require('./powerup-catalog-service');
 const {
   PowerupError,
   PowerupNotFoundError,
@@ -34,45 +38,50 @@ const {
 } = require('./powerup-errors');
 
 /**
- * The registry entry for `id` when it is offered on `networkId`: registered,
- * enabled on the stage, declared for the network, and transaction-building.
- * Everything else — including `swap`, which has no adapter — is 404.
+ * The registry entry for `id` when it is offered on `networkId` (catalog
+ * predicate) and transaction-building. Everything else — including `swap`,
+ * which has no adapter — is 404.
  * @throws {PowerupError} 404 `not_found`; 503 `network_catalog_unavailable`
- *   when the stage's powerups block is invalid
+ *   when the stage config is invalid
  */
 const resolve = (id, networkId) => {
-  const stagePowerups = networkCapabilitiesService.getPowerups();
-  if (!stagePowerups) {
-    throw new PowerupError(
-      'The Powerup catalog is temporarily unavailable.',
-      503,
-      'network_catalog_unavailable'
-    );
-  }
   const entry = POWERUPS[id];
-  const offered =
-    entry && entry.adapter && entry.networks.includes(networkId) && stagePowerups[id]?.enabled;
-  if (!offered) {
+  if (!entry?.adapter || !powerupCatalog.isOffered(id, networkId)) {
     throw new PowerupNotFoundError(id, networkId);
   }
   return entry;
 };
 
-/** Every program an instruction references must be in the Powerup's declared list. */
-const assertDeclaredPrograms = (id, entry, instructions) => {
-  const declared = new Set(entry.programIds || []);
-  for (const ix of instructions) {
-    const programId = ix.programId.toBase58();
-    if (!declared.has(programId)) {
-      console.error(
-        '[POWERUP_PROGRAM_MISMATCH] adapter built an instruction for an undeclared program',
-        {
-          powerup: id,
-          programId,
-        }
-      );
-      throw new PowerupProgramMismatchError(id, programId);
-    }
+/** Validation codes the adapter may answer with, beyond the two generic ones. */
+const validationError = (entry, { error, error_description: description }) => {
+  const passThrough = ['missing_parameter', ...(entry.errorCodes || [])];
+  const code = passThrough.includes(error) ? error : 'invalid_parameter';
+  return new PowerupError(description, 400, code);
+};
+
+/** An adapter may only name the lookup tables its entry declared. */
+const assertDeclaredLookupTables = (id, entry, addresses) => {
+  const declared = new Set(entry.lookupTables || []);
+  const undeclared = addresses.find((address) => !declared.has(address));
+  if (undeclared) {
+    console.error('[POWERUP_PROGRAM_MISMATCH] adapter named an undeclared lookup table', {
+      powerup: id,
+      lookupTable: undeclared,
+    });
+    throw new PowerupProgramMismatchError(id, `lookup table ${undeclared}`);
+  }
+};
+
+/** Every top-level program of the compiled message must be declared, or the compute budget. */
+const assertDeclaredPrograms = (id, entry, programIds) => {
+  const allowed = new Set([...ALWAYS_ALLOWED_PROGRAMS, ...(entry.programIds || [])]);
+  const undeclared = programIds.find((programId) => !allowed.has(programId));
+  if (undeclared) {
+    console.error('[POWERUP_PROGRAM_MISMATCH] compiled message invokes an undeclared program', {
+      powerup: id,
+      programId: undeclared,
+    });
+    throw new PowerupProgramMismatchError(id, undeclared);
   }
 };
 
@@ -87,23 +96,22 @@ const build = async (id, query, locals) => {
 
   const validated = entry.adapter.validate(query);
   if (validated.error) {
-    throw new PowerupError(
-      validated.error_description,
-      400,
-      validated.error === 'missing_parameter' ? 'missing_parameter' : 'invalid_parameter'
-    );
+    throw validationError(entry, validated);
   }
 
   const connection = new Connection(locals.network.config.nodeUrl, COMMITMENT);
   const result = await entry.adapter.build(validated.params, { locals, connection });
-  assertDeclaredPrograms(id, entry, result.instructions);
+  const lookupTableAddresses = result.lookupTableAddresses || [];
+  assertDeclaredLookupTables(id, entry, lookupTableAddresses);
 
   const built = await compileUnsigned({
     connection,
     payer: query.publicKey,
     instructions: result.instructions,
-    lookupTableAddresses: result.lookupTableAddresses || [],
+    lookupTableAddresses,
+    simulationFallback: false,
   });
+  assertDeclaredPrograms(id, entry, built.programIds);
   if (built.simulation.err) {
     throw new PowerupSimulationError(built.simulation);
   }
@@ -112,7 +120,7 @@ const build = async (id, query, locals) => {
     transaction: built.transaction,
     expiresAt: new Date(Date.now() + BUILD_TTL_MS).toISOString(),
     provider: result.provider || null,
-    salmonFee: result.salmonFee || null,
+    salmonFee: null,
     contributor: entry.contributor,
     priorityFeeMicroLamports: built.priorityFeeMicroLamports,
     computeUnitLimit: built.computeUnitLimit,

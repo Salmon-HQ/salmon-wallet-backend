@@ -10,7 +10,7 @@ jest.mock('@solana/web3.js', () => {
   const actual = jest.requireActual('@solana/web3.js');
   return { ...actual, Connection: jest.fn(() => mockConnection) };
 });
-jest.mock('../../../shared/network-capabilities-service', () => ({ getPowerups: jest.fn() }));
+jest.mock('../powerup-catalog-service', () => ({ isOffered: jest.fn() }));
 
 const mockAdapter = { validate: jest.fn(), build: jest.fn() };
 jest.mock('../registry', () => ({
@@ -21,6 +21,8 @@ jest.mock('../registry', () => ({
       networks: ['solana-mainnet'],
       contributor: { name: 'Fixture Labs', url: 'https://fixture.example' },
       programIds: ['MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'],
+      lookupTables: ['AddressLookupTab1e1111111111111111111111111'],
+      errorCodes: ['note_too_long'],
       adapter: mockAdapter,
     },
     readonly: { tier: 'community', networks: ['solana-mainnet'], contributor: null, endpoints: [] },
@@ -28,7 +30,7 @@ jest.mock('../registry', () => ({
 }));
 
 const { PublicKey, TransactionInstruction, VersionedTransaction } = require('@solana/web3.js');
-const networkCapabilitiesService = require('../../../shared/network-capabilities-service');
+const powerupCatalog = require('../powerup-catalog-service');
 const service = require('../powerup-build-service');
 
 const PAYER = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
@@ -44,13 +46,15 @@ const instruction = (programId) =>
     data: Buffer.from('hi'),
   });
 
-const stage = (powerups) => networkCapabilitiesService.getPowerups.mockReturnValue(powerups);
+const OFFERED = new Set(['swap', 'fixture', 'readonly']);
 
 describe('powerup-build-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS;
-    stage({ swap: { enabled: true }, fixture: { enabled: true }, readonly: { enabled: true } });
+    powerupCatalog.isOffered.mockImplementation(
+      (id, networkId) => networkId === 'solana-mainnet' && OFFERED.has(id)
+    );
     mockAdapter.validate.mockReturnValue({ params: { note: 'hi' } });
     mockAdapter.build.mockResolvedValue({
       instructions: [instruction(MEMO)],
@@ -95,13 +99,11 @@ describe('powerup-build-service', () => {
     expect(result.expiresAt).toEqual(expect.any(String));
   });
 
-  it('passes an adapter-reported fee through untouched', async () => {
+  it('never publishes an adapter-reported fee: salmonFee is forced null', async () => {
     const salmonFee = { amount: '5', mint: MEMO, side: 'input', bps: 50 };
     mockAdapter.build.mockResolvedValue({ instructions: [instruction(MEMO)], salmonFee });
 
-    expect((await service.build('fixture', { publicKey: PAYER }, locals)).salmonFee).toEqual(
-      salmonFee
-    );
+    expect((await service.build('fixture', { publicKey: PAYER }, locals)).salmonFee).toBeNull();
   });
 
   it.each([
@@ -117,22 +119,59 @@ describe('powerup-build-service', () => {
     expect(mockAdapter.build).not.toHaveBeenCalled();
   });
 
-  it('answers 404 not_found when the stage disables the Powerup', async () => {
-    stage({ fixture: { enabled: false, reason: 'maintenance' } });
+  it('answers 404 not_found when the catalog does not offer the Powerup (stage or network off)', async () => {
+    powerupCatalog.isOffered.mockReturnValue(false);
 
     await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toMatchObject({
       statusCode: 404,
       errorCode: 'not_found',
     });
+    expect(powerupCatalog.isOffered).toHaveBeenCalledWith('fixture', 'solana-mainnet');
   });
 
-  it('answers 503 when the stage powerups block is invalid', async () => {
-    stage(undefined);
-
-    await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toMatchObject({
+  it('lets the catalog 503 through when the stage config is invalid', async () => {
+    const unavailable = Object.assign(new Error('x'), {
       statusCode: 503,
       errorCode: 'network_catalog_unavailable',
     });
+    powerupCatalog.isOffered.mockImplementation(() => {
+      throw unavailable;
+    });
+
+    await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toBe(unavailable);
+  });
+
+  it('passes an adapter-declared error code through and maps unknown codes to invalid_parameter', async () => {
+    mockAdapter.validate.mockReturnValueOnce({
+      error: 'note_too_long',
+      error_description: 'max 32',
+    });
+    await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toMatchObject({
+      statusCode: 400,
+      errorCode: 'note_too_long',
+      message: 'max 32',
+    });
+
+    mockAdapter.validate.mockReturnValueOnce({ error: 'whatever', error_description: 'bad' });
+    await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toMatchObject({
+      statusCode: 400,
+      errorCode: 'invalid_parameter',
+    });
+  });
+
+  it('refuses an undeclared lookup table with 502 before compiling', async () => {
+    mockAdapter.build.mockResolvedValue({
+      instructions: [instruction(MEMO)],
+      lookupTableAddresses: ['AddressLookupTab1e2222222222222222222222222'],
+    });
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toMatchObject({
+      statusCode: 502,
+      errorCode: 'provider_program_mismatch',
+    });
+    expect(mockConnection.getLatestBlockhash).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 
   it.each(['missing_parameter', 'invalid_parameter'])(
@@ -150,7 +189,7 @@ describe('powerup-build-service', () => {
     }
   );
 
-  it('refuses an instruction for an undeclared program with 502 and logs [POWERUP_PROGRAM_MISMATCH]', async () => {
+  it('refuses a compiled message invoking an undeclared program with 502 and logs [POWERUP_PROGRAM_MISMATCH]', async () => {
     mockAdapter.build.mockResolvedValue({ instructions: [instruction(MEMO), instruction(OTHER)] });
     const error = jest.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -162,8 +201,38 @@ describe('powerup-build-service', () => {
       powerup: 'fixture',
       programId: OTHER,
     });
-    expect(mockConnection.simulateTransaction).not.toHaveBeenCalled();
     error.mockRestore();
+  });
+
+  it('resolves lookup-table programs before checking: an ALT-loaded program must be declared', async () => {
+    const { AddressLookupTableAccount } = require('@solana/web3.js');
+    const LOOKUP = 'AddressLookupTab1e1111111111111111111111111';
+    // OTHER lives in the table only; the message references it by table index, not statically.
+    jest.spyOn(AddressLookupTableAccount, 'deserialize').mockReturnValueOnce({
+      deactivationSlot: BigInt('18446744073709551615'),
+      lastExtendedSlot: 0,
+      lastExtendedSlotStartIndex: 0,
+      authority: undefined,
+      addresses: [new PublicKey(OTHER)],
+    });
+    mockConnection.getMultipleAccountsInfo.mockResolvedValue([{ data: Buffer.alloc(56) }]);
+    mockAdapter.build.mockResolvedValue({
+      instructions: [
+        instruction(MEMO),
+        new TransactionInstruction({
+          programId: new PublicKey(MEMO),
+          keys: [{ pubkey: new PublicKey(OTHER), isSigner: false, isWritable: true }],
+          data: Buffer.from('x'),
+        }),
+      ],
+      lookupTableAddresses: [LOOKUP],
+    });
+
+    // OTHER is only an account here, never a program → allowed, and it is table-loaded.
+    const result = await service.build('fixture', { publicKey: PAYER }, locals);
+    const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
+    expect(tx.message.addressTableLookups).toHaveLength(1);
+    expect(tx.message.staticAccountKeys.map((k) => k.toBase58())).not.toContain(OTHER);
   });
 
   it('answers 422 simulation_failed with the runtime message instead of returning bytes', async () => {
@@ -177,7 +246,17 @@ describe('powerup-build-service', () => {
       errorCode: 'simulation_failed',
       message: expect.stringContaining('InstructionError'),
     });
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  it('answers 503 simulation_unavailable when the RPC could not simulate at all', async () => {
+    mockConnection.simulateTransaction.mockRejectedValue(new Error('rpc down'));
+
+    await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toMatchObject({
+      statusCode: 503,
+      errorCode: 'simulation_unavailable',
+    });
   });
 
   it('lets an upstream failure from the adapter propagate unchanged', async () => {
