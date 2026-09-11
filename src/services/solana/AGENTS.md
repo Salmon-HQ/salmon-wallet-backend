@@ -30,7 +30,7 @@ These rules apply to Solana service code only.
 - `token-metadata-service.js`
   - Triton DAS `getAssetBatch` → per-mint metadata, token program, Token-2022 routability (`swappable`)
 - `swap/` — `solana-swap-build-service.js` (quote → unsigned v0 tx: fee recipient, 0x instructions, intermediate-account cleanup, fee check), `unsigned-transaction-builder.js` (the shared compile step: ALTs, blockhash, priority fee, compute-unit limit, simulation — used by the swap and by every Powerup build), `zeroex-swap-provider.js` (0x wire format), `solana-swap-errors.js`
-- `powerups/` — `registry.js` (Salmon-maintained Powerup entries: tier, networks, contributor, `programIds` / `endpoints`, optional adapter; `swap` is listed for the catalog only), `powerup-catalog-service.js` (the `powerups` list `/v1/networks` publishes per network), `powerup-build-service.js` (resolve → adapter validate → adapter build → declared-program check → shared compile → simulation check), `powerup-errors.js`. Adapters never read `req`; they get validated params + `{ locals, connection }` and every upstream call goes through `providerCall`.
+- `powerups/` — `registry.js` (Salmon-maintained Powerup entries: tier, networks, contributor, `programIds` / `endpoints`, optional adapter; `swap` is listed for the catalog only), `powerup-catalog-service.js` (the `powerups` list `/v1/networks` publishes per network), `powerup-build-service.js` (resolve via the catalog predicate → adapter validate → adapter build → declared lookup tables → shared compile → declared-program check on the COMPILED message → simulation check; `salmonFee` forced null), `powerup-errors.js`. Adapters never read `req`; they get validated params + `{ locals, connection }` and every upstream call goes through `providerCall` under the entry's `providerProfile` row.
 - `solana-nft-service.js`
   - NFT read flows
 - `burn-service.js`
@@ -54,7 +54,7 @@ These rules apply to Solana service code only.
 - Transaction history/detail must keep frontend-compatible shape.
 - Burn flows are sensitive to asset type routing. Verify standard NFT, programmable NFT, and compressed NFT paths as applicable.
 - Swap and every Powerup build are instructions → unsigned transaction only (root `AGENTS.md` "Signing boundary"); never accept signed bytes or broadcast.
-- A Powerup build must refuse any instruction whose program is outside the registry entry's `programIds` (502 `provider_program_mismatch`) — that check is the only thing standing between an adapter bug and a transaction the wallet signs.
+- A Powerup build must refuse a compiled message whose top-level instructions (lookup tables resolved) invoke a program outside the registry entry's `programIds` + ComputeBudget (502 `provider_program_mismatch`) — that check is the only thing standing between an adapter bug and a transaction the wallet signs. A declared program is trusted with everything it can CPI into.
 
 ## Testing rules
 

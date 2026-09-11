@@ -56,8 +56,20 @@ path with the first real transaction-building Powerup.
 
 ## Deviations from spec
 
-- Fee policy reuse (`SWAP_FEE_BPS` recipient resolution) is a pass-through
-  hook, not wired: no adapter reports a fee leg yet. Recorded in AGENTS.md.
+- `salmonFee` is forced null on the generic route: no adapter-reported fee
+  is published. Fee legs land with the first Powerup that has one and will
+  reuse the swap's `existingFeeAccount` + `assertFeeInstructionPresent` +
+  `[SWAP_FEE_SKIPPED]` semantics. Recorded in AGENTS.md.
+- The declared-program check runs on the COMPILED v0 message with lookup
+  tables resolved (`compileUnsigned` returns `programIds`; ComputeBudget is
+  an explicit member of the allowed set); an adapter may only name lookup
+  tables in the entry's `lookupTables`. Simulation transport failures are
+  503 `simulation_unavailable`, not 422.
+- `listFor(networkId)` also honours the network's stage `enable` flag and
+  the build route resolves through the same predicate (`isOffered`).
+- Placement: `registry.js` + `powerup-catalog-service.js` live under
+  `src/services/solana/powerups/` for now; they may move to
+  `src/services/shared/powerups/` when a second chain needs them.
 - `powerupGate` logs nothing; `[POWERUP_BUILD]` is logged by the controller
   (id, network, outcome) so the gate stays a pure seam.
 

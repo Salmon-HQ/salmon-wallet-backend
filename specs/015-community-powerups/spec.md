@@ -116,7 +116,7 @@ off by id.
 
 **Acceptance Scenarios**:
 
-1. **Given** a read-only Powerup registered and enabled, **When** `/v1/networks` is called, **Then** it appears in `powerups` like any other.
+1. **Given** a read-only Powerup registered and enabled, **When** `/v1/networks` is called, **Then** it appears in `powerups` as `{ id, enabled }` like any other — the catalog publishes only `{ id, enabled, reason? }`; contributor and endpoints are the registry's (reviewer's) record.
 2. **Given** it is switched off with reason `deprecated`, **When** `/v1/networks` is called, **Then** `{ id, enabled: false, reason: 'deprecated' }` and its build route answers 404.
 
 ### Edge Cases
