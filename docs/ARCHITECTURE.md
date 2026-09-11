@@ -244,8 +244,12 @@ Important subfolders:
 
 - `src/infrastructure/cache/`
   - cache primitives and helpers
+- `src/infrastructure/providers/`
+  - `providerCall`: the one door to every upstream provider (request
+    budget, Redis-shared token bucket, circuit breaker, bounded retry, EMF
+    metrics); provider numbers in `profiles.js`
 - `src/infrastructure/rate-limiting/`
-  - rate-limit control for external integrations
+  - pure helpers behind `providers/` (in-process bucket, retry math)
 
 #### `src/middlewares/`
 

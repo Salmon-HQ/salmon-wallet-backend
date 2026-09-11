@@ -17,7 +17,22 @@ description: RPC, provider, and caching architecture of this multichain (Solana-
 
 - `src/services/solana/token-metadata-service.js` — Triton DAS `getAssetBatch` (`showFungible`, ≤1000 ids, Redis 1 h) for symbol/name/decimals/logo/token program and Token-2022 routability.
 - `src/services/solana/token-catalog-service.js` — CoinGecko Solana token list + `coins/list?include_platform` (Redis ≤24 h per their terms): verified catalog, `coingeckoId`, local search.
-- `src/services/shared/coingecko-service.js` — `getTokenPrices` (`simple/token_price/solana`, ≤515 mints/call, `price-cache` 5 min) plus charts/coin info/exchange rates. Paid plan → `COINGECKO_API_URL=https://pro-api.coingecko.com`; respect `coingecko-rate-limiter`.
+- `src/services/shared/coingecko-service.js` — `getTokenPrices` (`simple/token_price/solana`, ≤515 mints/call, `price-cache` 5 min) plus charts/coin info/exchange rates. Paid plan → `COINGECKO_API_URL=https://pro-api.coingecko.com`.
+
+### Provider limiter table (`src/infrastructure/providers/profiles.js`)
+
+Every upstream call goes through `providerCall(name, fn, { locals, environment, operationName })`; the numbers below are the defaults, `<PROVIDER>_MAX_RPS` overrides the rate. Bucket is shared across containers in Redis (`ratelimit:<STAGE>:<provider>`), in-memory fallback when Redis is down.
+
+| Provider      | rps (burst)                                  | timeout | retries | breaker        |
+| ------------- | -------------------------------------------- | ------- | ------- | -------------- |
+| `coingecko`   | 25/60 (30) demo · 500/60 (100) pro-api + key | 15 s    | 6       | 5 fails / 30 s |
+| `helius`      | 10 (20) · 50 (100) with `HELIUS_TIER=paid`   | 30 s    | 4       | 5 fails / 30 s |
+| `triton`      | 50 (100)                                     | 30 s    | 2       | 5 fails / 30 s |
+| `zeroex`      | 2 (2)                                        | 10 s    | 3       | 5 fails / 30 s |
+| `blockdaemon` | 20 (40)                                      | 6 s     | 1       | 5 fails / 30 s |
+| `dapp`        | 10 (20)                                      | 5 s     | 1       | none           |
+
+Every call is also bounded by the request budget (`res.locals.deadline`, `REQUEST_BUDGET_MS` default 25 s): a wait or retry that would land past it fails now (`503 upstream_rate_limited` / the last provider error). Open circuit → `503 upstream_unavailable`; the token catalog serves its stale Redis snapshot instead.
 
 ## Cache layers — pick the right one
 
