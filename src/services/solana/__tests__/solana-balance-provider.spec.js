@@ -142,6 +142,22 @@ describe('solana-balance-provider', () => {
     expect(out[0].currency.type).toBe('native');
   });
 
+  it('drops community-tagged (listed, long-tail) tokens by default like untagged ones', async () => {
+    const items = [buildSplToken('verified-mint', '10'), buildSplToken('community-mint', '10')];
+    blockdaemon.getBalance.mockResolvedValue(items);
+    tokenService.getByMints.mockResolvedValue([
+      { id: 'verified-mint', symbol: 'V', name: 'V', tags: ['verified'] },
+      { id: 'community-mint', symbol: 'C', name: 'C', tags: ['community'] },
+    ]);
+
+    const out = await provider.getBalance('sol-address', undefined, {});
+
+    const tokenMints = out
+      .filter((it) => it.currency?.type === 'token')
+      .map((it) => it.currency.asset_path?.replace(/^solana\/(?:mint|token)\//, ''));
+    expect(tokenMints).toEqual(['verified-mint']);
+  });
+
   it('drops tokens with only "unknown" tags by default (spam filter)', async () => {
     blockdaemon.getBalance.mockResolvedValue([
       buildSolNative('1'),

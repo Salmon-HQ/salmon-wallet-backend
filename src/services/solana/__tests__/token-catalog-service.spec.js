@@ -97,6 +97,8 @@ describe('token-catalog-service', () => {
     const tokens = await catalog.getVerified();
 
     expect(tokens.map((t) => t.symbol)).toEqual(['Bonk', 'USDC', 'USDC', 'USDCet']);
+    // without ranks nothing can be told apart: everything listed is community
+    expect(tokens.every((t) => t.tags[0] === 'community')).toBe(true);
     warn.mockRestore();
   });
 

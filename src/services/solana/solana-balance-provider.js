@@ -85,11 +85,12 @@ const extractTokenMint = (item) => {
   return null;
 };
 
-/** True when a token has no catalog tags, or every tag is `'unknown'`. */
-const isUnknownOnlyTags = (tags) => {
-  if (!Array.isArray(tags) || tags.length === 0) return true;
-  return tags.every((tag) => tag === 'unknown');
-};
+/**
+ * True unless the catalog tags carry `verified` (top market-cap tier).
+ * `community` (listed, long tail) and unlisted mints are hidden by default;
+ * `includeSpam` shows them.
+ */
+const isUnknownOnlyTags = (tags) => !(Array.isArray(tags) && tags.includes('verified'));
 
 /** Index a token-metadata array by mint (`id` or `address`). */
 const indexMetadataByMint = (metadata) => {
@@ -135,7 +136,7 @@ const filterZeroAmountTokens = (items) => {
   });
 };
 
-/** Drop SPL token items whose catalog tags are empty or only `'unknown'`. Native items always pass through. */
+/** Drop SPL token items without the `verified` tag. Native items always pass through. */
 const filterSpamTokens = (items) => {
   return items.filter((item) => {
     if (item?.currency?.type !== 'token') return true;

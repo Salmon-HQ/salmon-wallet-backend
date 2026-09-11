@@ -5,7 +5,9 @@
  * its coin ids, held as a 24 h snapshot (Redis, per CoinGecko's caching
  * terms) with an in-memory search index per process.
  *
- * "Verified" means "listed here". The list is ordered by market-cap rank
+ * Tags are two-level: `verified` for the top market-cap tier (the ranked
+ * top-1000 Solana coins), `community` for every other listed token; unlisted
+ * mints carry no tag. The list is ordered by market-cap rank
  * (top Solana coins first, the rest alphabetically) so a client that keeps
  * the first entry per symbol keeps the real token, not a look-alike. Search
  * covers symbol, name and mint of listed tokens only; unlisted mints are
@@ -21,17 +23,21 @@ let snapshot = null; // { builtAt, tokens, byMint }
 
 const UNRANKED = Number.MAX_SAFE_INTEGER;
 
+/** Listed AND in the market-cap top tier → `verified`; listed only → `community`. */
+const tagsFor = (rank) => (rank === UNRANKED ? ['community'] : ['verified']);
+
 const toToken = (entry, coinIds, ranks) => {
   const coingeckoId = coinIds.get(entry.address) || null;
+  const rank = (coingeckoId && ranks.get(coingeckoId)) || UNRANKED;
   return {
     id: entry.address,
     symbol: entry.symbol,
     name: entry.name,
     decimals: entry.decimals,
     icon: entry.logoURI || null,
-    tags: ['verified'],
+    tags: tagsFor(rank),
     coingeckoId,
-    rank: (coingeckoId && ranks.get(coingeckoId)) || UNRANKED,
+    rank,
   };
 };
 
@@ -67,7 +73,7 @@ const getSnapshot = async () => {
   return snapshot;
 };
 
-/** @returns {Promise<Object[]>} every listed token, canonical shape. */
+/** @returns {Promise<Object[]>} every listed token (verified + community), canonical shape, ranked first. */
 const getVerified = async () => (await getSnapshot()).tokens;
 
 /** @returns {Promise<Object|null>} the listed token for `mint`, or null. */

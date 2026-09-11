@@ -423,7 +423,7 @@ paths:
             enum: ['true', 'false', '1', '0']
           description: |
             When truthy (`true`/`1`), opts out of the chain-specific spam
-            filter (e.g. Solana drops tokens without a `verified` tag
+            filter (e.g. Solana drops tokens without a `verified` tag — top-1000 market cap; `community` = listed long tail
             by default).
       responses:
         '200':
