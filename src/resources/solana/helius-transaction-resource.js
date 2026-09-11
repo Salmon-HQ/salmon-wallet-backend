@@ -48,6 +48,19 @@ const {
 const { normalizeIpfsUrl } = require('./content-urls');
 const imageOverrides = require('../../services/solana/nft-image-override-service');
 
+/**
+ * One public vocabulary whichever provider enriched the page: the local
+ * parser names the token programs by program, Helius names plain SPL
+ * transfers `SOLANA_PROGRAM_LIBRARY`; the wallet must not see two labels for
+ * the same thing depending on which provider answered.
+ */
+const PUBLIC_SOURCE_ALIASES = {
+  TOKEN_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
+  TOKEN_2022_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
+  ASSOCIATED_TOKEN_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
+};
+const publicSource = (source) => PUBLIC_SOURCE_ALIASES[source] || source;
+
 const AGGREGATOR_ALL_IDS = new Set([
   ...AGGREGATOR_ROUTER_PROGRAM_IDS,
   ...AGGREGATOR_LIMIT_PROGRAM_IDS,
@@ -685,7 +698,9 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
   // The enrichment provider labels aggregator swaps with the program's own
   // brand; the public `source` enum (`solana-source-catalog`) names the
   // program by its role instead, so program-id detection decides the label.
-  const source = hasAggregatorProgram(heliusTransaction) ? 'AGGREGATOR' : heliusTransaction.source;
+  const source = hasAggregatorProgram(heliusTransaction)
+    ? 'AGGREGATOR'
+    : publicSource(heliusTransaction.source);
 
   const rawInputs = getInputs(type, address, heliusTransaction, tokenLookup);
   const rawOutputs = getOutputs(type, address, heliusTransaction, tokenLookup);

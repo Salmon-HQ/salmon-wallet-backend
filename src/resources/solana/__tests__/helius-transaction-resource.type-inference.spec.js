@@ -160,6 +160,25 @@ describe('mapTransactionType', () => {
     expect(item.type).toBe(SWAP);
   });
 
+  test("the parser's token-program sources surface under the provider-neutral SOLANA_PROGRAM_LIBRARY label", async () => {
+    const transformTransaction = require('../helius-transaction-resource');
+    const base = {
+      signature: 'sig',
+      timestamp: 1,
+      type: 'TRANSFER',
+      feePayer: 'user',
+      instructions: [],
+      tokenTransfers: [],
+      nativeTransfers: [],
+    };
+    for (const source of ['TOKEN_PROGRAM', 'TOKEN_2022_PROGRAM', 'ASSOCIATED_TOKEN_PROGRAM']) {
+      const item = await transformTransaction({ ...base, source }, 'user', []);
+      expect(item.source).toBe('SOLANA_PROGRAM_LIBRARY');
+    }
+    const item = await transformTransaction({ ...base, source: 'RAYDIUM' }, 'user', []);
+    expect(item.source).toBe('RAYDIUM');
+  });
+
   test('aggregator program present forces SWAP regardless of Helius type', () => {
     const result = mapTransactionType('TRANSFER', USER, {
       ...buildTx(),
