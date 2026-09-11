@@ -20,6 +20,7 @@ const repository = require('../../repositories/solana/solana-ft-repository');
 const catalog = require('./token-catalog-service');
 const metadata = require('./token-metadata-service');
 const { isValidSolanaAddress } = require('../../utils/solana-address');
+const { SOL_ADDRESS } = require('../../constants/solana-constants');
 
 const TOKEN_LIST_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
@@ -124,9 +125,13 @@ const clearListCache = () => {
 /** Listed entry (tags, coingeckoId) over on-chain metadata (program, swappable, freshest decimals). */
 const merge = (listed, onChain) => {
   if (!listed && !onChain) return null;
+  // The catalog lists the SOL mint as "Wrapped SOL"/WSOL; the wallet shows
+  // native SOL, so the native constant's symbol/name win for that mint.
+  const isNativeSol = (listed || onChain).id === SOL_ADDRESS;
   return {
     ...(onChain || {}),
     ...(listed || {}),
+    ...(isNativeSol && onChain ? { symbol: onChain.symbol, name: onChain.name } : {}),
     icon: listed?.icon || onChain?.icon || null,
     tags: listed ? listed.tags : [],
     coingeckoId: listed?.coingeckoId ?? null,

@@ -114,6 +114,37 @@ describe('Solana FT Service - catalog + on-chain metadata', () => {
     ]);
   });
 
+  test('getByMints keeps the native SOL symbol/name over the catalog "WSOL" listing', async () => {
+    const SOL = 'So11111111111111111111111111111111111111112';
+    metadata.getByMints.mockResolvedValue(
+      new Map([[SOL, { id: SOL, symbol: 'SOL', name: 'Solana', decimals: 9, swappable: true }]])
+    );
+    catalog.byMints.mockResolvedValue(
+      new Map([
+        [
+          SOL,
+          {
+            id: SOL,
+            symbol: 'WSOL',
+            name: 'Wrapped SOL',
+            decimals: 9,
+            tags: ['verified'],
+            coingeckoId: 'wrapped-solana',
+          },
+        ],
+      ])
+    );
+
+    const [sol] = await service.getByMints([SOL], locals);
+
+    expect(sol).toMatchObject({
+      symbol: 'SOL',
+      name: 'Solana',
+      tags: ['verified'],
+      coingeckoId: 'wrapped-solana',
+    });
+  });
+
   test('getVerified serves the catalog as-is (no per-mint DAS call for ~7k entries) and caches it', async () => {
     catalog.getVerified.mockResolvedValue([listedUsdc]);
 
