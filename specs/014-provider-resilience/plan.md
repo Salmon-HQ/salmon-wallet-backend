@@ -80,7 +80,7 @@ in-memory fallback otherwise. Metrics appear in CloudWatch under namespace
 - `providerCall` takes an `environment` option next to `locals`: the Helius / Triton readers receive an environment string, not `res.locals`, and the breaker scope needs it.
 - Per-call axios timeouts survive as `Math.min(<call timeout>, ctx.timeout)` so the tighter budgets already in place (e.g. 2 s exchange rates) are not widened to the profile cap.
 - `dapp` has no breaker (`breaker: null`): every dapp is a different host, so one broken dapp would open the circuit for all. It keeps the limiter, timeout and budget.
-- `withSingleFlight` serves the stale copy on *any* rebuild failure, not only an open circuit; that is the smallest path to FR-005's "prefer stale" and matches the coingecko long-term fallback already in the repo. No `cacheKeyForStale` option on `providerCall`.
+- `withSingleFlight` serves the stale copy on _any_ rebuild failure, not only an open circuit; that is the smallest path to FR-005's "prefer stale" and matches the coingecko long-term fallback already in the repo. No `cacheKeyForStale` option on `providerCall`.
 - Breaker state is three plain keys (`:failures` INCR, `:open` SET PX, `:probe` SET NX PX) instead of one JSON blob, so writes are atomic without a second Lua script.
 - The in-memory fallback + the test fake share `providers/memory-store.js`; `src/__tests__/helpers/fake-redis.js` adds a JS port of the bucket script and a `failing` switch.
 - The bare-RPC path (`locals.network.config.nodeUrl`, `@solana/web3.js` Connection) is not a profiled provider and stays outside `providerCall`; Triton JSON-RPC reads in `parser/triton-rpc.js` are inside.
