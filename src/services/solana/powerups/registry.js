@@ -44,12 +44,25 @@
  * `GET /powerups/swap/build` answers 404 (no adapter).
  */
 
+const memo = require('./adapters/memo');
+
 const POWERUPS = {
   swap: {
     tier: 'core',
     networks: ['solana-mainnet'],
     contributor: null,
     endpoints: [],
+  },
+  // Reference transaction-building Powerup: one Memo instruction. Listed
+  // only where a stage enables it (today: `local`).
+  memo: {
+    tier: 'core',
+    networks: ['solana-mainnet', 'solana-devnet'],
+    contributor: null,
+    programIds: [memo.MEMO_PROGRAM_ID],
+    lookupTables: [],
+    errorCodes: ['note_too_long'],
+    adapter: memo,
   },
 };
 

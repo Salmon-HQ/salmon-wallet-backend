@@ -7,10 +7,10 @@
  * Stage selection happens in `src/services/shared/network-capabilities-service.js`,
  * which loads `network-capabilities-${NODE_ENV}.js` based on `NODE_ENV`.
  *
- * The four stage files (develop/local/main/prod) are currently
- * byte-identical because the matrices agree across stages. They are
- * kept as separate files so a future stage divergence (e.g. enabling a
- * feature only in `develop`) is a one-file edit, not a refactor.
+ * The four stage files (develop/local/main/prod) agree on the network
+ * matrix; they only diverge in the `powerups` block (the `memo` reference
+ * Powerup is enabled on `local` alone). They are kept as separate files so
+ * a stage divergence is a one-file edit, not a refactor.
  */
 
 const { SOLANA } = require('../constants/blockchains');
