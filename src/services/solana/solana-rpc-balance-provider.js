@@ -17,12 +17,11 @@
 
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } = require('@solana/spl-token');
-const { SOL_SYMBOL, SOL_DECIMALS } = require('../../constants/solana-constants');
+const { SOL_SYMBOL, SOL_DECIMALS, SOL_NAME } = require('../../constants/solana-constants');
 
 const BLOCKCHAIN = 'solana';
 const COMMITMENT = 'confirmed';
-// Blockdaemon names the native asset "Solana" (SOL_NAME is "Wrapped SOL").
-const NATIVE_NAME = 'Solana';
+const NATIVE_NAME = SOL_NAME;
 
 const buildNativeItem = (owner, lamports) => ({
   owner,

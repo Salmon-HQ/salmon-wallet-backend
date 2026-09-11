@@ -1,4 +1,6 @@
-const SOL_NAME = 'Wrapped SOL';
+// Display name of native SOL everywhere (balance, history, swap); the catalog's
+// "Wrapped SOL" is the token-account wrapper, not what the user holds.
+const SOL_NAME = 'Solana';
 const SOL_SYMBOL = 'SOL';
 const SOL_DECIMALS = 9;
 const SOL_ADDRESS = 'So11111111111111111111111111111111111111112';

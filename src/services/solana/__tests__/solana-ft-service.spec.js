@@ -126,7 +126,7 @@ describe('Solana FT Service - catalog + on-chain metadata', () => {
           {
             id: SOL,
             symbol: 'WSOL',
-            name: 'Wrapped SOL',
+            name: 'Solana',
             decimals: 9,
             tags: ['verified'],
             coingeckoId: 'wrapped-solana',

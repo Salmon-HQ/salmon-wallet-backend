@@ -87,7 +87,7 @@ describe('solana-transaction-resource rpc fallback parser', () => {
         amount: 1250000000,
         decimals: 9,
         symbol: 'SOL',
-        name: 'Wrapped SOL',
+        name: 'Solana',
         logo: expect.stringContaining('So11111111111111111111111111111111111111112'),
         contract: 'So11111111111111111111111111111111111111112',
         source: 'sender-address',

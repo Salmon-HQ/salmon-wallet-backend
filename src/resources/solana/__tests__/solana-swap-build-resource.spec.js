@@ -35,7 +35,7 @@ describe('solana-swap-build-resource', () => {
   beforeEach(() => {
     tokenService.getByMints.mockResolvedValue([
       { id: USDC, symbol: 'USDC', name: 'USD Coin', decimals: 6, icon: 'usdc.png' },
-      { id: SOL, symbol: 'SOL', name: 'Wrapped SOL', decimals: 9, icon: 'sol.png' },
+      { id: SOL, symbol: 'SOL', name: 'Solana', decimals: 9, icon: 'sol.png' },
     ]);
     coingecko.getTokenPrices.mockResolvedValue(
       new Map([
@@ -69,7 +69,7 @@ describe('solana-swap-build-resource', () => {
         minAmount: '980000000',
         decimals: 9,
         symbol: 'SOL',
-        name: 'Wrapped SOL',
+        name: 'Solana',
         logo: 'sol.png',
       },
       route: [
