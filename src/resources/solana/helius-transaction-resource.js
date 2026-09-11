@@ -46,6 +46,7 @@ const {
   AGGREGATOR_LIMIT_PROGRAM_IDS,
 } = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
+const imageOverrides = require('../../services/solana/nft-image-override-service');
 
 const AGGREGATOR_ALL_IDS = new Set([
   ...AGGREGATOR_ROUTER_PROGRAM_IDS,
@@ -515,7 +516,10 @@ const enrichWithNftMetadata = (items, nftMetadata) => {
       const metadata = nftMetadata.get(item.contract);
       if (metadata.name) item.name = metadata.name;
       if (metadata.symbol) item.symbol = metadata.symbol;
-      if (metadata.image) item.logo = normalizeIpfsUrl(metadata.image);
+      // Same precedence as the NFT list: the curated override (a mirror for
+      // collections whose origin no longer serves) wins over the asset image.
+      const image = imageOverrides.lookup(item.contract) || metadata.image;
+      if (image) item.logo = normalizeIpfsUrl(image);
     }
   });
 };

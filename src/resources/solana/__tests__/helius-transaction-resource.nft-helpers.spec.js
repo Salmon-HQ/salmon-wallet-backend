@@ -123,4 +123,25 @@ describe('enrichWithNftMetadata', () => {
     enrichWithNftMetadata(items, new Map([['M', { name: 'X' }]]));
     expect(items[0].name).toBeUndefined();
   });
+
+  test('enrichWithNftMetadata prefers the curated image override, like the NFT list', () => {
+    const overrides = require('../../../services/solana/nft-image-override-service');
+    const spy = jest
+      .spyOn(overrides, 'lookup')
+      .mockImplementation((mint) => (mint === 'mint-1' ? 'https://arweave.net/mirror' : undefined));
+    const items = [
+      { isNft: true, contract: 'mint-1' },
+      { isNft: true, contract: 'mint-2' },
+    ];
+    const metadata = new Map([
+      ['mint-1', { image: 'https://cid.ipfs.nftstorage.link/1.png' }],
+      ['mint-2', { image: 'https://cid.ipfs.nftstorage.link/2.png' }],
+    ]);
+
+    enrichWithNftMetadata(items, metadata);
+
+    expect(items[0].logo).toBe('https://arweave.net/mirror');
+    expect(items[1].logo).toBe('https://ipfs.io/ipfs/cid/2.png');
+    spy.mockRestore();
+  });
 });

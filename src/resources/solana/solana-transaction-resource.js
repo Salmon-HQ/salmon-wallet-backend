@@ -22,6 +22,7 @@ const {
   BUBBLEGUM_PROGRAM_ID,
 } = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
+const imageOverrides = require('../../services/solana/nft-image-override-service');
 
 const PROGRAMS = {
   AGGREGATOR: [...AGGREGATOR_ROUTER_PROGRAM_IDS, ...AGGREGATOR_LIMIT_PROGRAM_IDS],
@@ -179,7 +180,7 @@ const buildNftTransfer = (nft, directionField, directionValue) => ({
   decimals: 0,
   symbol: nft.symbol,
   name: nft.json.collection?.name,
-  logo: normalizeIpfsUrl(nft.json.image),
+  logo: normalizeIpfsUrl(imageOverrides.lookup(nft.mint?.address?.toBase58()) || nft.json.image),
   contract: nft.mint?.address?.toBase58(),
   [directionField]: directionValue,
 });
