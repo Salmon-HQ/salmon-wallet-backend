@@ -32,13 +32,18 @@ const { SOL_ADDRESS, SOL_DECIMALS } = require('../../../constants/solana-constan
 const { getByMints } = require('../solana-ft-service');
 const tokenMetadata = require('../token-metadata-service');
 const zeroex = require('./zeroex-swap-provider');
+const { intermediateAccountCleanup } = require('./intermediate-account-cleanup');
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
 
 const PROVIDER = { id: '0x', displayName: '0x', attribution: 'Powered by 0x' };
 const DEFAULT_SLIPPAGE_BPS = 50;
 const MAX_SLIPPAGE_BPS = 10000;
-/** Bytes 0x leaves free for the ComputeBudget instructions we prepend (docs' worked example). */
-const COMPUTE_BUDGET_RESERVE_BYTES = 52;
+/**
+ * Bytes 0x leaves free for what we add: two ComputeBudget instructions (52,
+ * the docs' worked example) plus a CloseAccount per intermediate account
+ * (~8 each; every key it needs is already in the transaction).
+ */
+const COMPUTE_BUDGET_RESERVE_BYTES = 68;
 /** A blockhash stays valid for ~150 slots; tell the client when to ask for a fresh build. */
 const BUILD_TTL_MS = 60 * 1000;
 const COMMITMENT = 'confirmed';
@@ -205,32 +210,40 @@ const resolveFee = async (connection, fee, inputMint, outputMint) => {
 };
 
 /**
- * Compute-unit limit for the swap: simulate the unsigned message and add
- * headroom. Without a limit the runtime budgets 200k CU per instruction and
- * the priority fee is charged on that budget, not on what runs (probed: a
- * 3-instruction swap consumed ~135k of a 785k default budget). A failed
- * simulation (e.g. the taker cannot fund the swap yet) falls back to a fixed
- * limit so a quote is still returned; the wallet simulates again before
- * signing.
+ * Simulate the unsigned message. `{ units }` on success, `{ err }` when the
+ * runtime rejected it (logs kept for the caller's warning), `{ err }` with
+ * the transport message when the RPC could not simulate at all.
  */
-const resolveComputeUnitLimit = async (connection, message) => {
+const simulate = async (connection, message) => {
   try {
     const { value } = await connection.simulateTransaction(new VersionedTransaction(message), {
       sigVerify: false,
       replaceRecentBlockhash: true,
     });
     if (value.err || !value.unitsConsumed) {
-      console.warn('Swap build: simulation did not yield compute units', {
-        err: value.err,
-        logs: (value.logs || []).slice(-3),
-      });
-      return COMPUTE_UNIT_FALLBACK;
+      return { err: value.err || 'no compute units reported', logs: (value.logs || []).slice(-3) };
     }
-    return Math.ceil(value.unitsConsumed * COMPUTE_UNIT_HEADROOM);
+    return { units: value.unitsConsumed };
   } catch (error) {
-    console.warn(`Swap build: simulation unavailable (${error.message}); using fallback CU limit`);
+    return { err: error.message, logs: [] };
+  }
+};
+
+/**
+ * Compute-unit limit for the swap: the simulated units plus headroom.
+ * Without a limit the runtime budgets 200k CU per instruction and the
+ * priority fee is charged on that budget, not on what runs (probed: a
+ * 3-instruction swap consumed ~135k of a 785k default budget). A failed
+ * simulation (e.g. the taker cannot fund the swap yet) falls back to a fixed
+ * limit so a quote is still returned; the wallet simulates again before
+ * signing.
+ */
+const computeUnitLimitFrom = (simulation) => {
+  if (simulation.err) {
+    console.warn('Swap build: simulation did not yield compute units', simulation);
     return COMPUTE_UNIT_FALLBACK;
   }
+  return Math.ceil(simulation.units * COMPUTE_UNIT_HEADROOM);
 };
 
 const fetchLookupTables = async (connection, addresses) => {
@@ -337,7 +350,24 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
       instructions,
     }).compileToV0Message(lookupTables);
 
-  const computeUnitLimit = await resolveComputeUnitLimit(connection, compile(quote.instructions));
+  // Refund the rent of intermediate token accounts in the same transaction;
+  // if the runtime rejects the close (a balance left behind), ship without it.
+  let cleanup = await intermediateAccountCleanup(connection, quote.instructions, {
+    taker: publicKey,
+    inputMint,
+    outputMint,
+  });
+  let simulation = await simulate(connection, compile([...quote.instructions, ...cleanup]));
+  if (simulation.err && cleanup.length > 0) {
+    console.warn('[SWAP_CLEANUP_SKIPPED] intermediate account close rejected in simulation', {
+      accounts: cleanup.length,
+      err: simulation.err,
+      logs: simulation.logs,
+    });
+    cleanup = [];
+    simulation = await simulate(connection, compile(quote.instructions));
+  }
+  const computeUnitLimit = computeUnitLimitFrom(simulation);
   const budget =
     priorityFee > 0
       ? [
@@ -346,7 +376,7 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
         ]
       : [];
   const transaction = Buffer.from(
-    new VersionedTransaction(compile([...budget, ...quote.instructions])).serialize()
+    new VersionedTransaction(compile([...budget, ...quote.instructions, ...cleanup])).serialize()
   ).toString('base64');
 
   return {
@@ -362,6 +392,7 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     slippageBps,
     priorityFeeMicroLamports: priorityFee,
     computeUnitLimit: priorityFee > 0 ? computeUnitLimit : null,
+    intermediateAccountsClosed: cleanup.length,
     routePlan: quote.routePlan,
     salmonFee: fee
       ? {

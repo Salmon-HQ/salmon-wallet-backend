@@ -19,7 +19,11 @@ jest.mock('../../solana-ft-service', () => ({ getByMints: jest.fn() }));
 jest.mock('../../token-metadata-service', () => ({ getByMints: jest.fn(async () => new Map()) }));
 
 const { PublicKey, TransactionInstruction, VersionedTransaction } = require('@solana/web3.js');
-const { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } = require('@solana/spl-token');
+const {
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+} = require('@solana/spl-token');
 const zeroex = require('../zeroex-swap-provider');
 const { getByMints } = require('../../solana-ft-service');
 const tokenMetadata = require('../../token-metadata-service');
@@ -94,7 +98,7 @@ describe('solana-swap-build-service', () => {
     const result = await service.build(params(), locals);
 
     expect(zeroex.requestSwapInstructions).toHaveBeenCalledWith(
-      expect.objectContaining({ fee: null, reserveBytes: 52, taker: TAKER })
+      expect.objectContaining({ fee: null, reserveBytes: 68, taker: TAKER })
     );
     const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
     expect(tx.version).toBe(0);
@@ -242,6 +246,84 @@ describe('solana-swap-build-service', () => {
     expect(result.priorityFeeMicroLamports).toBe(0);
     expect(result.computeUnitLimit).toBeNull();
     expect(compiledPrograms(result)).toEqual([SETTLER]);
+  });
+
+  describe('intermediate account cleanup', () => {
+    const USD1 = 'USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB';
+    const takerKey = new PublicKey(TAKER);
+    const createAta = (mint) =>
+      createAssociatedTokenAccountIdempotentInstruction(
+        takerKey,
+        getAssociatedTokenAddressSync(new PublicKey(mint), takerKey, false, TOKEN_PROGRAM_ID),
+        takerKey,
+        new PublicKey(mint),
+        TOKEN_PROGRAM_ID
+      );
+    const CLOSE_ACCOUNT = 9;
+    const closeInstructions = (result) => {
+      const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
+      return tx.message.compiledInstructions.filter(
+        (ix) =>
+          tx.message.staticAccountKeys[ix.programIdIndex].equals(TOKEN_PROGRAM_ID) &&
+          ix.data[0] === CLOSE_ACCOUNT
+      );
+    };
+
+    it('closes the intermediate ATA the route creates, refunding rent to the taker', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([createAta(USD1), createAta(USDC), swapInstruction()])
+      );
+      // the USD1 account does not exist yet → ours to close; USDC is the output → kept
+      mockConnection.getMultipleAccountsInfo.mockResolvedValue([null]);
+
+      const result = await service.build(params(), locals);
+
+      const closes = closeInstructions(result);
+      expect(closes).toHaveLength(1);
+      const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
+      const keys = closes[0].accountKeyIndexes.map((i) =>
+        tx.message.staticAccountKeys[i].toBase58()
+      );
+      const usd1Ata = getAssociatedTokenAddressSync(new PublicKey(USD1), takerKey).toBase58();
+      expect(keys).toEqual([usd1Ata, TAKER, TAKER]); // account, rent destination, owner
+      expect(result.intermediateAccountsClosed).toBe(1);
+      // the simulated message already carries the close
+      const [simulated] = mockConnection.simulateTransaction.mock.calls[0];
+      expect(simulated.message.compiledInstructions).toHaveLength(4);
+      const [queried] = mockConnection.getMultipleAccountsInfo.mock.calls[0];
+      expect(queried.map((k) => k.toBase58())).toEqual([usd1Ata]);
+    });
+
+    it('leaves a pre-existing intermediate account alone', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(quote([createAta(USD1), swapInstruction()]));
+      mockConnection.getMultipleAccountsInfo.mockResolvedValue([{ data: Buffer.alloc(165) }]);
+
+      const result = await service.build(params(), locals);
+
+      expect(closeInstructions(result)).toHaveLength(0);
+      expect(result.intermediateAccountsClosed).toBe(0);
+    });
+
+    it('drops the cleanup and logs [SWAP_CLEANUP_SKIPPED] when the simulation rejects it', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(quote([createAta(USD1), swapInstruction()]));
+      mockConnection.getMultipleAccountsInfo.mockResolvedValue([null]);
+      mockConnection.simulateTransaction
+        .mockResolvedValueOnce({ value: { err: { InstructionError: [2, 'Custom'] }, logs: [] } })
+        .mockResolvedValueOnce({ value: { err: null, unitsConsumed: 100000, logs: [] } });
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const result = await service.build(params(), locals);
+
+      expect(closeInstructions(result)).toHaveLength(0);
+      expect(result.intermediateAccountsClosed).toBe(0);
+      expect(result.computeUnitLimit).toBe(115000);
+      expect(mockConnection.simulateTransaction).toHaveBeenCalledTimes(2);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('[SWAP_CLEANUP_SKIPPED]'),
+        expect.objectContaining({ accounts: 1 })
+      );
+      warn.mockRestore();
+    });
   });
 
   it('falls back to a fixed CU limit when the simulation fails, still returning the quote', async () => {

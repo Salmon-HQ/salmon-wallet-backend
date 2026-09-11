@@ -79,6 +79,7 @@ module.exports = async (build, _include, _key, context) => {
     slippageBps: build.slippageBps,
     priorityFeeMicroLamports: build.priorityFeeMicroLamports,
     computeUnitLimit: build.computeUnitLimit,
+    intermediateAccountsClosed: build.intermediateAccountsClosed,
     inUsdValue,
     outUsdValue,
     salmonFee: feeLine(build.salmonFee, build.salmonFee && tokenFor(build.salmonFee.mint)),
