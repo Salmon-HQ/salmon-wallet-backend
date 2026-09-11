@@ -75,6 +75,23 @@ module.exports = (settings) => {
 
   const del = async (keys) => handle(async () => client.del(keys));
 
+  const pExpire = async (key, ms) => handle(async () => client.pExpire(key, ms));
+
+  const mGet = async (keys) => handle(async () => client.mGet(keys));
+
+  // One MULTI: SET EX per entry, one round-trip.
+  const setMany = async (entries, { ex } = {}) =>
+    handle(async () => {
+      const multi = client.multi();
+      for (const [key, value] of entries) {
+        multi.set(key, value, { EX: ex });
+      }
+      return multi.exec();
+    });
+
+  const evalScript = async (script, keys, args) =>
+    handle(async () => client.eval(script, { keys, arguments: args.map(String) }));
+
   const quit = async () => handle(async () => client.quit());
 
   return {
@@ -91,6 +108,10 @@ module.exports = (settings) => {
     incr,
     decr,
     del,
+    pExpire,
+    mGet,
+    setMany,
+    eval: evalScript,
     quit,
   };
 };

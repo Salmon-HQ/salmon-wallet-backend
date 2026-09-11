@@ -1,6 +1,12 @@
 'use strict';
 
-const { getFromCache, storeInCache, getCacheKeyFor } = require('./cache-helper');
+const {
+  getFromCache,
+  storeInCache,
+  getManyFromCache,
+  storeManyInCache,
+  getCacheKeyFor,
+} = require('./cache-helper');
 
 /**
  * Price Cache Service
@@ -67,8 +73,13 @@ const setCachedQuote = async (mintAddress, quote, locals = {}) => {
   }
 };
 
+const toQuote = (cached) =>
+  cached && cached.usdPrice != null
+    ? { usdPrice: cached.usdPrice, priceChange24h: cached.priceChange24h ?? null }
+    : null;
+
 /**
- * Read each mint from cache in parallel.
+ * Read every mint from cache in one MGET.
  * @param {string[]} mintAddresses
  * @param {Object} locals
  * @returns {Promise<{hits: Map<string, {usdPrice:number, priceChange24h:number|null}>, misses: string[]}>}
@@ -76,19 +87,34 @@ const setCachedQuote = async (mintAddress, quote, locals = {}) => {
 const readCachedQuotes = async (mintAddresses, locals = {}) => {
   const hits = new Map();
   const misses = [];
+  const cached = await getManyFromCache(mintAddresses.map((mint) => buildKey(mint, locals)));
 
-  await Promise.all(
-    mintAddresses.map(async (mintAddress) => {
-      const cached = await getCachedQuote(mintAddress, locals);
-      if (cached) {
-        hits.set(mintAddress, cached);
-      } else {
-        misses.push(mintAddress);
-      }
-    })
-  );
+  for (const mintAddress of mintAddresses) {
+    const quote = toQuote(cached.get(buildKey(mintAddress, locals)));
+    if (quote) {
+      hits.set(mintAddress, quote);
+    } else {
+      misses.push(mintAddress);
+    }
+  }
 
   return { hits, misses };
+};
+
+/**
+ * Store many quotes in one MULTI.
+ * @param {Map<string, {usdPrice:number, priceChange24h:number|null}>} quotes - mint → quote.
+ * @param {Object} locals
+ */
+const setCachedQuotes = async (quotes, locals = {}) => {
+  const cachedAt = Date.now();
+  await storeManyInCache(
+    [...quotes].map(([mint, quote]) => [
+      buildKey(mint, locals),
+      { usdPrice: quote.usdPrice, priceChange24h: quote.priceChange24h ?? null, cachedAt },
+    ]),
+    PRICE_CACHE_TTL
+  );
 };
 
 /**
@@ -114,6 +140,7 @@ const getQuoteWithCache = async (mintAddress, fetchFn, locals = {}) => {
 
 module.exports = {
   setCachedQuote,
+  setCachedQuotes,
   readCachedQuotes,
   getQuoteWithCache,
 };
