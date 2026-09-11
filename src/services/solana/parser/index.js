@@ -87,6 +87,15 @@ const POST_PROCESSORS = PARSERS.filter((p) => typeof p.postProcess === 'function
  * touched by the tx. They're keyed by accountIndex into accountKeys, so we
  * walk both and populate two maps.
  */
+/** Parsed instruction types that open a token account, and the field naming its owner. */
+const INITIALIZE_OWNER_FIELD = {
+  initializeAccount: 'owner',
+  initializeAccount2: 'owner',
+  initializeAccount3: 'owner',
+  create: 'wallet',
+  createIdempotent: 'wallet',
+};
+
 const buildAccountMaps = (rawTx) => {
   const accountKeys = rawTx?.transaction?.message?.accountKeys || [];
   const pre = rawTx?.meta?.preTokenBalances || [];
@@ -102,6 +111,22 @@ const buildAccountMaps = (rawTx) => {
     if (!key) continue;
     if (balance.owner) tokenAccountOwners.set(key, balance.owner);
     if (balance.mint) tokenAccountMints.set(key, balance.mint);
+  }
+
+  // A token account opened and closed within the transaction (a router's
+  // hop account, a wrapped-SOL wrapper) is in neither balance list; its
+  // owner is only on the instruction that initialised it.
+  const top = rawTx?.transaction?.message?.instructions || [];
+  const inner = (rawTx?.meta?.innerInstructions || []).flatMap((g) => g.instructions || []);
+  for (const ix of [...top, ...inner]) {
+    const info = ix?.parsed?.info;
+    if (!info?.account) continue;
+    const owner =
+      INITIALIZE_OWNER_FIELD[ix.parsed?.type] && info[INITIALIZE_OWNER_FIELD[ix.parsed.type]];
+    if (!owner) continue;
+    if (!tokenAccountOwners.has(info.account)) tokenAccountOwners.set(info.account, owner);
+    if (info.mint && !tokenAccountMints.has(info.account))
+      tokenAccountMints.set(info.account, info.mint);
   }
 
   return { tokenAccountOwners, tokenAccountMints };

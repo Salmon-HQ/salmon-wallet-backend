@@ -480,13 +480,21 @@ const netSwapLegs = (inputs, outputs) => {
   const byMint = (items) => new Map(items.map((item) => [item.contract, item]));
   const inByMint = byMint(inputs);
   const outByMint = byMint(outputs);
-  const net = (items, other) =>
-    items.flatMap((item) => {
+  // A mint seen on both sides passed through the wallet; whatever remains of
+  // it is a residual, listed after the tokens the user actually chose so a
+  // reader of [0] gets the pair.
+  const net = (items, other) => {
+    const own = [];
+    const residual = [];
+    items.forEach((item) => {
       const counterpart = other.get(item.contract);
-      if (!counterpart) return [item];
+      if (!counterpart) return own.push(item);
       const difference = BigInt(item.amount) - BigInt(counterpart.amount);
-      return difference > 0n ? [{ ...item, amount: String(difference) }] : [];
+      if (difference > 0n) residual.push({ ...item, amount: String(difference) });
+      return undefined;
     });
+    return [...own, ...residual];
+  };
   return { inputs: net(inputs, outByMint), outputs: net(outputs, inByMint) };
 };
 

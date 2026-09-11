@@ -629,4 +629,85 @@ describe('parser orchestrator', () => {
       ]);
     });
   });
+
+  describe('buildAccountMaps', () => {
+    const { buildAccountMaps } = require('..').__testing;
+
+    test('resolves the owner of a token account opened inside the transaction', () => {
+      const rawTx = {
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [{ pubkey: 'user' }],
+            instructions: [
+              {
+                program: 'spl-associated-token-account',
+                programId: 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+                parsed: {
+                  type: 'createIdempotent',
+                  info: { account: 'hopAta', mint: 'PYUSD', wallet: 'user', source: 'user' },
+                },
+              },
+            ],
+          },
+        },
+        meta: {
+          preTokenBalances: [],
+          postTokenBalances: [],
+          innerInstructions: [
+            {
+              index: 0,
+              instructions: [
+                {
+                  program: 'spl-token',
+                  programId: 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
+                  parsed: {
+                    type: 'initializeAccount3',
+                    info: {
+                      account: 'wrapper',
+                      mint: 'So11111111111111111111111111111111111111112',
+                      owner: 'user',
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const { tokenAccountOwners, tokenAccountMints } = buildAccountMaps(rawTx);
+
+      expect(tokenAccountOwners.get('hopAta')).toBe('user');
+      expect(tokenAccountMints.get('hopAta')).toBe('PYUSD');
+      expect(tokenAccountOwners.get('wrapper')).toBe('user');
+    });
+
+    test('a balance-list owner wins over the instruction when both exist', () => {
+      const rawTx = {
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [{ pubkey: 'ata' }],
+            instructions: [
+              {
+                program: 'spl-token',
+                programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+                parsed: {
+                  type: 'initializeAccount3',
+                  info: { account: 'ata', mint: 'M', owner: 'stale' },
+                },
+              },
+            ],
+          },
+        },
+        meta: {
+          preTokenBalances: [],
+          postTokenBalances: [{ accountIndex: 0, owner: 'fresh', mint: 'M' }],
+        },
+      };
+
+      expect(buildAccountMaps(rawTx).tokenAccountOwners.get('ata')).toBe('fresh');
+    });
+  });
 });

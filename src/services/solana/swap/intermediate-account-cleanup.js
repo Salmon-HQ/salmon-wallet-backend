@@ -14,7 +14,10 @@
  *
  * Only accounts that do not exist yet AND are not the input/output token are
  * closed — a pre-existing account is the user's, the output account is where
- * the bought token lives. `CloseAccount` fails on a non-zero balance, which
+ * the bought token lives. Wrapped SOL is the exception: a native-SOL swap
+ * opens the taker's wrapped-SOL account only to pass SOL through it (probed:
+ * 0x left it open and empty with ~0.0019 SOL locked, 12% of a 0.013 SOL
+ * swap), so it is closed like any other pass-through account. `CloseAccount` fails on a non-zero balance, which
  * would fail the swap; the build service simulates with the cleanup and
  * drops it when the simulation rejects it.
  */
@@ -51,7 +54,7 @@ const intermediateAccountCleanup = async (
   instructions,
   { taker, inputMint, outputMint }
 ) => {
-  const keep = new Set([inputMint, outputMint, SOL_ADDRESS]);
+  const keep = new Set([inputMint, outputMint].filter((mint) => mint !== SOL_ADDRESS));
   const candidates = createdAccounts(instructions).filter(
     (account) => account.owner === taker && !keep.has(account.mint)
   );

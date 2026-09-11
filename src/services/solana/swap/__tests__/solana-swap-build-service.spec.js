@@ -294,6 +294,23 @@ describe('solana-swap-build-service', () => {
       expect(queried.map((k) => k.toBase58())).toEqual([usd1Ata]);
     });
 
+    it('closes the wrapped-SOL account a native-SOL input opens', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([createAta(SOL), createAta(USDC), swapInstruction()])
+      );
+      // wrapped-SOL account is new → closed; USDC is the output → kept
+      mockConnection.getMultipleAccountsInfo.mockResolvedValue([null]);
+
+      const result = await service.build(params(), locals);
+
+      const closes = closeInstructions(result);
+      expect(closes).toHaveLength(1);
+      const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
+      const wsolAta = getAssociatedTokenAddressSync(new PublicKey(SOL), takerKey).toBase58();
+      expect(tx.message.staticAccountKeys[closes[0].accountKeyIndexes[0]].toBase58()).toBe(wsolAta);
+      expect(result.intermediateAccountsClosed).toBe(1);
+    });
+
     it('leaves a pre-existing intermediate account alone', async () => {
       zeroex.requestSwapInstructions.mockResolvedValue(quote([createAta(USD1), swapInstruction()]));
       mockConnection.getMultipleAccountsInfo.mockResolvedValue([{ data: Buffer.alloc(165) }]);

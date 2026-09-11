@@ -148,4 +148,27 @@ describe('buildSwapRoute', () => {
     );
     expect(small.conversionRate.rate).toBe(big.conversionRate.rate);
   });
+
+  describe('netSwapLegs', () => {
+    const { netSwapLegs } = __testing;
+    const leg = (contract, amount) => ({ contract, amount, symbol: contract });
+
+    it('drops a pass-through token that nets to zero', () => {
+      const { inputs, outputs } = netSwapLegs(
+        [leg('USD1', '1093657'), leg('SOL', '8767071')],
+        [leg('USDC', '1100000'), leg('USD1', '1093657')]
+      );
+      expect(inputs.map((l) => l.contract)).toEqual(['SOL']);
+      expect(outputs.map((l) => l.contract)).toEqual(['USDC']);
+    });
+
+    it('keeps a residual of a pass-through token, netted and listed after the chosen tokens', () => {
+      const { inputs, outputs } = netSwapLegs(
+        [leg('PYUSD', '40087'), leg('USDC', '1338135')],
+        [leg('PYUSD', '40000'), leg('SOL', '15107610')]
+      );
+      expect(inputs).toEqual([leg('USDC', '1338135'), leg('PYUSD', '87')]);
+      expect(outputs.map((l) => l.contract)).toEqual(['SOL']);
+    });
+  });
 });
