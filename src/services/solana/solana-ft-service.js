@@ -8,20 +8,19 @@
  *     list returned by `list()`. Concurrent loads share a single inflight
  *     promise via `pendingTokenLoads`.
  *   - Repository-backed cache for `getVerified()` — survives process restarts
- *     and feeds Jupiter's curated lists.
+ *     and feeds the curated catalog.
  *
- * Token list source is environment-dependent: Jupiter cache for mainnet,
+ * Token list source is environment-dependent: the CoinGecko catalog for mainnet,
  * SPL Token Registry fallback for devnet/testnet. All results are filtered
  * to fungible tokens (decimals > 0).
  */
 
-const http = require('axios');
 const { TokenListProvider } = require('@solana/spl-token-registry');
 const repository = require('../../repositories/solana/solana-ft-repository');
-const jupiterTokenService = require('./jupiter-token-service');
-const cdnTokenListService = require('./cdn-token-list-service');
+const catalog = require('./token-catalog-service');
+const metadata = require('./token-metadata-service');
+const { isValidSolanaAddress } = require('../../utils/solana-address');
 
-const JUPITER_TOKEN_LIST_URL = 'https://cache.jup.ag/tokens';
 const TOKEN_LIST_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 const tokenListCache = new Map();
@@ -53,8 +52,8 @@ const setCachedTokens = (environment, tokens) => {
 };
 
 /**
- * Fetch the raw per-environment token list from its source. Jupiter's
- * cache only covers mainnet, so devnet/testnet fall back to the SPL Token
+ * Fetch the raw per-environment token list from its source. The catalog
+ * only covers mainnet, so devnet/testnet fall back to the SPL Token
  * Registry (`@solana/spl-token-registry`) filtered by cluster slug.
  * @param {Object} locals - Reads `network.environment`.
  * @returns {Promise<Object[]>} Unfiltered token list from the source.
@@ -62,10 +61,9 @@ const setCachedTokens = (environment, tokens) => {
 const getTokenList = async (locals) => {
   const { environment } = locals.network;
 
-  // Jupiter only has mainnet tokens
+  // The curated catalog only covers mainnet
   if (environment === 'mainnet') {
-    const { data } = await http.get(JUPITER_TOKEN_LIST_URL, { timeout: 10000 });
-    return data;
+    return catalog.getVerified();
   }
 
   // Fallback to SPL Token Registry for devnet/testnet
@@ -99,8 +97,6 @@ const list = async (locals) => {
     const solanaTokens = await getTokenList(locals);
     console.log(`Token Service: ${solanaTokens.length} solana tokens loaded`);
 
-    // Jupiter V6 removed the indexed-route-map endpoint
-    // Returning all Solana tokens instead of filtering by Jupiter routes
     const tokens = solanaTokens.filter((token) => token && token.name);
 
     setCachedTokens(environment, tokens);
@@ -125,23 +121,41 @@ const clearListCache = () => {
   pendingTokenLoads.clear();
 };
 
+/** Listed entry (tags, coingeckoId) over on-chain metadata (program, swappable, freshest decimals). */
+const merge = (listed, onChain) => {
+  if (!listed && !onChain) return null;
+  return {
+    ...(onChain || {}),
+    ...(listed || {}),
+    icon: listed?.icon || onChain?.icon || null,
+    tags: listed ? listed.tags : [],
+    coingeckoId: listed?.coingeckoId ?? null,
+    tokenProgram: onChain?.tokenProgram ?? null,
+    swappable: onChain ? onChain.swappable : true,
+  };
+};
+
 /**
- * Resolve token metadata for a batch of mints via Jupiter.
+ * Resolve token metadata for a batch of mints: on-chain description (DAS)
+ * for every mint, catalog fields for the listed ones.
  * @param {string[]} mintAddresses
  * @param {Object} locals
- * @returns {Promise<Array<Object>>} Fungible tokens only.
+ * @returns {Promise<Array<Object>>} Fungible tokens only, in canonical shape.
  */
 const getByMints = async (mintAddresses, locals) => {
-  const tokens = await jupiterTokenService.getTokensByMints(mintAddresses, locals);
+  const mints = [...new Set(mintAddresses)].filter(Boolean);
+  const [onChain, listed] = await Promise.all([
+    metadata.getByMints(mints, locals),
+    catalog.byMints(mints),
+  ]);
+  const tokens = mints.map((mint) => merge(listed.get(mint), onChain.get(mint))).filter(Boolean);
   return filterFungibleTokens(tokens);
 };
 
 /**
- * Return the verified-token list. Repository-cached; on miss, tries
- * Jupiter Tokens v2 first and transparently falls back to the Solana Labs
- * CDN list when Jupiter is unavailable. Both upstreams are normalized to
- * the same Jupiter v2 canonical shape before persistence so cached
- * entries are provider-agnostic.
+ * Return the verified-token list: the curated catalog, decorated with
+ * on-chain program + swappability. Repository-cached (5 min); the catalog
+ * itself is a 24 h snapshot.
  *
  * @param {Object} locals
  * @returns {Promise<Array<Object>>} Fungible tokens only.
@@ -152,40 +166,43 @@ const getVerified = async (locals) => {
   // from a bad upstream response, and honouring it would serve an empty token
   // catalog — a swap screen with nothing in it — until the TTL expired.
   if (cached && cached.length > 0) {
-    console.log('Verified tokens cache hit.');
     return filterFungibleTokens(cached);
   }
 
-  console.log('Verified tokens cache miss. Loading from Jupiter API');
-
-  let tokens;
-  try {
-    tokens = await jupiterTokenService.getVerifiedTokens(locals);
-  } catch (error) {
-    console.warn(
-      `Jupiter verified-tokens unavailable, falling back to Solana Labs CDN: ${error.message}`
-    );
-    tokens = await cdnTokenListService.getVerifiedTokens();
-  }
-
+  const listed = await catalog.getVerified();
+  const onChain = await metadata.getByMints(
+    listed.map((t) => t.id),
+    locals
+  );
+  const tokens = listed.map((token) => merge(token, onChain.get(token.id)));
   if (tokens.length > 0) {
     await repository.saveVerifiedTokens(tokens, locals);
-  } else {
-    console.warn('Verified token list came back empty; not caching it.');
   }
-
   return filterFungibleTokens(tokens);
 };
 
 /**
- * Free-text token search via Jupiter.
+ * Free-text token search over the catalog; a bare mint address that is not
+ * listed resolves on-chain so any token stays reachable by address.
  * @param {string} query
  * @param {Object} locals
  * @returns {Promise<Array<Object>>} Fungible tokens only.
  */
 const search = async (query, locals) => {
-  const tokens = await jupiterTokenService.searchTokensByQuery(query, locals);
-  return filterFungibleTokens(tokens);
+  const listed = await catalog.search(query);
+  if (listed.length > 0) {
+    const onChain = await metadata.getByMints(
+      listed.map((t) => t.id),
+      locals
+    );
+    return filterFungibleTokens(listed.map((token) => merge(token, onChain.get(token.id))));
+  }
+  const candidate = String(query || '').trim();
+  if (!isValidSolanaAddress(candidate)) {
+    return [];
+  }
+  const onChain = await metadata.getByMints([candidate], locals);
+  return filterFungibleTokens([merge(null, onChain.get(candidate))].filter(Boolean));
 };
 
 module.exports = {
@@ -194,5 +211,5 @@ module.exports = {
   getByMints,
   getVerified,
   search,
-  MAX_MINTS_PER_QUERY: jupiterTokenService.MAX_MINTS_PER_QUERY,
+  MAX_MINTS_PER_QUERY: metadata.MAX_IDS_PER_BATCH,
 };

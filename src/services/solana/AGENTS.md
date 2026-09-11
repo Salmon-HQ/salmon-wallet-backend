@@ -25,8 +25,10 @@ These rules apply to Solana service code only.
   - common serialization helpers used by transaction flows
 - `solana-ft-service.js`
   - FT-oriented read flows and token fetch orchestration
-- `jupiter-token-service.js`
-  - Jupiter token catalog/search wrapper
+- `token-catalog-service.js`
+  - CoinGecko Solana token list + coin ids → verified catalog, local search (24 h snapshot)
+- `token-metadata-service.js`
+  - Triton DAS `getAssetBatch` → per-mint metadata, token program, Token-2022 routability (`swappable`)
 - `swap/` — `solana-swap-build-service.js` (quote → unsigned v0 tx: fee recipient, ALTs, blockhash, priority fee, fee check), `zeroex-swap-provider.js` (0x wire format), `solana-swap-errors.js`
 - `solana-nft-service.js`
   - NFT read flows
@@ -34,8 +36,6 @@ These rules apply to Solana service code only.
   - burn routing and transaction creation for supported asset types
 - `solana-address-service.js`
   - address validation and normalization helpers
-- `jupiter-service.js`
-  - Jupiter Price v3 client used by token and balance enrichment
 - `address-lookup-table-service.js`
   - resolves Solana address lookup tables for transaction parsing
 - `solana-nft-burn-errors.js`
@@ -45,7 +45,7 @@ These rules apply to Solana service code only.
 
 - Keep provider selection and fallback policy in services, not in controllers.
 - Keep public payload shaping in `src/resources/solana` unless a helper is clearly internal to the service layer.
-- Do not leak raw Helius or Jupiter payloads upward if the rest of the app expects normalized data.
+- Do not leak raw Helius, DAS or CoinGecko payloads upward if the rest of the app expects normalized data.
 - When adding a helper, prefer extracting a focused local helper over growing one large service file further.
 
 ## Contract-sensitive areas

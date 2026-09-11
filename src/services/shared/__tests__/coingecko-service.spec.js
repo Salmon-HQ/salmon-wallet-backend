@@ -5,6 +5,10 @@ jest.mock('axios', () => ({
 }));
 
 jest.mock('../../../repositories/shared/coingecko-repository', () => ({
+  getSolanaTokenList: jest.fn(),
+  saveSolanaTokenList: jest.fn(),
+  getSolanaCoinIds: jest.fn(),
+  saveSolanaCoinIds: jest.fn(),
   getTokensPrices: jest.fn(),
   getShortTermChart: jest.fn(),
   getLongTermChart: jest.fn(),
@@ -17,6 +21,10 @@ jest.mock('../../../repositories/shared/coingecko-repository', () => ({
   saveExchangeRates: jest.fn(),
 }));
 
+jest.mock('../../../infrastructure/cache/price-cache', () => ({
+  readCachedQuotes: jest.fn(async (mints) => ({ hits: new Map(), misses: mints })),
+  setCachedQuote: jest.fn(),
+}));
 jest.mock('../../../infrastructure/rate-limiting/coingecko-rate-limiter', () => ({
   rateLimiter: {
     waitAndConsume: jest.fn().mockResolvedValue(undefined),
@@ -79,6 +87,7 @@ describe('coingecko-service', () => {
           days: 365,
         },
         timeout: 5000,
+        headers: {},
       }
     );
     expect(repository.saveChart).toHaveBeenCalledWith(
@@ -259,6 +268,7 @@ describe('coingecko-service', () => {
     expect(http.get).toHaveBeenCalledWith('https://api.coingecko.com/api/v3/exchange_rates', {
       params: {},
       timeout: 2000,
+      headers: {},
     });
     expect(repository.saveExchangeRates).toHaveBeenCalledWith(result, locals);
     expect(result).toEqual({
@@ -442,5 +452,80 @@ describe('coingecko-service', () => {
     );
     expect(repository.saveCoinInfo).not.toHaveBeenCalled();
     expect(result).toBe(cached);
+  });
+
+  describe('Solana token data', () => {
+    const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+    const BONK = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+
+    it('fetches and caches the Solana token list for 24h, refusing an empty list', async () => {
+      repository.getSolanaTokenList.mockResolvedValue(null);
+      http.get.mockResolvedValueOnce({
+        data: { tokens: [{ address: USDC, symbol: 'USDC', name: 'USD Coin', decimals: 6 }] },
+      });
+
+      const tokens = await service.getSolanaTokenList();
+
+      expect(http.get).toHaveBeenCalledWith(
+        'https://api.coingecko.com/api/v3/token_lists/solana/all.json',
+        expect.objectContaining({ timeout: 10000 })
+      );
+      expect(tokens).toHaveLength(1);
+      expect(repository.saveSolanaTokenList).toHaveBeenCalledWith(tokens, 24 * 60 * 60);
+
+      http.get.mockResolvedValueOnce({ data: { tokens: [] } });
+      await expect(service.getSolanaTokenList()).rejects.toThrow('came back empty');
+    });
+
+    it('maps Solana mints to coin ids from coins/list', async () => {
+      repository.getSolanaCoinIds.mockResolvedValue(null);
+      http.get.mockResolvedValueOnce({
+        data: [
+          { id: 'usd-coin', platforms: { ethereum: '0xa0b8', solana: USDC } },
+          { id: 'bitcoin', platforms: {} },
+        ],
+      });
+
+      const ids = await service.getSolanaCoinIds();
+
+      expect(http.get).toHaveBeenCalledWith(
+        'https://api.coingecko.com/api/v3/coins/list',
+        expect.objectContaining({ params: { include_platform: true } })
+      );
+      expect(ids.get(USDC)).toBe('usd-coin');
+      expect(repository.saveSolanaCoinIds).toHaveBeenCalledWith(
+        { [USDC]: 'usd-coin' },
+        24 * 60 * 60
+      );
+    });
+
+    it('prices mints in chunks, leaves unlisted mints absent, and caches hits', async () => {
+      const priceCache = require('../../../infrastructure/cache/price-cache');
+      http.get.mockResolvedValue({
+        data: { [USDC]: { usd: 1.0001, usd_24h_change: -0.01 } },
+      });
+      const many = Array.from(
+        { length: service.MAX_ADDRESSES_PER_PRICE_CALL + 1 },
+        (_, i) => `M${i}`
+      );
+
+      const prices = await service.getTokenPrices([USDC, BONK, ...many]);
+
+      expect(http.get).toHaveBeenCalledTimes(2);
+      expect(http.get.mock.calls[0][1].params).toEqual(
+        expect.objectContaining({ vs_currencies: 'usd', include_24hr_change: true })
+      );
+      expect(prices.get(USDC)).toEqual({ usdPrice: 1.0001, priceChange24h: -0.01 });
+      expect(prices.has(BONK)).toBe(false);
+      expect(priceCache.setCachedQuote).toHaveBeenCalledWith(USDC, prices.get(USDC), {});
+    });
+
+    it('sends the API key header when configured', async () => {
+      process.env.COINGECKO_API_KEY = 'CG-test';
+      repository.getSolanaCoinIds.mockResolvedValue({});
+      await service.getSolanaCoinIds();
+      expect(repository.getSolanaCoinIds).toHaveBeenCalled();
+      delete process.env.COINGECKO_API_KEY;
+    });
   });
 });

@@ -26,7 +26,7 @@
   `price-cache.js`). `src/repositories/helper.js` re-exports
   `cache-helper.js` for the repository layer.
 - `rate-limiting/` — token-bucket rate limiters and `with-retry.js`
-  factory shared by Jupiter, CoinGecko, Helius.
+  factory shared by 0x, CoinGecko, Helius.
 
 ## Rules
 

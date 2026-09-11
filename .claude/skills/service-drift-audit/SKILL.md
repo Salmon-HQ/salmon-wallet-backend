@@ -1,6 +1,6 @@
 ---
 name: service-drift-audit
-description: Checks salmon-api's external service dependencies (0x, Jupiter, Helius, Triton, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did Jupiter/Helius/Metaplex change anything", or similar drift-check requests.
+description: Checks salmon-api's external service dependencies (0x, CoinGecko, Triton, Helius, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did CoinGecko/Helius/Metaplex change anything", or similar drift-check requests.
 ---
 
 # Service Drift Audit — salmon-api
@@ -21,12 +21,19 @@ automation is wired up yet — running this skill is the whole audit.
 - Sources: docs.0x.org/svm/solana-swap-api (append `.md`),
   docs.0x.org/openapi/solana-swap-apis.json, docs.0x.org/llms.txt.
 
-### Jupiter Price + Tokens
+### CoinGecko (token catalog, prices, charts)
 
-- Price v3 (`JUPITER_PRICE_URL`) and Tokens v2 (`api.jup.ag/tokens/v2`)
-  back balance pricing, `/ft/verified`, `/ft/search` and swap-build token
-  hydration (`jupiter-service.js`, `jupiter-token-service.js`).
-- Sources: dev.jup.ag/updates, developers.jup.ag/docs, portal.jup.ag.
+- `token_lists/solana/all.json`, `coins/list?include_platform=true`,
+  `simple/token_price/solana` (≤515 addresses), `coins/{id}`, `exchange_rates`.
+  Watch plan limits (Basic 100k calls/mo, 300/min), the 24 h caching clause
+  (API Terms §6.1) and the attribution wording (brand attribution guide).
+- Sources: docs.coingecko.com/reference, coingecko.com/en/api_terms, brand.coingecko.com.
+
+### Triton DAS (token metadata)
+
+- `getAssetBatch` with `displayOptions.showFungible` on our RPC URL; fields
+  `content.metadata`, `token_info`, `mint_extensions`. Watch docs.triton.one
+  digital-assets-api for shape changes.
 
 ### Helius
 

@@ -9,6 +9,7 @@
  * feature gating.
  */
 
+const { ATTRIBUTION } = require('./coingecko-service');
 const NETWORKS = require('../../constants/networks');
 const networkCapabilitiesService = require('./network-capabilities-service');
 
@@ -41,6 +42,9 @@ const mergeNetworkCapabilities = (network, capabilities) => {
     ...network,
     enabled: networkCapabilities?.enable ?? false,
     sections: networkCapabilities?.sections || {},
+    // Token catalog + USD prices on solana-mainnet come from CoinGecko, whose
+    // terms require a visible, linked attribution; clients render it verbatim.
+    attribution: network.id === 'solana-mainnet' ? ATTRIBUTION : null,
   };
 };
 

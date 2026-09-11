@@ -10,7 +10,7 @@
  *
  * Forwards the optional markers attached by chain-specific balance
  * providers and enrichers:
- *   - metadata (Solana provider, Jupiter v2): `_logo`, `_name`,
+ *   - metadata (Solana provider, catalog + DAS): `_logo`, `_name`,
  *     `_symbol`, `_coingeckoId`, `_tags`
  *   - pricing (`multichain/price-enrichers`): `_price`, `_usdBalance`,
  *     `_priceChange24h`

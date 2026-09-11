@@ -423,7 +423,7 @@ paths:
             enum: ['true', 'false', '1', '0']
           description: |
             When truthy (`true`/`1`), opts out of the chain-specific spam
-            filter (e.g. Solana drops tokens with only `unknown` Jupiter tags
+            filter (e.g. Solana drops tokens without a `verified` tag
             by default).
       responses:
         '200':
@@ -1123,6 +1123,15 @@ components:
           type: object
           additionalProperties: true
           description: Stage-derived feature-section flags; always an object
+        attribution:
+          type: object
+          nullable: true
+          description: 'Data-provider credit the client must render verbatim on screens showing this network''s catalog or prices (CoinGecko terms); null when none applies'
+          properties:
+            text:
+              type: string
+            url:
+              type: string
       required: [id, blockchain, environment, name, enabled, sections]
 
     BalanceItem:
@@ -1165,7 +1174,7 @@ components:
           type: array
           items:
             type: string
-          description: Token entries only, when the enricher attached Jupiter tags
+          description: Token entries only, when the enricher attached catalog tags
         price:
           type: number
           description: USD unit price (when price enrichment resolved)
@@ -1210,7 +1219,10 @@ components:
         coingeckoId:
           type: string
           nullable: true
-          description: 'Null for Jupiter-v2-sourced tokens (v2 omits it)'
+          description: 'CoinGecko coin id when the token is listed there, else null'
+        swappable:
+          type: boolean
+          description: false for Token-2022 mints with a transfer fee or transfer hook, which the swap router cannot trade
       required: [chainId, address, symbol, name, decimals, logo, tags, coingeckoId]
 
     Nft:
@@ -1407,7 +1419,7 @@ components:
         priceImpactPct:
           type: number
           nullable: true
-          description: USD value lost input→output, from Jupiter Price v3; null when a price is unknown
+          description: USD value lost input→output, from CoinGecko prices; null when a price is unknown
         slippageBps:
           type: integer
         priorityFeeMicroLamports:

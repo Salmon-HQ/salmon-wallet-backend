@@ -10,7 +10,7 @@
  * `getParsedTransaction`.
  *
  * `loadEnrichment` batches the per-page lookups the decorator needs
- * (token metadata via Jupiter, NFT metadata via DAS) so a page of N txs
+ * (token metadata via the catalog + DAS, NFT metadata via DAS) so a page of N txs
  * costs at most one tokens fetch + one NFT-metadata batch.
  */
 

@@ -158,7 +158,7 @@ Important subfolders:
 
 - `src/services/solana/`
   - the densest domain in the project
-  - groups transactions, NFTs, FT, swaps, burn, and Helius/Jupiter
+  - groups transactions, NFTs, FT, swaps, burn, and Helius/DAS/CoinGecko
     wrappers
 - `src/services/bitcoin/`
   - Bitcoin vertical slice: transactions, UTXO (read-only); HTTP client
@@ -332,7 +332,7 @@ backend.
 - integration with Solana data providers (Triton primary, Helius
   fallback, bare RPC as last resort)
 - swap build on the 0x Solana Swap API (`swap/`): instructions → unsigned v0 transaction
-- Jupiter Price v3 / Tokens v2 integration (pricing, token catalog)
+- token catalog + metadata (CoinGecko list + Triton DAS) and USD pricing (CoinGecko)
 - transaction orchestration
 - enrichment preloading for both transaction paths: the service batches
   the lookups each mapper needs (`loadEnrichment` for the enriched path,
@@ -443,7 +443,7 @@ Today: balance.
   `index.js#PROVIDERS_BY_CHAIN` maps chain -> provider for future
   overrides.
 - `src/services/multichain/price-enrichers/` — per-chain USD price
-  decoration of balance items (Solana via Jupiter Price v3, Bitcoin
+  decoration of balance items (Solana via CoinGecko token prices, Bitcoin
   via the CoinGecko repository). Same registry pattern as
   balance-providers; see the folder's `AGENTS.md`.
 

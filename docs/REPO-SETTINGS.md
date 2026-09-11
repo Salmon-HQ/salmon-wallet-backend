@@ -106,7 +106,7 @@ aggregate; Maintained is 0 until the repo is 90 days old.
 
 The external-provider integration suite (nightly workflow, separate from PR
 checks) needs real provider keys as repository secrets: `HELIUS_API_KEY`,
-`JUPITER_API_KEY` (optional), `TRITON_RPC_URL`, `TRITON_API_TOKEN`. Fork PRs
+`COINGECKO_API_KEY`, `ZEROEX_API_KEY`, `TRITON_RPC_URL`, `TRITON_API_TOKEN`. Fork PRs
 never see these — the PR workflow uses plain `pull_request` and no secrets.
 
 ## 6. Who can push

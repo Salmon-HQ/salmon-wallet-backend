@@ -40,7 +40,7 @@ const showBalance = async (req, res) => {
 
   // `includeSpam=true` opts out of the chain-specific spam filter applied
   // by the resolved BalanceProvider (e.g. Solana drops tokens with only
-  // `unknown` Jupiter tags by default). Stashed on `res.locals` so the
+  // tokens with no `verified` tag by default). Stashed on `res.locals` so the
   // provider sees a typed boolean instead of re-parsing the query string.
   res.locals.includeSpam = isTruthyQueryFlag(includeSpam);
 

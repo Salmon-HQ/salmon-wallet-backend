@@ -4,7 +4,7 @@
  * Solana price enricher.
  *
  * Reads mints from each balance item and queries the Jupiter Price v3
- * service through `solana/jupiter-service.getQuotes` (which already
+ * service through `shared/coingecko-service.getTokenPrices` (which already
  * batches, rate-limits, and caches per-mint quotes). Items without a
  * resolvable mint or without a quote pass through untouched — clients
  * treat the absence of `price` / `usdBalance` as "no quote available".
@@ -13,17 +13,17 @@
  * `_priceChange24h`) onto each item; the `account-balance-resource`
  * decorator forwards them to the public payload as `price`,
  * `usdBalance`, `priceChange24h`. Native SOL is mapped to
- * `SOL_ADDRESS` so it shares Jupiter's mint-keyed pricing surface.
+ * `SOL_ADDRESS` so it shares the mint-keyed pricing surface.
  */
 
-const jupiterService = require('../../solana/jupiter-service');
+const coingecko = require('../../shared/coingecko-service');
 const { SOL_ADDRESS } = require('../../../constants/solana-constants');
 const { computeUsdBalance } = require('./usd-balance');
 
 const SOLANA_NATIVE_ASSET_PATH = 'solana/native/sol';
 
 /**
- * Resolves the Jupiter-pricing mint key for a balance item. Native SOL
+ * Resolves the pricing mint key for a balance item. Native SOL
  * maps to `SOL_ADDRESS` so it shares the mint-keyed pricing surface;
  * SPL tokens use `currency.detail.contract`, falling back to parsing
  * the mint out of `currency.asset_path`.
@@ -42,12 +42,12 @@ const extractMint = (item) => {
 
 /**
  * `PriceEnricher#enrich` implementation for Solana. Batches every
- * resolvable mint through `jupiterService.getQuotes` (already cached +
+ * resolvable mint through `coingecko.getTokenPrices` (already cached +
  * rate-limited) and decorates matching items. Items without a
  * resolvable mint or without a quote are passed through untouched.
  *
  * @param {Array<Object>} items - balance items from a `BalanceProvider`.
- * @param {Object} locals - per-request locals forwarded to `jupiterService.getQuotes`.
+ * @param {Object} locals - per-request locals forwarded to `coingecko.getTokenPrites`.
  * @returns {Promise<Array<Object>>} items, priced entries decorated with
  *   `_price`, `_usdBalance`, `_priceChange24h`.
  */
@@ -57,7 +57,7 @@ const enrich = async (items, locals) => {
   const mints = [...new Set(items.map(extractMint).filter(Boolean))];
   if (mints.length === 0) return items;
 
-  const quotes = await jupiterService.getQuotes(mints, locals);
+  const quotes = await coingecko.getTokenPrices(mints, locals);
   if (!quotes || quotes.size === 0) return items;
 
   return items.map((item) => {

@@ -16,6 +16,7 @@ const decorateNetwork = (network) => ({
   config: network.config || {},
   enabled: Boolean(network.enabled),
   sections: network.sections || {},
+  attribution: network.attribution || null,
 });
 
 module.exports = decorateNetwork;

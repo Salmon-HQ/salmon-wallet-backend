@@ -16,11 +16,13 @@ jest.mock('../zeroex-swap-provider', () => ({
   PPM_PER_BPS: 100,
 }));
 jest.mock('../../solana-ft-service', () => ({ getByMints: jest.fn() }));
+jest.mock('../../token-metadata-service', () => ({ getByMints: jest.fn(async () => new Map()) }));
 
 const { PublicKey, TransactionInstruction, VersionedTransaction } = require('@solana/web3.js');
 const { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } = require('@solana/spl-token');
 const zeroex = require('../zeroex-swap-provider');
 const { getByMints } = require('../../solana-ft-service');
+const tokenMetadata = require('../../token-metadata-service');
 const service = require('../solana-swap-build-service');
 
 const TAKER = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
@@ -265,6 +267,18 @@ describe('solana-swap-build-service', () => {
 
     expect(result.priorityFeeMicroLamports).toBe(1000);
     warn.mockRestore();
+  });
+
+  it('refuses a non-routable Token-2022 mint with 422 token_not_supported before calling 0x', async () => {
+    tokenMetadata.getByMints.mockResolvedValueOnce(
+      new Map([[USDC, { id: USDC, symbol: 'BERN', swappable: false }]])
+    );
+
+    await expect(service.build(params(), locals)).rejects.toMatchObject({
+      statusCode: 422,
+      errorCode: 'token_not_supported',
+    });
+    expect(zeroex.requestSwapInstructions).not.toHaveBeenCalled();
   });
 
   it('fails loudly when a lookup table the provider named is not on chain', async () => {

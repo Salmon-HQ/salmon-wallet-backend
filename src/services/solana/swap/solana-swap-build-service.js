@@ -30,8 +30,9 @@ const {
 const { getAssociatedTokenAddressSync } = require('@solana/spl-token');
 const { SOL_ADDRESS, SOL_DECIMALS } = require('../../../constants/solana-constants');
 const { getByMints } = require('../solana-ft-service');
+const tokenMetadata = require('../token-metadata-service');
 const zeroex = require('./zeroex-swap-provider');
-const { SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
+const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
 
 const PROVIDER = { id: '0x', displayName: '0x', attribution: 'Powered by 0x' };
 const DEFAULT_SLIPPAGE_BPS = 50;
@@ -287,7 +288,27 @@ const estimateFeeAmount = ({ side, amountIn, amountOut, bps }) => {
  * @param {Object} locals - request locals (`network.config.nodeUrl`).
  * @returns {Promise<Object>} build result consumed by `solana-swap-build-resource`.
  */
+/**
+ * Refuse Token-2022 mints the router cannot trade (transfer fee, transfer
+ * hook, non-transferable) before spending a provider call.
+ * @throws {SolanaSwapError} 422 token_not_supported
+ */
+const assertRoutable = async (mints, locals) => {
+  const tokens = await tokenMetadata.getByMints(mints, locals);
+  for (const mint of mints) {
+    const token = tokens.get(mint);
+    if (token && token.swappable === false) {
+      throw new SolanaSwapError(
+        `${token.symbol || mint} carries a Token-2022 extension the router cannot trade (transfer fee or hook)`,
+        422,
+        'token_not_supported'
+      );
+    }
+  }
+};
+
 const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, locals) => {
+  await assertRoutable([inputMint, outputMint], locals);
   const connection = new Connection(locals.network.config.nodeUrl, COMMITMENT);
   const fee = await resolveFee(connection, feeConfig(), inputMint, outputMint);
 

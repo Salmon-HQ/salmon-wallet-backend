@@ -31,6 +31,7 @@ describe('network-resource', () => {
       sections: {
         swap: { active: true },
       },
+      attribution: null,
     });
   });
 });

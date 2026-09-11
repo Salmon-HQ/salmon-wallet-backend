@@ -2,7 +2,7 @@
 
 /**
  * In-memory token-bucket rate limiter shared across the per-provider
- * limiters (Jupiter, CoinGecko, Helius). For multi-instance deployments,
+ * limiters (0x, CoinGecko, Helius). For multi-instance deployments,
  * consider swapping this for a Redis-backed implementation.
  */
 

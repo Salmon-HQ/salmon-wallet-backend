@@ -1,12 +1,10 @@
 'use strict';
 
-jest.mock('../../../services/solana/jupiter-token-service', () => ({
-  getTokensByMints: jest.fn(),
-}));
-jest.mock('../../../services/solana/jupiter-service', () => ({ getQuotes: jest.fn() }));
+jest.mock('../../../services/solana/solana-ft-service', () => ({ getByMints: jest.fn() }));
+jest.mock('../../../services/shared/coingecko-service', () => ({ getTokenPrices: jest.fn() }));
 
-const jupiterTokenService = require('../../../services/solana/jupiter-token-service');
-const jupiterService = require('../../../services/solana/jupiter-service');
+const tokenService = require('../../../services/solana/solana-ft-service');
+const coingecko = require('../../../services/shared/coingecko-service');
 const decorate = require('../solana-swap-build-resource');
 
 const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
@@ -35,11 +33,11 @@ const build = () => ({
 
 describe('solana-swap-build-resource', () => {
   beforeEach(() => {
-    jupiterTokenService.getTokensByMints.mockResolvedValue([
+    tokenService.getByMints.mockResolvedValue([
       { id: USDC, symbol: 'USDC', name: 'USD Coin', decimals: 6, icon: 'usdc.png' },
       { id: SOL, symbol: 'SOL', name: 'Wrapped SOL', decimals: 9, icon: 'sol.png' },
     ]);
-    jupiterService.getQuotes.mockResolvedValue(
+    coingecko.getTokenPrices.mockResolvedValue(
       new Map([
         [USDC, { usdPrice: 1 }],
         [SOL, { usdPrice: 100 }],
@@ -94,11 +92,11 @@ describe('solana-swap-build-resource', () => {
       },
       routeFee: null,
     });
-    expect(jupiterTokenService.getTokensByMints).toHaveBeenCalledWith([USDC, SOL], context.locals);
+    expect(tokenService.getByMints).toHaveBeenCalledWith([USDC, SOL], context.locals);
   });
 
   it('degrades USD fields to null when prices are unavailable, keeping the transaction', async () => {
-    jupiterService.getQuotes.mockRejectedValue(new Error('jupiter down'));
+    coingecko.getTokenPrices.mockRejectedValue(new Error('jupiter down'));
 
     const resource = await decorate(build(), {}, 'k', context);
 

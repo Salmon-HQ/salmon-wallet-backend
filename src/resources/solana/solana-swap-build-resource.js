@@ -3,15 +3,15 @@
 /**
  * Public shape of `GET /ft/swap/build` (`solana-swap-build` contract).
  *
- * Hydrates the build result with token metadata (Jupiter Tokens v2) and USD
- * values (Jupiter Price v3) so the wallet can render the review screen
+ * Hydrates the build result with token metadata (catalog + on-chain) and USD
+ * values (CoinGecko) so the wallet can render the review screen
  * without extra lookups. Amounts are base-unit strings. The provider is data
  * (`provider`, `providerDisplayName`, `attribution`): the client renders the
  * attribution from these fields and has no provider-specific branches.
  */
 
-const jupiterTokenService = require('../../services/solana/jupiter-token-service');
-const jupiterService = require('../../services/solana/jupiter-service');
+const tokenService = require('../../services/solana/solana-ft-service');
+const coingecko = require('../../services/shared/coingecko-service');
 
 const PPB_PER_PERCENT = 10000000;
 
@@ -46,8 +46,8 @@ module.exports = async (build, _include, _key, context) => {
   const { inputMint, outputMint } = build;
   const mints = [...new Set([inputMint, outputMint])];
   const [tokens, prices] = await Promise.all([
-    jupiterTokenService.getTokensByMints(mints, context.locals),
-    jupiterService.getQuotes(mints, context.locals).catch((error) => {
+    tokenService.getByMints(mints, context.locals),
+    coingecko.getTokenPrices(mints, context.locals).catch((error) => {
       console.warn('Swap build: USD prices unavailable:', error.message);
       return new Map();
     }),

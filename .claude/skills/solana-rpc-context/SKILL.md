@@ -1,6 +1,6 @@
 ---
 name: solana-rpc-context
-description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, 0x swap build, Jupiter price/tokens over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/swap/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
+description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, 0x swap build, CoinGecko catalog + prices over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/swap/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
 ---
 
 # Solana / RPC Context — salmon-api
@@ -13,14 +13,12 @@ description: RPC, provider, and caching architecture of this multichain (Solana-
 - `src/infrastructure/blockdaemon-client.js`: multichain balances (Universal API), not a Solana RPC.
 - Service-level providers: `src/services/solana/providers/{triton,helius}-provider.js` (create `@solana/web3.js` `Connection`s).
 
-## Jupiter — REST, not the SDK
+## Token data — Triton DAS + CoinGecko (no Jupiter)
 
-`@jup-ag/api` is in package.json but **unused** (0 imports). Jupiter is consumed over REST with axios against `JUPITER_PRICE_URL` and the Tokens v2 endpoints:
-
-- `src/services/solana/jupiter-service.js` — Price v3 with rate limiting + Redis cache.
-- `src/infrastructure/rate-limiting/jupiter-rate-limiter.js` — respect it; Jupiter bans on bursts.
-- Swap: `src/services/solana/swap/` — 0x Solana Swap API (`POST /solana/swap-instructions`, 5 RPS free tier, `zeroex-rate-limiter`) returns instructions; the build service compiles the unsigned v0 tx (ALTs + blockhash from `locals.network.config.nodeUrl`).
-- Jupiter transaction parser in `src/services/solana/parser/parsers/jupiter.js` (reads on-chain history; no swap is offered through Jupiter any more — see "Signing boundary" in the root `AGENTS.md`).
+- `src/services/solana/token-metadata-service.js` — Triton DAS `getAssetBatch` (`showFungible`, ≤1000 ids, Redis 1 h) for symbol/name/decimals/logo/token program and Token-2022 routability.
+- `src/services/solana/token-catalog-service.js` — CoinGecko Solana token list + `coins/list?include_platform` (Redis ≤24 h per their terms): verified catalog, `coingeckoId`, local search.
+- `src/services/shared/coingecko-service.js` — `getTokenPrices` (`simple/token_price/solana`, ≤515 mints/call, `price-cache` 5 min) plus charts/coin info/exchange rates. Paid plan → `COINGECKO_API_URL=https://pro-api.coingecko.com`; respect `coingecko-rate-limiter`.
+- Jupiter program ids remain only in `parser/parsers/jupiter.js` / `solana-program-ids.js` to classify on-chain history.
 
 ## Cache layers — pick the right one
 

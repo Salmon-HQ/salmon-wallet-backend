@@ -3,7 +3,7 @@
 /**
  * CoinGecko API rate limiter.
  *
- * Free tier is much stricter than Jupiter (~25 req/min sustained), and
+ * Free tier is strict (~25 req/min sustained), and
  * CoinGecko consistently returns `retry-after` on 429s — we honor it
  * instead of running our own exponential backoff for that single attempt.
  */

@@ -147,7 +147,7 @@ Service specs (`src/services/solana/__tests__/`):
 - `solana-burn-routing.spec.js`
 - `solana-ft-swap-service.unit.spec.js`
 - other unit specs such as `burn-service.spec.js`,
-  `jupiter-service.spec.js`, `solana-ft-service.spec.js`,
+  `token-catalog-service.spec.js`, `token-metadata-service.spec.js`, `solana-ft-service.spec.js`,
   `solana-nft-service.spec.js`, `solana-transaction-service.spec.js`,
   `address-lookup-table-service.spec.js`
 
@@ -183,7 +183,7 @@ npm run test:unit
 ### 2. Integration tests
 
 **What they cover:** real integration with external APIs (Helius,
-Jupiter, Solana RPC).
+CoinGecko, Triton, Solana RPC).
 
 **Files:**
 
@@ -261,8 +261,8 @@ HELIUS_API_KEY=your-helius-api-key
 # Caps Helius fallback usage when Triton fails (req/s, default 8)
 SOLANA_FALLBACK_MAX_RPS=8
 
-# Required for Jupiter price / token-catalog tests
-JUPITER_API_KEY=your-api-key-here
+# Required for the CoinGecko token-catalog / price tests
+COINGECKO_API_KEY=your-api-key-here
 
 # Optional
 SOLANA_FEE_ACCOUNT=9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3
@@ -448,7 +448,7 @@ Trivial mappers with no branching, config/constant plumbing, framework behavior 
 ### Conventions
 
 - AAA structure (arrange / act / assert), one behavior per test.
-- Descriptive names that state the behavior: `returns null when Jupiter has no quote`, not `test price 2`.
+- Descriptive names that state the behavior: `returns null when CoinGecko has no quote`, not `test price 2`.
 - Timeouts: unit ~5 s default; integration declares its own budget with a comment when it needs more.
 - Clean up what you create (open handles fail the suite — `--detectOpenHandles` is on).
 

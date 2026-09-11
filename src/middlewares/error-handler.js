@@ -6,7 +6,7 @@
  * Three sources of truth for the response status, in order:
  *   1. `err.statusCode` / `err.errorCode` — errors the domain raised on
  *      purpose (e.g. `SolanaNftTransferError`).
- *   2. `err.response.status` — an upstream provider (Jupiter, Blockdaemon,
+ *   2. `err.response.status` — an upstream provider (0x, CoinGecko, Blockdaemon,
  *      an RPC node) rejected the request. A 400/404/422 there
  *      means the *caller* sent something the provider refused, so answering
  *      500 both lies to the client and turns every invalid transaction into a
@@ -25,7 +25,7 @@ const UPSTREAM_CLIENT_ERRORS = {
   422: 'unprocessable_entity',
 };
 
-// Where each provider hides its human-readable reason. Jupiter and Blockdaemon
+// Where each provider hides its human-readable reason. CoinGecko and Blockdaemon
 // use flat `message`/`error`; other providers nest it under `{err: {kind,
 // details}}`. Without this the client only ever saw axios's "Request failed
 // with status code 400", which the wallet cannot classify into a useful

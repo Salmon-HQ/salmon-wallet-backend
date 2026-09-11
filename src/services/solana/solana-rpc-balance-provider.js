@@ -8,10 +8,10 @@
  * Used by `solana-balance-provider` as the fallback when Blockdaemon
  * Universal times out or fails upstream.
  *
- * Emits items in Blockdaemon's shape so the Jupiter enrichment, the
+ * Emits items in Blockdaemon's shape so the metadata enrichment, the
  * zero-amount / spam filters and `account-balance-resource` need no
  * provider-specific branch. Token `symbol`/`name` are `null` here — the
- * Jupiter overlay fills them for listed mints, and unlisted mints are
+ * metadata overlay fills them for known mints, and unlisted mints are
  * hidden by the default spam filter exactly as with Blockdaemon.
  */
 

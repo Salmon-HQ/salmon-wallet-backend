@@ -5,7 +5,7 @@ const { getFromCache, storeInCache, getCacheKeyFor } = require('./cache-helper')
 /**
  * Price Cache Service
  *
- * Caches Solana token quotes (Jupiter Price v3) in Redis. Cache entries
+ * Caches Solana token quotes (CoinGecko token prices) in Redis. Cache entries
  * persist both `usdPrice` and `priceChange24h`; consumers are the swap-order
  * resource (single quote) and the balance price enricher (batch).
  *
@@ -21,7 +21,7 @@ const PRICE_CACHE_TTL = 5 * 60;
  * @returns {string} Cache key.
  */
 const buildKey = (mintAddress, locals) =>
-  getCacheKeyFor('jupiter_price', 'mint', mintAddress, locals);
+  getCacheKeyFor('token_price', 'mint', mintAddress, locals);
 
 /**
  * Read a cached quote for `mintAddress` or null if absent.

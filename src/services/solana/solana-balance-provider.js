@@ -6,16 +6,16 @@
  * Wraps the default Blockdaemon Universal provider with Solana-specific
  * post-processing:
  *
- *   1. **Jupiter v2 metadata** for SPL tokens — overrides Blockdaemon's
+ *   1. **catalog + on-chain metadata** for SPL tokens — overrides Blockdaemon's
  *      thin `currency.symbol/name` and side-loaded TrustWallet logo with
- *      richer Jupiter data (icon, name, symbol, coingeckoId, tags). Native
+ *      richer catalog/DAS data (icon, name, symbol, coingeckoId, tags). Native
  *      SOL passes through untouched (Blockdaemon already nails it).
  *   2. **Zero-amount filter** — drops SPL token entries with
  *      `confirmed_balance === '0'` (junk dust accounts). Native items
  *      pass through even at zero balance so the wallet always shows the
  *      base asset.
  *   3. **Spam filter** — when `locals.includeSpam !== true`, drops SPL
- *      tokens that Jupiter only tags as `unknown` (or that have no tags
+ *      tokens that carry no `verified` tag (or that have no tags
  *      at all). Devs opt-in via `?includeSpam=true` to surface unverified
  *      tokens.
  *
@@ -85,13 +85,13 @@ const extractTokenMint = (item) => {
   return null;
 };
 
-/** True when a token has no Jupiter tags, or every tag is `'unknown'`. */
+/** True when a token has no catalog tags, or every tag is `'unknown'`. */
 const isUnknownOnlyTags = (tags) => {
   if (!Array.isArray(tags) || tags.length === 0) return true;
   return tags.every((tag) => tag === 'unknown');
 };
 
-/** Index a Jupiter token-metadata array by mint (`id` or `address`). */
+/** Index a token-metadata array by mint (`id` or `address`). */
 const indexMetadataByMint = (metadata) => {
   const map = new Map();
   metadata.forEach((entry) => {
@@ -102,11 +102,11 @@ const indexMetadataByMint = (metadata) => {
 };
 
 /**
- * Overlay Jupiter metadata onto each balance item as internal `_logo`,
+ * Overlay token metadata onto each balance item as internal `_logo`,
  * `_name`, `_symbol`, `_coingeckoId`, `_tags` fields. Items whose mint has
- * no Jupiter match (or that are not SPL tokens) pass through unchanged.
+ * no metadata match (or that are not SPL tokens) pass through unchanged.
  */
-const enrichWithJupiterMetadata = (items, metadataByMint) => {
+const enrichWithTokenMetadata = (items, metadataByMint) => {
   return items.map((item) => {
     const mint = extractTokenMint(item);
     if (!mint) return item;
@@ -135,7 +135,7 @@ const filterZeroAmountTokens = (items) => {
   });
 };
 
-/** Drop SPL token items whose Jupiter tags are empty or only `'unknown'`. Native items always pass through. */
+/** Drop SPL token items whose catalog tags are empty or only `'unknown'`. Native items always pass through. */
 const filterSpamTokens = (items) => {
   return items.filter((item) => {
     if (item?.currency?.type !== 'token') return true;
@@ -145,10 +145,10 @@ const filterSpamTokens = (items) => {
 
 /**
  * Fetch Solana balances for `address` via the Blockdaemon Universal
- * provider, then enrich with Jupiter v2 metadata and apply the zero-amount
+ * provider, then enrich with catalog + on-chain metadata and apply the zero-amount
  * and spam filters described in the file header.
  *
- * Jupiter enrichment failure is non-fatal: on error the raw Blockdaemon
+ * Metadata enrichment failure is non-fatal: on error the raw Blockdaemon
  * items are used as-is (metadata fields simply stay unpopulated) rather
  * than failing the whole balance response.
  *
@@ -166,7 +166,7 @@ const getBalance = async (address, tokens, locals) => {
   const tokenMints = [...new Set(items.map(extractTokenMint).filter(Boolean))];
 
   let enriched = items;
-  // The spam filter is only meaningful once Jupiter tags are attached. If the
+  // The spam filter is only meaningful once catalog tags are attached. If the
   // metadata call fails, every token looks untagged and filtering would drop
   // the caller's entire SPL balance, leaving a wallet that shows only SOL —
   // a false zero the user reads as "my tokens are gone". Track the failure and
@@ -175,11 +175,11 @@ const getBalance = async (address, tokens, locals) => {
   if (tokenMints.length > 0) {
     try {
       const metadata = await tokenService.getByMints(tokenMints, locals);
-      enriched = enrichWithJupiterMetadata(items, indexMetadataByMint(metadata));
+      enriched = enrichWithTokenMetadata(items, indexMetadataByMint(metadata));
     } catch (error) {
       metadataAvailable = false;
       console.warn(
-        `[solana-balance-provider] Jupiter metadata enrichment failed, serving unfiltered balance: ${error.message}`
+        `[solana-balance-provider] token metadata enrichment failed, serving unfiltered balance: ${error.message}`
       );
     }
   }

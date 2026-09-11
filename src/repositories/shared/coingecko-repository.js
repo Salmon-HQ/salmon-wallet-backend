@@ -65,6 +65,15 @@ const saveTokensPrices = async (prices, platform) => {
  * @param {object} [locals]
  * @returns {string}
  */
+/** CoinGecko Solana token list (raw), 24 h at most per their terms. */
+const getSolanaTokenList = async () => getFromCache('solana:coingecko_token_list');
+const saveSolanaTokenList = async (tokens, ttl) =>
+  storeInCache('solana:coingecko_token_list', tokens, ttl);
+/** Solana mint → CoinGecko coin id map, same TTL. */
+const getSolanaCoinIds = async () => getFromCache('solana:coingecko_coin_ids');
+const saveSolanaCoinIds = async (byMint, ttl) =>
+  storeInCache('solana:coingecko_coin_ids', byMint, ttl);
+
 const getChartKey = (type, { coinId, days, currency }, locals) => {
   return getCacheKey(`${type}:${coinId}:${currency}:${days}`, locals);
 };
@@ -210,6 +219,10 @@ const saveExchangeRates = async (rates, locals) => {
 };
 
 module.exports = {
+  getSolanaTokenList,
+  saveSolanaTokenList,
+  getSolanaCoinIds,
+  saveSolanaCoinIds,
   saveTokensList,
   saveTokensPrices,
   getTokensList,

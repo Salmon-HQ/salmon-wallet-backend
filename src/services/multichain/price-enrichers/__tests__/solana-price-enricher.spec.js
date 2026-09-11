@@ -1,10 +1,10 @@
 'use strict';
 
-jest.mock('../../../solana/jupiter-service', () => ({
-  getQuotes: jest.fn(),
+jest.mock('../../../shared/coingecko-service', () => ({
+  getTokenPrices: jest.fn(),
 }));
 
-const jupiterService = require('../../../solana/jupiter-service');
+const coingecko = require('../../../shared/coingecko-service');
 const { SOL_ADDRESS } = require('../../../../constants/solana-constants');
 const { enrich } = require('../solana-price-enricher');
 
@@ -43,17 +43,17 @@ describe('solana-price-enricher', () => {
   it('returns the input array as-is when items is empty', async () => {
     const out = await enrich([], { network: { blockchain: 'solana' } });
     expect(out).toEqual([]);
-    expect(jupiterService.getQuotes).not.toHaveBeenCalled();
+    expect(coingecko.getTokenPrices).not.toHaveBeenCalled();
   });
 
   it('attaches price + usdBalance + 24h change to native SOL via SOL_ADDRESS', async () => {
     const quotes = new Map([[SOL_ADDRESS, { usdPrice: 80, priceChange24h: -1.5 }]]);
-    jupiterService.getQuotes.mockResolvedValue(quotes);
+    coingecko.getTokenPrices.mockResolvedValue(quotes);
 
     const items = [buildSolItem('1000000000')]; // 1 SOL
     const out = await enrich(items, { network: { blockchain: 'solana' } });
 
-    expect(jupiterService.getQuotes).toHaveBeenCalledWith([SOL_ADDRESS], {
+    expect(coingecko.getTokenPrices).toHaveBeenCalledWith([SOL_ADDRESS], {
       network: { blockchain: 'solana' },
     });
     expect(out[0]).toMatchObject({
@@ -66,7 +66,7 @@ describe('solana-price-enricher', () => {
   it('attaches pricing to SPL tokens by contract mint', async () => {
     const usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
     const quotes = new Map([[usdcMint, { usdPrice: 1.0, priceChange24h: 0.01 }]]);
-    jupiterService.getQuotes.mockResolvedValue(quotes);
+    coingecko.getTokenPrices.mockResolvedValue(quotes);
 
     const items = [buildSplItem(usdcMint, '5000000')]; // 5 USDC
     const out = await enrich(items, { network: { blockchain: 'solana' } });
@@ -81,7 +81,7 @@ describe('solana-price-enricher', () => {
   it('falls back to asset_path third segment when contract is missing', async () => {
     const fallbackMint = '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R';
     const quotes = new Map([[fallbackMint, { usdPrice: 2, priceChange24h: null }]]);
-    jupiterService.getQuotes.mockResolvedValue(quotes);
+    coingecko.getTokenPrices.mockResolvedValue(quotes);
 
     const items = [
       {
@@ -105,7 +105,7 @@ describe('solana-price-enricher', () => {
   });
 
   it('passes through items when Jupiter returns no quote for that mint', async () => {
-    jupiterService.getQuotes.mockResolvedValue(new Map());
+    coingecko.getTokenPrices.mockResolvedValue(new Map());
 
     const items = [buildSplItem('SomeUnpricedMint111111111111111111111111111', '1')];
     const out = await enrich(items, { network: { blockchain: 'solana' } });
@@ -116,7 +116,7 @@ describe('solana-price-enricher', () => {
   });
 
   it('passes through items when Jupiter returns an empty Map', async () => {
-    jupiterService.getQuotes.mockResolvedValue(new Map());
+    coingecko.getTokenPrices.mockResolvedValue(new Map());
 
     const items = [buildSolItem('1000000000')];
     const out = await enrich(items, { network: { blockchain: 'solana' } });
@@ -125,18 +125,18 @@ describe('solana-price-enricher', () => {
   });
 
   it('deduplicates mints before calling Jupiter', async () => {
-    jupiterService.getQuotes.mockResolvedValue(new Map());
+    coingecko.getTokenPrices.mockResolvedValue(new Map());
     const sameMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
     const items = [buildSplItem(sameMint, '1'), buildSplItem(sameMint, '2')];
     await enrich(items, { network: { blockchain: 'solana' } });
 
-    expect(jupiterService.getQuotes).toHaveBeenCalledWith([sameMint], expect.any(Object));
+    expect(coingecko.getTokenPrices).toHaveBeenCalledWith([sameMint], expect.any(Object));
   });
 
   it('zero-balance items resolve usdBalance to 0', async () => {
     const usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-    jupiterService.getQuotes.mockResolvedValue(
+    coingecko.getTokenPrices.mockResolvedValue(
       new Map([[usdcMint, { usdPrice: 1.0, priceChange24h: 0 }]])
     );
 
