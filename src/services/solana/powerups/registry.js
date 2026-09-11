@@ -64,6 +64,16 @@ const POWERUPS = {
     errorCodes: ['note_too_long'],
     adapter: memo,
   },
+  // Read-only FIXTURE for the client's catalogue + disclosure test (T2 of
+  // spec 015): no adapter, no relationship with the protocol named; listed
+  // only where a stage enables it (today: `local`). Remove or replace with a
+  // real entry when the first community Powerup lands.
+  'kamino-positions': {
+    tier: 'community',
+    networks: ['solana-mainnet'],
+    contributor: { name: 'Fixture Labs', url: 'https://example.invalid/fixture' },
+    endpoints: ['https://api.kamino.finance'],
+  },
 };
 
 module.exports = { POWERUPS };
