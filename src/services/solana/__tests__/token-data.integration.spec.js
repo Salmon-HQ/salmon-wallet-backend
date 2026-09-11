@@ -9,9 +9,14 @@ const axios = require('axios');
 const tritonClient = require('../../../infrastructure/triton-client');
 const metadata = require('../token-metadata-service');
 const catalog = require('../token-catalog-service');
-const coingecko = require('../../shared/coingecko-service');
+const coingeckoService = require('../../shared/coingecko-service');
+const { redis } = require('../../../repositories/data-source');
 
 jest.setTimeout(60000);
+
+afterAll(async () => {
+  await redis.quit();
+});
 
 const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const BERN = 'CKfatsPMUf8SkiURsDXs7eK6GWb4Jsd6UDbs7twMCWxo';
@@ -64,7 +69,7 @@ describe('token data — integration', () => {
 
   it('prices USDC and SOL in USD with a 24h change, and leaves an unknown mint absent', async () => {
     if (!cg) return;
-    const prices = await coingecko.getTokenPrices(
+    const prices = await coingeckoService.getTokenPrices(
       [USDC, SOL, 'Unknown111111111111111111111111111111111111'],
       locals
     );
