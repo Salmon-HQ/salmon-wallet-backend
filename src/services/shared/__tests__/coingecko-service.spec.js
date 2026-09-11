@@ -374,12 +374,12 @@ describe('coingecko-service', () => {
     repository.getShortTermCoinInfo.mockResolvedValue(null);
     http.get.mockResolvedValue({
       data: {
-        id: 'jupiter-exchange-solana',
+        id: 'bonk',
         symbol: 'jup',
-        name: 'Jupiter',
+        name: 'Bonk',
         image: { large: 'https://img/jup-large.png' },
         description: { en: 'DEX aggregator on Solana.' },
-        links: { homepage: ['https://jup.ag'], twitter_screen_name: 'JupiterExchange' },
+        links: { homepage: ['https://bonkcoin.com'], twitter_screen_name: 'bonk_inu' },
         market_data: {
           current_price: { usd: 0.5 },
           market_cap: { usd: 1000 },
@@ -402,12 +402,12 @@ describe('coingecko-service', () => {
     expect(http.get.mock.calls[0][0]).toBe(
       'https://api.coingecko.com/api/v3/coins/solana/contract/JUPmint'
     );
-    expect(result.id).toBe('jupiter-exchange-solana');
-    expect(result.name).toBe('Jupiter');
+    expect(result.id).toBe('bonk');
+    expect(result.name).toBe('Bonk');
     expect(result.description).toBe('DEX aggregator on Solana.');
     expect(result.links).toEqual({
-      homepage: 'https://jup.ag',
-      twitter: 'https://twitter.com/JupiterExchange',
+      homepage: 'https://bonkcoin.com',
+      twitter: 'https://twitter.com/bonk_inu',
     });
     expect(result.marketData).toMatchObject({
       currentPrice: 0.5,
@@ -426,7 +426,7 @@ describe('coingecko-service', () => {
   });
 
   it('getContractCoinInfo serves the short-term cache without fetching', async () => {
-    const cached = { id: 'jupiter-exchange-solana', name: 'Jupiter' };
+    const cached = { id: 'bonk', name: 'Bonk' };
     repository.getShortTermCoinInfo.mockResolvedValue(cached);
 
     const result = await service.getContractCoinInfo(
@@ -439,7 +439,7 @@ describe('coingecko-service', () => {
   });
 
   it('getContractCoinInfo falls back to the long-term cache on fetch failure', async () => {
-    const cached = { id: 'jupiter-exchange-solana', name: 'Jupiter' };
+    const cached = { id: 'bonk', name: 'Bonk' };
     repository.getShortTermCoinInfo.mockResolvedValue(null);
     repository.getLongTermCoinInfo.mockResolvedValue(cached);
     http.get.mockRejectedValue(new Error('upstream down'));

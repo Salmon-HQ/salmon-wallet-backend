@@ -17,14 +17,14 @@ const {
 } = require('../../constants/solana-constants');
 
 const {
-  JUPITER_PROGRAM_IDS,
-  JUPITER_LIMIT_PROGRAM_IDS,
+  AGGREGATOR_ROUTER_PROGRAM_IDS,
+  AGGREGATOR_LIMIT_PROGRAM_IDS,
   BUBBLEGUM_PROGRAM_ID,
 } = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
 
 const PROGRAMS = {
-  JUPITER: [...JUPITER_PROGRAM_IDS, ...JUPITER_LIMIT_PROGRAM_IDS],
+  AGGREGATOR: [...AGGREGATOR_ROUTER_PROGRAM_IDS, ...AGGREGATOR_LIMIT_PROGRAM_IDS],
   BUBBLEGUM: BUBBLEGUM_PROGRAM_ID,
 };
 
@@ -108,7 +108,7 @@ const getType = (address, meta, transaction, destination) => {
   // 1. Check for SWAP
   if (
     containsProgramInLogs('SetTokenLedger') ||
-    instructions.some(({ programId }) => PROGRAMS.JUPITER.includes(programId?.toString()))
+    instructions.some(({ programId }) => PROGRAMS.AGGREGATOR.includes(programId?.toString()))
   ) {
     return SWAP;
   }

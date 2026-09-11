@@ -3,7 +3,7 @@
 /**
  * Solana price enricher.
  *
- * Reads mints from each balance item and queries the Jupiter Price v3
+ * Reads mints from each balance item and queries the CoinGecko token-price
  * service through `shared/coingecko-service.getTokenPrices` (which already
  * batches, rate-limits, and caches per-mint quotes). Items without a
  * resolvable mint or without a quote pass through untouched — clients

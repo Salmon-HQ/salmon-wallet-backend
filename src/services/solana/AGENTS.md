@@ -18,7 +18,7 @@ These rules apply to Solana service code only.
   - canonical provider abstraction lives in `solana-data-provider.js`
 - `parser/`
   - local Triton parser pipeline that produces the same enriched-tx shape as Helius Enhanced API, so the resource decorator stays provider-agnostic
-  - per-program parsers under `parser/parsers/`: `system`, `spl-token`, `metaplex`, `bubblegum`, `jupiter`, `stake`, `staking`, `lending`, `dex`
+  - per-program parsers under `parser/parsers/`: `system`, `spl-token`, `metaplex`, `bubblegum`, `aggregator`, `stake`, `staking`, `lending`, `dex`
 - `helius-transaction-service.js`
   - Helius API wrapper used by the Helius provider
 - `transaction-serialization.js`

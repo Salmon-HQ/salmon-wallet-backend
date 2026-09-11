@@ -42,22 +42,25 @@ const {
   SOL_LOGO,
 } = require('../../constants/solana-constants');
 const {
-  JUPITER_PROGRAM_IDS,
-  JUPITER_LIMIT_PROGRAM_IDS,
+  AGGREGATOR_ROUTER_PROGRAM_IDS,
+  AGGREGATOR_LIMIT_PROGRAM_IDS,
 } = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
 
-const JUPITER_ALL_IDS = new Set([...JUPITER_PROGRAM_IDS, ...JUPITER_LIMIT_PROGRAM_IDS]);
+const AGGREGATOR_ALL_IDS = new Set([
+  ...AGGREGATOR_ROUTER_PROGRAM_IDS,
+  ...AGGREGATOR_LIMIT_PROGRAM_IDS,
+]);
 
 /**
- * True if the transaction touches any Jupiter program (aggregator router or
- * Limit Order v2). Jupiter Ultra executes from its own escrow accounts, so
+ * True if the transaction touches any aggregator program (aggregator router or
+ * Limit Order v2). The aggregator executes from its own escrow accounts, so
  * the user never appears in `tokenTransfers` — programId detection is the
  * only reliable signal.
  */
-const hasJupiterProgram = (transaction) => {
+const hasAggregatorProgram = (transaction) => {
   const instructions = transaction.instructions || [];
-  return instructions.some((ix) => JUPITER_ALL_IDS.has(ix.programId));
+  return instructions.some((ix) => AGGREGATOR_ALL_IDS.has(ix.programId));
 };
 
 /**
@@ -295,7 +298,7 @@ const inferDirectionalType = (isSender, isReceiver) => {
 
 /**
  * Heuristic: when both sides of a TRANSFER touch the user but with different
- * mints (e.g. swap-by-different-mints from a non-Jupiter aggregator), classify
+ * mints (e.g. swap-by-different-mints from a other aggregator), classify
  * as SWAP. Returns SWAP or undefined.
  */
 const inferSwapByMintMix = (address, nativeTransfers, tokenTransfers) => {
@@ -308,9 +311,9 @@ const inferSwapByMintMix = (address, nativeTransfers, tokenTransfers) => {
  * @returns {string} SEND, RECEIVE, SWAP, MINT, INTERACTION, UNKNOWN, ...
  */
 const mapTransactionType = (heliusType, address, transaction) => {
-  // Jupiter Ultra executes from its own escrow accounts — the user never
+  // The aggregator executes from its own escrow accounts — the user never
   // appears in transfers, so programId detection is the only reliable signal.
-  if (hasJupiterProgram(transaction)) return SWAP;
+  if (hasAggregatorProgram(transaction)) return SWAP;
 
   const mappedType = HELIUS_TYPE_MAPPING[heliusType] || INTERACTION;
   const { nativeTransfers, tokenTransfers } = getTransfers(transaction);
@@ -598,6 +601,10 @@ const normalizeInstructions = (instructions) => {
 const transformTransaction = async (heliusTransaction, address, tokens = [], options = {}) => {
   const tokenLookup = buildTokenLookup(tokens);
   const type = mapTransactionType(heliusTransaction.type, address, heliusTransaction);
+  // The enrichment provider labels aggregator swaps with the program's own
+  // brand; the public `source` enum (`solana-source-catalog`) names the
+  // program by its role instead, so program-id detection decides the label.
+  const source = hasAggregatorProgram(heliusTransaction) ? 'AGGREGATOR' : heliusTransaction.source;
 
   const inputs = getInputs(type, address, heliusTransaction, tokenLookup);
   const outputs = getOutputs(type, address, heliusTransaction, tokenLookup);
@@ -613,8 +620,7 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
   // Populate swapRoute when this is a swap so the FE's SwapRoute /
   // ConversionRate UI lights up. Works for both Helius- and Triton-parsed
   // transactions because both paths feed the same canonical inputs/outputs.
-  const swapRoute =
-    type === SWAP ? buildSwapRoute(inputs, outputs, heliusTransaction.source) : undefined;
+  const swapRoute = type === SWAP ? buildSwapRoute(inputs, outputs, source) : undefined;
 
   return {
     id: heliusTransaction.signature,
@@ -627,7 +633,7 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
 
     // Provider-enriched fields forwarded to the FE
     description: heliusTransaction.description,
-    source: heliusTransaction.source,
+    source,
     events: heliusTransaction.events,
     // Original provider type — FE uses tx.heliusType.startsWith('NFT_')
     heliusType: heliusTransaction.type,

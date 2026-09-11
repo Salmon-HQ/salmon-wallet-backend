@@ -366,7 +366,7 @@ public RPC is the last resort.
   Enhanced Transactions. It classifies transactions from each
   instruction's program IDs.
 - `src/services/solana/parser/parsers/` contains the per-program
-  parsers: `system`, `spl-token`, `metaplex`, `bubblegum`, `jupiter`,
+  parsers: `system`, `spl-token`, `metaplex`, `bubblegum`, `aggregator`,
   `stake`, `staking`, `lending`, `dex`, plus the `_hint-parser.js`
   helper.
 - The HTTP/RPC clients live in `src/infrastructure/triton-client.js`

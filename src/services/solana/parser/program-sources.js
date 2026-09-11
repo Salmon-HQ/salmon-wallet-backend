@@ -5,7 +5,7 @@
  * downstream resource layer and the FE source-badge keep working unchanged).
  *
  * Adding a source = drop a new entry below. Adding more program IDs to an
- * existing source (e.g. a new Jupiter program version) = append to its list.
+ * existing source (e.g. a new aggregator program version) = append to its list.
  *
  * Source name conventions:
  *   - UPPER_SNAKE_CASE
@@ -17,8 +17,8 @@
  */
 
 const {
-  JUPITER_PROGRAM_IDS,
-  JUPITER_LIMIT_PROGRAM_IDS,
+  AGGREGATOR_ROUTER_PROGRAM_IDS,
+  AGGREGATOR_LIMIT_PROGRAM_IDS,
   BUBBLEGUM_PROGRAM_ID,
 } = require('../../../constants/solana-program-ids');
 
@@ -39,11 +39,11 @@ const SOURCES = {
   // Compression / state Merkle (cNFT support program)
   ACCOUNT_COMPRESSION: ['cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'],
 
-  // Jupiter aggregator routers (canonical list lives in src/constants).
-  JUPITER: JUPITER_PROGRAM_IDS,
+  // aggregator routers (canonical list lives in src/constants).
+  AGGREGATOR: AGGREGATOR_ROUTER_PROGRAM_IDS,
 
-  // Jupiter Limit Orders v2.
-  JUPITER_LIMIT: JUPITER_LIMIT_PROGRAM_IDS,
+  // the aggregator limit-order program.
+  AGGREGATOR_LIMIT: AGGREGATOR_LIMIT_PROGRAM_IDS,
 
   // Major DEX programs (also bucketed via SWAP downstream)
   RAYDIUM: [
@@ -125,7 +125,7 @@ const SOURCES = {
   // Moonshot launchpad (DEX Screener). Verified via solanacompass + Bitquery.
   MOONSHOT: ['MoonCVVNZFSYkqNXP6bxHLPL6QQJiMagDL3qcqUQTrG'],
 
-  // Meteora Dynamic Bonding Curve — used by Jupiter LFG and others.
+  // Meteora Dynamic Bonding Curve — used by aggregator launchpads and others.
   // Verified via solscan + meteora docs.
   METEORA_DBC: ['dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN'],
 
@@ -182,15 +182,15 @@ const PROGRAM_TO_SOURCE = (() => {
 /**
  * Resolve a program ID to its canonical source name.
  * @param {string} programId - Base58 program address
- * @returns {string|null} Canonical source name (e.g. 'JUPITER'), or `null` if unknown
+ * @returns {string|null} Canonical source name (e.g. 'AGGREGATOR'), or `null` if unknown
  */
 const getSource = (programId) => PROGRAM_TO_SOURCE.get(programId) || null;
 
 /**
  * @param {string} programId - Base58 program address
- * @returns {boolean} True for any Jupiter aggregator router program ID
+ * @returns {boolean} True for any aggregator router program ID
  */
-const isJupiter = (programId) => SOURCES.JUPITER.includes(programId);
+const isAggregator = (programId) => SOURCES.AGGREGATOR.includes(programId);
 /**
  * @param {string} programId - Base58 program address
  * @returns {boolean} True for the Metaplex token-metadata program
@@ -216,7 +216,7 @@ const isToken = (programId) =>
 /**
  * Source priority — when a transaction has instructions from multiple
  * sources, the source with the highest priority wins. Lower number = higher
- * priority. Aggregators (Jupiter) trump the underlying AMMs they route
+ * priority. Aggregators (aggregator) trump the underlying AMMs they route
  * through; marketplaces trump generic token programs.
  *
  * Priority bands group sources by semantic class so adding a new source is a
@@ -224,7 +224,7 @@ const isToken = (programId) =>
  * absolute integer values are an implementation detail of the sort order.
  */
 const PRIORITY_BANDS = {
-  AGGREGATOR: 0, // Jupiter, Sanctum LST router — wraps lower-tier protocols
+  AGGREGATOR: 0, // aggregator, Sanctum LST router — wraps lower-tier protocols
   LAUNCHPAD_NFT: 1, // Pump.fun, Magic Eden, Tensor — user-facing markets
   LENDING_LST: 2, // Solend / Kamino / MarginFi / Marinade / Stake Pool
   AMM: 3, // Raydium / Orca / Meteora / Phoenix / OpenBook / Lifinity / Saber
@@ -240,8 +240,8 @@ const PRIORITY_BANDS = {
 };
 
 const SOURCE_PRIORITY = {
-  JUPITER: PRIORITY_BANDS.AGGREGATOR,
-  JUPITER_LIMIT: PRIORITY_BANDS.AGGREGATOR,
+  AGGREGATOR: PRIORITY_BANDS.AGGREGATOR,
+  AGGREGATOR_LIMIT: PRIORITY_BANDS.AGGREGATOR,
   SANCTUM: PRIORITY_BANDS.AGGREGATOR,
 
   PUMP_FUN: PRIORITY_BANDS.LAUNCHPAD_NFT,
@@ -329,7 +329,7 @@ module.exports = {
   SOURCE_PRIORITY,
   getSource,
   pickPrimarySource,
-  isJupiter,
+  isAggregator,
   isMetaplex,
   isBubblegum,
   isStakeProgram,

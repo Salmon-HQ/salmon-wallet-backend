@@ -2,8 +2,8 @@
 
 /**
  * Direct-DEX parser — flags any DEX program (aggregated or direct) so the
- * tx is bucketed as SWAP. When Jupiter routes through a DEX as a CPI both
- * `hasJupiter` and `hasDexSwap` end up set; both produce SWAP, so the
+ * tx is bucketed as SWAP. When aggregator routes through a DEX as a CPI both
+ * `hasAggregator` and `hasDexSwap` end up set; both produce SWAP, so the
  * double-flag is harmless.
  *
  * Edge case (deliberate trade-off): liquidity operations on AMMs

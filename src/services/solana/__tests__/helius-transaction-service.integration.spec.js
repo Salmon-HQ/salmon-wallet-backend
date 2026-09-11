@@ -50,9 +50,9 @@ describe('Helius Enhanced Transactions API - Integration Tests', () => {
   });
 
   describe('getEnhancedTransactions() - Single transaction', () => {
-    test('should fetch and parse a Jupiter swap transaction', async () => {
+    test('should fetch and parse an aggregator swap transaction', async () => {
       if (!heliusAvailable) return;
-      // Signature de un swap real de Jupiter en mainnet (reciente)
+      // Signature of a real aggregator swap on mainnet
       const signature =
         '42GYdSrtwmU6rHmGuC8KcWANa7w15ieZpZnjY39EQVR9oiDnbptFaTw7PLtfBeHPH27L9AzTVqpY51YsMVgYcDRY';
 

@@ -21,7 +21,7 @@ const TOKEN = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const TOKEN_2022 = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
 const METAPLEX = 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s';
 const BUBBLEGUM = 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY';
-const JUPITER_V6 = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
+const AGGREGATOR_V6 = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
 const STAKE = 'Stake11111111111111111111111111111111111111';
 
 const MARINADE = 'MarBmsSgKXdrN1egZf5sqe1TMThczhMLJhJlsbXxy7Z';
@@ -269,7 +269,7 @@ describe('parser orchestrator', () => {
 
     const result = parseTransaction(rawTx);
     expect(result.type).toBe('NFT_MINT');
-    expect(['JUPITER', 'METAPLEX_TOKEN_METADATA']).toContain(result.source);
+    expect(['AGGREGATOR', 'METAPLEX_TOKEN_METADATA']).toContain(result.source);
   });
 
   it('detects Bubblegum cNFT instruction and tags COMPRESSED_NFT type', () => {
@@ -332,9 +332,9 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('COMPRESSED_NFT_TRANSFER');
   });
 
-  it('detects Jupiter v6 program and tags type=SWAP source=JUPITER', () => {
+  it('detects aggregator v6 program and tags type=SWAP source=AGGREGATOR', () => {
     const rawTx = buildRawTx({
-      instructions: [{ programId: JUPITER_V6, accounts: [], data: 'opaque' }],
+      instructions: [{ programId: AGGREGATOR_V6, accounts: [], data: 'opaque' }],
       inner: [
         {
           index: 0,
@@ -357,7 +357,7 @@ describe('parser orchestrator', () => {
               parsed: {
                 type: 'transferChecked',
                 info: {
-                  authority: 'JUPITER',
+                  authority: 'AGGREGATOR',
                   source: 'B',
                   destination: 'C',
                   mint: 'OUT_MINT',
@@ -372,7 +372,7 @@ describe('parser orchestrator', () => {
 
     const result = parseTransaction(rawTx);
     expect(result.type).toBe('SWAP');
-    expect(result.source).toBe('JUPITER');
+    expect(result.source).toBe('AGGREGATOR');
     expect(result.tokenTransfers).toHaveLength(2);
   });
 
@@ -419,17 +419,17 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('TRANSFER');
   });
 
-  it('produces deterministic source priority: JUPITER beats RAYDIUM in sources mix', () => {
+  it('produces deterministic source priority: AGGREGATOR beats RAYDIUM in sources mix', () => {
     const RAYDIUM_AMM = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
     const rawTx = buildRawTx({
       instructions: [
-        { programId: JUPITER_V6, accounts: [], data: 'op' },
+        { programId: AGGREGATOR_V6, accounts: [], data: 'op' },
         { programId: RAYDIUM_AMM, accounts: [], data: 'op' },
       ],
     });
 
     const result = parseTransaction(rawTx);
-    expect(result.source).toBe('JUPITER');
+    expect(result.source).toBe('AGGREGATOR');
   });
 
   it('resolves token account → owner via pre/post token balances', () => {
@@ -529,7 +529,7 @@ describe('parser orchestrator', () => {
     ['Lifinity', LIFINITY, 'LIFINITY'],
     ['Saber', SABER, 'SABER'],
   ])(
-    'classifies direct %s call as SWAP (no Jupiter present)',
+    'classifies direct %s call as SWAP (no aggregator present)',
     (_name, programId, expectedSource) => {
       const rawTx = buildRawTx({
         instructions: [{ programId, accounts: [], data: 'op' }],
@@ -582,16 +582,16 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('TRANSFER');
   });
 
-  it('Jupiter still wins source priority over a direct DEX program in the same tx', () => {
+  it('aggregator still wins source priority over a direct DEX program in the same tx', () => {
     const rawTx = buildRawTx({
       instructions: [
-        { programId: JUPITER_V6, accounts: [], data: 'op' },
+        { programId: AGGREGATOR_V6, accounts: [], data: 'op' },
         { programId: PHOENIX, accounts: [], data: 'op' },
       ],
     });
     const result = parseTransaction(rawTx);
     expect(result.type).toBe('SWAP');
-    expect(result.source).toBe('JUPITER');
+    expect(result.source).toBe('AGGREGATOR');
   });
 
   it('Sanctum (LST aggregator) wins over STAKE_POOL when both are present', () => {

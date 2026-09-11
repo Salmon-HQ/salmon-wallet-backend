@@ -96,7 +96,7 @@ describe('solana-swap-build-resource', () => {
   });
 
   it('degrades USD fields to null when prices are unavailable, keeping the transaction', async () => {
-    coingecko.getTokenPrices.mockRejectedValue(new Error('jupiter down'));
+    coingecko.getTokenPrices.mockRejectedValue(new Error('prices down'));
 
     const resource = await decorate(build(), {}, 'k', context);
 

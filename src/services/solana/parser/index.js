@@ -15,13 +15,13 @@
  *   build ctx (accountKeys, tokenAccount → owner, tokenAccount → mint)
  *                │
  *   walk top-level instructions ──► parser registry (System, SPL Token,
- *                │                  Metaplex, Bubblegum, Jupiter, Stake,
+ *                │                  Metaplex, Bubblegum, aggregator, Stake,
  *                │                  Staking, Lending, DEX) — each contributes
  *                │                  transfers / hints to the building shape
  *                │
  *   walk inner instructions ─► same registry
  *                │
- *   post-process pass (Jupiter swapRoute, type derivation, source pick)
+ *   post-process pass (aggregator swapRoute, type derivation, source pick)
  *                │
  *                ▼
  *   enriched tx ─► returned to TritonProvider
@@ -41,7 +41,7 @@ const systemParser = require('./parsers/system');
 const splTokenParser = require('./parsers/spl-token');
 const metaplexParser = require('./parsers/metaplex');
 const bubblegumParser = require('./parsers/bubblegum');
-const jupiterParser = require('./parsers/jupiter');
+const aggregatorParser = require('./parsers/aggregator');
 const stakeParser = require('./parsers/stake');
 const stakingParser = require('./parsers/staking');
 const lendingParser = require('./parsers/lending');
@@ -52,7 +52,7 @@ const PARSERS = [
   splTokenParser,
   metaplexParser,
   bubblegumParser,
-  jupiterParser,
+  aggregatorParser,
   stakeParser,
   stakingParser,
   lendingParser,
@@ -163,7 +163,7 @@ const collectInstructionMetadata = (rawTx) => {
  * Ordering is the contract — earlier rows take priority over later rows.
  */
 const TYPE_PRECEDENCE = [
-  { hint: (h) => h.hasJupiter || h.hasDexSwap, type: 'SWAP' },
+  { hint: (h) => h.hasAggregator || h.hasDexSwap, type: 'SWAP' },
   { hint: (h) => h.hasCnftMint, type: 'COMPRESSED_NFT_MINT' },
   { hint: (h) => h.hasCnftBurn, type: 'COMPRESSED_NFT_BURN' },
   { hint: (h) => h.hasCnftTransfer, type: 'COMPRESSED_NFT_TRANSFER' },
@@ -297,7 +297,7 @@ const parseTransaction = (rawTx, options = {}) => {
   // 3. Instruction metadata for FE debug pane
   ctx.building.instructions = collectInstructionMetadata(rawTx);
 
-  // 4. Post-process passes (Jupiter swapRoute, etc.)
+  // 4. Post-process passes (aggregator swapRoute, etc.)
   for (const parser of POST_PROCESSORS) {
     try {
       parser.postProcess(ctx);

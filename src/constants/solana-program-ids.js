@@ -5,7 +5,7 @@
  *
  * Both the resource layer (transaction shaping) and the service-layer parser
  * (program-sources lookup) need to know about a small set of programs:
- * Jupiter aggregator versions, Bubblegum (cNFT), Token-2022, etc. Keeping
+ * swap-aggregator router versions, Bubblegum (cNFT), Token-2022, etc. Keeping
  * these in `src/constants` lets both layers import without violating the
  * AGENTS placement rule (resources don't reach into services).
  *
@@ -14,9 +14,10 @@
  * source of truth for source-name resolution.
  */
 
-// Jupiter aggregator routers — every version Salmon has historically seen.
-// Latest first. Helius source: 'JUPITER'.
-const JUPITER_PROGRAM_IDS = [
+// Swap-aggregator routers — every version Salmon has historically seen,
+// latest first. Transactions touching any of them surface as source
+// 'AGGREGATOR' in history, whatever label the enrichment provider used.
+const AGGREGATOR_ROUTER_PROGRAM_IDS = [
   'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4', // v6 (current)
   'JUP5cHjnnCx2DppVsufsLrXs8EBZeEZzGtEK9Gdz6ow',
   'JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB',
@@ -24,16 +25,16 @@ const JUPITER_PROGRAM_IDS = [
   'JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo',
 ];
 
-// Jupiter Limit Orders v2 — distinct surface from the aggregator router but
-// callers (resource Jupiter detection, parser Jupiter classifier) need it
-// tagged as Jupiter for SWAP bucketing.
-const JUPITER_LIMIT_PROGRAM_IDS = ['j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X'];
+// The aggregator's limit-order program — a distinct surface from the router,
+// but callers (resource detection, parser classifier) need it tagged as the
+// aggregator for SWAP bucketing.
+const AGGREGATOR_LIMIT_PROGRAM_IDS = ['j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X'];
 
 // Metaplex Bubblegum — compressed NFT program.
 const BUBBLEGUM_PROGRAM_ID = 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY';
 
 module.exports = {
-  JUPITER_PROGRAM_IDS,
-  JUPITER_LIMIT_PROGRAM_IDS,
+  AGGREGATOR_ROUTER_PROGRAM_IDS,
+  AGGREGATOR_LIMIT_PROGRAM_IDS,
   BUBBLEGUM_PROGRAM_ID,
 };

@@ -104,7 +104,7 @@ describe('solana-price-enricher', () => {
     expect(out[0]._priceChange24h).toBeNull();
   });
 
-  it('passes through items when Jupiter returns no quote for that mint', async () => {
+  it('passes through items when the price source returns no quote for that mint', async () => {
     coingecko.getTokenPrices.mockResolvedValue(new Map());
 
     const items = [buildSplItem('SomeUnpricedMint111111111111111111111111111', '1')];
@@ -115,7 +115,7 @@ describe('solana-price-enricher', () => {
     expect(out[0]).not.toHaveProperty('_priceChange24h');
   });
 
-  it('passes through items when Jupiter returns an empty Map', async () => {
+  it('passes through items when the price source returns an empty Map', async () => {
     coingecko.getTokenPrices.mockResolvedValue(new Map());
 
     const items = [buildSolItem('1000000000')];
@@ -124,7 +124,7 @@ describe('solana-price-enricher', () => {
     expect(out).toBe(items);
   });
 
-  it('deduplicates mints before calling Jupiter', async () => {
+  it('deduplicates mints before calling the price source', async () => {
     coingecko.getTokenPrices.mockResolvedValue(new Map());
     const sameMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 

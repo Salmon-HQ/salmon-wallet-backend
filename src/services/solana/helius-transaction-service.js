@@ -122,7 +122,7 @@ const getEnhancedTransactionHistory = async (address, filters = {}, environment 
 
 /**
  * True if Helius classified this transaction (any non-UNKNOWN `type`).
- * Helius parses NFTs, Jupiter, SPL transfers, and many DeFi protocols.
+ * Helius parses NFTs, aggregator swaps, SPL transfers, and many DeFi protocols.
  * @param {Object} transaction
  * @returns {boolean}
  */

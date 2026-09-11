@@ -20,12 +20,12 @@ const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
 describe('swapRoute integration', () => {
-  test('Jupiter SWAP populates a single-hop swapRoute aligned with inputs/outputs', async () => {
+  test('aggregator SWAP populates a single-hop swapRoute aligned with inputs/outputs', async () => {
     const heliusTx = {
       signature: 'sig-swap',
       timestamp: 1700000000,
       type: 'SWAP',
-      source: 'JUPITER',
+      source: 'AGGREGATOR',
       feePayer: USER,
       instructions: [{ programId: 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4' }],
       tokenTransfers: [
@@ -64,7 +64,7 @@ describe('swapRoute integration', () => {
     // Hop's `outputToken` is what the user received (SOL).
     expect(hop.outputToken.amount).toBe('500000000');
     expect(hop.outputToken.decimals).toBe(9);
-    expect(hop.dex).toBe('JUPITER');
+    expect(hop.dex).toBe('AGGREGATOR');
 
     expect(result.swapRoute.inputAmount).toBe('1000000');
     expect(result.swapRoute.outputAmount).toBe('500000000');

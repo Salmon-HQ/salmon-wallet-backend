@@ -73,7 +73,7 @@ describe('coingecko-controller getContractCoinInfo', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('responds 200 with the mapped coin info including the resolved id', async () => {
-    const coinInfo = { id: 'jupiter-exchange-solana', name: 'Jupiter', marketData: {} };
+    const coinInfo = { id: 'bonk', name: 'Bonk', marketData: {} };
     service.getContractCoinInfo.mockResolvedValue(coinInfo);
     const res = buildRes();
 
@@ -88,7 +88,7 @@ describe('coingecko-controller getContractCoinInfo', () => {
     );
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith(coinInfo);
-    expect(res.send.mock.calls[0][0].id).toBe('jupiter-exchange-solana');
+    expect(res.send.mock.calls[0][0].id).toBe('bonk');
   });
 
   it('maps an upstream 404 to the info_not_found envelope', async () => {

@@ -119,22 +119,22 @@ describe('Sanctum Infinity → STAKE_TOKEN (LST router)', () => {
   });
 });
 
-describe('Jupiter primary source priority', () => {
-  test('Jupiter + Raydium together → JUPITER source wins (aggregator > AMM)', () => {
+describe('aggregator primary source priority', () => {
+  test('aggregator + Raydium together → AGGREGATOR source wins (aggregator > AMM)', () => {
     const tx = {
-      ...buildTx({ programId: SOURCES.JUPITER[0] }),
+      ...buildTx({ programId: SOURCES.AGGREGATOR[0] }),
     };
     tx.transaction.message.instructions = [
       { programId: SOURCES.RAYDIUM[0], parsed: null },
-      { programId: SOURCES.JUPITER[0], parsed: null },
+      { programId: SOURCES.AGGREGATOR[0], parsed: null },
     ];
     const result = parseTransaction(tx);
     expect(result.type).toBe('SWAP');
-    expect(result.source).toBe('JUPITER');
+    expect(result.source).toBe('AGGREGATOR');
   });
 
-  test('Jupiter Limit Orders also produce SWAP type', () => {
-    const tx = parseTransaction(buildTx({ programId: SOURCES.JUPITER_LIMIT[0] }));
+  test('aggregator limit orders also produce SWAP type', () => {
+    const tx = parseTransaction(buildTx({ programId: SOURCES.AGGREGATOR_LIMIT[0] }));
     expect(tx.type).toBe('SWAP');
   });
 });

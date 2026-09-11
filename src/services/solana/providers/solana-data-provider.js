@@ -36,7 +36,7 @@
  *                                                 // 'BURN' | 'STAKE_TOKEN' |
  *                                                 // 'COMPRESSED_NFT_MINT' |
  *                                                 // 'UNKNOWN'
- *     source?:          string,                  // 'JUPITER' | 'RAYDIUM' | ...
+ *     source?:          string,                  // 'AGGREGATOR' | 'RAYDIUM' | ...
  *     description?:     string,                  // human-readable line
  *
  *     // Required transfer arrays (post-enrichment, the resource decorator

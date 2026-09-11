@@ -5,21 +5,21 @@ const decorateBatchToken = require('../solana-ft-batch-resource');
 describe('solana-ft-batch-resource', () => {
   test('maps canonical catalog entries (id + icon)', async () => {
     const result = await decorateBatchToken({
-      id: 'JUP1mint',
-      symbol: 'JUP',
-      name: 'Jupiter',
+      id: 'BONK1mint',
+      symbol: 'BONK',
+      name: 'Bonk',
       decimals: 6,
-      icon: 'https://example.test/jup.png',
+      icon: 'https://example.test/bonk.png',
       tags: ['lst'],
     });
 
     expect(result).toEqual({
       chainId: 101,
-      address: 'JUP1mint',
-      symbol: 'JUP',
-      name: 'Jupiter',
+      address: 'BONK1mint',
+      symbol: 'BONK',
+      name: 'Bonk',
       decimals: 6,
-      logo: 'https://example.test/jup.png',
+      logo: 'https://example.test/bonk.png',
       tags: ['lst'],
       coingeckoId: null,
       swappable: true,

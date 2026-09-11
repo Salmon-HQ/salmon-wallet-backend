@@ -50,7 +50,7 @@ describe('solana-balance-provider', () => {
     tokenService.getByMints.mockResolvedValue([]);
   });
 
-  it('attaches Jupiter v2 metadata markers to SPL tokens by mint', async () => {
+  it('attaches catalog metadata markers to SPL tokens by mint', async () => {
     const usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
     blockdaemon.getBalance.mockResolvedValue([
       buildSolNative('1'),
@@ -182,28 +182,28 @@ describe('solana-balance-provider', () => {
     expect(out[0]._tags).toEqual(['unknown']);
   });
 
-  it('keeps SPL tokens when Jupiter metadata is unavailable, spam filter or not', async () => {
-    // The spam filter reads `_tags`, which only exists once Jupiter metadata is
-    // merged. When Jupiter is down every token looks untagged, so filtering
+  it('keeps SPL tokens when token metadata is unavailable, spam filter or not', async () => {
+    // The spam filter reads `_tags`, which only exists once token metadata is
+    // merged. When the metadata source is down every token looks untagged, so filtering
     // would empty the wallet: the user sees only SOL and reads it as "my
     // tokens are gone". Showing possible spam beats hiding real funds.
     blockdaemon.getBalance.mockResolvedValue([
       buildSolNative('1'),
       buildSplToken('verified-mint', '10'),
     ]);
-    tokenService.getByMints.mockRejectedValue(new Error('jupiter down'));
+    tokenService.getByMints.mockRejectedValue(new Error('metadata down'));
 
     const out = await provider.getBalance('sol-address', undefined, {});
 
     expect(out.filter((it) => it.currency?.type === 'token')).toHaveLength(1);
   });
 
-  it('still surfaces tokens when Jupiter metadata fetch throws', async () => {
+  it('still surfaces tokens when the metadata fetch throws', async () => {
     blockdaemon.getBalance.mockResolvedValue([
       buildSolNative('1'),
       buildSplToken('verified-mint', '10'),
     ]);
-    tokenService.getByMints.mockRejectedValue(new Error('jupiter down'));
+    tokenService.getByMints.mockRejectedValue(new Error('metadata down'));
 
     // With metadata fetch failing, no tags → spam filter would drop the token.
     // Caller passes includeSpam to surface it for inspection.

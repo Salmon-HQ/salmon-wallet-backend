@@ -37,20 +37,20 @@ const outputToken = (overrides = {}) => ({
 
 describe('buildSwapRoute', () => {
   it('returns null when inputs or outputs is empty', () => {
-    expect(buildSwapRoute([], [outputToken()], 'JUPITER')).toBeNull();
-    expect(buildSwapRoute([inputToken()], [], 'JUPITER')).toBeNull();
-    expect(buildSwapRoute(undefined, undefined, 'JUPITER')).toBeNull();
+    expect(buildSwapRoute([], [outputToken()], 'AGGREGATOR')).toBeNull();
+    expect(buildSwapRoute([inputToken()], [], 'AGGREGATOR')).toBeNull();
+    expect(buildSwapRoute(undefined, undefined, 'AGGREGATOR')).toBeNull();
   });
 
   it('inverts naming so hop.inputToken comes from user `outputs` (sent) and hop.outputToken from user `inputs` (received)', () => {
     // User SENT SOL (in outputs[]), user RECEIVED USDC (in inputs[]).
     const sent = outputToken({ symbol: 'SOL', amount: '1000000000', decimals: 9 });
     const received = inputToken({ symbol: 'USDC', amount: '120000000', decimals: 6 });
-    const route = buildSwapRoute([received], [sent], 'JUPITER');
+    const route = buildSwapRoute([received], [sent], 'AGGREGATOR');
 
     expect(route.hops).toHaveLength(1);
     const hop = route.hops[0];
-    expect(hop.dex).toBe('JUPITER');
+    expect(hop.dex).toBe('AGGREGATOR');
     expect(hop.percent).toBe(100);
     expect(hop.inputToken.symbol).toBe('SOL');
     expect(hop.inputToken.amount).toBe('1000000000');
@@ -64,7 +64,7 @@ describe('buildSwapRoute', () => {
     // Rate = 120 USDC / 1 SOL = 120.000000
     const sent = outputToken({ symbol: 'SOL', amount: '1000000000', decimals: 9 });
     const received = inputToken({ symbol: 'USDC', amount: '120000000', decimals: 6 });
-    const route = buildSwapRoute([received], [sent], 'JUPITER');
+    const route = buildSwapRoute([received], [sent], 'AGGREGATOR');
 
     expect(route.conversionRate).toEqual({
       fromSymbol: 'SOL',
@@ -76,7 +76,7 @@ describe('buildSwapRoute', () => {
   it('omits conversionRate when sent amount is zero (would be Infinity)', () => {
     const sent = outputToken({ symbol: 'SOL', amount: '0', decimals: 9 });
     const received = inputToken({ symbol: 'USDC', amount: '1', decimals: 6 });
-    const route = buildSwapRoute([received], [sent], 'JUPITER');
+    const route = buildSwapRoute([received], [sent], 'AGGREGATOR');
 
     expect(route).not.toBeNull();
     expect(route.conversionRate).toBeUndefined();
@@ -85,7 +85,7 @@ describe('buildSwapRoute', () => {
   it('exposes inputAmount and outputAmount as raw amount strings', () => {
     const sent = outputToken({ amount: '750000000' });
     const received = inputToken({ amount: '95000000' });
-    const route = buildSwapRoute([received], [sent], 'JUPITER');
+    const route = buildSwapRoute([received], [sent], 'AGGREGATOR');
 
     expect(route.inputAmount).toBe('750000000');
     expect(route.outputAmount).toBe('95000000');
@@ -100,7 +100,7 @@ describe('buildSwapRoute', () => {
     const route = buildSwapRoute(
       [inputToken({ logo: 'https://logo/usdc.png' })],
       [outputToken({ logo: 'https://logo/sol.png' })],
-      'JUPITER'
+      'AGGREGATOR'
     );
     expect(route.hops[0].inputToken.logo).toBe('https://logo/sol.png');
     expect(route.hops[0].outputToken.logo).toBe('https://logo/usdc.png');
@@ -110,7 +110,7 @@ describe('buildSwapRoute', () => {
     const route = buildSwapRoute(
       [{ ...inputToken(), logo: undefined }],
       [{ ...outputToken(), logo: undefined }],
-      'JUPITER'
+      'AGGREGATOR'
     );
     expect(route.hops[0].inputToken.logo).toBeNull();
     expect(route.hops[0].outputToken.logo).toBeNull();
@@ -128,7 +128,7 @@ describe('buildSwapRoute', () => {
       amount: '20000000000',
       decimals: 6,
     });
-    const route = buildSwapRoute([received], [sent], 'JUPITER');
+    const route = buildSwapRoute([received], [sent], 'AGGREGATOR');
 
     expect(route.conversionRate).toBeDefined();
     // 20_000 USDC for 1_000_000_000 BONK = 0.00002 USDC/BONK
@@ -139,12 +139,12 @@ describe('buildSwapRoute', () => {
     const small = buildSwapRoute(
       [inputToken({ amount: '120000000', decimals: 6, symbol: 'USDC' })],
       [outputToken({ amount: '1000000000', decimals: 9, symbol: 'SOL' })],
-      'JUPITER'
+      'AGGREGATOR'
     );
     const big = buildSwapRoute(
       [inputToken({ amount: '120000000000000', decimals: 6, symbol: 'USDC' })],
       [outputToken({ amount: '1000000000000000', decimals: 9, symbol: 'SOL' })],
-      'JUPITER'
+      'AGGREGATOR'
     );
     expect(small.conversionRate.rate).toBe(big.conversionRate.rate);
   });

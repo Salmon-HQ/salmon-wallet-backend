@@ -7,7 +7,7 @@
  *                      normalization)
  *   - hasMintAsymmetry (different in/out mint sets ⇒ swap-by-mix)
  *   - inferSwapByMintMix (full swap-by-mint-mix heuristic)
- *   - mapTransactionType (top-level mapping covering Jupiter, TRANSFER,
+ *   - mapTransactionType (top-level mapping covering aggregator, TRANSFER,
  *                         UNKNOWN, and Helius-typed flows)
  */
 
@@ -139,7 +139,28 @@ describe('mapTransactionType', () => {
     ...overrides,
   });
 
-  test('Jupiter program present forces SWAP regardless of Helius type', () => {
+  test('source is AGGREGATOR whenever the aggregator program is present, whatever the provider labelled it', async () => {
+    const transformTransaction = require('../helius-transaction-resource');
+    const { AGGREGATOR_ROUTER_PROGRAM_IDS } = require('../../../constants/solana-program-ids');
+    const tx = {
+      signature: 'sig',
+      timestamp: 1,
+      type: 'SWAP',
+      source: 'SOME_BRAND_LABEL',
+      feePayer: 'user',
+      instructions: [{ programId: AGGREGATOR_ROUTER_PROGRAM_IDS[0], accounts: [], data: '' }],
+      tokenTransfers: [],
+      nativeTransfers: [],
+      accountData: [],
+    };
+
+    const item = await transformTransaction(tx, 'user', []);
+
+    expect(item.source).toBe('AGGREGATOR');
+    expect(item.type).toBe(SWAP);
+  });
+
+  test('aggregator program present forces SWAP regardless of Helius type', () => {
     const result = mapTransactionType('TRANSFER', USER, {
       ...buildTx(),
       instructions: [{ programId: 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4' }],
@@ -147,7 +168,7 @@ describe('mapTransactionType', () => {
     expect(result).toBe(SWAP);
   });
 
-  test('Jupiter LIMIT program also triggers SWAP', () => {
+  test('aggregator LIMIT program also triggers SWAP', () => {
     const result = mapTransactionType('TRANSFER', USER, {
       ...buildTx(),
       instructions: [{ programId: 'j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X' }],

@@ -2,7 +2,7 @@
 
 /**
  * Spec for the CoinGecko rate limiter. Focused on the bits CoinGecko
- * differs from Jupiter on: longer backoff window, retry-after header
+ * differs from the other provider limiters on: longer backoff window, retry-after header
  * honored, conservative free-tier defaults.
  */
 

@@ -465,8 +465,8 @@ describe('Helius Transaction Resource - Unit Tests', () => {
         timestamp: 1234567890,
         fee: 5000,
         feePayer: mockAddress,
-        description: 'Swapped 1 USDC for 0.5 SOL on Jupiter',
-        source: 'JUPITER',
+        description: 'Swapped 1 USDC for 0.5 SOL on aggregator',
+        source: 'AGGREGATOR',
         events: [{ type: 'SWAP', data: {} }],
         tokenTransfers: [],
         nativeTransfers: [],
@@ -474,8 +474,8 @@ describe('Helius Transaction Resource - Unit Tests', () => {
 
       const result = await transformTransaction(heliusTx, mockAddress);
 
-      expect(result.description).toBe('Swapped 1 USDC for 0.5 SOL on Jupiter');
-      expect(result.source).toBe('JUPITER');
+      expect(result.description).toBe('Swapped 1 USDC for 0.5 SOL on aggregator');
+      expect(result.source).toBe('AGGREGATOR');
       expect(result.events).toBeDefined();
       expect(result.heliusType).toBe('SWAP');
     });

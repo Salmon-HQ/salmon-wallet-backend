@@ -13,19 +13,18 @@ description: RPC, provider, and caching architecture of this multichain (Solana-
 - `src/infrastructure/blockdaemon-client.js`: multichain balances (Universal API), not a Solana RPC.
 - Service-level providers: `src/services/solana/providers/{triton,helius}-provider.js` (create `@solana/web3.js` `Connection`s).
 
-## Token data — Triton DAS + CoinGecko (no Jupiter)
+## Token data — Triton DAS + CoinGecko
 
 - `src/services/solana/token-metadata-service.js` — Triton DAS `getAssetBatch` (`showFungible`, ≤1000 ids, Redis 1 h) for symbol/name/decimals/logo/token program and Token-2022 routability.
 - `src/services/solana/token-catalog-service.js` — CoinGecko Solana token list + `coins/list?include_platform` (Redis ≤24 h per their terms): verified catalog, `coingeckoId`, local search.
 - `src/services/shared/coingecko-service.js` — `getTokenPrices` (`simple/token_price/solana`, ≤515 mints/call, `price-cache` 5 min) plus charts/coin info/exchange rates. Paid plan → `COINGECKO_API_URL=https://pro-api.coingecko.com`; respect `coingecko-rate-limiter`.
-- Jupiter program ids remain only in `parser/parsers/jupiter.js` / `solana-program-ids.js` to classify on-chain history.
 
 ## Cache layers — pick the right one
 
 | Layer                          | Where                                                   | TTL       | Purpose                                                     |
 | ------------------------------ | ------------------------------------------------------- | --------- | ----------------------------------------------------------- |
 | In-memory + request coalescing | `src/infrastructure/cache/transaction-history-cache.js` | 15s       | tx history (first page only; coalesces concurrent requests) |
-| Redis                          | `src/infrastructure/cache/price-cache.js`               | 5min      | Jupiter quotes (`getQuoteWithCache`)                        |
+| Redis                          | `src/infrastructure/cache/price-cache.js`               | 5min      | token USD quotes (`getQuoteWithCache`)                      |
 | Redis                          | `src/infrastructure/cache/token-list-cache.js`          | —         | token lists                                                 |
 | HTTP `Cache-Control`           | `cacheControl(...)` middleware per route                | per route | CDN/client-cacheable responses                              |
 
