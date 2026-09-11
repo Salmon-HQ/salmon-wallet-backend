@@ -32,6 +32,7 @@ jest.mock('../providers', () => ({
 
 jest.mock('../solana-ft-service', () => ({
   list: jest.fn(),
+  getByMints: jest.fn().mockResolvedValue([]),
 }));
 
 // The RPC fallback path preloads resource lookups via solana-rpc-enrichment;
@@ -103,7 +104,7 @@ describe('Solana Transaction Service - unit tests', () => {
     });
 
     heliusService.getNftMetadataBatch.mockResolvedValue(nftMetadataByMint);
-    solanaFtService.list.mockResolvedValue([{ address: 'token-1', name: 'USD Coin' }]);
+    solanaFtService.getByMints.mockResolvedValue([{ id: 'token-1', name: 'USD Coin' }]);
     heliusTransactionResource.mockImplementation(async (tx, txAddress, tokenLookup, options) => ({
       id: tx.signature,
       timestamp: tx.timestamp,
@@ -175,7 +176,7 @@ describe('Solana Transaction Service - unit tests', () => {
 
     const result = await service.getTransactions(address, { pageSize: 10 }, locals);
 
-    expect(solanaFtService.list).not.toHaveBeenCalled();
+    expect(solanaFtService.getByMints).not.toHaveBeenCalled();
     expect(heliusService.getNftMetadataBatch).not.toHaveBeenCalled();
     expect(result.data).toHaveLength(1);
     expect(result.data[0]).toMatchObject({
@@ -183,6 +184,87 @@ describe('Solana Transaction Service - unit tests', () => {
       hasTokenLookup: true,
       metadataSize: 0,
     });
+  });
+
+  const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+  const SPAM = 'SPAMmint111111111111111111111111111111111111';
+  const address = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
+  const receiveOf = (signature, mint) => ({
+    signature,
+    timestamp: 1,
+    type: 'TRANSFER',
+    feePayer: 'airdropper',
+    tokenTransfers: [
+      { fromUserAccount: 'airdropper', toUserAccount: address, mint, tokenStandard: 'Fungible' },
+    ],
+    nativeTransfers: [],
+  });
+  const passThroughResource = () =>
+    heliusTransactionResource.mockImplementation(async (tx, _address, tokenLookup) => ({
+      id: tx.signature,
+      type: 'receive',
+      feePayer: tx.feePayer,
+      inputs: tx.tokenTransfers.map((t) => ({ contract: t.mint })),
+      outputs: [],
+      token: tokenLookup.get(tx.tokenTransfers[0].mint),
+    }));
+
+  test('resolves page metadata per mint (catalog + DAS) in the shape the resource reads', async () => {
+    heliusService.getEnhancedTransactionHistory.mockResolvedValue({
+      data: [receiveOf('sig-usdc', USDC)],
+      meta: {},
+    });
+    solanaFtService.getByMints.mockResolvedValue([
+      { id: USDC, symbol: 'USDC', decimals: 6, icon: 'https://cdn/usdc.png', tags: ['verified'] },
+    ]);
+    passThroughResource();
+
+    const result = await service.getTransactions(address, { pageSize: 10 }, locals);
+
+    expect(solanaFtService.getByMints).toHaveBeenCalledWith([USDC], locals);
+    expect(result.data[0].token).toMatchObject({
+      address: USDC,
+      symbol: 'USDC',
+      decimals: 6,
+      logoURI: 'https://cdn/usdc.png',
+    });
+  });
+
+  test('hides an incoming transfer of an unverified token unless includeSpam=true', async () => {
+    heliusService.getEnhancedTransactionHistory.mockResolvedValue({
+      data: [receiveOf('sig-usdc', USDC), receiveOf('sig-spam', SPAM)],
+      meta: { nextPageToken: 'next' },
+    });
+    solanaFtService.getByMints.mockResolvedValue([
+      { id: USDC, symbol: 'USDC', decimals: 6, tags: ['verified'] },
+      { id: SPAM, symbol: 'SPAM', decimals: 0, tags: [] },
+    ]);
+    passThroughResource();
+
+    const hidden = await service.getTransactions(address, { pageSize: 10 }, locals);
+    expect(hidden.data.map((t) => t.id)).toEqual(['sig-usdc']);
+    expect(hidden.meta).toEqual({ nextPageToken: 'next', hidden: 1 });
+
+    const shown = await service.getTransactions(
+      address,
+      { pageSize: 10, includeSpam: 'true' },
+      locals
+    );
+    expect(shown.data.map((t) => t.id)).toEqual(['sig-usdc', 'sig-spam']);
+    expect(shown.meta.hidden).toBe(0);
+  });
+
+  test('never hides a transfer the user signed, even of an unverified token', async () => {
+    heliusService.getEnhancedTransactionHistory.mockResolvedValue({
+      data: [{ ...receiveOf('sig-self', SPAM), feePayer: address }],
+      meta: {},
+    });
+    solanaFtService.getByMints.mockResolvedValue([{ id: SPAM, tags: [] }]);
+    passThroughResource();
+
+    const result = await service.getTransactions(address, { pageSize: 10 }, locals);
+    expect(result.data.map((t) => t.id)).toEqual(['sig-self']);
+    expect(result.meta.hidden).toBe(0);
   });
 
   test('should fallback to RPC history when Helius transaction history fails', async () => {

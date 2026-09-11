@@ -111,4 +111,98 @@ describe('swapRoute integration', () => {
     expect(result.type).toBe(SWAP);
     expect(result.swapRoute).toBeNull();
   });
+
+  test('a 0x multi-hop swap nets the intermediate token out of the legs', async () => {
+    // Shape of a real mainnet tx: USDC → USD1 → SOL through the 0x settler,
+    // labelled INITIALIZE_ACCOUNT by the provider, ui amounts, no decimals.
+    const USD1_MINT = 'USD1ttGY1N17NEEHLmELoaybftRBUSErhqYiQzvEmuB';
+    const SETTLER = 'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m';
+    const transfer = (from, to, mint, tokenAmount) => ({
+      fromUserAccount: from,
+      toUserAccount: to,
+      mint,
+      tokenAmount,
+      tokenStandard: 'Fungible',
+    });
+    const heliusTx = {
+      signature: 'sig-0x',
+      timestamp: 1789139570,
+      type: 'INITIALIZE_ACCOUNT',
+      source: 'ASSOCIATED_TOKEN_PROGRAM',
+      feePayer: USER,
+      instructions: [{ programId: SETTLER }],
+      tokenTransfers: [
+        transfer(USER, POOL, USDC_MINT, 1.093481),
+        transfer(POOL, USER, USD1_MINT, 1.093657),
+        transfer(USER, 'other-pool', USDC_MINT, 0.006519),
+        transfer('other-pool', USER, SOL_MINT, 0.000063301),
+        transfer(USER, POOL, USD1_MINT, 1.093657),
+        transfer(POOL, USER, SOL_MINT, 0.010612719),
+      ],
+      nativeTransfers: [{ fromUserAccount: USER, toUserAccount: 'fee-wallet', amount: 53380 }],
+    };
+    const tokens = new Map([
+      [USDC_MINT, { address: USDC_MINT, symbol: 'USDC', decimals: 6 }],
+      [USD1_MINT, { address: USD1_MINT, symbol: 'USD1', decimals: 6 }],
+      [SOL_MINT, { address: SOL_MINT, symbol: 'SOL', decimals: 9 }],
+    ]);
+
+    const item = await transformTransaction(heliusTx, USER, tokens);
+
+    expect(item.type).toBe(SWAP);
+    expect(item.source).toBe('AGGREGATOR');
+    expect(item.outputs).toEqual([
+      expect.objectContaining({ contract: USDC_MINT, symbol: 'USDC', amount: '1100000' }),
+    ]);
+    expect(item.inputs).toEqual([
+      expect.objectContaining({ contract: SOL_MINT, symbol: 'SOL', amount: '10676020' }),
+    ]);
+    expect(item.swapRoute.hops[0]).toMatchObject({
+      dex: 'AGGREGATOR',
+      inputToken: { symbol: 'USDC', amount: '1100000' },
+      outputToken: { symbol: 'SOL', amount: '10676020' },
+    });
+  });
+
+  test('a wallet-to-wallet swap by mint mix keeps the native SOL leg and never borrows the counterparty transfer', async () => {
+    // Shape of a real mainnet tx: a counterparty sends USDC to the user, the
+    // user sends SOL natively; the provider labels it TRANSFER.
+    const COUNTERPARTY = '6UWsi9WKQbE5jLxLcycfr5NZ1DQGVNKUCkW1pzUaRVCE';
+    const heliusTx = {
+      signature: 'sig-p2p',
+      timestamp: 1756000000,
+      type: 'TRANSFER',
+      source: 'SYSTEM_PROGRAM',
+      feePayer: COUNTERPARTY,
+      instructions: [{ programId: '11111111111111111111111111111111' }],
+      tokenTransfers: [
+        {
+          fromUserAccount: COUNTERPARTY,
+          toUserAccount: USER,
+          mint: USDC_MINT,
+          tokenAmount: 2.863933,
+          tokenStandard: 'Fungible',
+        },
+      ],
+      nativeTransfers: [
+        { fromUserAccount: USER, toUserAccount: 'merchant', amount: 150000 },
+        { fromUserAccount: USER, toUserAccount: 'merchant', amount: 29850000 },
+      ],
+    };
+    const tokens = new Map([[USDC_MINT, { address: USDC_MINT, symbol: 'USDC', decimals: 6 }]]);
+
+    const item = await transformTransaction(heliusTx, USER, tokens);
+
+    expect(item.type).toBe(SWAP);
+    expect(item.inputs).toEqual([
+      expect.objectContaining({ contract: USDC_MINT, symbol: 'USDC', amount: '2863933' }),
+    ]);
+    expect(item.outputs).toEqual([
+      expect.objectContaining({ contract: SOL_MINT, symbol: 'SOL', amount: '30000000' }),
+    ]);
+    expect(item.swapRoute.hops[0]).toMatchObject({
+      inputToken: { symbol: 'SOL', amount: '30000000' },
+      outputToken: { symbol: 'USDC', amount: '2863933' },
+    });
+  });
 });

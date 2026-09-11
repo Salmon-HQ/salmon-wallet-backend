@@ -310,6 +310,18 @@ const inferSwapByMintMix = (address, nativeTransfers, tokenTransfers) => {
  * Determine the system transaction type from the provider's type string.
  * @returns {string} SEND, RECEIVE, SWAP, MINT, INTERACTION, UNKNOWN, ...
  */
+/**
+ * Provider labels that carry no meaning of their own: a plain transfer, an
+ * explicit unknown, or a label we never mapped (INITIALIZE_ACCOUNT for a
+ * router the provider does not know). The transfers decide those; a typed
+ * label (NFT_SALE, STAKE, …) is kept.
+ */
+const isGenericLabel = (heliusType) =>
+  !heliusType ||
+  heliusType === 'TRANSFER' ||
+  heliusType === 'UNKNOWN' ||
+  !(heliusType in HELIUS_TYPE_MAPPING);
+
 const mapTransactionType = (heliusType, address, transaction) => {
   // The aggregator executes from its own escrow accounts — the user never
   // appears in transfers, so programId detection is the only reliable signal.
@@ -325,14 +337,17 @@ const mapTransactionType = (heliusType, address, transaction) => {
     (t) => t.fromUserAccount === address
   );
 
+  // A router the provider does not know is labelled by the first instruction
+  // it understands (INITIALIZE_ACCOUNT for the account a multi-hop route
+  // creates); the user sending one mint and receiving another is the swap.
+  if (isSender && isReceiver && isGenericLabel(heliusType)) {
+    const swapByMix = inferSwapByMintMix(address, nativeTransfers, tokenTransfers);
+    if (swapByMix) return swapByMix;
+  }
+
   if (mappedType === 'TRANSFER') {
     const directional = inferDirectionalType(isSender, isReceiver);
     if (directional === RECEIVE || directional === SEND) return directional;
-
-    if (isSender && isReceiver) {
-      const swapByMix = inferSwapByMintMix(address, nativeTransfers, tokenTransfers);
-      if (swapByMix) return swapByMix;
-    }
     return SEND;
   }
 
@@ -397,7 +412,10 @@ const getDirectional = (direction, type, address, transaction, tokens) => {
   const transfers = getTransfers(transaction);
   const directional = getDirectionalTransfers(transfers, address);
 
-  if (type === SWAP) {
+  if (type === SWAP && hasAggregatorProgram(transaction)) {
+    // A router moves SOL as wrapped SOL, already in tokenTransfers; a native
+    // leg would count it twice. Routes settle from escrow, so when the user
+    // has no leg on this side the fee payer's transfers stand in.
     let directionalTokens = directional[dir.tokensField];
     if (directionalTokens.length === 0 && transaction.feePayer) {
       directionalTokens = transfers.tokenTransfers.filter((t) =>
@@ -406,6 +424,14 @@ const getDirectional = (direction, type, address, transaction, tokens) => {
     }
     directionalTokens.forEach((t) => {
       items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
+    });
+  } else if (type === SWAP) {
+    // Wallet-to-wallet swap inferred from the mint mix: SOL moves natively.
+    directional[dir.tokensField].forEach((t) => {
+      items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
+    });
+    directional[dir.nativeField].forEach((t) => {
+      items.push(buildNativeItem(t, dir.item, dir.counterparty(t)));
     });
   }
 
@@ -419,6 +445,26 @@ const getDirectional = (direction, type, address, transaction, tokens) => {
   }
 
   return type === SWAP ? groupByToken(items) : items;
+};
+
+/**
+ * A multi-hop route passes an intermediate token through the user's own
+ * account (USDC → USD1 → SOL: USD1 arrives and leaves within the swap). Net
+ * each mint across both sides so the legs show what the user gave and got;
+ * a mint that nets to zero disappears.
+ */
+const netSwapLegs = (inputs, outputs) => {
+  const byMint = (items) => new Map(items.map((item) => [item.contract, item]));
+  const inByMint = byMint(inputs);
+  const outByMint = byMint(outputs);
+  const net = (items, other) =>
+    items.flatMap((item) => {
+      const counterpart = other.get(item.contract);
+      if (!counterpart) return [item];
+      const difference = BigInt(item.amount) - BigInt(counterpart.amount);
+      return difference > 0n ? [{ ...item, amount: String(difference) }] : [];
+    });
+  return { inputs: net(inputs, outByMint), outputs: net(outputs, inByMint) };
 };
 
 const getInputs = (type, address, transaction, tokens) =>
@@ -606,8 +652,10 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
   // program by its role instead, so program-id detection decides the label.
   const source = hasAggregatorProgram(heliusTransaction) ? 'AGGREGATOR' : heliusTransaction.source;
 
-  const inputs = getInputs(type, address, heliusTransaction, tokenLookup);
-  const outputs = getOutputs(type, address, heliusTransaction, tokenLookup);
+  const rawInputs = getInputs(type, address, heliusTransaction, tokenLookup);
+  const rawOutputs = getOutputs(type, address, heliusTransaction, tokenLookup);
+  const { inputs, outputs } =
+    type === SWAP ? netSwapLegs(rawInputs, rawOutputs) : { inputs: rawInputs, outputs: rawOutputs };
 
   const nftMints = collectNftMints(heliusTransaction);
   markNftTransfers([...inputs, ...outputs], nftMints);
@@ -664,6 +712,7 @@ module.exports.buildTokenLookup = buildTokenLookup;
  */
 module.exports.__testing = {
   buildSwapRoute,
+  netSwapLegs,
   toRawAmount,
   computeConversionRate,
   mapTransactionType,

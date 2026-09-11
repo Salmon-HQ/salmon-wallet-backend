@@ -42,6 +42,11 @@ const {
 const NAME = 'triton';
 
 const MAX_HISTORY_BATCH = 25;
+const JSON_RPC_METHOD_NOT_FOUND = -32601;
+let historyMethodMissingLogged = false;
+
+/** `getTransactionsForAddress` is a custom method; an endpoint without it says -32601. */
+const isMethodMissing = (error) => error?.rpcError?.code === JSON_RPC_METHOD_NOT_FOUND;
 
 const getRpcUrl = (environment = 'mainnet') => tritonClient.getRpcUrl(environment);
 
@@ -200,23 +205,36 @@ const provider = {
     // stays a signature end-to-end — compatible with the Helius fallback and
     // bare-RPC fallback, which both paginate by signature.
     if (!before) {
-      const { transactions } = await tritonRpc.getTransactionsForAddress(
-        address,
-        { limit },
-        environment
-      );
+      try {
+        const { transactions } = await tritonRpc.getTransactionsForAddress(
+          address,
+          { limit },
+          environment
+        );
 
-      if (transactions.length === 0) {
-        return { data: [], meta: { nextPageToken: undefined } };
+        if (transactions.length === 0) {
+          return { data: [], meta: { nextPageToken: undefined } };
+        }
+
+        const data = enrichFullTransactions(transactions);
+        return {
+          data,
+          meta: {
+            nextPageToken: data[data.length - 1]?.signature,
+          },
+        };
+      } catch (error) {
+        // The endpoint has no single-call history method: stay on Triton
+        // through the standard signature-cursor pair rather than losing the
+        // primary provider to the fallback for a missing optimisation.
+        if (!isMethodMissing(error)) throw error;
+        if (!historyMethodMissingLogged) {
+          historyMethodMissingLogged = true;
+          console.warn(
+            `[TRITON_HISTORY_METHOD_MISSING] getTransactionsForAddress not enabled on the ${environment} endpoint; paging by signatures (ask Triton to enable it)`
+          );
+        }
       }
-
-      const data = enrichFullTransactions(transactions);
-      return {
-        data,
-        meta: {
-          nextPageToken: data[data.length - 1]?.signature,
-        },
-      };
     }
 
     const signatureInfos = await tritonRpc.getSignaturesForAddress(

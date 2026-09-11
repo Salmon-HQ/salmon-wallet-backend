@@ -14,11 +14,14 @@
  * source of truth for source-name resolution.
  */
 
-// Swap-aggregator routers — every version Salmon has historically seen,
-// latest first. Transactions touching any of them surface as source
-// 'AGGREGATOR' in history, whatever label the enrichment provider used.
+// Swap-aggregator routers — every router Salmon has routed through, current
+// first. Transactions touching any of them surface as source 'AGGREGATOR' in
+// history, whatever label the enrichment provider used (Helius does not know
+// the 0x settler and labels its swaps by the first instruction it
+// understands, e.g. INITIALIZE_ACCOUNT).
 const AGGREGATOR_ROUTER_PROGRAM_IDS = [
-  'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4', // v6 (current)
+  'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m', // 0x settler (current)
+  'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4', // previous router v6
   'JUP5cHjnnCx2DppVsufsLrXs8EBZeEZzGtEK9Gdz6ow',
   'JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB',
   'JUP3c2Uh3WA4Ng34oL4N1jYG7R7xSJJRpf8Gp6p6C',

@@ -98,7 +98,15 @@ const list = async (locals) => {
     const solanaTokens = await getTokenList(locals);
     console.log(`Token Service: ${solanaTokens.length} solana tokens loaded`);
 
-    const tokens = solanaTokens.filter((token) => token && token.name);
+    // The bare-RPC history reader looks tokens up by `address` and reads
+    // `logoURI`; the catalog names them `id` / `icon`.
+    const tokens = solanaTokens
+      .filter((token) => token && token.name)
+      .map((token) => ({
+        ...token,
+        address: token.address || token.id,
+        logoURI: token.logoURI || token.icon,
+      }));
 
     setCachedTokens(environment, tokens);
     console.log(`Token Service cache warm for ${environment} (${Date.now() - startTime}ms)`);

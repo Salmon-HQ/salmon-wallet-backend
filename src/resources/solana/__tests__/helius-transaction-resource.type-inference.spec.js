@@ -168,6 +168,34 @@ describe('mapTransactionType', () => {
     expect(result).toBe(SWAP);
   });
 
+  test('the 0x settler is an aggregator program → SWAP whatever the provider said', () => {
+    const result = mapTransactionType('INITIALIZE_ACCOUNT', USER, {
+      ...buildTx(),
+      instructions: [{ programId: 'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m' }],
+    });
+    expect(result).toBe(SWAP);
+  });
+
+  test('an unknown router labelled INITIALIZE_ACCOUNT still reads as SWAP from the mint mix', () => {
+    const result = mapTransactionType('INITIALIZE_ACCOUNT', USER, {
+      ...buildTx(),
+      tokenTransfers: [
+        { fromUserAccount: USER, toUserAccount: 'pool', mint: 'USDC' },
+        { fromUserAccount: 'pool', toUserAccount: USER, mint: SOL_ADDRESS },
+      ],
+    });
+    expect(result).toBe(SWAP);
+  });
+
+  test('a typed provider label (NFT_SALE) is not overridden by the mint mix', () => {
+    const result = mapTransactionType('NFT_SALE', USER, {
+      ...buildTx(),
+      tokenTransfers: [{ fromUserAccount: USER, toUserAccount: 'buyer', mint: 'NFT' }],
+      nativeTransfers: [{ fromUserAccount: 'buyer', toUserAccount: USER, amount: 5 }],
+    });
+    expect(result).not.toBe(SWAP);
+  });
+
   test('aggregator LIMIT program also triggers SWAP', () => {
     const result = mapTransactionType('TRANSFER', USER, {
       ...buildTx(),

@@ -104,6 +104,60 @@ describe('getEnhancedTransactionHistory — first page (single call)', () => {
   });
 });
 
+describe('getEnhancedTransactionHistory — endpoint without getTransactionsForAddress', () => {
+  const methodNotFound = () => {
+    const error = new Error('getTransactionsForAddress failed: Method not found');
+    error.code = 'TRITON_RPC_ERROR';
+    error.rpcError = { code: -32601, message: 'Method not found' };
+    return error;
+  };
+
+  it('stays on Triton through the signature-cursor pair and logs once', async () => {
+    tritonRpc.getTransactionsForAddress.mockRejectedValue(methodNotFound());
+    tritonRpc.getSignaturesForAddress.mockResolvedValue([
+      { signature: 'sigA', slot: 10, blockTime: 1600000000, confirmationStatus: 'finalized' },
+    ]);
+    tritonRpc.getParsedTransactionsBatch.mockResolvedValue([
+      {
+        slot: 10,
+        blockTime: 1600000000,
+        transaction: { signatures: ['sigA'], message: {} },
+        meta: {},
+      },
+    ]);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const first = await provider.getEnhancedTransactionHistory('addr', { limit: 5 }, 'mainnet');
+    const second = await provider.getEnhancedTransactionHistory('addr', { limit: 5 }, 'mainnet');
+
+    expect(tritonRpc.getSignaturesForAddress).toHaveBeenCalledWith(
+      'addr',
+      { before: undefined, limit: 5 },
+      'mainnet'
+    );
+    expect(first.data.map((tx) => tx.signature)).toEqual(['sigA']);
+    expect(first.meta.nextPageToken).toBe('sigA');
+    expect(second.data).toHaveLength(1);
+    const missingLogs = warn.mock.calls.filter(([message]) =>
+      String(message).includes('[TRITON_HISTORY_METHOD_MISSING]')
+    );
+    expect(missingLogs).toHaveLength(1);
+    warn.mockRestore();
+  });
+
+  it('surfaces any other RPC error to the resolver', async () => {
+    const error = new Error('getTransactionsForAddress failed: boom');
+    error.code = 'TRITON_RPC_ERROR';
+    error.rpcError = { code: -32000, message: 'boom' };
+    tritonRpc.getTransactionsForAddress.mockRejectedValue(error);
+
+    await expect(
+      provider.getEnhancedTransactionHistory('addr', { limit: 5 }, 'mainnet')
+    ).rejects.toBe(error);
+    expect(tritonRpc.getSignaturesForAddress).not.toHaveBeenCalled();
+  });
+});
+
 describe('getEnhancedTransactionHistory — paginated (signature cursor)', () => {
   it('uses the getSignaturesForAddress + batch path when before is present', async () => {
     tritonRpc.getSignaturesForAddress.mockResolvedValue([
