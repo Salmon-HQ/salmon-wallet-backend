@@ -210,4 +210,76 @@ describe('swapRoute integration', () => {
       outputToken: { symbol: 'USDC', amount: '2863933' },
     });
   });
+
+  test('a memo-only transaction is type memo with the note, from either provider shape', async () => {
+    const MEMO_ID = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
+    const base = {
+      signature: 'sig-memo',
+      timestamp: 1,
+      feePayer: USER,
+      tokenTransfers: [],
+      nativeTransfers: [],
+    };
+    // Helius: UNKNOWN with the instruction's base58 data ("2E" = "G")
+    const helius = await transformTransaction(
+      {
+        ...base,
+        type: 'UNKNOWN',
+        source: 'UNKNOWN',
+        instructions: [{ programId: MEMO_ID, data: '2E', accounts: [] }],
+      },
+      USER,
+      []
+    );
+    expect(helius.type).toBe('memo');
+    expect(helius.memo).toBe('G');
+    // Local parser: type MEMO with the text on `memo`
+    const triton = await transformTransaction(
+      {
+        ...base,
+        type: 'MEMO',
+        source: 'MEMO_PROGRAM',
+        memo: 'gm from salmon',
+        instructions: [{ programId: MEMO_ID }],
+      },
+      USER,
+      []
+    );
+    expect(triton.type).toBe('memo');
+    expect(triton.memo).toBe('gm from salmon');
+  });
+
+  test('a memo riding a swap leaves the type alone and carries the note', async () => {
+    const heliusTx = {
+      signature: 'sig-swap-memo',
+      timestamp: 1,
+      type: 'SWAP',
+      source: 'AGGREGATOR',
+      feePayer: USER,
+      instructions: [
+        { programId: 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4' },
+        { programId: 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr', data: '2E' },
+      ],
+      tokenTransfers: [
+        {
+          fromUserAccount: USER,
+          toUserAccount: POOL,
+          mint: USDC_MINT,
+          tokenAmount: '1000000',
+          decimals: 6,
+        },
+        {
+          fromUserAccount: POOL,
+          toUserAccount: USER,
+          mint: SOL_MINT,
+          tokenAmount: '5000000',
+          decimals: 9,
+        },
+      ],
+      nativeTransfers: [],
+    };
+    const item = await transformTransaction(heliusTx, USER, []);
+    expect(item.type).toBe(SWAP);
+    expect(item.memo).toBe('G');
+  });
 });

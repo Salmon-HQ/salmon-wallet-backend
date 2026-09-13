@@ -710,4 +710,46 @@ describe('parser orchestrator', () => {
       expect(buildAccountMaps(rawTx).tokenAccountOwners.get('ata')).toBe('fresh');
     });
   });
+
+  describe('memo', () => {
+    const memoIx = (text) => ({
+      program: 'spl-memo',
+      programId: 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
+      parsed: text,
+    });
+    const rawTx = (instructions) => ({
+      slot: 1,
+      blockTime: 1,
+      transaction: {
+        signatures: ['sig'],
+        message: { accountKeys: [{ pubkey: 'user' }], instructions },
+      },
+      meta: {
+        fee: 5000,
+        preBalances: [10],
+        postBalances: [5],
+        preTokenBalances: [],
+        postTokenBalances: [],
+        innerInstructions: [],
+      },
+    });
+
+    test('a memo-only transaction derives to MEMO with the note text', () => {
+      const parsed = parseTransaction(rawTx([memoIx('gm from salmon')]));
+      expect(parsed.type).toBe('MEMO');
+      expect(parsed.memo).toBe('gm from salmon');
+      expect(parsed.source).toBe('MEMO_PROGRAM');
+    });
+
+    test('a memo next to a transfer keeps the transfer type and carries the note', () => {
+      const transfer = {
+        program: 'system',
+        programId: '11111111111111111111111111111111',
+        parsed: { type: 'transfer', info: { source: 'user', destination: 'other', lamports: 5 } },
+      };
+      const parsed = parseTransaction(rawTx([transfer, memoIx('rent')]));
+      expect(parsed.type).toBe('TRANSFER');
+      expect(parsed.memo).toBe('rent');
+    });
+  });
 });

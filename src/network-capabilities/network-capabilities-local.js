@@ -60,5 +60,7 @@ module.exports = {
     swap: { enabled: true },
     // Reference Powerup for exercising the generic build path end to end.
     memo: { enabled: true },
+    // Read-only fixture for the client's catalogue/disclosure test (015 T2).
+    'kamino-positions': { enabled: true },
   },
 };

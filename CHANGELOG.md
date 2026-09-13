@@ -4,6 +4,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## Unreleased
 
+- History items carry `memo` (the on-chain note, or null); a memo-only transaction is `type: 'memo'` instead of `unknown`.
+
 - `memo` reference Powerup (one SPL Memo instruction) registered as the first transaction-building Powerup, enabled on the `local` stage only, so the generic build path can be exercised end to end.
 
 - Community Powerups (`community-powerups`): `/v1/networks` now carries `powerups: [{ id, enabled, reason? }]` on every network (`[]` when none; `reason` ∈ `region` | `maintenance` | `deprecated`, only when disabled) — `swap` is listed enabled on `solana-mainnet`. Added `GET /v1/solana-{env}/powerups/{id}/build`: an **unsigned** transaction for a registered, transaction-building Powerup, in the swap-build envelope (`salmonFee` always `null` for now) plus `contributor { name, url }` and the Powerup's typed fields; 404 `not_found` for unknown / disabled / read-only ids and for `swap` (which stays on `/ft/swap/build`), 400 `missing_parameter` / `invalid_parameter`, 502 `provider_program_mismatch`, 422 `simulation_failed`, 503 `simulation_unavailable`. The swap build's cleanup log tag is now `[CLEANUP_SKIPPED]` (was `[SWAP_CLEANUP_SKIPPED]`). No transaction-building Powerup is registered yet, so the route answers 404 for every id today.

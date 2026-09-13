@@ -33,6 +33,7 @@ const {
   LOAN,
   INTERACTION,
   UNKNOWN,
+  MEMO,
 } = require('../../constants/transaction-types');
 const {
   SOL_SYMBOL,
@@ -54,6 +55,40 @@ const imageOverrides = require('../../services/solana/nft-image-override-service
  * transfers `SOLANA_PROGRAM_LIBRARY`; the wallet must not see two labels for
  * the same thing depending on which provider answered.
  */
+const MEMO_PROGRAM_ID = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
+const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+/** Minimal base58 → utf8, enough for a memo's instruction data. */
+const base58ToUtf8 = (encoded) => {
+  let value = 0n;
+  for (const char of encoded) {
+    const digit = BASE58.indexOf(char);
+    if (digit < 0) return null;
+    value = value * 58n + BigInt(digit);
+  }
+  const bytes = [];
+  while (value > 0n) {
+    bytes.unshift(Number(value % 256n));
+    value /= 256n;
+  }
+  for (const char of encoded) {
+    if (char !== '1') break;
+    bytes.unshift(0);
+  }
+  return Buffer.from(bytes).toString('utf8');
+};
+
+/**
+ * The note an SPL Memo instruction carries, whichever provider enriched the
+ * transaction: the local parser puts the text on `memo`; Helius leaves the
+ * instruction's base58 data.
+ */
+const extractMemo = (transaction) => {
+  if (typeof transaction.memo === 'string') return transaction.memo;
+  const memoIx = (transaction.instructions || []).find((ix) => ix.programId === MEMO_PROGRAM_ID);
+  return memoIx && typeof memoIx.data === 'string' ? base58ToUtf8(memoIx.data) : null;
+};
+
 const PUBLIC_SOURCE_ALIASES = {
   TOKEN_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
   TOKEN_2022_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
@@ -271,6 +306,7 @@ const HELIUS_TYPE_MAPPING = {
   WITHDRAW: INTERACTION,
 
   UNKNOWN: UNKNOWN,
+  MEMO: MEMO,
 };
 
 /**
@@ -694,7 +730,14 @@ const normalizeInstructions = (instructions) => {
  */
 const transformTransaction = async (heliusTransaction, address, tokens = [], options = {}) => {
   const tokenLookup = buildTokenLookup(tokens);
-  const type = mapTransactionType(heliusTransaction.type, address, heliusTransaction);
+  const memo = extractMemo(heliusTransaction);
+  const mappedType = mapTransactionType(heliusTransaction.type, address, heliusTransaction);
+  // Nothing moved and a note was written: the note is the transaction.
+  const { nativeTransfers, tokenTransfers } = getTransfers(heliusTransaction);
+  const type =
+    mappedType === UNKNOWN && memo !== null && nativeTransfers.length + tokenTransfers.length === 0
+      ? MEMO
+      : mappedType;
   // The enrichment provider labels aggregator swaps with the program's own
   // brand; the public `source` enum (`solana-source-catalog`) names the
   // program by its role instead, so program-id detection decides the label.
@@ -728,6 +771,9 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
     type,
     inputs,
     outputs,
+    // The note of an SPL Memo instruction (null when none); the type is
+    // `memo` only when nothing else moved.
+    memo,
 
     // Provider-enriched fields forwarded to the FE
     description: heliusTransaction.description,
@@ -762,6 +808,7 @@ module.exports.buildTokenLookup = buildTokenLookup;
  */
 module.exports.__testing = {
   buildSwapRoute,
+  extractMemo,
   netSwapLegs,
   toRawAmount,
   computeConversionRate,

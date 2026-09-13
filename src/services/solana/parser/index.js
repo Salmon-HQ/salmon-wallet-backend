@@ -46,6 +46,7 @@ const stakeParser = require('./parsers/stake');
 const stakingParser = require('./parsers/staking');
 const lendingParser = require('./parsers/lending');
 const dexParser = require('./parsers/dex');
+const memoParser = require('./parsers/memo');
 
 const PARSERS = [
   systemParser,
@@ -57,6 +58,7 @@ const PARSERS = [
   stakingParser,
   lendingParser,
   dexParser,
+  memoParser,
 ];
 
 /**
@@ -221,6 +223,9 @@ const deriveType = (building) => {
     return 'TRANSFER';
   }
 
+  // Nothing moved and a note was written: the note is the transaction.
+  if (h.hasMemo) return 'MEMO';
+
   // Bubblegum operates without SPL transfers (Merkle tree only). When the
   // discriminator decoder didn't match a known op, fall back to
   // COMPRESSED_NFT_TRANSFER — the most common Bubblegum op — so the FE
@@ -310,6 +315,7 @@ const parseTransaction = (rawTx, options = {}) => {
       description: null,
       nativeTransfers: [],
       tokenTransfers: [],
+      memo: null,
       instructions: [],
       // `events`, `swapRoute`, `innerSwaps`, `swapFees` are part of the FE
       // contract but the parser does not populate them: the resource layer
