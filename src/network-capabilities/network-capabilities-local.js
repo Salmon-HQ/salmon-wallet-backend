@@ -60,6 +60,10 @@ module.exports = {
     swap: { enabled: true },
     // Reference Powerup for exercising the generic build path end to end.
     memo: { enabled: true },
+    // Reference Powerup with an amount (amount card + USD + typed rows).
+    'transfer-sol': { enabled: true },
+    // Fixture that the backend always refuses (502), to exercise that state.
+    'broken-build': { enabled: true },
     // Read-only fixture for the client's catalogue/disclosure test (015 T2).
     'kamino-positions': { enabled: true },
   },
