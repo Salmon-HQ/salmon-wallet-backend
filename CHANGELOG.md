@@ -4,7 +4,7 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## Unreleased
 
-- Two more local-stage fixture Powerups: `transfer-sol` (a native-SOL transfer with the amount, its USD value and typed confirmation rows) and `broken-build` (always refused with 502 `provider_program_mismatch`, so the guard is demonstrable on a device).
+- `broken-build`, a local-stage fixture Powerup the backend always refuses with 502 `provider_program_mismatch`, so the guard is demonstrable on a device.
 
 - History items carry `memo` (the on-chain note, or null); a memo-only transaction is `type: 'memo'` instead of `unknown`.
 

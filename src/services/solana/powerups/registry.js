@@ -45,7 +45,6 @@
  */
 
 const memo = require('./adapters/memo');
-const transferSol = require('./adapters/transfer-sol');
 const brokenBuild = require('./adapters/broken-build');
 
 const POWERUPS = {
@@ -65,18 +64,6 @@ const POWERUPS = {
     lookupTables: [],
     errorCodes: ['note_too_long'],
     adapter: memo,
-  },
-  // Reference Powerup with an amount: the amount card, its USD conversion
-  // and typed confirmation rows. Listed only where a stage enables it.
-  'transfer-sol': {
-    tier: 'core',
-    networks: ['solana-mainnet', 'solana-devnet'],
-    contributor: null,
-    programIds: [transferSol.SYSTEM_PROGRAM_ID],
-    lookupTables: [],
-    errorCodes: ['amount_too_small'],
-    providerProfile: 'coingecko',
-    adapter: transferSol,
   },
   // FIXTURE: always refused with 502 `provider_program_mismatch` so the
   // guard is demonstrable on a device. Never enable it on a shipping stage.
