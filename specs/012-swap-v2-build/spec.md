@@ -129,6 +129,11 @@ User is "prohibited under the OFAC Programs", and since the backend calls 0x,
 behalf. Wallet-address screening is 0x's own (CipherOwl, OFAC/EU/UK/UN
 lists); the backend's job is to render its refusal, not to duplicate it.
 
+The mechanism both phases run on — where the country is resolved, how the
+answer reaches the client, and which routes the gate wraps — is
+`specs/011-capability-availability`, which is generic across capabilities.
+This spec owns only what Swap does with it.
+
 **Phase B — positive allowlist (not in scope).** Enabling swap in a named
 country, per Powerup, with an evidence record and an approver per change,
 and served from the backend so a stale client cannot keep a territory that
