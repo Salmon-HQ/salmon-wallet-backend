@@ -2,6 +2,12 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.18.0 — 2026-09-14
+
+- **Breaking**: removed the Solana swap surface — `GET /v1/solana-{env}/ft/swap/order` and `POST /v1/solana-{env}/ft/swap/execute` answer the standard 404 envelope. No client calls them: the wallets offer no swap. Both were reachable without authentication, so anyone with the base URL could ask the backend to quote and execute a Jupiter swap against an arbitrary wallet address. The `/ft` surface is read-only — `verified` and `search` list and search tokens and build nothing.
+- The stricter per-IP transaction rate limiter covers the Solana NFT routes alone, since the `/ft/swap` prefix it also guarded stops resolving.
+- OpenAPI synced with the code: both swap paths and the now-unreferenced `SwapOrder`, `SwapLegToken` and `SwapExecuteResult` schemas are removed. The swap controller, service and resources stay in the repository for whoever rebuilds the feature; nothing reaches them over HTTP.
+
 ## 0.17.0 — 2026-09-10
 
 - Solana transaction history: every RPC reader (Triton JSON-RPC and the bare-RPC fallback) now opts into `maxSupportedTransactionVersion: 1`, so pages containing a v1 / 4096-byte transaction (SIMD-0296) are read instead of failing with `-32015`. Response shape unchanged: v1 carries every account inline and `meta.fee` already includes the priority fee. `@solana/web3.js` is pinned to `1.99.0-beta.0` (first 1.x that accepts `version: 1` in a parsed response; read-only, the backend never builds v1).
