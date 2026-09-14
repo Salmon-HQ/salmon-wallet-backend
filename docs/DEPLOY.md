@@ -99,4 +99,4 @@ No deploy workflow reads GitHub repo secrets; any entries remaining under Settin
 
 ## CI IAM permissions
 
-The GitHub Actions OIDC role's live policy (`GithubActionsPolicy` in AWS — **not** the repo's `aws-deploy-policy.json`, which is an unapplied least-privilege draft) can read `/salmon-api/prod/*` from SSM: the `v0.14.0` tag deploy resolved every `${ssm:...}` ref and completed successfully. Keep any future tightening scoped to `ssm:GetParameter*` on that prefix.
+The GitHub Actions OIDC role's live policy is `GithubActionsPolicy` in AWS, and it is the policy this repository checks in as `aws-deploy-policy.json`: the attached version matches the file statement for statement, and the role additionally carries an inline `ReadSalmonApiProdParams` that lets it read `/salmon-api/prod/*` from SSM. Confirmed against the account on 2026-09-14. The deploy resolves every `${ssm:...}` ref with it: the `v0.14.0` tag deploy resolved every `${ssm:...}` ref and completed successfully. Keep any future tightening scoped to `ssm:GetParameter*` on that prefix.
