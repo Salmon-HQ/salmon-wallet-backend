@@ -36,13 +36,13 @@ describe('solana-ft-router', () => {
     expect(paths).toEqual(expect.arrayContaining(['/verified', '/search']));
   });
 
-  it('keeps active swap endpoints registered', () => {
+  it('registers no swap endpoint', () => {
     require('../solana-ft-router');
 
-    expect(mockRouter.get).toHaveBeenCalledWith('/swap/order', { type: 'safe', handler: 'order' });
-    expect(mockRouter.post).toHaveBeenCalledWith('/swap/execute', {
-      type: 'safe',
-      handler: 'execute',
-    });
+    const paths = [...mockRouter.get.mock.calls, ...mockRouter.post.mock.calls].map(
+      ([path]) => path
+    );
+
+    expect(paths.some((path) => path.startsWith('/swap'))).toBe(false);
   });
 });
