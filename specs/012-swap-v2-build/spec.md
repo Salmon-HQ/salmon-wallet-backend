@@ -10,7 +10,7 @@
 
 > Depends on spec 010 (signing boundary — the route is a GET-only build
 > endpoint, so it passes the allowlist as-is) and, still pending, on
-> spec 011 (region gating — it must wrap this route; not wired yet). The
+> the Phase A region gate in User Story 3, which wraps this route. The
 > frontend side is spec 027 in `salmon-wallet-frontend`.
 
 ## Context
@@ -110,19 +110,50 @@ public key.
 
 ---
 
-### User Story 3 - The swap respects region and screening (Priority: P1) — DEFERRED
+### User Story 3 - The swap respects region and screening (Priority: P1)
 
-Not implemented on this branch. Spec 011 (`powerupGate('swap')`) is still
-a follow-up and must wrap `GET /ft/swap/build`. Until then the route is
-open to every caller once `ZEROEX_API_KEY` is set; the production
-switch is the SSM key plus the `swap` capability section.
+The gate has two phases, and only the first is in scope here. The split is
+the point: a denylist of embargoed territories needs no legal opinion, while
+a positive per-country allowlist cannot be written before counsel names the
+countries, and holding the first hostage to the second leaves the route open
+to everyone.
 
-**Acceptance Scenarios (for spec 011)**:
+**Phase A — embargoed territories (this spec).** `powerupGate('swap')` wraps
+`GET /ft/swap/build` and refuses a request whose IP resolves to a
+comprehensively embargoed territory: Cuba, Iran, North Korea, Syria, and the
+Crimea, Donetsk and Luhansk regions. The list is the one every comparable
+wallet publishes in its own terms, and it is what 0x's API Licence Agreement
+§8.2(b) obliges Salmon to stand behind — Salmon warrants that no Licensee
+User is "prohibited under the OFAC Programs", and since the backend calls 0x,
+0x sees Salmon's egress IP and cannot screen a user's location on Salmon's
+behalf. Wallet-address screening is 0x's own (CipherOwl, OFAC/EU/UK/UN
+lists); the backend's job is to render its refusal, not to duplicate it.
 
-1. **Given** a blocked or unknown country, **When** a build is
-   requested, **Then** 403 `region_restricted` and no 0x call.
-2. **Given** a listed wallet, **When** a build is requested, **Then** 403
-   `wallet_restricted` and no 0x call.
+**Phase B — positive allowlist (not in scope).** Enabling swap in a named
+country, per Powerup, with an evidence record and an approver per change,
+and served from the backend so a stale client cannot keep a territory that
+was withdrawn. Phase B is what an App Store submission with a live swap
+needs; Phase A is what production needs the day the route opens.
+
+**Acceptance Scenarios**:
+
+1. **Given** an IP that resolves to an embargoed territory, **When** a build
+   is requested, **Then** 403 `region_restricted` and no 0x call.
+2. **Given** an IP the lookup cannot resolve, **When** a build is requested,
+   **Then** the build proceeds. Phase A is a denylist: an unknown country is
+   not an embargoed one, and failing closed on every lookup outage would take
+   the feature down worldwide.
+3. **Given** a listed wallet, **When** a build is requested, **Then** 403
+   `wallet_restricted` — 0x answers 403 `TAKER_NOT_AUTHORIZED_FOR_TRADE` and
+   the provider adapter already maps it.
+4. **Given** the geolocation lookup is unavailable, **When** a build is
+   requested, **Then** the failure is logged and the build proceeds, for the
+   reason in scenario 2.
+
+**What this gate is not.** It is not evidence of "appropriate licensing and
+permissions" for App Review, and it is not the KYC-corroborated geo-block the
+FCA describes as good practice — a wallet with no accounts cannot cross-check
+an IP against a verified address. Claiming either overstates it.
 
 ---
 
@@ -186,8 +217,10 @@ attribution without provider-specific branches; the client-side enum is
   `slippageBps` are read from the query.
 - **FR-003**: The route MUST be a GET (spec 010 allowlist) and MUST
   answer 400 on a network other than `solana-mainnet` before any
-  provider call. Mounting `powerupGate('swap', { addressParam: 'publicKey' })`
-  is spec 011's job (pending).
+  provider call. The route MUST mount
+  `powerupGate('swap', { addressParam: 'publicKey' })`, which refuses an
+  embargoed territory with 403 `region_restricted` before any provider call
+  (User Story 3, Phase A).
 - **FR-004**: A 0x 400 MUST map to 404 `no_route` with the provider's
   reason in `error_description`; any other upstream status (401/429/5xx)
   MUST propagate to `error-handler.js` (500) — it is our credentials or
@@ -251,15 +284,19 @@ attribution without provider-specific branches; the client-side enum is
   USDC, USDT at least) are created by ops before the fee is enabled; a
   missing one turns that pair into a 503, never a fee-less swap.
 - Legal opinion per enabled territory exists before Swap is enabled in
-  production (owner/counsel, outside the repo); until spec 011 lands the
-  production switch is the `ZEROEX_API_KEY` SSM parameter.
+  a named country (owner/counsel, outside the repo). That opinion gates
+  Phase B, not Phase A: refusing an embargoed territory needs no opinion.
+  The production switch remains the `ZEROEX_API_KEY` SSM parameter.
 
 ## Open decisions (owner)
 
-- Fee bps value (`SWAP_FEE_BPS`).
+- ~~Fee bps value (`SWAP_FEE_BPS`).~~ **Decided (owner, 2026-09-14): 50
+  bps.** The value is served from SSM and named on the confirmation
+  screen; it is never compiled into a client.
 - Fee account owner pubkey (`SWAP_FEE_ACCOUNT_OWNER`) and creating its
   fee ATAs (SOL/USDC/USDT at least).
-- Which countries are enabled (spec 011).
+- Which countries are enabled (Phase B). Phase A needs no answer: the
+  embargoed list is not a product decision.
 - 0x dashboard plan / RPS (`ZEROEX_MAX_RPS`).
 - UNVERIFIED from the research, needs a real-key probe: native SOL
   address `So111…111` (schema text) vs `So111…112` (WSOL mint, every
@@ -287,8 +324,10 @@ Recorded 2026-09-10 against the implemented branch.
   `solana-swap-build-service.js`: a sibling adapter returning the same
   `{ instructions, lookupTableAddresses, amountOut, minAmountOut, routePlan, zid }`
   and a selector in front of that call.
-- **No `powerupGate` / region gating** — spec 011 is not implemented;
-  the route is open once `ZEROEX_API_KEY` is set.
+- **Region gating is Phase A only** — the gate refuses embargoed
+  territories; the positive per-country allowlist is Phase B and is not
+  built. Until Phase B lands, the route serves every country that is not
+  embargoed, once `ZEROEX_API_KEY` is set.
 - **No nightly integration spec yet** — needs a real 0x key; pending.
 - **Response shape**: `salmonFee` carries `decimals` + `symbol` (asked by
   the frontend), `routeFee` is always `null` for 0x, `providerRequestId`
@@ -308,8 +347,8 @@ Recorded 2026-09-10 against the implemented branch.
 ## Out of scope
 
 - Client-side signing/broadcast/confirmation — frontend spec 027.
-- Region allowlist and wallet screening — spec 011 (must wrap this
-  route).
+- The positive per-country allowlist — User Story 3, Phase B. Wallet
+  screening stays 0x's (CipherOwl); the backend renders its 403.
 - Jupiter / DFlow adapters — separate features once their terms/pricing
   are confirmed.
 - Sponsored (gasless) swaps, `trade_surplus_*`, `disabled_sources`,
