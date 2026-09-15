@@ -81,7 +81,6 @@ Frontend (`../salmon-wallet-frontend`): the package is absent from every
 (`TokenMetadata`) — read `address, symbol, name, decimals, logo, tags,
 coingeckoId`; none of that path changes.
 
-Incidental (pre-existing, not touched): the three swap screens pass
 `networkId: 'solana-devnet'` to `/ft/search`, which is served by mainnet-only
 Jupiter.
 

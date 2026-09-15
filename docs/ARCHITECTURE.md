@@ -158,7 +158,7 @@ Important subfolders:
 
 - `src/services/solana/`
   - the densest domain in the project
-  - groups transactions, NFTs, FT, swaps, burn, and Helius/DAS/CoinGecko
+  - groups transactions, NFTs, FT, Powerup builds, burn, and Helius/DAS/CoinGecko
     wrappers
 - `src/services/bitcoin/`
   - Bitcoin vertical slice: transactions, UTXO (read-only); HTTP client
@@ -221,7 +221,7 @@ Important subfolders:
 
 - `src/resources/solana/`
   - serialization and transformation for transactions, accounts, FT,
-    NFT, and swaps
+    NFT, and Powerup builds
 - `src/resources/bitcoin/`
   - Bitcoin transaction and UTXO shapes
 - `src/resources/shared/`
@@ -335,7 +335,7 @@ backend.
 
 - integration with Solana data providers (Triton primary, Helius
   fallback, bare RPC as last resort)
-- swap build on the 0x Solana Swap API (`swap/`): instructions → unsigned v0 transaction
+- Powerup builds (`powerups/`): adapter instructions → unsigned v0 transaction
 - token catalog + metadata (CoinGecko list + Triton DAS) and USD pricing (CoinGecko)
 - transaction orchestration
 - enrichment preloading for both transaction paths: the service batches
@@ -344,7 +344,7 @@ backend.
   stay pure mappers with no network I/O
 - burn routing
 - FT/NFT fetching
-- account- and swap-specific logic
+- account-specific logic
 
 ### Solana data providers
 

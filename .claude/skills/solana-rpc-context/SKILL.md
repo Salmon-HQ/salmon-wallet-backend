@@ -1,6 +1,6 @@
 ---
 name: solana-rpc-context
-description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, 0x swap build, CoinGecko catalog + prices over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/swap/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
+description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, Powerup builds, CoinGecko catalog + prices over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/Powerup/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
 ---
 
 # Solana / RPC Context — salmon-api
@@ -28,7 +28,6 @@ Every upstream call goes through `providerCall(name, fn, { locals, environment, 
 | `coingecko`   | 25/60 (30) demo · 500/60 (100) pro-api + key | 15 s    | 6       | 5 fails / 30 s |
 | `helius`      | 10 (20) · 50 (100) with `HELIUS_TIER=paid`   | 30 s    | 4       | 5 fails / 30 s |
 | `triton`      | 50 (100)                                     | 30 s    | 2       | 5 fails / 30 s |
-| `zeroex`      | 2 (2)                                        | 10 s    | 3       | 5 fails / 30 s |
 | `blockdaemon` | 20 (40)                                      | 6 s     | 1       | 5 fails / 30 s |
 | `dapp`        | 10 (20)                                      | 5 s     | 1       | none           |
 
@@ -53,11 +52,11 @@ For Metaplex/NFT work (burn, transfer, Bubblegum, DAS), agents can install the o
 
 ## Route map
 
-Entry `src/index.js` (Express → serverless-http; CORS: `*.salmonwallet.io` + localhost). Dynamic per-chain mounting at `/v1/<chain>-<env>`: `routes/solana/index.js` (`/ft` verified/search/swap, `/account`, `/nft` incl. burn), `routes/bitcoin/`, `routes/ethereum/`. Also: coingecko market data (`/v1/exchange-rates`, `/v1/chart/:coinId`, `/v1/coin/:coinId`), dapp metadata, internal allowlist (auth `allowlistAdmin`).
+Entry `src/index.js` (Express → serverless-http; CORS: `*.salmonwallet.io` + localhost). Dynamic per-chain mounting at `/v1/<chain>-<env>`: `routes/solana/index.js` (`/ft` verified/search, `/account`, `/nft` incl. burn, `/powerups` build), `routes/bitcoin/`, `routes/ethereum/`. Also: coingecko market data (`/v1/exchange-rates`, `/v1/chart/:coinId`, `/v1/coin/:coinId`), dapp metadata, internal allowlist (auth `allowlistAdmin`).
 
 ## Security
 
-Any change to swap/send/burn flows moves user value, so it needs a security
+Any change to Powerup build/send/burn flows moves user value, so it needs a security
 review pass: amounts in base units with BigInt/BN, mint/address validation,
 and never RPC metadata as the source of truth for token identity. If your
 environment provides a web3 security review skill or agent, run it; otherwise

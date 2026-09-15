@@ -6,10 +6,7 @@
 
 **Status**: Draft — owner decisions below taken 2026-09-14; the build hold on the Powerups stack still stands
 
-**Input**: Owner: "a generic gate, not a swap one — a capability must not appear as installable where it cannot be used, and someone who installed it at home and travels should be told when they open it, not when their transaction fails"
-
 > The referenced-but-never-written spec 011. `specs/010-signing-boundary`,
-> `specs/012-swap-v2-build` and `specs/015-community-powerups` all point
 > here for region gating; this document is what they point at.
 
 ## The property
@@ -29,9 +26,7 @@ configuration edit, not a release.
    for. Server policy takes effect on the next call, for everyone.
 2. **The first list is a denylist of embargoed territories** — Cuba, Iran,
    North Korea, Syria, and the Crimea, Donetsk and Luhansk regions. It needs
-   no legal opinion, and it is what 0x's licence obliges Salmon to stand
    behind. The positive per-country allowlist is a later phase and waits for
-   counsel (see `specs/012-swap-v2-build` User Story 3).
 3. **An unresolved country is not a restricted one.** The gate fails open on a
    lookup failure: a denylist that cannot resolve an address has not found an
    embargo, and failing closed would take every capability down worldwide
@@ -60,10 +55,9 @@ route, and one shared surface to render it.
    `specs/015-community-powerups` states that per-request region must never
    leak into it. Availability therefore cannot ride on that response; it needs
    its own, uncached one.
-2. **`GET /ft/swap/build` has no gate mounted at all.** The seam covers the
    generic Powerup route only, so a gate built there alone would leave the one
    capability that is actually built ungated.
-3. **`geo-service.js` is unwired and resolves without the caller's address**,
+2. **`geo-service.js` is unwired and resolves without the caller's address**,
    so it answers for the server rather than the caller. It is a starting point
    to fix, not a working component to mount.
 
@@ -112,7 +106,6 @@ and client state goes stale and can be forged.
    `GET /powerups/:id/build`, **Then** `403 region_restricted`, and no
    provider is called.
 2. **Given** a restricted territory, **When** a build is requested on
-   `GET /ft/swap/build`, **Then** the same refusal on the same terms.
 3. **Given** a request whose country cannot be resolved, **When** a build is
    requested, **Then** it proceeds, and the failure to resolve is logged.
 4. **Given** a request that did not arrive through the edge, **When** any
@@ -121,14 +114,10 @@ and client state goes stale and can be forged.
 
 ### User Story 4 - One unavailable surface, not one per capability (Priority: P2)
 
-Today only Swap has an unavailable screen, and Memo renders it by borrowing
-Swap's translation key. A capability should not have to copy another's copy.
-
 **Acceptance Scenarios**:
 
 1. **Given** any capability and any unavailable reason, **When** its screen
    renders, **Then** it uses the shared surface with its own name in it.
-2. **Given** Memo, **When** it is unavailable, **Then** no string from Swap's
    locale block is read.
 
 ## Requirements _(mandatory)_
@@ -140,7 +129,6 @@ Swap's translation key. A capability should not have to copy another's copy.
   the origin, and the origin MUST refuse a request that did not arrive through
   the edge. A country supplied by the caller MUST never be trusted.
 - **FR-003**: `powerupGate` MUST be mounted on every route that builds a
-  transaction, `GET /ft/swap/build` included, and MUST answer
   `403 region_restricted` before any provider call.
 - **FR-004**: The gate MUST treat an unresolved country as unrestricted, and
   MUST log the failure to resolve.
@@ -173,7 +161,6 @@ it does not pretend to make the network unreachable.
 ## Out of scope
 
 - The positive per-country allowlist and the legal opinion that would justify
-  one — `specs/012-swap-v2-build` User Story 3, Phase B.
 - Sanctions screening of addresses, which the routing provider performs.
 - Anything that would make a stale client refuse on its own: the answer comes
   from the backend on every call, which is what makes a withdrawal immediate.

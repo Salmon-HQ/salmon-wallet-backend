@@ -30,5 +30,3 @@
 - [x] No implementation details leak beyond what the contract needs
 
 ## Notes
-
-- Ready for `/speckit-plan`. Implementation waits for the swap-0x stack hold to lift; US1 (catalog field) is a valid first increment on its own.

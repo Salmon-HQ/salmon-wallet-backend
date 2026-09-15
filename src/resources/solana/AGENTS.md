@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-- shape Solana account, FT, NFT, swap, and transaction payloads
+- shape Solana account, FT, NFT, Powerup build, and transaction payloads
 - normalize enriched-tx data from both providers (Helius Enhanced API and the local Triton parser) plus RPC-derived transaction data into public API contracts
 - `helius-transaction-resource.js` is the shared canonical mapper for both providers — its name is back-compat only; both Helius and Triton outputs flow through it.
 

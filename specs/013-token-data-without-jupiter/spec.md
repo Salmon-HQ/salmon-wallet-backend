@@ -1,27 +1,18 @@
 # Feature Specification: Token data without Jupiter
 
-**Feature Branch**: `013-token-data-without-jupiter` (stacked on `feat/swap-0x-signing-boundary`)
-
 **Created**: 2026-09-11
 
 **Status**: Draft — approved by the owner for implementation on this branch
-
-**Input**: User description: "Replace Jupiter entirely as the Solana token-data source: token catalog (verified list + free-text search), per-mint metadata (symbol, name, decimals, logo, Token-2022 extensions) and USD prices with 24h change. Metadata and extensions come from the Triton One DAS API, catalog and prices from CoinGecko. Public shapes stay backward compatible. Accepted losses: no USD price and no name search for tokens not listed in CoinGecko, no Jupiter organicScore, CoinGecko Basic cost. New: Token-2022 transfer-fee/hook detection so the swap does not offer tokens 0x cannot route. Remove every Jupiter service and variable; keep only the on-chain history parser."
 
 ## Context
 
 The wallet shows Solana tokens in four places, and all four are fed by Jupiter
 today: the token picker (verified list + free-text search), the balance
-(logo, name, symbol, USD value, 24h change, spam filter), the swap review
-screen (token names and USD values around the 0x-built transaction) and the
-`uiAmount` conversion before a swap is requested. Jupiter's terms of use do
 not mention their data APIs, but their "Prohibited Localities" clause (United
 States among them) and the licence's incorporation of those terms leave the
-read-only use ambiguous (research: `../012-swap-v2-build/research-token-catalog-and-jupiter-scope.md`).
 The owner decided to remove the doubt by removing Jupiter.
 
 Two sources replace it, both cleared for US users (research:
-`../012-swap-v2-build/research-helius-coingecko-triton-terms.md`): the
 node provider Salmon already pays for, whose Digital Asset Standard API
 describes any mint (symbol, name, decimals, logo, token program, Token-2022
 extensions) in batches of up to 1000, and CoinGecko, whose curated Solana
@@ -32,14 +23,12 @@ What is deliberately given up (owner decision 2026-09-11): a USD value and
 a name search for tokens CoinGecko has not listed (fresh memecoins,
 long-tail), Jupiter's `organicScore` quality signal, and a monthly fee for
 the CoinGecko plan. What is gained: no Jupiter dependency, a stable
-`coingeckoId` on every listed token, and the ability to hide from the swap
 the Token-2022 mints the routing provider cannot trade.
 
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - The token picker keeps working, without Jupiter (Priority: P1)
 
-A user opens the token picker (send, swap, token detail). The verified list
 shows the curated Solana tokens with logo, symbol, name and decimals, and
 typing "bonk" or a mint address finds the token. Behind the scenes no call
 reaches Jupiter.
@@ -100,11 +89,7 @@ meaningful amount, by the same rule as before.
 
 ---
 
-### User Story 3 - The swap never offers a token the router cannot trade (Priority: P2)
-
 A user picks a Token-2022 mint with a transfer fee or transfer hook as the
-output of a swap. The wallet learns before requesting a quote that this
-token cannot be swapped, and says so.
 
 **Why this priority**: Avoids the dead-end `token_not_supported` on the
 review screen; depends on story 1's metadata path.
@@ -122,12 +107,9 @@ extensions builds normally.
 2. **Given** a Token-2022 mint whose extensions are all routable, **When** a
    build is requested, **Then** it proceeds as today.
 3. **Given** the catalog and search results, **When** a token is
-   non-routable, **Then** it carries `swappable: false` so the picker can
    grey it out (additive field, defaults to `true`).
 
 ---
-
-### User Story 4 - The swap review shows names and USD values (Priority: P2)
 
 The review screen keeps showing input/output symbol, name, logo, decimals,
 the USD value of both sides and the price impact, now sourced without
@@ -197,7 +179,6 @@ Wherever a CoinGecko-sourced price or list is shown, the wallet shows the
 - **FR-007**: A build request whose input or output mint carries a
   transfer-fee or transfer-hook extension MUST answer 422
   `token_not_supported` before calling the routing provider; catalog and
-  search entries MUST expose `swappable` (boolean, additive).
 - **FR-008**: The network catalog response MUST carry the CoinGecko
   attribution (`text`, `url`) so clients render it from data.
 - **FR-009**: `JUPITER_PRICE_URL`, `JUPITER_API_KEY`, the Jupiter services,
@@ -206,7 +187,6 @@ Wherever a CoinGecko-sourced price or list is shown, the wallet shows the
   the SSM parameter list; a `COINGECKO_API_KEY` on a paid plan becomes
   required for mainnet prices and catalog.
 - **FR-010**: Public shapes of `/ft/verified`, `/ft/search`, the multichain
-  balance items and `/ft/swap/build` MUST remain backward compatible
   (additive fields only).
 - **FR-011**: The full CI gate MUST pass; every removed Jupiter behaviour
   MUST have an equivalent test against the new sources.
@@ -214,7 +194,6 @@ Wherever a CoinGecko-sourced price or list is shown, the wallet shows the
 ### Key Entities
 
 - **Catalog entry**: a listed token — mint, symbol, name, decimals, logo,
-  `coingeckoId`, `tags` (`verified`), `swappable`. Source: CoinGecko list,
   24h snapshot.
 - **Mint metadata**: on-chain description of any mint — symbol, name,
   decimals, logo, token program, extensions. Source: node provider DAS,
@@ -227,11 +206,8 @@ Wherever a CoinGecko-sourced price or list is shown, the wallet shows the
 ## Success Criteria _(mandatory)_
 
 - **SC-001**: With every Jupiter hostname unreachable, the verified list,
-  search, balance and swap build all answer successfully for a mainnet
   wallet holding SOL, USDC and one unlisted token.
-- **SC-002**: The wallet's existing token-picker, balance and swap screens
   work with zero client changes other than rendering the attribution and
-  the optional `swappable` flag.
 - **SC-003**: A search for a top-100 Solana token by symbol returns it as the
   first result in under one second on a warm cache.
 - **SC-004**: A balance of 50 distinct mints resolves metadata and prices in
@@ -252,7 +228,6 @@ Wherever a CoinGecko-sourced price or list is shown, the wallet shows the
 - Helius `price_info` is NOT used in this feature; it remains a possible
   fallback for unlisted-token prices in a later feature.
 - The frontend renders the attribution from the catalog data and treats
-  `swappable: false` as "greyed out in the swap picker" (frontend session
   informed 2026-09-11).
 
 ## Out of scope

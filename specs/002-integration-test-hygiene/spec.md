@@ -15,7 +15,6 @@ must fail only for real reasons.
    directly (raw axios, 5 s timeout, NOT through the service under test — a
    service regression must still be able to fail the suite) and skip with a
    logged reason when unavailable, exactly like the existing
-   `triton-provider.integration.spec.js` pattern. The Jupiter swap spec
    already had a DNS probe; it now logs why it skips.
 2. **Pure-function tests moved to the unit suite.** The
    `isTransactionParsed()` block in the Helius integration spec touches no
@@ -26,7 +25,6 @@ must fail only for real reasons.
      `process.env.JUPITER_PRICE_URL` at runtime, but the module reads it
      once at load — the invalid URL was never used, and its try/catch
      accepted both outcomes. It could not fail; it tested nothing.
-   - Swap "should handle execute with mock signed transaction": placeholder
      asserting `typeof execute === 'function'`. Real execute() coverage
      needs wallet signing — end-to-end territory, noted in a comment.
 4. **Fallback test used a fabricated environment.** The
@@ -71,7 +69,6 @@ missed — both DNS-only checks that pass while auth fails:
   `api-mainnet.helius-rpc.com` via DNS and then 401ed on every call with the
   dummy key. Now probes the Enhanced API with the configured key, same
   pattern as the other suites.
-- `solana-ft-swap-service.integration.spec.js` resolved the Jupiter host and
   then failed its referral assertions when keyless `order()` calls returned
   null. Now probes the `/order` endpoint with a real minimal quote (and the
   API key when configured); auth/rate-limit failures skip with a reason.
@@ -89,7 +86,6 @@ Triton path is dead weight in production too.
 ## Verification criteria
 
 - `npm run test:unit` green, count grows by the 3 moved tests (774 → 777).
-- `npm run test:integration` with a real `.env`: helius/jupiter/swap suites
   either run their assertions (provider reachable) or skip with a logged
   reason — no DNS/401 hard failures.
 - `npm run test:integration` with NO real provider env (CI conditions):

@@ -34,7 +34,7 @@ directly.
 
 Each event carries `client_id = install_id`: a random, per-install token with no
 PII and no link to a person. It is what lets GA4 build funnels ("how many who
-onboarded did their first swap"). It is the only persistent identifier involved.
+onboarded did their first send"). It is the only persistent identifier involved.
 
 `POST /v1/events` has no per-IP rate limit, by design: the handler never reads the client IP (not `requestContext.identity.sourceIp`, not `X-Forwarded-For`), and keying a limiter on it would reintroduce the address this pipeline exists to keep out. The API Gateway stage throttle is what bounds this route.
 

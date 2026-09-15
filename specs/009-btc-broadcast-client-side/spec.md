@@ -63,4 +63,3 @@ envelope; history and UTXO reads are unchanged.
 ## Out of scope
 
 - Fixing Bitcoin send end to end (P2PKH `nonWitnessUtxo`) — separate decision recorded in `AGENTS.md`.
-- Swap broadcast — later feature.

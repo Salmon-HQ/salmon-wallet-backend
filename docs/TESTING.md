@@ -135,8 +135,6 @@ Resource specs (`src/resources/solana/__tests__/`):
 - `helius-transaction-resource.spec.js`
 - `helius-transaction-resource.amounts.spec.js`
 - `helius-transaction-resource.nft-helpers.spec.js`
-- `helius-transaction-resource.swap-route.spec.js`
-- `helius-transaction-resource.swap-route-e2e.spec.js`
 - `helius-transaction-resource.type-inference.spec.js`
 - `solana-transaction-resource.spec.js`
 
@@ -145,7 +143,6 @@ Service specs (`src/services/solana/__tests__/`):
 - `providers.spec.js` — provider resolver (Triton primary, Helius
   fallback)
 - `solana-burn-routing.spec.js`
-- `solana-ft-swap-service.unit.spec.js`
 - other unit specs such as `burn-service.spec.js`,
   `token-catalog-service.spec.js`, `token-metadata-service.spec.js`, `solana-ft-service.spec.js`,
   `solana-nft-service.spec.js`, `solana-transaction-service.spec.js`,
@@ -189,7 +186,6 @@ CoinGecko, Triton, Solana RPC).
 
 - `src/services/solana/__tests__/helius-transaction-service.integration.spec.js`
 - `src/services/solana/__tests__/solana-transaction-service.integration.spec.js`
-- `src/services/solana/__tests__/solana-ft-swap-service.integration.spec.js`
 
 **Characteristics:**
 
@@ -203,8 +199,6 @@ CoinGecko, Triton, Solana RPC).
 ```bash
 npm run test:integration
 ```
-
-> **Note:** the swap service has a split pair — `solana-ft-swap-service.unit.spec.js` (hermetic, runs under `npm run test:unit`) and `solana-ft-swap-service.integration.spec.js` (live calls, needs a real `.env`).
 
 ### 3. End-to-End (E2E) tests
 

@@ -5,25 +5,14 @@ const { getProfile, PROVIDER_NAMES } = require('../profiles');
 describe('profiles', () => {
   const saved = { ...process.env };
   afterEach(() => {
-    for (const key of [
-      'COINGECKO_API_KEY',
-      'COINGECKO_API_URL',
-      'HELIUS_TIER',
-      'TRITON_MAX_RPS',
-    ]) {
+    for (const key of ['COINGECKO_API_KEY', 'COINGECKO_API_URL', 'HELIUS_TIER', 'TRITON_MAX_RPS']) {
       if (saved[key] === undefined) delete process.env[key];
       else process.env[key] = saved[key];
     }
   });
 
   it('lists every provider with a complete row', () => {
-    expect(PROVIDER_NAMES).toEqual([
-      'coingecko',
-      'helius',
-      'triton',
-      'blockdaemon',
-      'dapp',
-    ]);
+    expect(PROVIDER_NAMES).toEqual(['coingecko', 'helius', 'triton', 'blockdaemon', 'dapp']);
     for (const name of PROVIDER_NAMES) {
       expect(getProfile(name)).toMatchObject({
         name,

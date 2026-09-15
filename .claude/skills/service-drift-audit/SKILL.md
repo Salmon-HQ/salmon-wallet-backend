@@ -10,17 +10,6 @@ automation is wired up yet — running this skill is the whole audit.
 
 ## Watchlist & baseline (as of 2026-07-30)
 
-### 0x Solana Swap API (swap build)
-
-- `POST https://api.0x.org/solana/swap-instructions` + `GET /enabled-sources`,
-  header `0x-api-key`. Open beta: "interfaces may still change". Watch for
-  the announced split of `instructions[]` into `setupInstructions` /
-  `swapInstructions` (shape change for `zeroex-swap-provider.js`), fee
-  fields (`swap_fee_ppm`/`swap_fee_recipient`/`swap_fee_side`), and the
-  free-tier rate limit (`ZEROEX_MAX_RPS`).
-- Sources: docs.0x.org/svm/solana-swap-api (append `.md`),
-  docs.0x.org/openapi/solana-swap-apis.json, docs.0x.org/llms.txt.
-
 ### CoinGecko (token catalog, prices, charts)
 
 - `token_lists/solana/all.json`, `coins/list?include_platform=true`,

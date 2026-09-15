@@ -24,7 +24,6 @@ pieces reused: `RateLimiter` (becomes the fallback bucket), `with-retry.js`
 
 ```
 src/infrastructure/providers/
-├── profiles.js            # PROVIDERS = { coingecko, helius, triton, zeroex, blockdaemon, dapp }: rps, burst, timeoutMs, retry {maxAttempts, baseMs, maxMs, honorRetryAfter}, breaker {failures, cooldownMs}
 ├── request-deadline.js    # middleware: res.locals.deadline = now + REQUEST_BUDGET_MS (default 25000); remaining(locals); throws 503 request_budget_exhausted
 ├── shared-rate-limiter.js # acquire(name, rps, burst) → Lua EVAL on `ratelimit:<stage>:<name>` (tokens, ts) returns waitMs; falls back to in-memory RateLimiter when Redis errors; sleeps min(waitMs, remaining) else 503 upstream_rate_limited
 ├── circuit-breaker.js     # state on `breaker:<stage>:<env>:<name>` {failures, openUntil}; isOpen(), recordSuccess(), recordFailure(); half-open = one probe token via SET NX; open → 503 upstream_unavailable
@@ -36,7 +35,6 @@ src/infrastructure/cache/cache-helper.js   # + getManyFromCache(keys) (MGET), st
 Migration (call sites): `coingecko-service` (all fetches), `helius-provider`
 
 - `helius-transaction-service`, `triton-provider` + `token-metadata-service`
-  (DAS, no limiter today), `zeroex-swap-provider`, `blockdaemon-balance-provider`
   (no limiter today), `dapp-service` (fetch through guard). Old
   `*-rate-limiter.js` files are deleted; `with-retry.js` keeps only the pure
   helpers. `token-metadata-service` and `price-cache` switch to the batched
@@ -48,7 +46,6 @@ Axios timeouts become the profile timeout capped by the remaining budget;
 an `AbortController` signal is passed so a spent budget cancels the socket.
 
 Config (env, all optional): `REQUEST_BUDGET_MS`, `<PROVIDER>_MAX_RPS`
-overrides (keeps `ZEROEX_MAX_RPS`, adds the rest), `BREAKER_DISABLED=true`
 for local runs.
 
 ## Test plan
