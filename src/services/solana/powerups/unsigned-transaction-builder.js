@@ -2,16 +2,16 @@
 
 /**
  * Instructions → UNSIGNED v0 transaction, shared by every Powerup build
- * (the swap on `/ft/swap/build`, the generic `/powerups/:id/build`).
+ * (the generic `/powerups/:id/build`).
  *
  * One compile step so every builder pays the same priority fee, gets the
  * same compute-unit limit and is simulated the same way: address lookup
- * tables + blockhash + priority fee (`SWAP_PRIORITY_FEE_MICROLAMPORTS` pins
+ * tables + blockhash + priority fee (`POWERUP_PRIORITY_FEE_MICROLAMPORTS` pins
  * it; unset follows the network), a compute-unit limit from simulation, the
  * caller as fee payer, zero signatures. Nothing here signs or broadcasts
  * (root `AGENTS.md` "Signing boundary").
  *
- * Optional `cleanup` instructions (a swap's intermediate-account closes) are
+ * Optional `cleanup` instructions (an adapter's trailing account closes) are
  * appended, then dropped when the simulation rejects them so the main
  * instructions still ship. The result names every program the compiled
  * message invokes (lookup tables resolved) so a caller can enforce an
@@ -42,17 +42,17 @@ const COMPUTE_UNIT_FALLBACK = 400000;
 const PRIORITY_FEE_MAX_ACCOUNTS = 128;
 
 /**
- * Priority fee in micro-lamports per compute unit. `SWAP_PRIORITY_FEE_MICROLAMPORTS`
- * (named for the swap, now global to every unsigned build) pins it (0
+ * Priority fee in micro-lamports per compute unit. `POWERUP_PRIORITY_FEE_MICROLAMPORTS`
+ * (global to every unsigned build) pins it (0
  * disables); unset, it follows the network: the 75th percentile of
  * the recent fees paid on the accounts this transaction writes to (zeros
  * included — an uncongested network must read as cheap), clamped to
  * [PRIORITY_FEE_MIN, PRIORITY_FEE_MAX]. With the simulated CU limit (~150k
- * for a typical swap) the clamp range costs the user 0.00015–0.003 SOL.
+ * for a typical build) the clamp range costs the user 0.00015–0.003 SOL.
  * A failed RPC read falls back to the minimum.
  */
 const resolvePriorityFee = async (connection, instructions) => {
-  const pinned = process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS;
+  const pinned = process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS;
   if (pinned !== undefined && pinned !== '') {
     return Math.max(0, Number(pinned) || 0);
   }
@@ -103,7 +103,7 @@ const simulate = async (connection, message) => {
 /**
  * Compute-unit limit: the simulated units plus headroom. Without a limit the
  * runtime budgets 200k CU per instruction and the priority fee is charged on
- * that budget, not on what runs (probed: a 3-instruction swap consumed ~135k
+ * that budget, not on what runs (probed: a 3-instruction build consumed ~135k
  * of a 785k default budget). A failed simulation falls back to a fixed limit
  * (the caller decides whether that is acceptable — see `simulationFallback`).
  */
@@ -146,7 +146,7 @@ const programIdsOf = (message, lookupTables) => {
  * @param {import('@solana/web3.js').TransactionInstruction[]} [input.cleanup] - appended
  *   after `instructions`; dropped when the simulation rejects them
  * @param {boolean} [input.simulationFallback=true] - when the simulation fails, still
- *   ship the bytes with a fixed compute-unit limit (the swap: the wallet simulates
+ *   ship the bytes with a fixed compute-unit limit (the wallet simulates
  *   again before signing). `false` returns `transaction: null` and the failed
  *   `simulation` instead, so the caller can refuse without a warn-then-throw.
  * @returns {Promise<{ transaction: string|null, priorityFeeMicroLamports: number,

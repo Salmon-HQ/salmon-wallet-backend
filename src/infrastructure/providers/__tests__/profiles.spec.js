@@ -9,7 +9,6 @@ describe('profiles', () => {
       'COINGECKO_API_KEY',
       'COINGECKO_API_URL',
       'HELIUS_TIER',
-      'ZEROEX_MAX_RPS',
       'TRITON_MAX_RPS',
     ]) {
       if (saved[key] === undefined) delete process.env[key];
@@ -22,7 +21,6 @@ describe('profiles', () => {
       'coingecko',
       'helius',
       'triton',
-      'zeroex',
       'blockdaemon',
       'dapp',
     ]);
@@ -47,8 +45,6 @@ describe('profiles', () => {
   });
 
   it('honours <PROVIDER>_MAX_RPS overrides and keeps burst ≥ rps', () => {
-    process.env.ZEROEX_MAX_RPS = '5';
-    expect(getProfile('zeroex')).toMatchObject({ rps: 5, burst: 5 });
     process.env.TRITON_MAX_RPS = '200';
     expect(getProfile('triton')).toMatchObject({ rps: 200, burst: 200 });
     process.env.HELIUS_TIER = 'paid';

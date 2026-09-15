@@ -5,7 +5,7 @@
  * circuit-breaker thresholds. Adding a provider is adding a row; the
  * plumbing in `provider-client.js` reads nothing else.
  *
- * `<PROVIDER>_MAX_RPS` (e.g. `ZEROEX_MAX_RPS`) overrides the sustained rate
+ * `<PROVIDER>_MAX_RPS` (e.g. `TRITON_MAX_RPS`) overrides the sustained rate
  * at runtime; burst never drops below the rate so one second of traffic
  * always fits.
  */
@@ -40,14 +40,6 @@ const PROFILES = {
     tier: () => ({ rps: 50, burst: 100 }),
     timeoutMs: 30000,
     retry: { maxAttempts: 2, baseMs: 500, maxMs: 2000, honorRetryAfter: true },
-    breaker: BREAKER_DEFAULT,
-  },
-  // Free tier documents ~5 rps but a live probe (2026-09-10) got 429 on the
-  // 3rd call within ~2 s, so the default stays well under that.
-  zeroex: {
-    tier: () => ({ rps: 2, burst: 2 }),
-    timeoutMs: 10000,
-    retry: { maxAttempts: 3, baseMs: 500, maxMs: 4000, honorRetryAfter: true },
     breaker: BREAKER_DEFAULT,
   },
   // No retry: the balance service falls back to the bare RPC on failure.

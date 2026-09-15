@@ -9,8 +9,7 @@
  *                      transaction-building Powerup (no-cache). Passes the
  *                      `powerupGate` seam (spec 011) before the controller.
  *                      No execute/broadcast route exists by design (root
- *                      AGENTS.md "Signing boundary"). `swap` answers 404:
- *                      it stays on `/ft/swap/build`.
+ *                      AGENTS.md "Signing boundary").
  */
 
 const express = require('express');

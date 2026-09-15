@@ -58,7 +58,7 @@ app.use(requestDeadline);
 // Per-IP rate limiting (fixed window in Redis, fail-open). One global
 // limiter over every route (the unversioned /health, /status and /ip info
 // endpoints included — /ip calls a third party per request), plus a stricter one over the
-// transaction-building routes (Solana NFT burn/transfer, FT swap, Powerups) —
+// transaction-building routes (Solana NFT burn/transfer, Powerups) —
 // those are the expensive/abusable endpoints. Mode/limits come from env.
 // RATE_LIMIT_MODE falls back to 'log' here (count and log, don't block);
 // prod sets it to 'enforce' via config/env.prod.yml.
@@ -76,7 +76,6 @@ const txRateLimit = rateLimit({
   prefix: 'tx',
 });
 app.use('/v1/solana-:env/nft', txRateLimit);
-app.use('/v1/solana-:env/ft/swap', txRateLimit);
 app.use('/v1/solana-:env/powerups', txRateLimit);
 
 app.use('/', require('./routes/shared/info-router'));

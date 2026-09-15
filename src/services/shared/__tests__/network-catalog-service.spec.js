@@ -22,7 +22,7 @@ jest.mock('../network-capabilities-service', () => ({
 }));
 jest.mock('../../solana/powerups/powerup-catalog-service', () => ({
   listFor: jest.fn((networkId) =>
-    networkId === 'solana-mainnet' ? [{ id: 'swap', enabled: true }] : []
+    networkId === 'solana-mainnet' ? [{ id: 'memo', enabled: true }] : []
   ),
   catalogUnavailableError: jest.fn(() =>
     Object.assign(new Error('unavailable'), {
@@ -45,7 +45,7 @@ describe('network-catalog-service', () => {
       'solana-mainnet': {
         enable: true,
         sections: {
-          swap: { active: true },
+          collectibles: { active: true },
         },
       },
     });
@@ -55,9 +55,9 @@ describe('network-catalog-service', () => {
         id: 'solana-mainnet',
         enabled: true,
         sections: {
-          swap: { active: true },
+          collectibles: { active: true },
         },
-        powerups: [{ id: 'swap', enabled: true }],
+        powerups: [{ id: 'memo', enabled: true }],
       }),
       expect.objectContaining({
         id: 'ethereum-mainnet',

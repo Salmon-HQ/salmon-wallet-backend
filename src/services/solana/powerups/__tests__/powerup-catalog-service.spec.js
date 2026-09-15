@@ -2,7 +2,7 @@
 
 jest.mock('../registry', () => ({
   POWERUPS: {
-    swap: { tier: 'core', networks: ['solana-mainnet'], contributor: null },
+    memo: { tier: 'core', networks: ['solana-mainnet'], contributor: null },
     stake: { tier: 'community', networks: ['solana-mainnet', 'solana-devnet'], contributor: null },
     unlisted: { tier: 'community', networks: ['solana-mainnet'], contributor: null },
   },
@@ -23,7 +23,7 @@ describe('powerup-catalog-service', () => {
       'bitcoin-mainnet': { enable: true },
     });
     capabilities.getPowerups.mockReturnValue({
-      swap: { enabled: true },
+      memo: { enabled: true },
       stake: { enabled: false, reason: 'maintenance' },
       ghost: { enabled: true },
     });
@@ -31,7 +31,7 @@ describe('powerup-catalog-service', () => {
 
   it('lists registry ∩ stage ∩ declared networks, reason only when disabled', () => {
     expect(listFor('solana-mainnet')).toEqual([
-      { id: 'swap', enabled: true },
+      { id: 'memo', enabled: true },
       { id: 'stake', enabled: false, reason: 'maintenance' },
     ]);
   });
@@ -54,9 +54,9 @@ describe('powerup-catalog-service', () => {
   });
 
   it('isOffered is the catalog predicate: listed and enabled on that network', () => {
-    expect(isOffered('swap', 'solana-mainnet')).toBe(true);
+    expect(isOffered('memo', 'solana-mainnet')).toBe(true);
     expect(isOffered('stake', 'solana-mainnet')).toBe(false);
-    expect(isOffered('swap', 'solana-devnet')).toBe(false);
+    expect(isOffered('memo', 'solana-devnet')).toBe(false);
     expect(isOffered('unlisted', 'solana-mainnet')).toBe(false);
   });
 });

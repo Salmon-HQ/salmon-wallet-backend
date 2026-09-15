@@ -2,91 +2,7 @@
 
 const { decorator } = require('../../../packages/api-utils');
 const tokenService = require('../../services/solana/solana-ft-service');
-const swapBuildService = require('../../services/solana/swap/solana-swap-build-service');
 const decorateBatchToken = require('../../resources/solana/solana-ft-batch-resource');
-const decorateSwapBuild = require('../../resources/solana/solana-swap-build-resource');
-const { findInvalidAddressParam } = require('../../utils/solana-address');
-const powerupCatalog = require('../../services/solana/powerups/powerup-catalog-service');
-
-const BUILD_REQUIRED_PARAMS = ['inputMint', 'outputMint', 'publicKey'];
-const SWAP_NETWORK = 'solana-mainnet';
-
-/**
- * Builds an UNSIGNED swap transaction for the client to sign and broadcast
- * (`solana-swap-build` contract; root AGENTS.md "Signing boundary").
- *
- * @param {import('express').Request} req - Reads `query.inputMint`, `query.outputMint`,
- *   `query.publicKey` (all required), one of `query.amount`/`query.uiAmount`, and the
- *   optional `query.slippageBps`. Fee parameters are never read from the request.
- * @param {import('express').Response} res - Responds 200 with the swap-build resource;
- *   400 `{ error, error_description }` on missing/invalid params or a non-mainnet
- *   network. 404 `no_route`, 403 `wallet_restricted` and 502 `provider_fee_mismatch`
- *   reach the error middleware from the service.
- * @returns {Promise<void>}
- */
-const build = async (req, res) => {
-  const missing = BUILD_REQUIRED_PARAMS.filter((key) => !req.query[key]);
-  if (missing.length > 0) {
-    return res.status(400).json({
-      error: 'missing_parameter',
-      error_description: `Missing required query params: ${missing.join(', ')}`,
-    });
-  }
-
-  const { inputMint, outputMint, publicKey, amount, uiAmount, slippageBps } = req.query;
-  const invalidAddress = findInvalidAddressParam({ inputMint, outputMint, publicKey });
-  if (invalidAddress) {
-    return res.status(400).json({
-      error: 'invalid_parameter',
-      error_description: `${invalidAddress} is not a valid Solana address`,
-    });
-  }
-  if (inputMint === outputMint) {
-    return res.status(400).json({
-      error: 'invalid_parameter',
-      error_description: 'inputMint and outputMint must differ',
-    });
-  }
-  if (res.locals.network?.id !== SWAP_NETWORK) {
-    return res.status(400).json({
-      error: 'invalid_parameter',
-      error_description: `Swap is available on ${SWAP_NETWORK} only`,
-    });
-  }
-  // The stage's Powerup switch is binding, not descriptive: an off Swap
-  // answers exactly what the catalog says (`community-powerups` contract).
-  if (!powerupCatalog.isOffered('swap', SWAP_NETWORK)) {
-    return res.status(404).json({
-      error: 'not_found',
-      error_description: `Powerup swap is not available on ${SWAP_NETWORK}`,
-    });
-  }
-
-  const resolvedSlippage = swapBuildService.resolveSlippage(slippageBps);
-  if (resolvedSlippage.error) {
-    return res.status(400).json(resolvedSlippage);
-  }
-  const resolvedAmount = await swapBuildService.resolveAmount(
-    { amount, uiAmount, inputMint },
-    res.locals
-  );
-  if (resolvedAmount.error) {
-    return res.status(400).json(resolvedAmount);
-  }
-
-  const data = await swapBuildService.build(
-    {
-      inputMint,
-      outputMint,
-      publicKey,
-      amount: resolvedAmount.amount,
-      slippageBps: resolvedSlippage.slippageBps,
-    },
-    res.locals
-  );
-  const resource = await decorator(decorateSwapBuild, data, { req, res });
-  res.status(200).send(resource);
-};
 
 /**
  * Get verified tokens
@@ -135,4 +51,4 @@ const search = async (req, res) => {
   res.status(200).send(resource);
 };
 
-module.exports = { build, verified, search };
+module.exports = { verified, search };

@@ -16,9 +16,9 @@ describe('event-schema guardrail (server mirror)', () => {
 
   it('accepts a known event with allow-listed props', () => {
     expect(
-      validateEvent('swap_completed', { from_chain: 'solana', to_chain: 'ethereum', success: true })
+      validateEvent('send_completed', { from_chain: 'solana', to_chain: 'ethereum', success: true })
     ).toEqual({
-      event: 'swap_completed',
+      event: 'send_completed',
       props: { from_chain: 'solana', to_chain: 'ethereum', success: true },
     });
   });

@@ -3,7 +3,7 @@
 /**
  * Network capabilities service.
  *
- * Resolves per-stage feature flags (e.g. swap, NFTs, history) for every
+ * Resolves per-stage feature flags (e.g. NFTs, history) for every
  * configured network by loading `network-capabilities-<NODE_ENV>.js` and
  * matching each rule against the network id / blockchain. Used by
  * `network-catalog-service` to decorate the public network catalog.
@@ -24,7 +24,7 @@ const POWERUPS_KEY = 'powerups';
  * A leaf rule matches when it is `'*'` or equals the network's `id`/`blockchain`
  * (string form), or when it is an array containing either (array form).
  * Nested objects are walked recursively so a capability can have sub-flags
- * (e.g. `sections.swap`). The `powerups` block is skipped: its values are
+ * (e.g. `sections.collectibles`). The `powerups` block is skipped: its values are
  * per-Powerup flags, not network matches.
  * @param {Object} values - Rule tree (from `network-capabilities-<stage>.js`).
  * @param {Object} network - Network descriptor with `id` and `blockchain`.

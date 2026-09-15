@@ -36,24 +36,16 @@
  * every upstream call goes through `providerCall`.
  *
  * Fees: `salmonFee` is forced to null on every generic build in this
- * feature. Fee legs land with the first Powerup that has one; they will
- * reuse the swap's `existingFeeAccount` + `assertFeeInstructionPresent` +
- * `[SWAP_FEE_SKIPPED]` semantics, never an adapter-reported amount.
- *
- * `swap` is listed for the catalog only: it stays on `/ft/swap/build`, so
- * `GET /powerups/swap/build` answers 404 (no adapter).
+ * feature. Fee legs land with the first Powerup that has one: the fee
+ * instruction is asserted present in the compiled message and an ops gap
+ * (missing fee account) is logged, never a 503; the amount is never an
+ * adapter-reported figure.
  */
 
 const memo = require('./adapters/memo');
 const brokenBuild = require('./adapters/broken-build');
 
 const POWERUPS = {
-  swap: {
-    tier: 'core',
-    networks: ['solana-mainnet'],
-    contributor: null,
-    endpoints: [],
-  },
   // Reference transaction-building Powerup: one Memo instruction. Listed
   // only where a stage enables it (today: `local`).
   memo: {

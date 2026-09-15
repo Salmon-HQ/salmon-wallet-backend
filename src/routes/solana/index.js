@@ -6,7 +6,7 @@
  * that sets `res.locals.network` from the `:env` path segment.
  *
  * Composes:
- *   - `/ft`      — `solana-ft-router` (fungible token catalog, pricing, swap).
+ *   - `/ft`      — `solana-ft-router` (fungible token catalog, pricing).
  *   - `/account` — `solana-account-router` (account info, tx history).
  *   - `/nft`     — `solana-nft-router` (NFT listing, burn).
  *   - `/powerups` — `solana-powerups-router` (generic unsigned Powerup build).

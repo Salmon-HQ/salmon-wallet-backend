@@ -1,8 +1,7 @@
 /**
  * Network-capability matrix for the `main` stage. Declares which
  * networks are enabled and which UI sections / features are active per
- * blockchain (overview, token_detail, collectibles, swap,
- * transactions).
+ * blockchain (overview, token_detail, collectibles, transactions).
  *
  * Stage selection happens in `src/services/shared/network-capabilities-service.js`,
  * which loads `network-capabilities-${NODE_ENV}.js` based on `NODE_ENV`.
@@ -46,9 +45,6 @@ module.exports = {
       send: [SOLANA],
       burn: [SOLANA],
     },
-    swap: {
-      active: [SOLANA],
-    },
     transactions: {
       active: '*',
     },
@@ -57,6 +53,5 @@ module.exports = {
   // `src/services/solana/powerups/registry.js`). `reason` only when
   // `enabled: false`, one of `region` | `maintenance` | `deprecated`.
   powerups: {
-    swap: { enabled: true },
   },
 };

@@ -15,7 +15,7 @@ describe('network-resource', () => {
         config: { nodeUrl: 'https://rpc.example' },
         enabled: true,
         sections: {
-          swap: { active: true },
+          collectibles: { active: true },
         },
         ignored: 'value',
       })
@@ -29,7 +29,7 @@ describe('network-resource', () => {
       config: { nodeUrl: 'https://rpc.example' },
       enabled: true,
       sections: {
-        swap: { active: true },
+        collectibles: { active: true },
       },
       powerups: [],
       attribution: null,

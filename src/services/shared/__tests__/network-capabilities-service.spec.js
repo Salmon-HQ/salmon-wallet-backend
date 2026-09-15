@@ -112,12 +112,12 @@ describe('network-capabilities-service powerups', () => {
     );
 
   test('returns the validated powerups block and keeps it out of the network map', () => {
-    stage({ swap: { enabled: true }, stake: { enabled: false, reason: 'maintenance' } });
+    stage({ memo: { enabled: true }, stake: { enabled: false, reason: 'maintenance' } });
 
     const service = loadService();
 
     expect(service.getPowerups()).toEqual({
-      swap: { enabled: true },
+      memo: { enabled: true },
       stake: { enabled: false, reason: 'maintenance' },
     });
     expect(service.get()['solana-mainnet']).toEqual({ enable: true });
@@ -130,14 +130,14 @@ describe('network-capabilities-service powerups', () => {
   });
 
   test.each([
-    ['an unknown reason', { swap: { enabled: false, reason: 'typo' } }],
-    ['a non-boolean enabled', { swap: { enabled: 'yes' } }],
+    ['an unknown reason', { memo: { enabled: false, reason: 'typo' } }],
+    ['a non-boolean enabled', { memo: { enabled: 'yes' } }],
   ])('fails loudly on %s', (_label, powerups) => {
     stage(powerups);
 
     expect(loadService().getPowerups()).toBeUndefined();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid powerups config for swap')
+      expect.stringContaining('Invalid powerups config for memo')
     );
   });
 

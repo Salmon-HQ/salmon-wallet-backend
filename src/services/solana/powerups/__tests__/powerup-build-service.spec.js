@@ -15,7 +15,6 @@ jest.mock('../powerup-catalog-service', () => ({ isOffered: jest.fn() }));
 const mockAdapter = { validate: jest.fn(), build: jest.fn() };
 jest.mock('../registry', () => ({
   POWERUPS: {
-    swap: { tier: 'core', networks: ['solana-mainnet'], contributor: null, endpoints: [] },
     fixture: {
       tier: 'community',
       networks: ['solana-mainnet'],
@@ -46,12 +45,12 @@ const instruction = (programId) =>
     data: Buffer.from('hi'),
   });
 
-const OFFERED = new Set(['swap', 'fixture', 'readonly']);
+const OFFERED = new Set(['fixture', 'readonly']);
 
 describe('powerup-build-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    delete process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS;
+    delete process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS;
     powerupCatalog.isOffered.mockImplementation(
       (id, networkId) => networkId === 'solana-mainnet' && OFFERED.has(id)
     );
@@ -108,7 +107,6 @@ describe('powerup-build-service', () => {
 
   it.each([
     ['an unknown id', 'nope', locals],
-    ['swap (stays on /ft/swap/build)', 'swap', locals],
     ['a read-only Powerup', 'readonly', locals],
     ['a network the Powerup is not declared for', 'fixture', { network: { id: 'solana-devnet' } }],
   ])('answers 404 not_found for %s', async (_label, id, requestLocals) => {

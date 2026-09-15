@@ -5,12 +5,9 @@
  * `src/routes/solana/index.js` (chain slice mounted at
  * `/v1/solana-:env` by the `BLOCKCHAINS` loop in `src/index.js`).
  *
- * Endpoints (per `solana-fungible-token-catalog` / `solana-swap-build`):
+ * Endpoints (per `solana-fungible-token-catalog`):
  *   - GET  /verified              — verified-token list (cached 300s).
  *   - GET  /search                — token search (no-cache).
- *   - GET  /swap/build            — UNSIGNED swap transaction (0x; no-cache).
- *                                   No execute/broadcast route exists by design
- *                                   (root AGENTS.md "Signing boundary").
  *
  * No auth middleware; network resolution happens upstream in the chain
  * mount, not per-route here.
@@ -25,6 +22,5 @@ const router = express.Router();
 
 router.get('/verified', cacheControl('max-age=300'), safe(controller.verified));
 router.get('/search', safe(controller.search));
-router.get('/swap/build', safe(controller.build));
 
 module.exports = router;

@@ -384,7 +384,7 @@ const getContractCoinInfo = async (params, locals) => {
 };
 
 /**
- * CoinGecko's curated Solana token list (Uniswap token-list schema), cached
+ * CoinGecko's curated Solana token list (standard token-list schema), cached
  * for the 24 h their terms allow. The authority for "verified" and the
  * search corpus; `coingeckoId` is joined from `coins/list`.
  *

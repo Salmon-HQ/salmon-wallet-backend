@@ -7,7 +7,7 @@
  * Resolves the id through the catalog predicate (registry ∩ stage flags ∩
  * declared + enabled network ∩ has an adapter), validates the caller's params
  * through the adapter, asks the adapter for instructions, compiles through
- * the same step the swap uses (`unsigned-transaction-builder`: lookup
+ * one shared step (`unsigned-transaction-builder`: lookup
  * tables, priority fee, compute-unit limit, simulation) with the caller as
  * fee payer, then refuses the bytes unless every top-level program of the
  * COMPILED message (lookup tables resolved) is one the Powerup declared or
@@ -27,7 +27,7 @@ const {
   BUILD_TTL_MS,
   COMMITMENT,
   compileUnsigned,
-} = require('../swap/unsigned-transaction-builder');
+} = require('./unsigned-transaction-builder');
 const { POWERUPS } = require('./registry');
 const powerupCatalog = require('./powerup-catalog-service');
 const {
@@ -40,8 +40,8 @@ const {
 
 /**
  * The registry entry for `id` when it is offered on `networkId` (catalog
- * predicate) and transaction-building. Everything else — including `swap`,
- * which has no adapter — is 404.
+ * predicate) and transaction-building. Everything else — including a
+ * read-only entry, which has no adapter — is 404.
  * @throws {PowerupError} 404 `not_found`; 503 `network_catalog_unavailable`
  *   when the stage config is invalid
  */

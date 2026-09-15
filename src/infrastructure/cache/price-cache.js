@@ -12,8 +12,8 @@ const {
  * Price Cache Service
  *
  * Caches Solana token quotes (CoinGecko token prices) in Redis. Cache entries
- * persist both `usdPrice` and `priceChange24h`; consumers are the swap-order
- * resource (single quote) and the balance price enricher (batch).
+ * persist both `usdPrice` and `priceChange24h`; the consumer is the balance
+ * price enricher (batch).
  *
  * TTL: 5 minutes (crypto prices change frequently).
  */

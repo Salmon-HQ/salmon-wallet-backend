@@ -2,7 +2,7 @@
 
 /**
  * Direct spec for the shared with-retry factory + getRetryAfter helper.
- * The per-provider rate-limiter specs (zeroex / coingecko / helius) cover
+ * The per-provider rate-limiter specs (coingecko / helius) cover
  * their own configurations indirectly; this spec exercises the factory's
  * uncovered branches in isolation:
  *   - getRetryAfter: numeric / HTTP-date / non-parseable / missing

@@ -1,5 +1,5 @@
 # External-provider integration tests: everything the PR gate deliberately
-# excludes (Helius / CoinGecko / Triton / 0x / public Solana RPC — flaky, rate
+# excludes (Helius / CoinGecko / Triton / public Solana RPC — flaky, rate
 # limited, secret-needing). Runs nightly and on demand, never on PRs, so
 # provider secrets are never exposed to fork runs.
 #
@@ -63,6 +63,3 @@ jobs:
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
           TRITON_RPC_URL: ${{ secrets.TRITON_RPC_URL }}
           TRITON_API_TOKEN: ${{ secrets.TRITON_API_TOKEN }}
-          ZEROEX_API_KEY: ${{ secrets.ZEROEX_API_KEY }}
-          SWAP_FEE_BPS: ${{ secrets.SWAP_FEE_BPS }}
-          SWAP_FEE_ACCOUNT_OWNER: ${{ secrets.SWAP_FEE_ACCOUNT_OWNER }}

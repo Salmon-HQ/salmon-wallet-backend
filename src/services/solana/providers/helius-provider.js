@@ -7,7 +7,7 @@
  *
  * After Triton migration, this provider stays alive as the fallback in the
  * resolver. It must keep the same canonical return shape as TritonProvider so
- * the resolver can swap between them transparently.
+ * the resolver can switch between them transparently.
  */
 
 const axios = require('axios');

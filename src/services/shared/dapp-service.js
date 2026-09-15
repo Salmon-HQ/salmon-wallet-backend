@@ -69,7 +69,7 @@ const extractOpenGraphTags = (html) => {
  * Fetches a validated URL, following up to `MAX_REDIRECTS` hops and
  * re-validating each target. Every hop connects to the address the guard
  * validated (axios `lookup` pin) while the Host header keeps the hostname,
- * so a rebinding DNS answer cannot swap in a private address between
+ * so a rebinding DNS answer cannot slip a private address in between
  * validation and connect.
  *
  * @param {string} rawUrl

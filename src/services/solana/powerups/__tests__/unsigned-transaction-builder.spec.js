@@ -25,14 +25,14 @@ const connection = {
 describe('unsigned-transaction-builder compileUnsigned', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS = '500';
+    process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS = '500';
     connection.getLatestBlockhash.mockResolvedValue({ blockhash: BLOCKHASH });
     connection.simulateTransaction.mockResolvedValue({
       value: { err: null, unitsConsumed: 1000, logs: [] },
     });
   });
 
-  afterAll(() => delete process.env.SWAP_PRIORITY_FEE_MICROLAMPORTS);
+  afterAll(() => delete process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS);
 
   it('drops the cleanup, logs [CLEANUP_SKIPPED] and re-simulates when the close is rejected', async () => {
     connection.simulateTransaction
