@@ -1,13 +1,6 @@
 'use strict';
 
-const {
-  SEND,
-  RECEIVE,
-  SWAP,
-  INTERACTION,
-  UNKNOWN,
-  MINT,
-} = require('../../constants/transaction-types');
+const { SEND, RECEIVE, INTERACTION, UNKNOWN, MINT } = require('../../constants/transaction-types');
 const {
   SOL_NAME,
   SOL_SYMBOL,
@@ -16,16 +9,11 @@ const {
   SOL_LOGO,
 } = require('../../constants/solana-constants');
 
-const {
-  AGGREGATOR_ROUTER_PROGRAM_IDS,
-  AGGREGATOR_LIMIT_PROGRAM_IDS,
-  BUBBLEGUM_PROGRAM_ID,
-} = require('../../constants/solana-program-ids');
+const { BUBBLEGUM_PROGRAM_ID } = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
 const imageOverrides = require('../../services/solana/nft-image-override-service');
 
 const PROGRAMS = {
-  AGGREGATOR: [...AGGREGATOR_ROUTER_PROGRAM_IDS, ...AGGREGATOR_LIMIT_PROGRAM_IDS],
   BUBBLEGUM: BUBBLEGUM_PROGRAM_ID,
 };
 
@@ -97,7 +85,7 @@ const buildResource = async (transactionInfo, context) => {
   };
 };
 
-/** Classifies the tx as `SWAP` | `MINT` | `RECEIVE` | `SEND` | `INTERACTION` | `UNKNOWN`. */
+/** Classifies the tx as `MINT` | `RECEIVE` | `SEND` | `INTERACTION` | `UNKNOWN`. */
 const getType = (address, meta, transaction, destination) => {
   const logMessages = meta?.logMessages || [];
   const instructions = transaction?.message?.instructions || [];
@@ -105,14 +93,6 @@ const getType = (address, meta, transaction, destination) => {
 
   // Helper: Check if log messages contain a specific program ID
   const containsProgramInLogs = (programId) => logMessages.some((msg) => msg.includes(programId));
-
-  // 1. Check for SWAP
-  if (
-    containsProgramInLogs('SetTokenLedger') ||
-    instructions.some(({ programId }) => PROGRAMS.AGGREGATOR.includes(programId?.toString()))
-  ) {
-    return SWAP;
-  }
 
   // 2. Check for MINT
   if (containsProgramInLogs(PROGRAMS.BUBBLEGUM)) {
@@ -217,40 +197,6 @@ const getTransferToken = async (fallbackAddress, mint, context) => {
   return tokens?.find((token) => token.address === mint || token.address === fallbackAddress);
 };
 
-/** Returns the input leg(s) of a SWAP — the token credited to one of the user's token accounts (or the last parsed instruction as fallback). */
-const getSwapInputs = async (meta, source, context) => {
-  const parsedInstructions = getParsedInstructionInfos(meta);
-  const { tokenAccounts } = context.locals;
-  const {
-    destination: tokenAddress,
-    mint,
-    amount,
-  } = parsedInstructions?.filter((info) => tokenAccounts?.includes(info?.destination))?.[0] ||
-  parsedInstructions?.at(-1) ||
-  {};
-
-  const { tokens } = context.locals;
-  const {
-    address: contract,
-    symbol,
-    name,
-    decimals,
-    logoURI,
-  } = tokens?.find((token) => token.address === tokenAddress || token.address === mint) || {};
-
-  return [
-    {
-      amount,
-      decimals,
-      symbol,
-      name,
-      logo: normalizeIpfsUrl(logoURI),
-      contract,
-      source,
-    },
-  ];
-};
-
 /** Returns the input leg(s) of a RECEIVE — NFT, SPL token (using `postTokenBalances`), or native SOL lamports. */
 const getReceiveInputs = async (address, meta, transaction, source, destination, nft, context) => {
   if (nft) {
@@ -275,51 +221,13 @@ const getReceiveInputs = async (address, meta, transaction, source, destination,
   return lamports ? [buildNativeTransfer(lamports, 'source', source)] : [];
 };
 
-/** Dispatches to `getSwapInputs` / `getReceiveInputs` based on `type`, or returns `[]` for SEND/INTERACTION/UNKNOWN/MINT. */
+/** Dispatches to `getReceiveInputs` based on `type`, or returns `[]` for SEND/INTERACTION/UNKNOWN/MINT. */
 const getInputs = async (address, type, meta, transaction, source, destination, nft, context) => {
-  if (type === SWAP) {
-    return getSwapInputs(meta, source, context);
-  }
-
   if (type === RECEIVE) {
     return getReceiveInputs(address, meta, transaction, source, destination, nft, context);
   }
 
   return [];
-};
-
-/** Returns the output leg(s) of a SWAP — the token authority-debited from `address`, taken from one of the last two inner-instruction groups. */
-const getSwapOutputs = async (address, meta, destination, context) => {
-  const {
-    destination: tokenAddress,
-    mint,
-    amount,
-  } = meta.innerInstructions
-    ?.at(-2)
-    ?.instructions?.find(({ parsed }) => parsed?.info?.authority === address)?.parsed?.info ||
-  meta.innerInstructions
-    ?.at(-1)
-    ?.instructions?.find(({ parsed }) => parsed?.info?.authority === address)?.parsed?.info ||
-  {};
-
-  const { tokens } = context.locals;
-  const {
-    address: contract,
-    symbol,
-    decimals,
-    logoURI,
-  } = tokens?.find((token) => token.address === tokenAddress || token.address === mint) || {};
-
-  return [
-    {
-      amount,
-      decimals,
-      symbol,
-      logo: normalizeIpfsUrl(logoURI),
-      contract,
-      destination,
-    },
-  ];
 };
 
 /** Returns the output leg(s) of a SEND — NFT, SPL token (using `preTokenBalances`), or native SOL lamports. */
@@ -346,12 +254,8 @@ const getSendOutputs = async (address, meta, transaction, destination, nft, cont
   return lamports ? [buildNativeTransfer(lamports, 'destination', destination)] : [];
 };
 
-/** Dispatches to `getSwapOutputs` / `getSendOutputs` based on `type`, or returns `[]` for RECEIVE/INTERACTION/UNKNOWN/MINT. */
+/** Dispatches to `getSendOutputs` based on `type`, or returns `[]` for RECEIVE/INTERACTION/UNKNOWN/MINT. */
 const getOutputs = async (address, type, meta, transaction, source, destination, nft, context) => {
-  if (type === SWAP) {
-    return getSwapOutputs(address, meta, destination, context);
-  }
-
   if (type === SEND) {
     return getSendOutputs(address, meta, transaction, destination, nft, context);
   }

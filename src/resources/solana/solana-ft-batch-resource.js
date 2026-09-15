@@ -6,8 +6,8 @@ const { normalizeIpfsUrl } = require('./content-urls');
  * Resource decorator for the canonical Solana fungible-token shape used
  * by `/ft/verified` and `/ft/search`.
  *
- * Accepts the canonical catalog shape (`id`, `icon`, `coingeckoId`,
- * `swappable`) and the SPL Token Registry shape used for devnet/testnet
+ * Accepts the canonical catalog shape (`id`, `icon`, `coingeckoId`) and
+ * the SPL Token Registry shape used for devnet/testnet
  * (`address`, `logoURI`, `extensions.coingeckoId`).
  *
  * The `logo` field is run through `normalizeIpfsUrl` so flaky IPFS
@@ -26,7 +26,6 @@ const { normalizeIpfsUrl } = require('./content-urls');
  * @returns {string|null} resource.logo
  * @returns {Array<string>} resource.tags
  * @returns {string|null} resource.coingeckoId
- * @returns {boolean} resource.swappable - false for Token-2022 mints the swap router cannot trade
  */
 module.exports = async (token) => {
   const address = token.id || token.address;
@@ -43,6 +42,5 @@ module.exports = async (token) => {
     logo,
     tags: token.tags || [],
     coingeckoId,
-    swappable: token.swappable !== false,
   };
 };

@@ -26,7 +26,6 @@
 const {
   SEND,
   RECEIVE,
-  SWAP,
   MINT,
   BURN,
   STAKE,
@@ -42,10 +41,6 @@ const {
   SOL_NAME,
   SOL_LOGO,
 } = require('../../constants/solana-constants');
-const {
-  AGGREGATOR_ROUTER_PROGRAM_IDS,
-  AGGREGATOR_LIMIT_PROGRAM_IDS,
-} = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
 const imageOverrides = require('../../services/solana/nft-image-override-service');
 
@@ -95,22 +90,6 @@ const PUBLIC_SOURCE_ALIASES = {
   ASSOCIATED_TOKEN_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
 };
 const publicSource = (source) => PUBLIC_SOURCE_ALIASES[source] || source;
-
-const AGGREGATOR_ALL_IDS = new Set([
-  ...AGGREGATOR_ROUTER_PROGRAM_IDS,
-  ...AGGREGATOR_LIMIT_PROGRAM_IDS,
-]);
-
-/**
- * True if the transaction touches any aggregator program (aggregator router or
- * Limit Order v2). The aggregator executes from its own escrow accounts, so
- * the user never appears in `tokenTransfers` — programId detection is the
- * only reliable signal.
- */
-const hasAggregatorProgram = (transaction) => {
-  const instructions = transaction.instructions || [];
-  return instructions.some((ix) => AGGREGATOR_ALL_IDS.has(ix.programId));
-};
 
 /**
  * Truncate a mint address for UI display.
@@ -185,30 +164,6 @@ const toRawAmount = (tokenAmount, decimals) => {
   return String(Math.round(amount * Math.pow(10, decimals || 0)));
 };
 
-/**
- * Group items (inputs/outputs) by contract/mint and sum their amounts.
- * Used to consolidate multiple transfers of the same token in a single tx.
- * @param {Array} items
- * @returns {Array}
- */
-const groupByToken = (items) => {
-  const grouped = new Map();
-
-  items.forEach((item) => {
-    const key = item.contract;
-    if (grouped.has(key)) {
-      const existing = grouped.get(key);
-      // Sumar amounts (ambos son strings de raw amounts)
-      const totalAmount = BigInt(existing.amount) + BigInt(item.amount);
-      existing.amount = totalAmount.toString();
-    } else {
-      grouped.set(key, { ...item });
-    }
-  });
-
-  return Array.from(grouped.values());
-};
-
 const buildTokenItem = (transfer, tokens, directionField, directionValue) => {
   const cachedToken = findTokenInCache(transfer.mint, tokens);
   const decimals = transfer.decimals ?? cachedToken?.decimals ?? 0;
@@ -258,7 +213,6 @@ const getDirectionalTransfers = (transfers, address) => ({
  */
 const HELIUS_TYPE_MAPPING = {
   TRANSFER: 'TRANSFER',
-  SWAP: SWAP,
 
   TOKEN_MINT: MINT,
   MINT_NFT: MINT,
@@ -310,32 +264,6 @@ const HELIUS_TYPE_MAPPING = {
 };
 
 /**
- * Single-pass collection of incoming/outgoing mint sets for the user.
- * SOL natives normalize to `SOL_ADDRESS` so SPL ↔ SOL swaps register as
- * "different tokens" too.
- */
-const collectMintSets = (address, nativeTransfers, tokenTransfers) => {
-  const outgoing = new Set();
-  const incoming = new Set();
-  for (const t of tokenTransfers) {
-    if (t.fromUserAccount === address) outgoing.add(t.mint);
-    if (t.toUserAccount === address) incoming.add(t.mint);
-  }
-  for (const t of nativeTransfers) {
-    if (t.fromUserAccount === address) outgoing.add(SOL_ADDRESS);
-    if (t.toUserAccount === address) incoming.add(SOL_ADDRESS);
-  }
-  return { outgoing, incoming };
-};
-
-const hasMintAsymmetry = (outgoing, incoming) => {
-  if (outgoing.size === 0 || incoming.size === 0) return false;
-  for (const m of outgoing) if (!incoming.has(m)) return true;
-  for (const m of incoming) if (!outgoing.has(m)) return true;
-  return false;
-};
-
-/**
  * Pure-direction inference for TRANSFER and unknown-type transactions:
  * `RECEIVE` / `SEND` / `INTERACTION` / undefined (no transfers seen).
  */
@@ -347,36 +275,10 @@ const inferDirectionalType = (isSender, isReceiver) => {
 };
 
 /**
- * Heuristic: when both sides of a TRANSFER touch the user but with different
- * mints (e.g. swap-by-different-mints from a other aggregator), classify
- * as SWAP. Returns SWAP or undefined.
- */
-const inferSwapByMintMix = (address, nativeTransfers, tokenTransfers) => {
-  const { outgoing, incoming } = collectMintSets(address, nativeTransfers, tokenTransfers);
-  return hasMintAsymmetry(outgoing, incoming) ? SWAP : undefined;
-};
-
-/**
  * Determine the system transaction type from the provider's type string.
- * @returns {string} SEND, RECEIVE, SWAP, MINT, INTERACTION, UNKNOWN, ...
+ * @returns {string} SEND, RECEIVE, MINT, INTERACTION, UNKNOWN, ...
  */
-/**
- * Provider labels that carry no meaning of their own: a plain transfer, an
- * explicit unknown, or a label we never mapped (INITIALIZE_ACCOUNT for a
- * router the provider does not know). The transfers decide those; a typed
- * label (NFT_SALE, STAKE, …) is kept.
- */
-const isGenericLabel = (heliusType) =>
-  !heliusType ||
-  heliusType === 'TRANSFER' ||
-  heliusType === 'UNKNOWN' ||
-  !(heliusType in HELIUS_TYPE_MAPPING);
-
 const mapTransactionType = (heliusType, address, transaction) => {
-  // The aggregator executes from its own escrow accounts — the user never
-  // appears in transfers, so programId detection is the only reliable signal.
-  if (hasAggregatorProgram(transaction)) return SWAP;
-
   const mappedType = HELIUS_TYPE_MAPPING[heliusType] || INTERACTION;
   const { nativeTransfers, tokenTransfers } = getTransfers(transaction);
 
@@ -386,14 +288,6 @@ const mapTransactionType = (heliusType, address, transaction) => {
   const isSender = [...nativeTransfers, ...tokenTransfers].some(
     (t) => t.fromUserAccount === address
   );
-
-  // A router the provider does not know is labelled by the first instruction
-  // it understands (INITIALIZE_ACCOUNT for the account a multi-hop route
-  // creates); the user sending one mint and receiving another is the swap.
-  if (isSender && isReceiver && isGenericLabel(heliusType)) {
-    const swapByMix = inferSwapByMintMix(address, nativeTransfers, tokenTransfers);
-    if (swapByMix) return swapByMix;
-  }
 
   if (mappedType === 'TRANSFER') {
     const directional = inferDirectionalType(isSender, isReceiver);
@@ -433,20 +327,6 @@ const getFee = (address, transaction) => {
   return undefined;
 };
 
-/**
- * What the wallet gained (+) or paid (−) in SOL over the whole transaction,
- * excluding the network fee it paid as fee payer. Both providers report the
- * per-account lamport delta (`accountData`); it is the only SOL figure that
- * survives wrapped-SOL hops, rent locks and `closeAccount` refunds. Null when
- * the transaction carries no account data.
- */
-const nativeSwapLeg = (transaction, address) => {
-  const entry = (transaction.accountData || []).find((a) => a.account === address);
-  if (!entry || typeof entry.nativeBalanceChange !== 'number') return null;
-  const feePaid = transaction.feePayer === address ? Number(transaction.fee || 0) : 0;
-  return entry.nativeBalanceChange + feePaid;
-};
-
 const DIRECTIONS = {
   in: {
     tokensField: 'incomingTokens',
@@ -476,38 +356,6 @@ const getDirectional = (direction, type, address, transaction, tokens) => {
   const transfers = getTransfers(transaction);
   const directional = getDirectionalTransfers(transfers, address);
 
-  if (type === SWAP && hasAggregatorProgram(transaction)) {
-    // A router moves SOL through wrapped-SOL accounts it opens and closes;
-    // the transfers show hops, not what the wallet ended up with. The SOL
-    // leg is the wallet's own balance delta; token legs come from transfers.
-    // Routes settle from escrow, so when the user has no token leg on this
-    // side the fee payer's transfers stand in.
-    const solLeg = nativeSwapLeg(transaction, address);
-    let directionalTokens = directional[dir.tokensField];
-    if (directionalTokens.length === 0 && transaction.feePayer) {
-      directionalTokens = transfers.tokenTransfers.filter((t) =>
-        dir.feePayerMatch(t, transaction.feePayer)
-      );
-    }
-    directionalTokens
-      .filter((t) => solLeg === null || t.mint !== SOL_ADDRESS)
-      .forEach((t) => {
-        items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
-      });
-    const signedLeg = direction === 'in' ? solLeg : solLeg === null ? null : -solLeg;
-    if (signedLeg !== null && signedLeg > 0) {
-      items.push(buildNativeItem({ amount: signedLeg }, dir.item, null));
-    }
-  } else if (type === SWAP) {
-    // Wallet-to-wallet swap inferred from the mint mix: SOL moves natively.
-    directional[dir.tokensField].forEach((t) => {
-      items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
-    });
-    directional[dir.nativeField].forEach((t) => {
-      items.push(buildNativeItem(t, dir.item, dir.counterparty(t)));
-    });
-  }
-
   if (type === dir.transferType) {
     directional[dir.tokensField].forEach((t) => {
       items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
@@ -517,35 +365,7 @@ const getDirectional = (direction, type, address, transaction, tokens) => {
     });
   }
 
-  return type === SWAP ? groupByToken(items) : items;
-};
-
-/**
- * A multi-hop route passes an intermediate token through the user's own
- * account (USDC → USD1 → SOL: USD1 arrives and leaves within the swap). Net
- * each mint across both sides so the legs show what the user gave and got;
- * a mint that nets to zero disappears.
- */
-const netSwapLegs = (inputs, outputs) => {
-  const byMint = (items) => new Map(items.map((item) => [item.contract, item]));
-  const inByMint = byMint(inputs);
-  const outByMint = byMint(outputs);
-  // A mint seen on both sides passed through the wallet; whatever remains of
-  // it is a residual, listed after the tokens the user actually chose so a
-  // reader of [0] gets the pair.
-  const net = (items, other) => {
-    const own = [];
-    const residual = [];
-    items.forEach((item) => {
-      const counterpart = other.get(item.contract);
-      if (!counterpart) return own.push(item);
-      const difference = BigInt(item.amount) - BigInt(counterpart.amount);
-      if (difference > 0n) residual.push({ ...item, amount: String(difference) });
-      return undefined;
-    });
-    return [...own, ...residual];
-  };
-  return { inputs: net(inputs, outByMint), outputs: net(outputs, inByMint) };
+  return items;
 };
 
 const getInputs = (type, address, transaction, tokens) =>
@@ -571,105 +391,6 @@ const enrichWithNftMetadata = (items, nftMetadata) => {
       if (image) item.logo = normalizeIpfsUrl(image);
     }
   });
-};
-
-const RATE_PRECISION_DIGITS = 6;
-const RATE_PRECISION_SCALE = 10n ** BigInt(RATE_PRECISION_DIGITS);
-
-/**
- * Decimal-aware ratio with `RATE_PRECISION_DIGITS` digits, computed in
- * BigInt to survive token amounts that exceed `Number.MAX_SAFE_INTEGER`
- * (e.g. BONK at 18 decimals where 1 BONK = 10^18 raw).
- *
- *   rate = (recv / 10^recvDec) / (sent / 10^sentDec)
- *        = (recv * 10^sentDec) / (sent * 10^recvDec)
- *
- * Returns a string with the precision baked in, or `undefined` when sent=0
- * or any input is non-numeric.
- */
-const computeConversionRate = (sentRaw, sentDec, recvRaw, recvDec) => {
-  let sentBig;
-  let recvBig;
-  try {
-    sentBig = BigInt(sentRaw);
-    recvBig = BigInt(recvRaw);
-  } catch {
-    return undefined;
-  }
-  if (sentBig <= 0n) return undefined;
-
-  const sentScale = 10n ** BigInt(sentDec || 0);
-  const recvScale = 10n ** BigInt(recvDec || 0);
-
-  const numerator = recvBig * sentScale * RATE_PRECISION_SCALE;
-  const denominator = sentBig * recvScale;
-  const scaled = numerator / denominator;
-
-  const intPart = scaled / RATE_PRECISION_SCALE;
-  const fracPart = (scaled % RATE_PRECISION_SCALE).toString().padStart(RATE_PRECISION_DIGITS, '0');
-  return `${intPart}.${fracPart}`;
-};
-
-/**
- * Build a single-hop swapRoute from the user-pivoted inputs/outputs.
- *
- * Semantics:
- *   - `outputs` are tokens the user SENT (the swap's "input from user")
- *   - `inputs` are tokens the user RECEIVED (the swap's "output to user")
- *
- * The FE `SwapRouteHop` flips the naming: hop.inputToken = what enters the
- * hop (= user sent) and hop.outputToken = what leaves the hop (= user
- * received). We honor the FE contract.
- *
- * Multi-hop detail (`innerSwaps`) is left null for now — that requires
- * walking inner instructions per-program. The single-hop view is enough to
- * unlock the SwapRoute / conversion-rate UI in the FE today.
- */
-const buildSwapRoute = (inputs, outputs, source) => {
-  if (!inputs || !outputs) return null;
-  const sentToken = outputs[0];
-  const receivedToken = inputs[0];
-  if (!sentToken || !receivedToken) return null;
-
-  const sentAmount = sentToken.amount || '0';
-  const receivedAmount = receivedToken.amount || '0';
-
-  const hop = {
-    dex: source || 'UNKNOWN',
-    percent: 100,
-    inputToken: {
-      symbol: sentToken.symbol,
-      amount: sentAmount,
-      decimals: sentToken.decimals,
-      logo: sentToken.logo || null,
-    },
-    outputToken: {
-      symbol: receivedToken.symbol,
-      amount: receivedAmount,
-      decimals: receivedToken.decimals,
-      logo: receivedToken.logo || null,
-    },
-  };
-
-  const rate = computeConversionRate(
-    sentAmount,
-    sentToken.decimals,
-    receivedAmount,
-    receivedToken.decimals
-  );
-
-  return {
-    hops: [hop],
-    inputAmount: sentAmount,
-    outputAmount: receivedAmount,
-    conversionRate: rate
-      ? {
-          fromSymbol: sentToken.symbol,
-          toSymbol: receivedToken.symbol,
-          rate,
-        }
-      : undefined,
-  };
 };
 
 const collectNftMints = (transaction) => {
@@ -738,17 +459,10 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
     mappedType === UNKNOWN && memo !== null && nativeTransfers.length + tokenTransfers.length === 0
       ? MEMO
       : mappedType;
-  // The enrichment provider labels aggregator swaps with the program's own
-  // brand; the public `source` enum (`solana-source-catalog`) names the
-  // program by its role instead, so program-id detection decides the label.
-  const source = hasAggregatorProgram(heliusTransaction)
-    ? 'AGGREGATOR'
-    : publicSource(heliusTransaction.source);
+  const source = publicSource(heliusTransaction.source);
 
-  const rawInputs = getInputs(type, address, heliusTransaction, tokenLookup);
-  const rawOutputs = getOutputs(type, address, heliusTransaction, tokenLookup);
-  const { inputs, outputs } =
-    type === SWAP ? netSwapLegs(rawInputs, rawOutputs) : { inputs: rawInputs, outputs: rawOutputs };
+  const inputs = getInputs(type, address, heliusTransaction, tokenLookup);
+  const outputs = getOutputs(type, address, heliusTransaction, tokenLookup);
 
   const nftMints = collectNftMints(heliusTransaction);
   markNftTransfers([...inputs, ...outputs], nftMints);
@@ -757,11 +471,6 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
     enrichWithNftMetadata(inputs, options.nftMetadataByMint);
     enrichWithNftMetadata(outputs, options.nftMetadataByMint);
   }
-
-  // Populate swapRoute when this is a swap so the FE's SwapRoute /
-  // ConversionRate UI lights up. Works for both Helius- and Triton-parsed
-  // transactions because both paths feed the same canonical inputs/outputs.
-  const swapRoute = type === SWAP ? buildSwapRoute(inputs, outputs, source) : undefined;
 
   return {
     id: heliusTransaction.signature,
@@ -781,7 +490,6 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
     events: heliusTransaction.events,
     // Original provider type — FE uses tx.heliusType.startsWith('NFT_')
     heliusType: heliusTransaction.type,
-    swapRoute,
 
     // Parser-derived fields. Helius enriched txs already carry these; the
     // Triton parser pipeline computes them too. Forwarding the full set
@@ -807,16 +515,10 @@ module.exports.buildTokenLookup = buildTokenLookup;
  * Not part of the public resource API — do not consume from application code.
  */
 module.exports.__testing = {
-  buildSwapRoute,
   extractMemo,
-  netSwapLegs,
   toRawAmount,
-  computeConversionRate,
   mapTransactionType,
   inferDirectionalType,
-  inferSwapByMintMix,
-  collectMintSets,
-  hasMintAsymmetry,
   collectNftMints,
   markNftTransfers,
   enrichWithNftMetadata,

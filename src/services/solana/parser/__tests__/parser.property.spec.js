@@ -16,7 +16,6 @@ const { parseTransaction } = require('..');
 // fallbacks in deriveType). A new type must be added here on purpose: the
 // resource layer maps each of these to a public shape.
 const KNOWN_TYPES = new Set([
-  'SWAP',
   'COMPRESSED_NFT_MINT',
   'COMPRESSED_NFT_BURN',
   'COMPRESSED_NFT_TRANSFER',

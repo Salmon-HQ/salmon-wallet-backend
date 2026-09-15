@@ -5,14 +5,9 @@
  * RPC endpoint (`getAssetBatch` with `showFungible`).
  *
  * Answers the canonical token shape used everywhere downstream
- * (`id`, `symbol`, `name`, `decimals`, `icon`, `tokenProgram`, `swappable`)
+ * (`id`, `symbol`, `name`, `decimals`, `icon`, `tokenProgram`)
  * for ANY mint, listed or not. Verified tags and `coingeckoId` are the
  * catalog's business (`token-catalog-service`), merged by `solana-ft-service`.
- *
- * `swappable` encodes the routing provider's documented Token-2022 rule:
- * not routable when the transfer fee is > 0, a transfer hook program is set,
- * or the mint is non-transferable. Probed 2026-09-11: PYUSD (hook program
- * null, fee 0) is routable; BERN (269 bps fee) is not.
  */
 
 const axios = require('axios');
@@ -44,26 +39,8 @@ const NATIVE_SOL = {
   decimals: SOL_DECIMALS,
   icon: SOL_LOGO,
   tokenProgram: 'spl-token',
-  swappable: true,
 };
 
-/** 0x's Token-2022 routing rule, from the DAS `mint_extensions` block. */
-const isSwappable = (extensions) => {
-  if (!extensions) {
-    return true;
-  }
-  const feeConfig = extensions.transfer_fee_config;
-  const fee = feeConfig?.newer_transfer_fee ?? feeConfig?.older_transfer_fee ?? null;
-  if (fee && Number(fee.transfer_fee_basis_points) > 0) {
-    return false;
-  }
-  if (extensions.transfer_hook?.program_id) {
-    return false;
-  }
-  return !extensions.non_transferable;
-};
-
-/** DAS asset → canonical token; null when the asset is not a fungible mint we can describe. */
 const toToken = (asset) => {
   if (!asset || !asset.id) {
     return null;
@@ -80,7 +57,6 @@ const toToken = (asset) => {
     decimals: tokenInfo.decimals,
     icon: asset.content?.links?.image || null,
     tokenProgram: tokenInfo.token_program === TOKEN_2022_PROGRAM ? 'token-2022' : 'spl-token',
-    swappable: isSwappable(asset.mint_extensions),
   };
 };
 
@@ -156,4 +132,4 @@ const getByMints = async (mints, locals = {}) => {
   return result;
 };
 
-module.exports = { getByMints, isSwappable, toToken, NATIVE_SOL, MAX_IDS_PER_BATCH };
+module.exports = { getByMints, toToken, NATIVE_SOL, MAX_IDS_PER_BATCH };

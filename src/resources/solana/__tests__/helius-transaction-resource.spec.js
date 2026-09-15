@@ -9,7 +9,6 @@ const transformTransaction = require('../helius-transaction-resource');
 const {
   SEND,
   RECEIVE,
-  SWAP,
   MINT,
   BURN,
   STAKE,
@@ -25,33 +24,6 @@ describe('Helius Transaction Resource - Unit Tests', () => {
   });
 
   describe('Type Mapping', () => {
-    test('should map SWAP type correctly', async () => {
-      const heliusTx = {
-        signature: 'test-sig',
-        type: 'SWAP',
-        timestamp: 1234567890,
-        fee: 5000,
-        feePayer: mockAddress,
-        tokenTransfers: [
-          {
-            fromUserAccount: mockAddress,
-            toUserAccount: 'other-address',
-            tokenAmount: '1000000',
-            mint: 'So11111111111111111111111111111111111111112',
-            decimals: 9,
-            symbol: 'SOL',
-          },
-        ],
-        nativeTransfers: [],
-      };
-
-      const result = await transformTransaction(heliusTx, mockAddress);
-
-      expect(result.type).toBe(SWAP);
-      expect(result.id).toBe('test-sig');
-      expect(result.status).toBe('completed');
-    });
-
     test('should map TRANSFER to SEND when user is sender', async () => {
       const heliusTx = {
         signature: 'test-sig',
@@ -348,55 +320,6 @@ describe('Helius Transaction Resource - Unit Tests', () => {
     });
   });
 
-  describe('Inputs/Outputs for SWAP', () => {
-    test('should extract inputs and outputs for SWAP correctly', async () => {
-      const heliusTx = {
-        signature: 'test-sig',
-        type: 'SWAP',
-        timestamp: 1234567890,
-        fee: 5000,
-        feePayer: mockAddress,
-        tokenTransfers: [
-          // Output (user sends USDC)
-          {
-            fromUserAccount: mockAddress,
-            toUserAccount: 'pool-address',
-            tokenAmount: '1000000',
-            mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-            decimals: 6,
-            symbol: 'USDC',
-            name: 'USD Coin',
-          },
-          // Input (user receives SOL)
-          {
-            fromUserAccount: 'pool-address',
-            toUserAccount: mockAddress,
-            tokenAmount: '500000000',
-            mint: 'So11111111111111111111111111111111111111112',
-            decimals: 9,
-            symbol: 'SOL',
-            name: 'Solana',
-          },
-        ],
-        nativeTransfers: [],
-      };
-
-      const result = await transformTransaction(heliusTx, mockAddress);
-
-      expect(result.type).toBe(SWAP);
-
-      // Inputs: tokens the user received (resource convention)
-      expect(result.inputs.length).toBe(1);
-      expect(result.inputs[0].symbol).toBe('SOL');
-      expect(result.inputs[0].amount).toBe('500000000');
-
-      // Outputs: tokens the user sent (resource convention)
-      expect(result.outputs.length).toBe(1);
-      expect(result.outputs[0].symbol).toBe('USDC');
-      expect(result.outputs[0].amount).toBe('1000000');
-    });
-  });
-
   describe('Inputs/Outputs for SEND', () => {
     test('should extract outputs for SEND correctly', async () => {
       const heliusTx = {
@@ -457,27 +380,5 @@ describe('Helius Transaction Resource - Unit Tests', () => {
     });
   });
 
-  describe('Enriched Fields', () => {
-    test('should include Helius enriched fields', async () => {
-      const heliusTx = {
-        signature: 'test-sig',
-        type: 'SWAP',
-        timestamp: 1234567890,
-        fee: 5000,
-        feePayer: mockAddress,
-        description: 'Swapped 1 USDC for 0.5 SOL on aggregator',
-        source: 'AGGREGATOR',
-        events: [{ type: 'SWAP', data: {} }],
-        tokenTransfers: [],
-        nativeTransfers: [],
-      };
-
-      const result = await transformTransaction(heliusTx, mockAddress);
-
-      expect(result.description).toBe('Swapped 1 USDC for 0.5 SOL on aggregator');
-      expect(result.source).toBe('AGGREGATOR');
-      expect(result.events).toBeDefined();
-      expect(result.heliusType).toBe('SWAP');
-    });
-  });
+  describe('Enriched Fields', () => {});
 });

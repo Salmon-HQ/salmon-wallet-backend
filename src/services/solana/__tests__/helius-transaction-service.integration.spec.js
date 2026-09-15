@@ -50,9 +50,9 @@ describe('Helius Enhanced Transactions API - Integration Tests', () => {
   });
 
   describe('getEnhancedTransactions() - Single transaction', () => {
-    test('should fetch and parse an aggregator swap transaction', async () => {
+    test('should fetch and parse an aggregator transaction', async () => {
       if (!heliusAvailable) return;
-      // Signature of a real aggregator swap on mainnet
+      // Signature of a real aggregator route on mainnet
       const signature =
         '42GYdSrtwmU6rHmGuC8KcWANa7w15ieZpZnjY39EQVR9oiDnbptFaTw7PLtfBeHPH27L9AzTVqpY51YsMVgYcDRY';
 
@@ -61,16 +61,10 @@ describe('Helius Enhanced Transactions API - Integration Tests', () => {
       // Verificar estructura de respuesta de Helius
       expect(result).not.toBeNull();
       expect(result.signature).toBe(signature);
-      expect(result.type).toBeDefined(); // SWAP, TRANSFER, etc.
+      expect(result.type).toBeDefined(); // TRANSFER, NFT_SALE, etc.
       expect(result.timestamp).toBeDefined();
       expect(result.fee).toBeDefined();
       expect(result.feePayer).toBeDefined();
-
-      // Si es un swap, debe tener transfers de tokens
-      if (result.type === 'SWAP') {
-        expect(result.tokenTransfers).toBeDefined();
-        expect(Array.isArray(result.tokenTransfers)).toBe(true);
-      }
 
       console.log('Helius Enhanced Transaction:', {
         type: result.type,
@@ -182,7 +176,7 @@ describe('Helius Enhanced Transactions API - Integration Tests', () => {
 
       const result = await heliusService.getEnhancedTransactionHistory(
         address,
-        { limit: 5, type: 'SWAP' },
+        { limit: 5, type: 'TRANSFER' },
         'mainnet'
       );
 
@@ -190,7 +184,7 @@ describe('Helius Enhanced Transactions API - Integration Tests', () => {
 
       // If results are present, all must match the requested type
       result.data.forEach((tx) => {
-        expect(tx.type).toBe('SWAP');
+        expect(tx.type).toBe('TRANSFER');
       });
     });
   });

@@ -21,7 +21,7 @@
  *                │
  *   walk inner instructions ─► same registry
  *                │
- *   post-process pass (aggregator swapRoute, type derivation, source pick)
+ *   post-process pass (type derivation, source pick)
  *                │
  *                ▼
  *   enriched tx ─► returned to TritonProvider
@@ -41,11 +41,9 @@ const systemParser = require('./parsers/system');
 const splTokenParser = require('./parsers/spl-token');
 const metaplexParser = require('./parsers/metaplex');
 const bubblegumParser = require('./parsers/bubblegum');
-const aggregatorParser = require('./parsers/aggregator');
 const stakeParser = require('./parsers/stake');
 const stakingParser = require('./parsers/staking');
 const lendingParser = require('./parsers/lending');
-const dexParser = require('./parsers/dex');
 const memoParser = require('./parsers/memo');
 
 const PARSERS = [
@@ -53,11 +51,9 @@ const PARSERS = [
   splTokenParser,
   metaplexParser,
   bubblegumParser,
-  aggregatorParser,
   stakeParser,
   stakingParser,
   lendingParser,
-  dexParser,
   memoParser,
 ];
 
@@ -183,14 +179,12 @@ const collectInstructionMetadata = (rawTx) => {
 };
 
 /**
- * Hint → tx-type precedence (first match wins). Aggregator/DEX swaps share
- * a single SWAP bucket on the FE. Liquid staking buckets as STAKE_TOKEN
+ * Hint → tx-type precedence (first match wins). Liquid staking buckets as STAKE_TOKEN
  * (deposit/withdraw direction comes from inputs/outputs, not the type).
  *
  * Ordering is the contract — earlier rows take priority over later rows.
  */
 const TYPE_PRECEDENCE = [
-  { hint: (h) => h.hasAggregator || h.hasDexSwap, type: 'SWAP' },
   { hint: (h) => h.hasCnftMint, type: 'COMPRESSED_NFT_MINT' },
   { hint: (h) => h.hasCnftBurn, type: 'COMPRESSED_NFT_BURN' },
   { hint: (h) => h.hasCnftTransfer, type: 'COMPRESSED_NFT_TRANSFER' },
@@ -317,15 +311,10 @@ const parseTransaction = (rawTx, options = {}) => {
       tokenTransfers: [],
       memo: null,
       instructions: [],
-      // `events`, `swapRoute`, `innerSwaps`, `swapFees` are part of the FE
-      // contract but the parser does not populate them: the resource layer
-      // (helius-transaction-resource.buildSwapRoute) fills `swapRoute` from
-      // inputs/outputs, and the rest are Helius-only fields the FE treats as
-      // optional. We forward them as-is from the raw tx if present.
+      // `events` is part of the FE contract but the parser does not populate
+      // it: a Helius-only field the FE treats as optional, forwarded as-is
+      // from the raw tx if present.
       events: {},
-      swapRoute: null,
-      innerSwaps: [],
-      swapFees: null,
       _hints: {},
       _sources: [],
     },
@@ -349,7 +338,7 @@ const parseTransaction = (rawTx, options = {}) => {
   ctx.building.instructions = collectInstructionMetadata(rawTx);
   ctx.building.accountData = collectAccountData(rawTx);
 
-  // 4. Post-process passes (aggregator swapRoute, etc.)
+  // 4. Post-process passes
   for (const parser of POST_PROCESSORS) {
     try {
       parser.postProcess(ctx);

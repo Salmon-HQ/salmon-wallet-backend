@@ -3,11 +3,10 @@
 /**
  * Unit tests for the small numeric helpers in helius-transaction-resource:
  *   - `toRawAmount` (type-based dispatch between Helius numeric / Triton string)
- *   - `computeConversionRate` (BigInt-safe rate computation)
  */
 
 const { __testing } = require('../helius-transaction-resource');
-const { toRawAmount, computeConversionRate } = __testing;
+const { toRawAmount } = __testing;
 
 describe('toRawAmount', () => {
   it('returns "0" for null / undefined', () => {
@@ -41,34 +40,6 @@ describe('toRawAmount', () => {
 
   it('still treats string "1" as raw — Triton path always emits raw atomic units', () => {
     expect(toRawAmount('1', 6)).toBe('1');
-  });
-});
-
-describe('computeConversionRate', () => {
-  it('produces 6-digit fixed precision string', () => {
-    // 1 SOL -> 120 USDC: rate = 120.000000
-    expect(computeConversionRate('1000000000', 9, '120000000', 6)).toBe('120.000000');
-  });
-
-  it('returns undefined for sentRaw=0', () => {
-    expect(computeConversionRate('0', 9, '120000000', 6)).toBeUndefined();
-  });
-
-  it('returns undefined for invalid (non-numeric) inputs', () => {
-    expect(computeConversionRate('abc', 9, '120', 6)).toBeUndefined();
-    expect(computeConversionRate(undefined, 9, '120', 6)).toBeUndefined();
-  });
-
-  it('survives BigInt-scale amounts (BONK, decimals=18)', () => {
-    expect(computeConversionRate('1000000000000000000000000000', 18, '20000000000', 6)).toBe(
-      '0.000020'
-    );
-  });
-
-  it('rate is invariant to absolute magnitude when ratio is constant', () => {
-    const small = computeConversionRate('1000000000', 9, '120000000', 6);
-    const big = computeConversionRate('1000000000000000', 9, '120000000000000', 6);
-    expect(small).toBe(big);
   });
 });
 

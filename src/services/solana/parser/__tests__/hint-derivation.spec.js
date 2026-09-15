@@ -92,25 +92,6 @@ describe('Native Stake program → STAKE_TOKEN / UNSTAKE_TOKEN', () => {
   });
 });
 
-describe('Direct DEX → SWAP', () => {
-  test.each([
-    ['RAYDIUM', SOURCES.RAYDIUM[0]],
-    ['ORCA', SOURCES.ORCA[0]],
-    ['METEORA', SOURCES.METEORA[0]],
-    ['PHOENIX', SOURCES.PHOENIX[0]],
-    ['PUMP_AMM', SOURCES.PUMP_AMM[0]],
-    ['PHOTON', SOURCES.PHOTON[0]],
-    ['MOONSHOT', SOURCES.MOONSHOT[0]],
-    ['METEORA_DBC', SOURCES.METEORA_DBC[0]],
-    ['MAYAN_FINANCE', SOURCES.MAYAN_FINANCE[0]],
-    ['LAUNCHLAB', SOURCES.LAUNCHLAB[0]],
-  ])('%s program emits SWAP', (sourceName, programId) => {
-    const tx = parseTransaction(buildTx({ programId }));
-    expect(tx.type).toBe('SWAP');
-    expect(tx.source).toBe(sourceName);
-  });
-});
-
 describe('Sanctum Infinity → STAKE_TOKEN (LST router)', () => {
   test('Sanctum Infinity program emits STAKE_TOKEN', () => {
     const tx = parseTransaction(buildTx({ programId: SOURCES.SANCTUM_INFINITY[0] }));
@@ -129,13 +110,7 @@ describe('aggregator primary source priority', () => {
       { programId: SOURCES.AGGREGATOR[0], parsed: null },
     ];
     const result = parseTransaction(tx);
-    expect(result.type).toBe('SWAP');
     expect(result.source).toBe('AGGREGATOR');
-  });
-
-  test('aggregator limit orders also produce SWAP type', () => {
-    const tx = parseTransaction(buildTx({ programId: SOURCES.AGGREGATOR_LIMIT[0] }));
-    expect(tx.type).toBe('SWAP');
   });
 });
 

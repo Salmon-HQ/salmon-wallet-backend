@@ -81,7 +81,7 @@ const getEnhancedTransactions = async (signatures, environment = 'mainnet') => {
  * @param {Object} [filters={}]
  * @param {string} [filters.before] - Last signature of the previous page
  * @param {number} [filters.limit=10] - Max 100 per Helius
- * @param {string} [filters.type] - Tx type filter (TRANSFER, SWAP, NFT_SALE, ...)
+ * @param {string} [filters.type] - Tx type filter (TRANSFER, NFT_SALE, ...)
  * @param {string} [environment='mainnet']
  * @returns {Promise<{data: Array, meta: {nextPageToken?: string}}>}
  * @throws {Error} `Enhanced API not supported for environment: <environment>`
@@ -125,7 +125,7 @@ const getEnhancedTransactionHistory = async (address, filters = {}, environment 
 
 /**
  * True if Helius classified this transaction (any non-UNKNOWN `type`).
- * Helius parses NFTs, aggregator swaps, SPL transfers, and many DeFi protocols.
+ * Helius parses NFTs, aggregator routes, SPL transfers, and many DeFi protocols.
  * @param {Object} transaction
  * @returns {boolean}
  */

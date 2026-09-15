@@ -1,12 +1,12 @@
 'use strict';
 
 const { BITCOIN } = require('../../constants/blockchains');
-const { SEND, RECEIVE, SWAP, UNKNOWN } = require('../../constants/transaction-types');
+const { SEND, RECEIVE, UNKNOWN } = require('../../constants/transaction-types');
 const { getNativeLogo } = require('../../services/shared/trustwallet-service');
 
 const equals = (str1, str2) => str1?.toLowerCase() === str2?.toLowerCase();
 
-/** Classifies the tx as `SWAP` (address is both source and destination), `SEND`, `RECEIVE`, or `UNKNOWN`. */
+/** Classifies the tx as `SEND`, `RECEIVE`, or `UNKNOWN` (address is both source and destination, or neither). */
 const getType = (blockchain, address, events) => {
   let transfers = [];
   if (blockchain === BITCOIN) {
@@ -18,7 +18,7 @@ const getType = (blockchain, address, events) => {
     transfers.filter(({ destination }) => equals(destination, address)).length === 1;
 
   if (isSource && isDestination) {
-    return SWAP;
+    return UNKNOWN;
   } else if (isSource) {
     return SEND;
   } else if (isDestination) {
@@ -108,7 +108,7 @@ const getOutputs = (blockchain, address, events) => {
  * @returns {string} resource.id
  * @returns {number} resource.timestamp
  * @returns {string} resource.status
- * @returns {string} resource.type - `SEND` | `RECEIVE` | `SWAP` | `UNKNOWN`
+ * @returns {string} resource.type - `SEND` | `RECEIVE` | `UNKNOWN`
  * @returns {Object|undefined} resource.fee - `{ amount, decimals, symbol }`
  * @returns {Array<Object>} resource.inputs - transfer legs received by `address`
  * @returns {Array<Object>} resource.outputs - transfer legs sent by `address`

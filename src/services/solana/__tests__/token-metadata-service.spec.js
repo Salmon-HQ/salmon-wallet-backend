@@ -67,7 +67,7 @@ describe('token-metadata-service', () => {
     cache.getManyFromCache.mockImplementation(async (keys) => new Map(keys.map((k) => [k, null])));
   });
 
-  it('maps DAS assets to the canonical token shape with the token program and swappability', async () => {
+  it('maps DAS assets to the canonical token shape with the token program', async () => {
     axios.post.mockResolvedValue({ data: { result: [usdcAsset, pyusdAsset, bernAsset, null] } });
 
     const tokens = await service.getByMints([
@@ -92,10 +92,9 @@ describe('token-metadata-service', () => {
       decimals: 6,
       icon: 'https://img/x.png',
       tokenProgram: 'spl-token',
-      swappable: true,
     });
-    expect(tokens.get(PYUSD)).toMatchObject({ tokenProgram: 'token-2022', swappable: true });
-    expect(tokens.get(BERN)).toMatchObject({ tokenProgram: 'token-2022', swappable: false });
+    expect(tokens.get(PYUSD)).toMatchObject({ tokenProgram: 'token-2022' });
+    expect(tokens.get(BERN)).toMatchObject({ tokenProgram: 'token-2022' });
     expect(tokens.has('Unknown111111111111111111111111111111111111')).toBe(false);
     expect(cache.storeManyInCache).toHaveBeenCalledTimes(1);
     expect(cache.storeManyInCache.mock.calls[0][0]).toHaveLength(3);
@@ -133,20 +132,5 @@ describe('token-metadata-service', () => {
     axios.post.mockResolvedValue({ data: { error: { code: -32602, message: 'bad ids' } } });
 
     await expect(service.getByMints([USDC])).rejects.toThrow('DAS getAssetBatch failed: bad ids');
-  });
-
-  describe('isSwappable', () => {
-    it("applies 0x's Token-2022 rule", () => {
-      expect(service.isSwappable(undefined)).toBe(true);
-      expect(service.isSwappable({})).toBe(true);
-      expect(service.isSwappable({ transfer_hook: { program_id: null } })).toBe(true);
-      expect(service.isSwappable({ transfer_hook: { program_id: 'Hook111' } })).toBe(false);
-      expect(
-        service.isSwappable({
-          transfer_fee_config: { older_transfer_fee: { transfer_fee_basis_points: 10 } },
-        })
-      ).toBe(false);
-      expect(service.isSwappable({ non_transferable: {} })).toBe(false);
-    });
   });
 });

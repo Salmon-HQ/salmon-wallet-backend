@@ -10,24 +10,6 @@
 const { parseTransaction, __testing } = require('..');
 
 describe('deriveType', () => {
-  it('returns SWAP when hasAggregator is set', () => {
-    const t = __testing.deriveType({
-      _hints: { hasAggregator: true },
-      nativeTransfers: [],
-      tokenTransfers: [],
-    });
-    expect(t).toBe('SWAP');
-  });
-
-  it('returns SWAP when hasDexSwap is set (direct DEX, no aggregator)', () => {
-    const t = __testing.deriveType({
-      _hints: { hasDexSwap: true },
-      nativeTransfers: [],
-      tokenTransfers: [],
-    });
-    expect(t).toBe('SWAP');
-  });
-
   it('returns OFFER_LOAN when hasLoan is set (lending platforms)', () => {
     const t = __testing.deriveType({
       _hints: { hasLoan: true },

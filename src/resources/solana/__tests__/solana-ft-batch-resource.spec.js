@@ -22,18 +22,7 @@ describe('solana-ft-batch-resource', () => {
       logo: 'https://example.test/bonk.png',
       tags: ['lst'],
       coingeckoId: null,
-      swappable: true,
     });
-  });
-
-  test('passes swappable: false through for non-routable Token-2022 mints', async () => {
-    const result = await decorateBatchToken({
-      id: 'BERN',
-      symbol: 'BERN',
-      decimals: 5,
-      swappable: false,
-    });
-    expect(result.swappable).toBe(false);
   });
 
   test('preserves top-level coingeckoId from the CDN-normalized shape', async () => {

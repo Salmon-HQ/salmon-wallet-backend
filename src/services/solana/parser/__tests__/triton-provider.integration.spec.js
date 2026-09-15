@@ -97,7 +97,7 @@ describe('Triton provider — integration', () => {
       expect(Array.isArray(tx.tokenTransfers)).toBe(true);
       expect(tx.heliusType).toBe(tx.type);
 
-      // The 9 buckets the FE renders: SWAP, TRANSFER, TOKEN_MINT, NFT_MINT,
+      // The buckets the FE renders: TRANSFER, TOKEN_MINT, NFT_MINT,
       // BURN, STAKE_TOKEN, COMPRESSED_NFT_*, UNKNOWN are valid; we just
       // assert it's a non-empty type string.
       expect(tx.type.length).toBeGreaterThan(0);

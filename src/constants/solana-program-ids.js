@@ -5,7 +5,7 @@
  *
  * Both the resource layer (transaction shaping) and the service-layer parser
  * (program-sources lookup) need to know about a small set of programs:
- * swap-aggregator router versions, Bubblegum (cNFT), Token-2022, etc. Keeping
+ * aggregator router versions, Bubblegum (cNFT), Token-2022, etc. Keeping
  * these in `src/constants` lets both layers import without violating the
  * AGENTS placement rule (resources don't reach into services).
  *
@@ -14,11 +14,8 @@
  * source of truth for source-name resolution.
  */
 
-// Swap-aggregator routers — every router Salmon has routed through, current
-// first. Transactions touching any of them surface as source 'AGGREGATOR' in
-// history, whatever label the enrichment provider used (Helius does not know
-// the 0x settler and labels its swaps by the first instruction it
-// understands, e.g. INITIALIZE_ACCOUNT).
+// Aggregator routers, current first. Transactions touching any of them
+// surface as source 'AGGREGATOR' in history.
 const AGGREGATOR_ROUTER_PROGRAM_IDS = [
   'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m', // 0x settler (current)
   'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4', // previous router v6
@@ -29,8 +26,7 @@ const AGGREGATOR_ROUTER_PROGRAM_IDS = [
 ];
 
 // The aggregator's limit-order program — a distinct surface from the router,
-// but callers (resource detection, parser classifier) need it tagged as the
-// aggregator for SWAP bucketing.
+// tagged as the aggregator source all the same.
 const AGGREGATOR_LIMIT_PROGRAM_IDS = ['j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X'];
 
 // Metaplex Bubblegum — compressed NFT program.

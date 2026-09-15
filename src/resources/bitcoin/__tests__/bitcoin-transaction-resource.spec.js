@@ -129,7 +129,7 @@ describe('bitcoin-transaction-resource', () => {
 
     const result = await decorateTransaction(transaction, {}, undefined, { locals: {} });
 
-    expect(result.type).toBe('swap');
+    expect(result.type).toBe('unknown');
     expect(result.fee).toEqual({
       amount: '0.1',
       decimals: 8,

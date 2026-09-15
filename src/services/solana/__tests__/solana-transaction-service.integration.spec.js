@@ -4,7 +4,7 @@ const http = require('node:http');
 const https = require('node:https');
 const transactionService = require('../solana-transaction-service');
 
-// Triton parser walks aggregator swap txs (large payloads) plus token-service
+// Triton parser walks aggregator txs (large payloads) plus token-service
 // cold cache + DAS enrichment per tx. Real-network sessions need a wide
 // budget; 180s lets the slowest run pass and the typical run finishes in
 // well under 30s.
@@ -72,7 +72,7 @@ describe('Solana Transaction Service - Integration Tests with Helius', () => {
         return;
       }
 
-      // Use an aggregator address (known for heavy swap activitys)
+      // Use an aggregator address (known for heavy activity)
       const address = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
       const filters = { pageSize: 5 };
 

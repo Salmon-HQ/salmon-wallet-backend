@@ -130,7 +130,7 @@ const clearListCache = () => {
   pendingTokenLoads.clear();
 };
 
-/** Listed entry (tags, coingeckoId) over on-chain metadata (program, swappable, freshest decimals). */
+/** Listed entry (tags, coingeckoId) over on-chain metadata (program, freshest decimals). */
 const merge = (listed, onChain) => {
   if (!listed && !onChain) return null;
   // The catalog lists the SOL mint as "Wrapped SOL"/WSOL; the wallet shows
@@ -144,7 +144,6 @@ const merge = (listed, onChain) => {
     tags: listed ? listed.tags : [],
     coingeckoId: listed?.coingeckoId ?? null,
     tokenProgram: onChain?.tokenProgram ?? null,
-    swappable: onChain ? onChain.swappable : true,
   };
 };
 
@@ -178,7 +177,7 @@ const getVerified = async (locals) => {
   const cached = await repository.getVerifiedTokens(locals);
   // An empty cached array is treated as a miss on purpose: it can only come
   // from a bad upstream response, and honouring it would serve an empty token
-  // catalog — a swap screen with nothing in it — until the TTL expired.
+  // catalog — a token list with nothing in it — until the TTL expired.
   if (cached && cached.length > 0) {
     return filterFungibleTokens(cached);
   }

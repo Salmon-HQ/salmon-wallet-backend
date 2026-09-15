@@ -49,11 +49,11 @@ describe('token data — integration', () => {
     }
   });
 
-  it('describes USDC and flags BERN as not swappable from DAS', async () => {
+  it('describes USDC and BERN from DAS', async () => {
     if (!triton) return;
     const tokens = await metadata.getByMints([USDC, BERN, SOL], locals);
-    expect(tokens.get(USDC)).toMatchObject({ symbol: 'USDC', decimals: 6, swappable: true });
-    expect(tokens.get(BERN)).toMatchObject({ tokenProgram: 'token-2022', swappable: false });
+    expect(tokens.get(USDC)).toMatchObject({ symbol: 'USDC', decimals: 6 });
+    expect(tokens.get(BERN)).toMatchObject({ tokenProgram: 'token-2022' });
     expect(tokens.get(SOL)).toEqual(metadata.NATIVE_SOL);
   });
 

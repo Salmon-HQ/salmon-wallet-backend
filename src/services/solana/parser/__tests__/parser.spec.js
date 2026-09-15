@@ -31,9 +31,6 @@ const SOLEND = 'So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo';
 const KAMINO = 'KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD';
 const MARGINFI = 'MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA';
 const PHOENIX = 'PhoeNiCXqGVXLVHSKvXBLPjeBxz4Hpm5JhmJaDMkEQ4';
-const OPENBOOK_V2 = 'opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb';
-const LIFINITY = '2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c';
-const SABER = 'SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ';
 const WORMHOLE_TOKEN = 'wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb';
 const SNS = 'namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX';
 
@@ -332,50 +329,6 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('COMPRESSED_NFT_TRANSFER');
   });
 
-  it('detects aggregator v6 program and tags type=SWAP source=AGGREGATOR', () => {
-    const rawTx = buildRawTx({
-      instructions: [{ programId: AGGREGATOR_V6, accounts: [], data: 'opaque' }],
-      inner: [
-        {
-          index: 0,
-          instructions: [
-            {
-              programId: TOKEN,
-              parsed: {
-                type: 'transferChecked',
-                info: {
-                  authority: 'USER',
-                  source: 'A',
-                  destination: 'B',
-                  mint: 'IN_MINT',
-                  tokenAmount: { amount: '1000', decimals: 6 },
-                },
-              },
-            },
-            {
-              programId: TOKEN,
-              parsed: {
-                type: 'transferChecked',
-                info: {
-                  authority: 'AGGREGATOR',
-                  source: 'B',
-                  destination: 'C',
-                  mint: 'OUT_MINT',
-                  tokenAmount: { amount: '999', decimals: 9 },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    });
-
-    const result = parseTransaction(rawTx);
-    expect(result.type).toBe('SWAP');
-    expect(result.source).toBe('AGGREGATOR');
-    expect(result.tokenTransfers).toHaveLength(2);
-  });
-
   it('detects Stake program delegate as STAKE_TOKEN', () => {
     const rawTx = buildRawTx({
       instructions: [{ programId: STAKE, parsed: { type: 'delegate', info: {} } }],
@@ -523,23 +476,6 @@ describe('parser orchestrator', () => {
     }
   );
 
-  it.each([
-    ['Phoenix', PHOENIX, 'PHOENIX'],
-    ['OpenBook v2', OPENBOOK_V2, 'OPENBOOK_V2'],
-    ['Lifinity', LIFINITY, 'LIFINITY'],
-    ['Saber', SABER, 'SABER'],
-  ])(
-    'classifies direct %s call as SWAP (no aggregator present)',
-    (_name, programId, expectedSource) => {
-      const rawTx = buildRawTx({
-        instructions: [{ programId, accounts: [], data: 'op' }],
-      });
-      const result = parseTransaction(rawTx);
-      expect(result.type).toBe('SWAP');
-      expect(result.source).toBe(expectedSource);
-    }
-  );
-
   it('detects Wormhole bridge as TRANSFER with WORMHOLE source', () => {
     const rawTx = buildRawTx({
       instructions: [
@@ -582,7 +518,7 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('TRANSFER');
   });
 
-  it('aggregator still wins source priority over a direct DEX program in the same tx', () => {
+  it('aggregator wins source priority over a direct AMM program in the same tx', () => {
     const rawTx = buildRawTx({
       instructions: [
         { programId: AGGREGATOR_V6, accounts: [], data: 'op' },
@@ -590,7 +526,6 @@ describe('parser orchestrator', () => {
       ],
     });
     const result = parseTransaction(rawTx);
-    expect(result.type).toBe('SWAP');
     expect(result.source).toBe('AGGREGATOR');
   });
 

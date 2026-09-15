@@ -40,7 +40,6 @@ const onChainUsdc = {
   decimals: 6,
   icon: 'chain.png',
   tokenProgram: 'spl-token',
-  swappable: true,
 };
 const onChainBern = {
   id: BERN,
@@ -49,7 +48,6 @@ const onChainBern = {
   decimals: 5,
   icon: null,
   tokenProgram: 'token-2022',
-  swappable: false,
 };
 const onChainNft = {
   id: NFT,
@@ -58,7 +56,6 @@ const onChainNft = {
   decimals: 0,
   icon: null,
   tokenProgram: 'spl-token',
-  swappable: true,
 };
 
 describe('Solana FT Service - token list cache', () => {
@@ -108,16 +105,15 @@ describe('Solana FT Service - catalog + on-chain metadata', () => {
         ...listedUsdc,
         icon: 'cg.png',
         tokenProgram: 'spl-token',
-        swappable: true,
       },
-      { ...onChainBern, tags: [], coingeckoId: null, swappable: false },
+      { ...onChainBern, tags: [], coingeckoId: null },
     ]);
   });
 
   test('getByMints keeps the native SOL symbol/name over the catalog "WSOL" listing', async () => {
     const SOL = 'So11111111111111111111111111111111111111112';
     metadata.getByMints.mockResolvedValue(
-      new Map([[SOL, { id: SOL, symbol: 'SOL', name: 'Solana', decimals: 9, swappable: true }]])
+      new Map([[SOL, { id: SOL, symbol: 'SOL', name: 'Solana', decimals: 9 }]])
     );
     catalog.byMints.mockResolvedValue(
       new Map([
@@ -181,7 +177,7 @@ describe('Solana FT Service - catalog + on-chain metadata', () => {
     const result = await service.search('usdc', locals);
 
     expect(catalog.search).toHaveBeenCalledWith('usdc');
-    expect(result[0]).toMatchObject({ id: USDC, tags: ['verified'], swappable: true });
+    expect(result[0]).toMatchObject({ id: USDC, tags: ['verified'] });
   });
 
   test('search resolves an unlisted mint address on-chain, unverified', async () => {

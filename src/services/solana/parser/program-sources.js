@@ -45,7 +45,7 @@ const SOURCES = {
   // the aggregator limit-order program.
   AGGREGATOR_LIMIT: AGGREGATOR_LIMIT_PROGRAM_IDS,
 
-  // Major DEX programs (also bucketed via SWAP downstream)
+  // Major DEX programs
   RAYDIUM: [
     '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8', // AMM v4
     'CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK', // Concentrated v3
@@ -78,7 +78,7 @@ const SOURCES = {
   // Stake program (Solana native)
   STAKE_PROGRAM: ['Stake11111111111111111111111111111111111111'],
 
-  // Memo (frequently used by some swaps for branding)
+  // Memo (frequently attached by routers for branding)
   MEMO_PROGRAM: ['MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'],
 
   MARINADE_FINANCE: ['MarBmsSgKXdrN1egZf5sqe1TMThczhMLJhJlsbXxy7Z'],
@@ -108,7 +108,7 @@ const SOURCES = {
 
   SNS: ['namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX'],
 
-  // PumpSwap AMM — graduated Pump.fun bonding-curve tokens settle here.
+  // Pump.fun AMM — graduated bonding-curve tokens settle here.
   // Verified via solscan + Bitquery docs (2026).
   PUMP_AMM: ['pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA'],
 
@@ -136,7 +136,7 @@ const SOURCES = {
   // Squads Protocol v4 — Solana multisig. Verified via Squads-Protocol/v4.
   SQUADS_V4: ['SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf'],
 
-  // Mayan Finance — cross-chain swap (Solana ↔ EVM). Verified via Mayan SDK.
+  // Mayan Finance — cross-chain bridge (Solana ↔ EVM). Verified via Mayan SDK.
   MAYAN_FINANCE: ['FC4eXxkyrMPTjiYUpp4EAnkmwMbQyZ6NDCh1kfLn6vsf'],
 
   // deBridge cross-chain bridge. Verified via debridge-solana-sdk.

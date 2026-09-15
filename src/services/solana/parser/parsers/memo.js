@@ -3,8 +3,8 @@
 /**
  * SPL Memo parser: keeps the note's text on `building.memo` (first memo
  * wins) and sets the `hasMemo` hint. A transaction that moves nothing and
- * carries a memo derives to type MEMO; a memo riding a swap or a transfer
- * stays a swap or a transfer, the text just travels along.
+ * carries a memo derives to type MEMO; a memo riding a transfer stays a
+ * transfer, the text just travels along.
  *
  * `jsonParsed` renders a memo instruction as `{ program: 'spl-memo', parsed: '<text>' }`.
  */

@@ -8,7 +8,7 @@
  * helper. Both emit the same Token Metadata `Burn` instruction (discriminator
  * 41, `BurnArgs::V1 { amount: 1 }`) with the same 14 accounts, so with the same
  * pinned inputs they serialize to the same transaction. `GOLDEN_BURN_TRANSACTION`
- * is that transaction, captured from the deprecated builder before the swap.
+ * is that transaction, captured from the deprecated builder before the switch.
  *
  * Everything here runs offline: the blockhash is pinned, the account fetch is
  * stubbed, and every address is derived from the pinned mint and owner.
@@ -24,7 +24,7 @@ const BURN_V1_DATA_HEX = '29000100000000000000';
 
 // Captured from `@metaplex-foundation/js`'s `nfts().builders().delete()` before
 // that dependency was removed, with the inputs pinned above. It is the exact
-// transaction this endpoint returned in production prior to the Umi swap.
+// transaction this endpoint returned in production prior to the Umi switch.
 const GOLDEN_BURN_TRANSACTION =
   'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAECYJYi2cazW/XXS5wezndycuVSeNsR4NA6aEaNdv45qW24kCU3k8VDk0w6rajXM48BJ2r/bSKzRZSgh8VpqF7OCuCLQZF1mJQL1OCbdCmunT8/RvMuomPbTA2do74+fzwm6H/LjstfeUMb13KZDY7YaBBgwbjPrfLS1cnrRS9/MjsVf9ybOUu2l2NkTKbjNnjOS0UM90HtA1eQxDLJLdKSd0LcGWx49F8RTidUn9rBMPNWLhscxqg/bVJttG8A/gpRgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABqfVFxh70WY12tQEVf3CwMEkxo8hVnWl27rLXwgAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqcSa53YDeCBU8Xqd7OpDtETroO2xLG8dMcbg5KhL8FLrAQUOAAUBAgMEBQUFBQUGBwgKKQABAAAAAAAAAAA=';
 
@@ -77,7 +77,7 @@ const OWNER_ATA = fromWeb3JsPublicKey(
 
 const locals = { network: { config: { nodeUrl: NODE_URL } } };
 
-/** The on-chain asset the RPC would return, with `collection` swappable. */
+/** The on-chain asset the RPC would return, with `collection` replaceable. */
 const digitalAsset = (collection) => ({
   metadata: { publicKey: METADATA_PDA, collection },
   edition: { publicKey: MASTER_EDITION_PDA, isOriginal: true },
