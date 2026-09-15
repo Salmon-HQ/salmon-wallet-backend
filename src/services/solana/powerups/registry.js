@@ -46,6 +46,16 @@ const memo = require('./adapters/memo');
 const brokenBuild = require('./adapters/broken-build');
 
 const POWERUPS = {
+  // Payments (frontend spec 033): the wallet builds a Solana Pay transfer
+  // request on the device and verifies settlement from the network itself.
+  // Nothing to build here: the payer's transfer is core Send. Listed so the
+  // per-network switch can offer or withdraw it.
+  payments: {
+    tier: 'core',
+    networks: ['solana-mainnet', 'solana-devnet'],
+    contributor: null,
+    endpoints: [],
+  },
   // Reference transaction-building Powerup: one Memo instruction. Listed
   // only where a stage enables it (today: `local`).
   memo: {

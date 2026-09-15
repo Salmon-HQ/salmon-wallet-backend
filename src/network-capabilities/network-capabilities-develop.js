@@ -52,5 +52,8 @@ module.exports = {
   // Powerups offered on this stage, by id (registry:
   // `src/services/solana/powerups/registry.js`). `reason` only when
   // `enabled: false`, one of `region` | `maintenance` | `deprecated`.
-  powerups: {},
+  powerups: {
+    // Payments: read-only entry, the device asks and pays (frontend spec 033).
+    payments: { enabled: true },
+  },
 };
