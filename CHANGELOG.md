@@ -4,6 +4,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## Unreleased
 
+- History legs are the wallet's net balance change per asset (spec 016). `inputs` / `outputs` now come from the ledger's balance changes (`accountData`: lamports per account, raw token deltas per token account with its owner — Helius carries it, the local parser now fills it from `preTokenBalances` / `postTokenBalances`), one leg per asset, instead of one leg per provider transfer: a token that hopped between two accounts of the same wallet leaves no leg, five fee transfers are no rows, rent returned by closed accounts is one SOL input. Direction is read off the legs, never off the provider: outputs only → `send`, inputs only → `receive`, both → `interaction`, nothing moved → `memo` / `interaction` (the wallet signed) / `unknown`; the old rule that forced `send` whenever the wallet was on both sides is gone, and SOL that only came back to a wallet that signed (its own accounts' rent, a refund) is an `interaction`, not a `receive`. A SOL leg riding beside token legs is reported only from 0.005 SOL (two associated-token-account rents); alone it is always reported. Counterparties (`destination` / `source`) name the transfer of that asset with the largest amount; an `interaction`'s legs carry none. Programmable NFTs (`ProgrammableNonFungible*`) are NFT legs like the plain ones. Shape unchanged.
+
 - `broken-build`, a local-stage fixture Powerup the backend always refuses with 502 `provider_program_mismatch`, so the guard is demonstrable on a device.
 
 - History items carry `memo` (the on-chain note, or null); a memo-only transaction is `type: 'memo'` instead of `unknown`.

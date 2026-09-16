@@ -563,6 +563,106 @@ describe('parser orchestrator', () => {
         { account: 'receiver', nativeBalanceChange: 15000, tokenBalanceChanges: [] },
       ]);
     });
+
+    test('emits the raw token delta per token account, owner attached, from pre/post token balances', () => {
+      const rawTx = {
+        slot: 1,
+        blockTime: 1,
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [
+              { pubkey: 'payer' },
+              { pubkey: 'ata-out' },
+              { pubkey: 'ata-in' },
+              { pubkey: 'ata-closed' },
+            ],
+            instructions: [],
+          },
+        },
+        meta: {
+          fee: 5000,
+          preBalances: [10000, 2039280, 2039280, 2039280],
+          postBalances: [5000, 2039280, 2039280, 0],
+          preTokenBalances: [
+            {
+              accountIndex: 1,
+              mint: 'USDC',
+              owner: 'payer',
+              uiTokenAmount: { amount: '1000000', decimals: 6 },
+            },
+            {
+              accountIndex: 2,
+              mint: 'USDC',
+              owner: 'friend',
+              uiTokenAmount: { amount: '0', decimals: 6 },
+            },
+            {
+              accountIndex: 3,
+              mint: 'DUST',
+              owner: 'payer',
+              uiTokenAmount: { amount: '7', decimals: 0 },
+            },
+          ],
+          postTokenBalances: [
+            {
+              accountIndex: 1,
+              mint: 'USDC',
+              owner: 'payer',
+              uiTokenAmount: { amount: '250000', decimals: 6 },
+            },
+            {
+              accountIndex: 2,
+              mint: 'USDC',
+              owner: 'friend',
+              uiTokenAmount: { amount: '750000', decimals: 6 },
+            },
+          ],
+        },
+      };
+
+      const parsed = parseTransaction(rawTx);
+
+      expect(parsed.accountData).toEqual([
+        { account: 'payer', nativeBalanceChange: -5000, tokenBalanceChanges: [] },
+        {
+          account: 'ata-out',
+          nativeBalanceChange: 0,
+          tokenBalanceChanges: [
+            {
+              userAccount: 'payer',
+              tokenAccount: 'ata-out',
+              mint: 'USDC',
+              rawTokenAmount: { tokenAmount: '-750000', decimals: 6 },
+            },
+          ],
+        },
+        {
+          account: 'ata-in',
+          nativeBalanceChange: 0,
+          tokenBalanceChanges: [
+            {
+              userAccount: 'friend',
+              tokenAccount: 'ata-in',
+              mint: 'USDC',
+              rawTokenAmount: { tokenAmount: '750000', decimals: 6 },
+            },
+          ],
+        },
+        {
+          account: 'ata-closed',
+          nativeBalanceChange: -2039280,
+          tokenBalanceChanges: [
+            {
+              userAccount: 'payer',
+              tokenAccount: 'ata-closed',
+              mint: 'DUST',
+              rawTokenAmount: { tokenAmount: '-7', decimals: 0 },
+            },
+          ],
+        },
+      ]);
+    });
   });
 
   describe('buildAccountMaps', () => {

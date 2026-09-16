@@ -5,6 +5,7 @@
 - shape Solana account, FT, NFT, Powerup build, and transaction payloads
 - normalize enriched-tx data from both providers (Helius Enhanced API and the local Triton parser) plus RPC-derived transaction data into public API contracts
 - `helius-transaction-resource.js` is the shared canonical mapper for both providers — its name is back-compat only; both Helius and Triton outputs flow through it.
+- Legs are the wallet's net balance change per asset, computed in `wallet-delta.js` from `accountData` (the parser fills it from the ledger; Helius sends it). The provider's transfers name the counterparty and nothing else; never build a leg from a transfer list again — that is how a self-transfer became a send and five fees became five rows (spec 016).
 
 ## Rules
 

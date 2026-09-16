@@ -5,8 +5,11 @@
  *
  * Transforms enriched transactions (Helius Enhanced API or Triton parser
  * output, both produce the same canonical shape) into the public API
- * payload, mapping provider type strings to the system's transaction types
- * and pivoting transfers by the user wallet into inputs / outputs.
+ * payload. The legs (`inputs` / `outputs`) are the wallet's net balance
+ * change per asset, read from the ledger's `accountData` through
+ * `./wallet-delta`; the provider's transfers name the counterparty and its
+ * type is a hint for the semantic buckets, never the source of direction
+ * (spec 016).
  *
  * DESIGN NOTE — two-stage shaping, deliberate:
  * This mapper is applied INSIDE `solana-transaction-service`
@@ -43,6 +46,8 @@ const {
 } = require('../../constants/solana-constants');
 const { normalizeIpfsUrl } = require('./content-urls');
 const imageOverrides = require('../../services/solana/nft-image-override-service');
+const { computeWalletDelta } = require('./wallet-delta');
+const { isNftTokenStandard } = require('../../constants/token-standards');
 
 /**
  * One public vocabulary whichever provider enriched the page: the local
@@ -164,47 +169,9 @@ const toRawAmount = (tokenAmount, decimals) => {
   return String(Math.round(amount * Math.pow(10, decimals || 0)));
 };
 
-const buildTokenItem = (transfer, tokens, directionField, directionValue) => {
-  const cachedToken = findTokenInCache(transfer.mint, tokens);
-  const decimals = transfer.decimals ?? cachedToken?.decimals ?? 0;
-
-  return {
-    amount: toRawAmount(transfer.tokenAmount, decimals),
-    decimals,
-    symbol: transfer.symbol || cachedToken?.symbol || truncateMint(transfer.mint),
-    name: transfer.name || cachedToken?.name,
-    logo: normalizeIpfsUrl(transfer.logoURI || cachedToken?.logoURI),
-    contract: transfer.mint,
-    [directionField]: directionValue,
-  };
-};
-
-const buildNativeItem = (transfer, directionField, directionValue) => ({
-  amount: transfer.amount?.toString(),
-  decimals: SOL_DECIMALS,
-  symbol: SOL_SYMBOL,
-  name: SOL_NAME,
-  logo: SOL_LOGO,
-  contract: SOL_ADDRESS,
-  [directionField]: directionValue,
-});
-
 const getTransfers = (transaction) => ({
   nativeTransfers: transaction.nativeTransfers || [],
   tokenTransfers: transaction.tokenTransfers || [],
-});
-
-const getDirectionalTransfers = (transfers, address) => ({
-  incomingTokens: transfers.tokenTransfers.filter((transfer) => transfer.toUserAccount === address),
-  outgoingTokens: transfers.tokenTransfers.filter(
-    (transfer) => transfer.fromUserAccount === address
-  ),
-  incomingNative: transfers.nativeTransfers.filter(
-    (transfer) => transfer.toUserAccount === address
-  ),
-  outgoingNative: transfers.nativeTransfers.filter(
-    (transfer) => transfer.fromUserAccount === address
-  ),
 });
 
 /**
@@ -264,45 +231,151 @@ const HELIUS_TYPE_MAPPING = {
 };
 
 /**
- * Pure-direction inference for TRANSFER and unknown-type transactions:
- * `RECEIVE` / `SEND` / `INTERACTION` / undefined (no transfers seen).
+ * The provider's own word for the transaction, in the system's buckets.
+ * `'TRANSFER'` is returned as is: a transfer's direction is not the
+ * provider's to say — it is read off the wallet's balance change
+ * (`resolveType`). Everything the table does not name is an interaction.
+ * @returns {string} SEND, RECEIVE, MINT, INTERACTION, UNKNOWN, ... or 'TRANSFER'
  */
-const inferDirectionalType = (isSender, isReceiver) => {
-  if (isReceiver && !isSender) return RECEIVE;
-  if (isSender && !isReceiver) return SEND;
-  if (isSender && isReceiver) return INTERACTION;
-  return undefined;
+const mapProviderType = (heliusType) => HELIUS_TYPE_MAPPING[heliusType] || INTERACTION;
+
+/**
+ * A SOL leg riding beside token legs is rent, a royalty or a tip below
+ * this, and folds into the transaction rather than becoming a second row:
+ * two associated-token-account rents (2 × 2,039,280 lamports), so a single
+ * account opened for the counterparty never shows, and three or more
+ * accounts reclaimed at once do. A SOL leg that is the only asset moving is
+ * always reported, whatever its size (spec 016 FR-007).
+ */
+const NATIVE_SIDE_LEG_MIN_LAMPORTS = 5000000n;
+
+const absBig = (value) => (value < 0n ? -value : value);
+
+/**
+ * The other side of one asset's movement: the counterparty that received
+ * the most of it from the wallet (an output) or sent the most of it to the
+ * wallet (an input). Undefined when the transfers name nobody — a closed
+ * account's rent has no sender.
+ */
+const counterpartyFor = (transaction, address, mint, direction) => {
+  const isNative = mint === SOL_ADDRESS;
+  const transfers = isNative
+    ? (transaction.nativeTransfers || []).map((t) => ({ ...t, weight: toBigInt(t.amount) }))
+    : (transaction.tokenTransfers || [])
+        .filter((t) => t.mint === mint)
+        .map((t) => ({ ...t, weight: toBigInt(toRawAmount(t.tokenAmount, t.decimals ?? 0)) }));
+  const ownSide = direction === 'out' ? 'fromUserAccount' : 'toUserAccount';
+  const otherSide = direction === 'out' ? 'toUserAccount' : 'fromUserAccount';
+  const best = transfers
+    .filter((t) => t[ownSide] === address && t[otherSide] && t[otherSide] !== address)
+    .sort((a, b) => (a.weight < b.weight ? 1 : a.weight > b.weight ? -1 : 0))[0];
+  return best ? best[otherSide] : undefined;
+};
+
+const toBigInt = (value) => {
+  if (typeof value === 'bigint') return value;
+  if (value === undefined || value === null || value === '') return 0n;
+  if (typeof value === 'number') return BigInt(Math.round(value));
+  try {
+    return BigInt(value);
+  } catch {
+    return 0n;
+  }
+};
+
+/** A token leg from the delta: metadata from the transfers first, then the catalog. */
+const buildTokenLeg = (transaction, tokens, mint, entry) => {
+  const transfer = (transaction.tokenTransfers || []).find((t) => t.mint === mint) || {};
+  const cachedToken = findTokenInCache(mint, tokens);
+  const decimals = entry.decimals ?? transfer.decimals ?? cachedToken?.decimals ?? 0;
+  return {
+    amount: absBig(toBigInt(entry.amount)).toString(),
+    decimals,
+    symbol: transfer.symbol || cachedToken?.symbol || truncateMint(mint),
+    name: transfer.name || cachedToken?.name,
+    logo: normalizeIpfsUrl(transfer.logoURI || cachedToken?.logoURI),
+    contract: mint,
+  };
+};
+
+const buildNativeLeg = (lamports) => ({
+  amount: absBig(lamports).toString(),
+  decimals: SOL_DECIMALS,
+  symbol: SOL_SYMBOL,
+  name: SOL_NAME,
+  logo: SOL_LOGO,
+  contract: SOL_ADDRESS,
+});
+
+/**
+ * One leg per asset the wallet gained or lost (spec 016 FR-003): a
+ * negative net is an output, a positive net an input. The SOL leg follows
+ * FR-007 when token legs ride with it.
+ * @returns {{inputs: object[], outputs: object[]}} legs without counterparties
+ */
+const buildLegs = (transaction, address, tokens, delta) => {
+  const inputs = [];
+  const outputs = [];
+  const place = (leg, signed) => (signed < 0n ? outputs : inputs).push(leg);
+
+  delta.tokens.forEach((entry, mint) => {
+    place(buildTokenLeg(transaction, tokens, mint, entry), toBigInt(entry.amount));
+  });
+
+  const native = toBigInt(delta.native);
+  const hasTokenLegs = delta.tokens.size > 0;
+  if (native !== 0n && (!hasTokenLegs || absBig(native) >= NATIVE_SIDE_LEG_MIN_LAMPORTS)) {
+    place(buildNativeLeg(native), native);
+  }
+
+  return { inputs, outputs };
 };
 
 /**
- * Determine the system transaction type from the provider's type string.
- * @returns {string} SEND, RECEIVE, MINT, INTERACTION, UNKNOWN, ...
+ * The type, once the legs are known (spec 016 FR-004 to FR-006).
+ *
+ * A semantic provider type (mint, burn, stake, loan, interaction) keeps
+ * precedence. A transfer or an unknown reads its direction off the legs:
+ * only outputs is a send, only inputs a receive, both an interaction.
+ * Nothing moved: the note when one was written, an interaction when the
+ * wallet signed for it, unknown otherwise. SOL that only came back to a
+ * wallet that signed the transaction — rent from its own closed accounts,
+ * a refund — is not something anyone sent: an interaction, not a receive.
  */
-const mapTransactionType = (heliusType, address, transaction) => {
-  const mappedType = HELIUS_TYPE_MAPPING[heliusType] || INTERACTION;
-  const { nativeTransfers, tokenTransfers } = getTransfers(transaction);
+const resolveType = (providerType, transaction, address, legs, memo) => {
+  if (providerType !== 'TRANSFER' && providerType !== UNKNOWN) return providerType;
+  const signed = transaction.feePayer === address;
+  const { inputs, outputs } = legs;
 
-  const isReceiver = [...nativeTransfers, ...tokenTransfers].some(
-    (t) => t.toUserAccount === address
-  );
-  const isSender = [...nativeTransfers, ...tokenTransfers].some(
-    (t) => t.fromUserAccount === address
-  );
-
-  if (mappedType === 'TRANSFER') {
-    const directional = inferDirectionalType(isSender, isReceiver);
-    if (directional === RECEIVE || directional === SEND) return directional;
-    return SEND;
+  if (outputs.length > 0 && inputs.length === 0) return SEND;
+  if (inputs.length > 0 && outputs.length === 0) {
+    const onlySolBack = inputs.length === 1 && inputs[0].contract === SOL_ADDRESS && signed;
+    return onlySolBack ? INTERACTION : RECEIVE;
   }
+  if (inputs.length > 0 && outputs.length > 0) return INTERACTION;
+  if (memo !== null) return MEMO;
+  return signed ? INTERACTION : UNKNOWN;
+};
 
-  if (mappedType === UNKNOWN) {
-    if (nativeTransfers.length > 0 || tokenTransfers.length > 0) {
-      return inferDirectionalType(isSender, isReceiver) || UNKNOWN;
-    }
-    return UNKNOWN;
+/**
+ * Sends and receives name their other side on the leg (`destination` /
+ * `source`), the way the wallet's rows read them; an interaction's legs
+ * carry none (FR-008).
+ */
+const attachCounterparties = (type, transaction, address, legs) => {
+  if (type === SEND) {
+    legs.outputs.forEach((leg) => {
+      const destination = counterpartyFor(transaction, address, leg.contract, 'out');
+      if (destination) leg.destination = destination;
+    });
   }
-
-  return mappedType;
+  if (type === RECEIVE) {
+    legs.inputs.forEach((leg) => {
+      const source = counterpartyFor(transaction, address, leg.contract, 'in');
+      if (source) leg.source = source;
+    });
+  }
+  return legs;
 };
 
 /**
@@ -327,53 +400,6 @@ const getFee = (address, transaction) => {
   return undefined;
 };
 
-const DIRECTIONS = {
-  in: {
-    tokensField: 'incomingTokens',
-    nativeField: 'incomingNative',
-    item: 'source',
-    counterparty: (t) => t.fromUserAccount,
-    feePayerMatch: (t, fp) => t.toUserAccount === fp,
-    transferType: RECEIVE,
-  },
-  out: {
-    tokensField: 'outgoingTokens',
-    nativeField: 'outgoingNative',
-    item: 'destination',
-    counterparty: (t) => t.toUserAccount,
-    feePayerMatch: (t, fp) => t.fromUserAccount === fp,
-    transferType: SEND,
-  },
-};
-
-/**
- * Build the directional list (inputs when `direction='in'`, outputs when
- * `direction='out'`). Mirrors getInputs/getOutputs in a single function.
- */
-const getDirectional = (direction, type, address, transaction, tokens) => {
-  const dir = DIRECTIONS[direction];
-  const items = [];
-  const transfers = getTransfers(transaction);
-  const directional = getDirectionalTransfers(transfers, address);
-
-  if (type === dir.transferType) {
-    directional[dir.tokensField].forEach((t) => {
-      items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
-    });
-    directional[dir.nativeField].forEach((t) => {
-      items.push(buildNativeItem(t, dir.item, dir.counterparty(t)));
-    });
-  }
-
-  return items;
-};
-
-const getInputs = (type, address, transaction, tokens) =>
-  getDirectional('in', type, address, transaction, tokens);
-
-const getOutputs = (type, address, transaction, tokens) =>
-  getDirectional('out', type, address, transaction, tokens);
-
 /**
  * Enriquece inputs/outputs con metadata de NFTs
  * @param {Array} items - Array de inputs u outputs
@@ -395,10 +421,7 @@ const enrichWithNftMetadata = (items, nftMetadata) => {
 
 const collectNftMints = (transaction) => {
   return getTransfers(transaction)
-    .tokenTransfers.filter(
-      (transfer) =>
-        transfer.tokenStandard === 'NonFungible' || transfer.tokenStandard === 'NonFungibleEdition'
-    )
+    .tokenTransfers.filter((transfer) => isNftTokenStandard(transfer.tokenStandard))
     .map((transfer) => transfer.mint);
 };
 
@@ -452,17 +475,15 @@ const normalizeInstructions = (instructions) => {
 const transformTransaction = async (heliusTransaction, address, tokens = [], options = {}) => {
   const tokenLookup = buildTokenLookup(tokens);
   const memo = extractMemo(heliusTransaction);
-  const mappedType = mapTransactionType(heliusTransaction.type, address, heliusTransaction);
-  // Nothing moved and a note was written: the note is the transaction.
-  const { nativeTransfers, tokenTransfers } = getTransfers(heliusTransaction);
-  const type =
-    mappedType === UNKNOWN && memo !== null && nativeTransfers.length + tokenTransfers.length === 0
-      ? MEMO
-      : mappedType;
+  const providerType = mapProviderType(heliusTransaction.type);
   const source = publicSource(heliusTransaction.source);
 
-  const inputs = getInputs(type, address, heliusTransaction, tokenLookup);
-  const outputs = getOutputs(type, address, heliusTransaction, tokenLookup);
+  // What the wallet gained or lost, per asset, from the ledger's balance
+  // changes; the transfers only name the other side (spec 016).
+  const delta = computeWalletDelta(heliusTransaction, address, { toRawAmount });
+  const legs = buildLegs(heliusTransaction, address, tokenLookup, delta);
+  const type = resolveType(providerType, heliusTransaction, address, legs, memo);
+  const { inputs, outputs } = attachCounterparties(type, heliusTransaction, address, legs);
 
   const nftMints = collectNftMints(heliusTransaction);
   markNftTransfers([...inputs, ...outputs], nftMints);
@@ -517,8 +538,11 @@ module.exports.buildTokenLookup = buildTokenLookup;
 module.exports.__testing = {
   extractMemo,
   toRawAmount,
-  mapTransactionType,
-  inferDirectionalType,
+  mapProviderType,
+  resolveType,
+  buildLegs,
+  counterpartyFor,
+  NATIVE_SIDE_LEG_MIN_LAMPORTS,
   collectNftMints,
   markNftTransfers,
   enrichWithNftMetadata,

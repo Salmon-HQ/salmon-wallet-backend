@@ -248,23 +248,81 @@ const cleanInternalKeys = (building) => {
 };
 
 /**
- * Per-account lamport deltas in the Helius `accountData` shape. Transfers
- * alone miss what a `closeAccount` refunds or rent locks, so the resource
- * reads what the wallet actually gained or lost in SOL from here.
+ * Per-account balance deltas in the Helius `accountData` shape: lamports
+ * from `preBalances` / `postBalances`, tokens from `preTokenBalances` /
+ * `postTokenBalances`. Transfers alone miss what a `closeAccount` refunds,
+ * what rent locks, or a token that only hopped between two accounts of one
+ * owner, so the resource reads what the wallet actually gained or lost
+ * from here (spec 016).
+ *
+ * A token change sits on its token account's row with `userAccount` = the
+ * owner, exactly as Helius emits it; a row is kept when either its lamports
+ * or one of its token balances moved.
  * @param {object} rawTx - Solana parsed RPC tx response
- * @returns {Array<{account: string, nativeBalanceChange: number, tokenBalanceChanges: Array}>}
+ * @returns {Array<{account: string, nativeBalanceChange: number, tokenBalanceChanges: Array<{userAccount: string, tokenAccount: string, mint: string, rawTokenAmount: {tokenAmount: string, decimals: number}}>}>}
  */
 const collectAccountData = (rawTx) => {
   const keys = rawTx?.transaction?.message?.accountKeys || [];
   const pre = rawTx?.meta?.preBalances || [];
   const post = rawTx?.meta?.postBalances || [];
+  const tokenChangesByIndex = collectTokenBalanceChanges(rawTx);
   return keys
     .map((key, index) => ({
       account: key?.pubkey || key,
       nativeBalanceChange: (post[index] ?? 0) - (pre[index] ?? 0),
-      tokenBalanceChanges: [],
+      tokenBalanceChanges: tokenChangesByIndex.get(index) || [],
     }))
-    .filter((entry) => entry.account && entry.nativeBalanceChange !== 0);
+    .filter(
+      (entry) =>
+        entry.account && (entry.nativeBalanceChange !== 0 || entry.tokenBalanceChanges.length > 0)
+    );
+};
+
+/**
+ * Token balance deltas by account index. A balance list names the token
+ * account by `accountIndex` and carries `mint`, `owner` and the raw
+ * `uiTokenAmount.amount`; an account present on one side only (opened or
+ * closed in the transaction) counts from or to zero.
+ * @param {object} rawTx
+ * @returns {Map<number, Array>}
+ */
+const collectTokenBalanceChanges = (rawTx) => {
+  const keys = rawTx?.transaction?.message?.accountKeys || [];
+  const byIndex = new Map();
+  const note = (balance, side) => {
+    const index = balance?.accountIndex;
+    if (index === undefined || !balance?.mint) return;
+    const slotKey = `${index}:${balance.mint}`;
+    const entry = byIndex.get(slotKey) || {
+      index,
+      userAccount: balance.owner ?? null,
+      tokenAccount: keys[index]?.pubkey || keys[index] || null,
+      mint: balance.mint,
+      decimals: balance.uiTokenAmount?.decimals ?? 0,
+      pre: 0n,
+      post: 0n,
+    };
+    entry[side] = BigInt(balance.uiTokenAmount?.amount ?? '0');
+    if (balance.owner) entry.userAccount = balance.owner;
+    byIndex.set(slotKey, entry);
+  };
+  (rawTx?.meta?.preTokenBalances || []).forEach((balance) => note(balance, 'pre'));
+  (rawTx?.meta?.postTokenBalances || []).forEach((balance) => note(balance, 'post'));
+
+  const changes = new Map();
+  byIndex.forEach((entry) => {
+    const delta = entry.post - entry.pre;
+    if (delta === 0n) return;
+    const list = changes.get(entry.index) || [];
+    list.push({
+      userAccount: entry.userAccount,
+      tokenAccount: entry.tokenAccount,
+      mint: entry.mint,
+      rawTokenAmount: { tokenAmount: delta.toString(), decimals: entry.decimals },
+    });
+    changes.set(entry.index, list);
+  });
+  return changes;
 };
 
 /**
@@ -371,6 +429,7 @@ module.exports = {
     deriveType,
     buildAccountMaps,
     collectAccountData,
+    collectTokenBalanceChanges,
     collectInstructionMetadata,
   },
 };

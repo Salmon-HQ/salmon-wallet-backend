@@ -1235,7 +1235,7 @@ components:
               type: string
         type:
           type: string
-          description: 'Canonical transaction type (e.g. `send`, `receive`, `interaction`, `mint`, `unknown` — see `src/constants/transaction-types.js`)'
+          description: 'Canonical transaction type (`send`, `receive`, `interaction`, `mint`, `burn`, `stake`, `loan`, `memo`, `unknown` — see `src/constants/transaction-types.js`). For transfers the direction is read off the legs: outputs only is `send`, inputs only `receive`, both `interaction`; SOL that only came back to a wallet that signed the transaction (rent from its own closed accounts) is `interaction`.'
         inputs:
           type: array
           items:
@@ -1249,7 +1249,7 @@ components:
 
     TransferLeg:
       type: object
-      description: One transfer leg (token, native, or NFT) of a transaction
+      description: "One asset the queried address gained (`inputs`) or lost (`outputs`) in the transaction: its net balance change, one leg per asset, never one per instruction. A SOL leg beside token legs is reported only from 0.005 SOL; alone it is always reported. The transaction fee is never a leg (see `fee`)." 
       properties:
         amount:
           description: Raw amount in base units (number or numeric string depending on source)

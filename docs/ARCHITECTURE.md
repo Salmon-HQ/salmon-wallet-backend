@@ -382,7 +382,12 @@ public RPC is the last resort.
 
 - transaction serialization
 - final shape for FT/NFT/account responses
-- input/output mappings consumed by the frontend
+- input/output mappings consumed by the frontend. A leg is the wallet's
+  **net balance change for one asset** (`wallet-delta.js`, read from the
+  ledger's `accountData`), never one row per provider transfer; the
+  provider's transfers only name the counterparty, and its type only picks
+  the semantic buckets (mint, burn, stake, loan, interaction) — direction
+  is read off the legs (spec 016).
 
 ### Two-stage transaction shaping (deliberate)
 

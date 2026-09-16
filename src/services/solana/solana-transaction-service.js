@@ -25,6 +25,7 @@ const heliusTransactionResource = require('../../resources/solana/helius-transac
 const { getByMints } = require('./solana-ft-service');
 const { loadRpcEnrichment } = require('./solana-rpc-enrichment');
 const { RECEIVE } = require('../../constants/transaction-types');
+const { isNftTokenStandard } = require('../../constants/token-standards');
 const { SOL_ADDRESS } = require('../../constants/solana-constants');
 
 const COMMITMENT = 'confirmed';
@@ -44,11 +45,7 @@ const collectNftMints = (transactions = []) => {
 
   transactions.forEach((transaction) => {
     (transaction.tokenTransfers || []).forEach((transfer) => {
-      if (
-        transfer?.mint &&
-        (transfer.tokenStandard === 'NonFungible' ||
-          transfer.tokenStandard === 'NonFungibleEdition')
-      ) {
+      if (transfer?.mint && isNftTokenStandard(transfer.tokenStandard)) {
         mints.add(transfer.mint);
       }
     });
@@ -57,14 +54,12 @@ const collectNftMints = (transactions = []) => {
   return [...mints];
 };
 
-const NON_FUNGIBLE_STANDARDS = new Set(['NonFungible', 'NonFungibleEdition']);
-
 /** Every fungible mint moved on the page, deduped. */
 const collectFungibleMints = (transactions = []) => {
   const mints = new Set();
   transactions.forEach((transaction) => {
     (transaction.tokenTransfers || []).forEach((transfer) => {
-      if (transfer?.mint && !NON_FUNGIBLE_STANDARDS.has(transfer.tokenStandard)) {
+      if (transfer?.mint && !isNftTokenStandard(transfer.tokenStandard)) {
         mints.add(transfer.mint);
       }
     });

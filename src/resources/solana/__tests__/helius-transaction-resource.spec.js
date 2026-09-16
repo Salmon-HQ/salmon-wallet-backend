@@ -193,7 +193,7 @@ describe('Helius Transaction Resource - Unit Tests', () => {
       expect(result.type).toBe(STAKE);
     });
 
-    test('should map UNKNOWN to UNKNOWN', async () => {
+    test('UNKNOWN with nothing moved: an interaction the wallet signed, unknown otherwise', async () => {
       const heliusTx = {
         signature: 'test-sig',
         type: 'UNKNOWN',
@@ -204,9 +204,10 @@ describe('Helius Transaction Resource - Unit Tests', () => {
         nativeTransfers: [],
       };
 
-      const result = await transformTransaction(heliusTx, mockAddress);
-
-      expect(result.type).toBe(UNKNOWN);
+      expect((await transformTransaction(heliusTx, mockAddress)).type).toBe(INTERACTION);
+      expect(
+        (await transformTransaction({ ...heliusTx, feePayer: 'someone-else' }, mockAddress)).type
+      ).toBe(UNKNOWN);
     });
   });
 
