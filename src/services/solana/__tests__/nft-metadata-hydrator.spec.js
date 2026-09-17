@@ -93,7 +93,10 @@ describe('hydrate', () => {
 
     await hydrator.hydrate({ ...tritonShaped, uri: 'ipfs://bafyabc' }, {});
 
-    expect(repository.getOffchainMetadata).toHaveBeenCalledWith('https://ipfs.filebase.io/ipfs/bafyabc', {});
+    expect(repository.getOffchainMetadata).toHaveBeenCalledWith(
+      'https://ipfs.filebase.io/ipfs/bafyabc',
+      {}
+    );
   });
 });
 
