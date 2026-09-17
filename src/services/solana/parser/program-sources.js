@@ -115,6 +115,8 @@ const SOURCES = {
   // Photon trader — routing aggregator across multiple Solana DEXs.
   // Verified via Bitquery Solana Photon API docs (2026).
   PHOTON: ['BSfD6SHZigAfDWSjzD5Q41jw8LmKwtmjskPH9XW1mrRW'],
+  // DFlow — the aggregator the owner's 2026-08-17 swap routed through (spec 017).
+  DFLOW: ['DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH'],
 
   // Drift v2 — open-source perpetuals exchange. Verified via drift-labs/protocol-v2.
   DRIFT_V2: ['dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH'],
@@ -279,6 +281,7 @@ const SOURCE_PRIORITY = {
 
   // Aggregators (route across DEXs)
   PHOTON: PRIORITY_BANDS.AGGREGATOR,
+  DFLOW: PRIORITY_BANDS.AGGREGATOR,
   SANCTUM_INFINITY: PRIORITY_BANDS.AGGREGATOR,
 
   // Launchpads + memecoin markets

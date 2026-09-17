@@ -55,6 +55,7 @@ const APP_NAMES = {
   DEBRIDGE: 'deBridge',
   LAUNCHLAB: 'LaunchLab',
   PHOTON: 'Photon',
+  DFLOW: 'DFlow',
   METAPLEX: 'Metaplex',
   METAPLEX_TOKEN_METADATA: 'Metaplex',
   BUBBLEGUM: 'Metaplex',
