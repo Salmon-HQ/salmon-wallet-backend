@@ -101,6 +101,13 @@ const isSpamReceive = (item, address, tokenLookup) =>
 const wantsSpam = (value) => value === true || String(value).toLowerCase() === 'true';
 
 /**
+ * Housekeeping the user does not read as money moving: token accounts closed
+ * for their rent (spec 017, owner: "no suma nada"). The rent is in the
+ * balance; the row would only need explaining. Counted in `meta.hidden`.
+ */
+const isHousekeeping = (item) => item.action === 'accounts_closed';
+
+/**
  * Batch the per-page lookups the decorator (`heliusTransactionResource`)
  * needs across an entire page of transactions, so N transactions cost at
  * most one token-list fetch and one NFT-metadata batch instead of N each.
@@ -173,9 +180,11 @@ const getEnhancedHistory = async (address, filters, locals, environment) => {
       buildEnhancedTransaction(transaction, address, tokenLookup, nftMetadataByMint)
     )
   );
-  const visible = wantsSpam(filters.includeSpam)
-    ? data
-    : data.filter((item) => !isSpamReceive(item, address, tokenLookup));
+  const visible = (
+    wantsSpam(filters.includeSpam)
+      ? data
+      : data.filter((item) => !isSpamReceive(item, address, tokenLookup))
+  ).filter((item) => !isHousekeeping(item));
 
   return {
     data: visible,

@@ -1236,6 +1236,18 @@ components:
         type:
           type: string
           description: 'Canonical transaction type (`send`, `receive`, `interaction`, `mint`, `burn`, `stake`, `loan`, `memo`, `unknown` — see `src/constants/transaction-types.js`). For transfers the direction is read off the legs: outputs only is `send`, inputs only `receive`, both `interaction`; SOL that only came back to a wallet that signed the transaction (rent from its own closed accounts) is `interaction`.'
+        action:
+          type: string
+          nullable: true
+          description: 'The verb inside an `interaction`, as a stable key: `swap`, `nft_sale`, `nft_purchase`, `accounts_closed`, `program_call`. Absent on every other type.'
+        actionMeta:
+          type: object
+          nullable: true
+          description: 'What the verb needs said: `{ count }` for `accounts_closed`.'
+        app:
+          type: string
+          nullable: true
+          description: 'The name the user knows the program family by (Jupiter, Raydium, Magic Eden, Marinade…), for the detail. Absent for the platform’s own programs.'
         inputs:
           type: array
           items:

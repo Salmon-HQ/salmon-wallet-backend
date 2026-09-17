@@ -254,6 +254,28 @@ describe('Solana Transaction Service - unit tests', () => {
     expect(shown.meta.hidden).toBe(0);
   });
 
+  test('hides housekeeping — token accounts closed for their rent — and counts it', async () => {
+    heliusService.getEnhancedTransactionHistory.mockResolvedValue({
+      data: [receiveOf('sig-usdc', USDC), { ...receiveOf('sig-cleanup', USDC), feePayer: address }],
+      meta: {},
+    });
+    solanaFtService.getByMints.mockResolvedValue([
+      { id: USDC, symbol: 'USDC', decimals: 6, tags: ['verified'] },
+    ]);
+    heliusTransactionResource.mockImplementation(async (tx) => ({
+      id: tx.signature,
+      type: tx.feePayer === address ? 'interaction' : 'receive',
+      action: tx.feePayer === address ? 'accounts_closed' : undefined,
+      feePayer: tx.feePayer,
+      inputs: [{ contract: USDC }],
+      outputs: [],
+    }));
+
+    const result = await service.getTransactions(address, { pageSize: 10 }, locals);
+    expect(result.data.map((t) => t.id)).toEqual(['sig-usdc']);
+    expect(result.meta.hidden).toBe(1);
+  });
+
   test('never hides a transfer the user signed, even of an unverified token', async () => {
     heliusService.getEnhancedTransactionHistory.mockResolvedValue({
       data: [{ ...receiveOf('sig-self', SPAM), feePayer: address }],

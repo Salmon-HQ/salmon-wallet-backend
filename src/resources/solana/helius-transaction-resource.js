@@ -48,6 +48,7 @@ const { normalizeIpfsUrl } = require('./content-urls');
 const imageOverrides = require('../../services/solana/nft-image-override-service');
 const { computeWalletDelta } = require('./wallet-delta');
 const { isNftTokenStandard } = require('../../constants/token-standards');
+const { deriveAction } = require('./transaction-action');
 
 /**
  * One public vocabulary whichever provider enriched the page: the local
@@ -493,12 +494,25 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
     enrichWithNftMetadata(outputs, options.nftMetadataByMint);
   }
 
+  // The verb inside an interaction, and the app the user knows the program
+  // by, for the detail (spec 017).
+  const { action, actionMeta, app } = deriveAction(
+    heliusTransaction,
+    address,
+    { inputs, outputs },
+    type,
+    source
+  );
+
   return {
     id: heliusTransaction.signature,
     timestamp: heliusTransaction.timestamp,
     status: heliusTransaction.transactionError ? 'failed' : 'completed',
     fee: getFee(address, heliusTransaction),
     type,
+    action,
+    actionMeta,
+    app,
     inputs,
     outputs,
     // The note of an SPL Memo instruction (null when none); the type is
