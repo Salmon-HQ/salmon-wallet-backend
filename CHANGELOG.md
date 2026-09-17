@@ -4,6 +4,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## Unreleased
 
+- NFT media and metadata URIs no longer point at `ipfs.io` (the public gateway answers 429 with a `Sunset: 21 Sep 2026` header) or `dweb.link`: `ipfs://` URIs and links on those hosts are rewritten to `ipfs.filebase.io`, the gateway the clients already normalise to.
+
 - The bare-RPC history fallback (Triton and Helius both down) reads its legs the same way as the enriched path: the wallet's net change per asset off the parsed result's `preBalances` / `postBalances` and pre/post token balances, one leg per asset, direction from the legs (spec 016). It used to read the first transfer instruction, so a swap read as a send of one side and a fee-only interaction as unknown. The fallback no longer fetches the wallet's token accounts. `action` / `app` stay absent on that path.
 
 - History items carry `action` (`swap`, `nft_sale`, `nft_purchase`, `accounts_closed`, `program_call`; only on `interaction`), `actionMeta` (`{ count }` for closed accounts) and `app` (the name the user knows the program family by — Jupiter, Raydium, Magic Eden, Marinade…; on any type, absent for the platform's own programs): the verb inside an interaction as a stable key the client translates (spec 017). Token accounts closed for their rent (`accounts_closed`) are hidden from the page like spam and counted in `meta.hidden`.

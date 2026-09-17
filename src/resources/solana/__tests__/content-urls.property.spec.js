@@ -10,7 +10,7 @@
 const fc = require('fast-check');
 const { cleanIpfsHash, normalizeIpfsUrl } = require('../content-urls');
 
-const GATEWAY = 'https://ipfs.io/ipfs/';
+const GATEWAY = 'https://ipfs.filebase.io/ipfs/';
 
 describe('content-urls (property-based)', () => {
   it('normalizeIpfsUrl is total over strings and only answers string or null', () => {

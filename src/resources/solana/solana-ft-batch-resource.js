@@ -12,7 +12,7 @@ const { normalizeIpfsUrl } = require('./content-urls');
  *
  * The `logo` field is run through `normalizeIpfsUrl` so flaky IPFS
  * gateways (nftstorage.link, dweb.link subdomains, etc.) resolve to a
- * stable `ipfs.io` path before reaching the wallet — matching the
+ * stable `ipfs.filebase.io` path before reaching the wallet — matching the
  * normalization already applied to NFT and transaction logos.
  *
  * @param {Object} token - canonical catalog entry or SPL Token

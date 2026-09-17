@@ -141,7 +141,7 @@ describe('enrichWithNftMetadata', () => {
     enrichWithNftMetadata(items, metadata);
 
     expect(items[0].logo).toBe('https://arweave.net/mirror');
-    expect(items[1].logo).toBe('https://ipfs.io/ipfs/cid/2.png');
+    expect(items[1].logo).toBe('https://ipfs.filebase.io/ipfs/cid/2.png');
     spy.mockRestore();
   });
 });
