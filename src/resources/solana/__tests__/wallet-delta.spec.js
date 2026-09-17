@@ -1,6 +1,6 @@
 'use strict';
 
-const { computeWalletDelta } = require('../wallet-delta');
+const { computeWalletDelta, computeRpcWalletDelta } = require('../wallet-delta');
 const { __testing } = require('../helius-transaction-resource');
 
 const { toRawAmount } = __testing;
@@ -152,5 +152,36 @@ describe('computeWalletDelta', () => {
       deps
     );
     expect(delta.tokens.get('BIG').amount).toBe(big);
+  });
+});
+
+describe('computeRpcWalletDelta', () => {
+  it('reads SOL off the wallet index with the fee added back, and tokens per owned mint', () => {
+    const meta = {
+      fee: 5000,
+      preBalances: [1_000_000_000, 7],
+      postBalances: [499_995_000, 7],
+      preTokenBalances: [
+        { owner: 'me', mint: 'usdc', uiTokenAmount: { amount: '10', decimals: 6 } },
+        { owner: 'me', mint: 'usdc', uiTokenAmount: { amount: '5', decimals: 6 } },
+        { owner: 'them', mint: 'usdc', uiTokenAmount: { amount: '99', decimals: 6 } },
+      ],
+      postTokenBalances: [
+        { owner: 'me', mint: 'usdc', uiTokenAmount: { amount: '0', decimals: 6 } },
+        { owner: 'me', mint: 'usdc', uiTokenAmount: { amount: '25', decimals: 6 } },
+        { owner: 'them', mint: 'usdc', uiTokenAmount: { amount: '0', decimals: 6 } },
+      ],
+    };
+    const delta = computeRpcWalletDelta(meta, ['me', 'them'], 'me');
+    expect(delta.native).toBe('-500000000');
+    expect(delta.tokens.get('usdc')).toEqual({ amount: '10', decimals: 6 });
+    expect(delta.tokens.has('sol')).toBe(false);
+    expect(delta.source).toBe('rpcBalances');
+  });
+
+  it('a wallet that is not a key of the transaction has no native change', () => {
+    const delta = computeRpcWalletDelta({ preBalances: [1], postBalances: [2] }, ['x'], 'me');
+    expect(delta.native).toBe('0');
+    expect(delta.tokens.size).toBe(0);
   });
 });

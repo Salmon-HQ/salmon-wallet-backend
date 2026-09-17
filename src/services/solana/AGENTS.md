@@ -11,7 +11,7 @@ These rules apply to Solana service code only.
   - delegates the enriched-tx path to the provider resolver (`./providers`)
   - falls back to bare RPC when neither provider is available or the resolver throws
 - `solana-rpc-enrichment.js`
-  - preloads the lookups the bare-RPC transaction resource reads (token list, token accounts, per-tx NFT metadata) onto `locals`, so `src/resources/solana/solana-transaction-resource.js` stays a pure mapper with no network I/O
+  - preloads the lookups the bare-RPC transaction resource reads (token list, per-tx NFT metadata) onto `locals`, so `src/resources/solana/solana-transaction-resource.js` stays a pure mapper with no network I/O
 - `providers/`
   - resolver wires Triton One as primary + Helius as rate-limited fallback for tx enrichment
   - DAS surface (NFT metadata) is Triton primary with a rate-limited Helius fallback, same as tx enrichment; goes straight to Helius when Triton is not configured for the env

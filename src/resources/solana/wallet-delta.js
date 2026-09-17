@@ -88,6 +88,43 @@ const fromTransfers = (transaction, address, toRawAmount) => {
 };
 
 /**
+ * The same net change read off a bare `getParsedTransaction` result: SOL from
+ * `preBalances`/`postBalances` at the wallet's account index, tokens from the
+ * pre/post token balances the wallet owns, summed per mint (a wallet can
+ * hold several accounts of one mint). The fee is added back for the fee
+ * payer, the same convention as `computeWalletDelta`: the legs say what
+ * moved besides it.
+ * @param {object} meta        `transaction.meta` of the parsed result.
+ * @param {string[]} accountKeys  Base58 keys in message order.
+ * @param {string} address     The wallet under inspection.
+ * @returns {WalletDelta}
+ */
+const computeRpcWalletDelta = (meta, accountKeys, address) => {
+  const index = accountKeys.indexOf(address);
+  const pre = index >= 0 ? toBigInt(meta?.preBalances?.[index]) : 0n;
+  const post = index >= 0 ? toBigInt(meta?.postBalances?.[index]) : 0n;
+  const feePaid = index === 0 ? toBigInt(meta?.fee) : 0n;
+
+  const tokens = new Map();
+  const add = (rows, sign) =>
+    (rows || []).forEach((row) => {
+      if (row.owner !== address) return;
+      const raw = row.uiTokenAmount || {};
+      addToken(tokens, row.mint, sign * toBigInt(raw.amount), raw.decimals ?? 0);
+    });
+  add(meta?.postTokenBalances, 1n);
+  add(meta?.preTokenBalances, -1n);
+
+  const cleaned = new Map();
+  tokens.forEach((entry, mint) => {
+    if (entry.amount !== 0n)
+      cleaned.set(mint, { amount: entry.amount.toString(), decimals: entry.decimals });
+  });
+
+  return { native: (post - pre + feePaid).toString(), tokens: cleaned, source: 'rpcBalances' };
+};
+
+/**
  * @param {object} transaction  Enriched transaction (Helius or parser shape).
  * @param {string} address      The wallet under inspection.
  * @param {{toRawAmount: (tokenAmount: number|string, decimals: number) => string}} deps
@@ -118,4 +155,4 @@ const computeWalletDelta = (transaction, address, { toRawAmount }) => {
   };
 };
 
-module.exports = { computeWalletDelta, SOL_DECIMALS };
+module.exports = { computeWalletDelta, computeRpcWalletDelta, SOL_DECIMALS };

@@ -47,29 +47,26 @@ describe('solana-rpc-enrichment loader', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     listTokens.mockResolvedValue([]);
-    getTokenAccounts.mockResolvedValue([]);
     findNft.mockResolvedValue(null);
   });
 
-  it('loads the token list and token accounts once per page of rpc transactions', async () => {
+  it('loads the token list once per page of rpc transactions, and no token accounts', async () => {
     const locals = makeLocals();
 
     await loadRpcEnrichment([rpcTx('sig-1'), rpcTx('sig-2')], locals);
 
     expect(listTokens).toHaveBeenCalledTimes(1);
-    expect(getTokenAccounts).toHaveBeenCalledTimes(1);
-    expect(getTokenAccounts).toHaveBeenCalledWith(address, expect.any(Object));
+    expect(getTokenAccounts).not.toHaveBeenCalled();
     expect(locals.tokens).toEqual([]);
-    expect(locals.tokenAccounts).toEqual([]);
+    expect(locals.tokenAccounts).toBeUndefined();
   });
 
   it('does not reload lookups already memoized on locals', async () => {
-    const locals = { ...makeLocals(), tokens: [{ address: 'mint-1' }], tokenAccounts: ['ta-1'] };
+    const locals = { ...makeLocals(), tokens: [{ address: 'mint-1' }] };
 
     await loadRpcEnrichment([rpcTx('sig-1')], locals);
 
     expect(listTokens).not.toHaveBeenCalled();
-    expect(getTokenAccounts).not.toHaveBeenCalled();
   });
 
   it('is a no-op for enriched-only or empty pages', async () => {

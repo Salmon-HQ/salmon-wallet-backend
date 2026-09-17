@@ -404,7 +404,9 @@ the internal `_source` discriminator:
 2. The controller then applies `solana-transaction-resource` via the
    generic decorator. For enriched transactions this is a passthrough
    that strips the `_source` tag; for bare-RPC fallback transactions it
-   builds the full shape from the lookups preloaded by
+   builds the full shape from the parsed result's pre/post balances (the
+   wallet's net change per asset, spec 016 — the same rule the enriched
+   mapper reads off `accountData`) and the lookups preloaded by
    `solana-rpc-enrichment.js`.
 
 Do not merge the two mappers or move the enriched shaping into the

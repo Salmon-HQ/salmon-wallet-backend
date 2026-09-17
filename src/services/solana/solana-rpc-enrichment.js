@@ -18,7 +18,6 @@
 
 const { list: listTokens } = require('./solana-ft-service');
 const { find: findNft } = require('./solana-nft-service');
-const { getTokenAccounts } = require('./solana-address-service');
 
 /**
  * Returns the first NFT-mint candidate referenced by inner instructions whose
@@ -33,8 +32,10 @@ const getNftMintCandidate = (address, meta) =>
 
 /**
  * Preloads onto `locals` everything the bare-RPC transaction resource reads:
- * `locals.tokens`, `locals.tokenAccounts` and `locals.rpcNftBySignature`
- * (raw `findNft` result keyed by tx signature). No-op when every transaction
+ * `locals.tokens` and `locals.rpcNftBySignature` (raw `findNft` result keyed
+ * by tx signature). The token-account list is no longer read: the resource
+ * takes the wallet's deltas off the ledger's pre/post token balances, which
+ * name their owner. No-op when every transaction
  * is `_source: 'enriched'` (the resource passes those through untouched).
  *
  * @param {Array<Object>} transactions - service-shaped txs (`_source` tagged)
@@ -53,9 +54,6 @@ const loadRpcEnrichment = async (transactions, locals) => {
 
   if (!locals.tokens) {
     locals.tokens = await listTokens(locals);
-  }
-  if (!locals.tokenAccounts) {
-    locals.tokenAccounts = await getTokenAccounts(rpcTransactions[0].address, locals);
   }
 
   locals.rpcNftBySignature = locals.rpcNftBySignature || {};
