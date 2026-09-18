@@ -12,9 +12,14 @@ jest.mock('../solana-ft-service', () => ({
   getByMints: jest.fn(),
 }));
 
+jest.mock('../token-ui-amount-service', () => ({
+  getUiAmounts: jest.fn(),
+}));
+
 const blockdaemon = require('../../multichain/balance-providers/blockdaemon-balance-provider');
 const rpc = require('../solana-rpc-balance-provider');
 const tokenService = require('../solana-ft-service');
+const uiAmountService = require('../token-ui-amount-service');
 const provider = require('../solana-balance-provider');
 
 const buildSolNative = (lamports) => ({
@@ -48,6 +53,7 @@ describe('solana-balance-provider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     tokenService.getByMints.mockResolvedValue([]);
+    uiAmountService.getUiAmounts.mockResolvedValue(new Map());
   });
 
   it('attaches catalog metadata markers to SPL tokens by mint', async () => {
@@ -289,6 +295,91 @@ describe('solana-balance-provider', () => {
       await provider.getBalance('sol-address', undefined, {});
 
       expect(rpc.getBalance).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('scaled UI amounts', () => {
+    const SCALED_MINT = 'XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp';
+    const CLASSIC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
+    const catalogEntry = (mint, tokenProgram) => ({
+      id: mint,
+      symbol: 'TOK',
+      name: 'Token',
+      tokenProgram,
+      tags: ['verified'],
+    });
+
+    it('marks a rebasing token with the amount the holder should see', async () => {
+      blockdaemon.getBalance.mockResolvedValue([
+        buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
+      ]);
+      tokenService.getByMints.mockResolvedValue([catalogEntry(SCALED_MINT, 'token-2022')]);
+      uiAmountService.getUiAmounts.mockResolvedValue(new Map([[SCALED_MINT, '6796.15187137']]));
+
+      const out = await provider.getBalance('sol-address', undefined, {});
+
+      expect(uiAmountService.getUiAmounts).toHaveBeenCalledWith(
+        [{ mint: SCALED_MINT, amount: '677400755573', decimals: 8 }],
+        {}
+      );
+      expect(out[0]).toMatchObject({
+        confirmed_balance: '677400755573',
+        _uiAmount: '6796.15187137',
+      });
+    });
+
+    it('never asks about a classic SPL mint — neither extension can exist there', async () => {
+      blockdaemon.getBalance.mockResolvedValue([buildSplToken(CLASSIC_MINT, '5000000')]);
+      tokenService.getByMints.mockResolvedValue([catalogEntry(CLASSIC_MINT, 'spl-token')]);
+
+      await provider.getBalance('sol-address', undefined, {});
+
+      expect(uiAmountService.getUiAmounts).not.toHaveBeenCalled();
+    });
+
+    it('only asks about the tokens that survived the filters', async () => {
+      const spamMint = 'SpamMint1111111111111111111111111111111111';
+      blockdaemon.getBalance.mockResolvedValue([
+        buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
+        buildSplToken(spamMint, '1'),
+      ]);
+      tokenService.getByMints.mockResolvedValue([
+        catalogEntry(SCALED_MINT, 'token-2022'),
+        { id: spamMint, symbol: 'SPAM', name: 'Spam', tokenProgram: 'token-2022', tags: [] },
+      ]);
+
+      await provider.getBalance('sol-address', undefined, {});
+
+      expect(uiAmountService.getUiAmounts).toHaveBeenCalledWith(
+        [expect.objectContaining({ mint: SCALED_MINT })],
+        {}
+      );
+    });
+
+    it('leaves the raw amount in place when the mint lookup fails', async () => {
+      blockdaemon.getBalance.mockResolvedValue([
+        buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
+      ]);
+      tokenService.getByMints.mockResolvedValue([catalogEntry(SCALED_MINT, 'token-2022')]);
+      uiAmountService.getUiAmounts.mockRejectedValue(new Error('rpc down'));
+
+      const out = await provider.getBalance('sol-address', undefined, {});
+
+      expect(out[0].confirmed_balance).toBe('677400755573');
+      expect(out[0]).not.toHaveProperty('_uiAmount');
+    });
+
+    it('leaves a mint alone when its multiplier is neutral', async () => {
+      blockdaemon.getBalance.mockResolvedValue([
+        buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
+      ]);
+      tokenService.getByMints.mockResolvedValue([catalogEntry(SCALED_MINT, 'token-2022')]);
+      uiAmountService.getUiAmounts.mockResolvedValue(new Map());
+
+      const out = await provider.getBalance('sol-address', undefined, {});
+
+      expect(out[0]).not.toHaveProperty('_uiAmount');
     });
   });
 });

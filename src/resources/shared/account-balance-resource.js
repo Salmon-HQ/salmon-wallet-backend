@@ -14,6 +14,12 @@
  *     `_symbol`, `_coingeckoId`, `_tags`
  *   - pricing (`multichain/price-enrichers`): `_price`, `_usdBalance`,
  *     `_priceChange24h`
+ *   - display scaling (Solana provider, mint extensions): `_uiAmount`
+ *
+ * `amount` always stays the raw base-unit balance every transfer and price
+ * calculation is denominated in. `uiAmount` appears only for the mints whose
+ * extensions make the displayed figure differ from `amount / 10^decimals`
+ * (Scaled UI Amount, Interest Bearing) and is what a client renders.
  *
  * Markers override Blockdaemon defaults when present; absent markers
  * leave the response key-clean so existing consumers see the same
@@ -49,6 +55,7 @@ module.exports = async (balance, include, key, context) => {
     _price,
     _usdBalance,
     _priceChange24h,
+    _uiAmount,
   } = balance;
 
   const resource = {
@@ -60,6 +67,8 @@ module.exports = async (balance, include, key, context) => {
     name: _name ?? currency.name,
     type: currency.type,
   };
+
+  if (_uiAmount !== undefined && _uiAmount !== null) resource.uiAmount = _uiAmount;
 
   if (currency.type === 'native') {
     resource.address = NATIVE_ADDRESS[currency.asset_path] || currency.symbol.toLowerCase();

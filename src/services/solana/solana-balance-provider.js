@@ -18,11 +18,14 @@
  *      tokens that carry no `verified` tag (or that have no tags
  *      at all). Devs opt-in via `?includeSpam=true` to surface unverified
  *      tokens.
+ *   4. **UI amount** — for the Token-2022 mints still standing, resolves the
+ *      Scaled UI Amount / Interest Bearing multiplier and attaches `_uiAmount`.
+ *      Runs last so the mint reads cost only what the wallet actually shows.
  *
  * The merged shape is still Blockdaemon-flavoured raw items; downstream
  * (`account-balance-resource`) reads internal markers `_logo`, `_name`,
- * `_symbol`, `_coingeckoId`, `_tags` and forwards them to the public
- * payload.
+ * `_symbol`, `_coingeckoId`, `_tags`, `_uiAmount` and forwards them to the
+ * public payload.
  *
  * Registered in `multichain/balance-providers/index.js#PROVIDERS_BY_CHAIN`
  * for `solana`.
@@ -31,6 +34,7 @@
 const blockdaemonBalanceProvider = require('../multichain/balance-providers/blockdaemon-balance-provider');
 const rpcBalanceProvider = require('./solana-rpc-balance-provider');
 const tokenService = require('./solana-ft-service');
+const uiAmountService = require('./token-ui-amount-service');
 
 /**
  * True for failures the caller cannot act on: a transport error (timeout,
@@ -145,6 +149,52 @@ const filterSpamTokens = (items) => {
 };
 
 /**
+ * Attach `_uiAmount` to items whose mint scales the displayed amount (Scaled UI
+ * Amount, Interest Bearing — see `token-ui-amount-service`). Neither provider
+ * reports it, so a rebasing token such as a tokenised equity otherwise renders
+ * `amount / 10^decimals`, which is not what the holder owns.
+ *
+ * Runs last, on the items that survived the filters, and only for mints the
+ * catalog marks `token-2022` — the two extensions exist nowhere else, so a
+ * wallet of classic SPL tokens makes no request.
+ *
+ * A failure here is non-fatal, matching the metadata precedent above: the item
+ * keeps the raw amount it has today and the miss is logged. Failing the whole
+ * balance over one exotic mint would hide the wallet the user does own.
+ */
+const enrichWithUiAmounts = async (items, metadataByMint, locals) => {
+  const holdings = [];
+  for (const item of items) {
+    const mint = extractTokenMint(item);
+    if (!mint) continue;
+    if (metadataByMint.get(mint)?.tokenProgram !== 'token-2022') continue;
+    holdings.push({
+      mint,
+      amount: item.confirmed_balance,
+      decimals: item.currency?.decimals ?? 0,
+    });
+  }
+  if (holdings.length === 0) return items;
+
+  let uiAmounts;
+  try {
+    uiAmounts = await uiAmountService.getUiAmounts(holdings, locals);
+  } catch (error) {
+    console.warn(
+      `[solana-balance-provider] mint extension lookup failed, serving unscaled amounts: ${error.message}`
+    );
+    return items;
+  }
+  if (uiAmounts.size === 0) return items;
+
+  return items.map((item) => {
+    const mint = extractTokenMint(item);
+    const uiAmount = mint ? uiAmounts.get(mint) : undefined;
+    return uiAmount === undefined ? item : { ...item, _uiAmount: uiAmount };
+  });
+};
+
+/**
  * Fetch Solana balances for `address` via the Blockdaemon Universal
  * provider, then enrich with catalog + on-chain metadata and apply the zero-amount
  * and spam filters described in the file header.
@@ -173,10 +223,12 @@ const getBalance = async (address, tokens, locals) => {
   // a false zero the user reads as "my tokens are gone". Track the failure and
   // skip the filter instead: showing possible spam beats hiding real funds.
   let metadataAvailable = true;
+  let metadataByMint = new Map();
   if (tokenMints.length > 0) {
     try {
       const metadata = await tokenService.getByMints(tokenMints, locals);
-      enriched = enrichWithTokenMetadata(items, indexMetadataByMint(metadata));
+      metadataByMint = indexMetadataByMint(metadata);
+      enriched = enrichWithTokenMetadata(items, metadataByMint);
     } catch (error) {
       metadataAvailable = false;
       console.warn(
@@ -187,11 +239,10 @@ const getBalance = async (address, tokens, locals) => {
 
   const nonZero = filterZeroAmountTokens(enriched);
 
-  if (locals?.includeSpam === true || !metadataAvailable) {
-    return nonZero;
-  }
+  const visible =
+    locals?.includeSpam === true || !metadataAvailable ? nonZero : filterSpamTokens(nonZero);
 
-  return filterSpamTokens(nonZero);
+  return enrichWithUiAmounts(visible, metadataByMint, locals);
 };
 
 module.exports = { getBalance };

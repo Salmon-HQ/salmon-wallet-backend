@@ -148,4 +148,43 @@ describe('account-balance-resource', () => {
 
     expect(result.priceChange24h).toBeNull();
   });
+
+  describe('uiAmount', () => {
+    const scaledToken = (overrides = {}) => ({
+      owner: 'sol-address',
+      blockchain: 'solana',
+      confirmed_balance: '677400755573',
+      currency: {
+        symbol: 'AAPLx',
+        name: 'Apple xStock',
+        decimals: 8,
+        type: 'token',
+        asset_path: 'solana/mint/XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp',
+        detail: { contract: 'XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp' },
+      },
+      ...overrides,
+    });
+
+    it('publishes the scaled amount beside the raw one', async () => {
+      const result = await decorateBalance(
+        scaledToken({ _uiAmount: '6796.15187137' }),
+        {},
+        undefined,
+        {
+          locals: {},
+        }
+      );
+
+      // `amount` stays the unit transfers and fees are denominated in.
+      expect(result.amount).toBe('677400755573');
+      expect(result.decimals).toBe(8);
+      expect(result.uiAmount).toBe('6796.15187137');
+    });
+
+    it('omits uiAmount for a mint that scales one to one', async () => {
+      const result = await decorateBalance(scaledToken(), {}, undefined, { locals: {} });
+
+      expect(result).not.toHaveProperty('uiAmount');
+    });
+  });
 });
