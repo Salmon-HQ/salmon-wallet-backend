@@ -81,16 +81,24 @@ const toFixedPoint = (value) => {
 
 /**
  * The multiplier a Scaled UI Amount mint applies right now. `newMultiplier`
- * takes over at `newMultiplierEffectiveTimestamp`; before it, `multiplier`
- * still stands.
+ * takes over at `newMultiplierEffectiveTimestamp`; strictly before it, and
+ * when no timestamp is set at all, `multiplier` still stands.
  */
 const scaledUiMultiplier = (state, nowSeconds) => {
   if (!state) return null;
-  const effectiveAt = Number(state.newMultiplierEffectiveTimestamp ?? 0);
+
+  // Matches `amount_to_ui_amount` in the Token Extension Program, which
+  // compares against the timestamp and nothing else: 0 and any elapsed
+  // negative value mean "already effective", not "unset". An absent
+  // timestamp is the only "nothing scheduled" case, and it is handled here
+  // rather than folded into the numeric comparison.
+  const raw = state.newMultiplierEffectiveTimestamp;
+  const effectiveAt = raw === undefined || raw === null ? null : Number(raw);
   const active =
-    Number.isFinite(effectiveAt) && nowSeconds >= effectiveAt && effectiveAt > 0
+    effectiveAt !== null && Number.isFinite(effectiveAt) && nowSeconds >= effectiveAt
       ? state.newMultiplier
       : state.multiplier;
+
   return toFixedPoint(active ?? state.multiplier);
 };
 

@@ -102,9 +102,21 @@ describe('readMultiplier — scaled UI amount', () => {
     expect(multiplier).toBe(service.toFixedPoint('1.0032690125398187'));
   });
 
-  it('ignores an unscheduled new multiplier (zero timestamp)', () => {
+  // The Token Extension Program compares against the timestamp and nothing
+  // else, so 0 and any elapsed negative value mean "already effective". The
+  // chain applies the new multiplier; reporting the old one understates the
+  // holding in both the balance and its USD value.
+  it.each([[0], [-5]])('applies a new multiplier effective at %s', (effectiveAt) => {
     const multiplier = service.readMultiplier(
-      mintAccount([scaledUiExtension({ newMultiplierEffectiveTimestamp: 0 })]),
+      mintAccount([scaledUiExtension({ newMultiplierEffectiveTimestamp: effectiveAt })]),
+      AAPLX_EFFECTIVE_AT
+    );
+    expect(multiplier).toBe(service.toFixedPoint('1.0032690125398187'));
+  });
+
+  it.each([[undefined], [null]])('keeps the current multiplier when no timestamp is set (%s)', (effectiveAt) => {
+    const multiplier = service.readMultiplier(
+      mintAccount([scaledUiExtension({ newMultiplierEffectiveTimestamp: effectiveAt })]),
       AAPLX_EFFECTIVE_AT
     );
     expect(multiplier).toBe(service.toFixedPoint('1.0026642075893797'));
