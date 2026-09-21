@@ -79,8 +79,20 @@ const getSolanaMarketRanks = async () => getFromCache('solana:coingecko_market_r
 const saveSolanaMarketRanks = async (ranks, ttl) =>
   storeInCache('solana:coingecko_market_ranks', ranks, ttl);
 
+/**
+ * Encodes one caller-derived field so a ':' inside its value can never be
+ * read as the key's delimiter. The contract routes fold two path segments
+ * into a single `coinId` (`${platform}:${contractAddress}`), so without this
+ * two structurally different requests can produce one byte-identical key and
+ * each can serve the other's cached payload.
+ *
+ * @param {string|number} value
+ * @returns {string}
+ */
+const keyPart = (value) => encodeURIComponent(String(value));
+
 const getChartKey = (type, { coinId, days, currency }, locals) => {
-  return getCacheKey(`${type}:${coinId}:${currency}:${days}`, locals);
+  return getCacheKey(`${type}:${keyPart(coinId)}:${keyPart(currency)}:${keyPart(days)}`, locals);
 };
 
 /**
@@ -141,7 +153,7 @@ const saveChart = async (params, chartData, locals) => {
  * @returns {string}
  */
 const getCoinInfoKey = (type, { coinId, currency }, locals) => {
-  return getCacheKey(`${type}:${coinId}:${currency}`, locals);
+  return getCacheKey(`${type}:${keyPart(coinId)}:${keyPart(currency)}`, locals);
 };
 
 /**

@@ -48,3 +48,37 @@ describe('saveChart() TTL branching', () => {
     expect(ttls).toEqual([SHORT_HISTORY_SHORT_TTL, SHORT_HISTORY_LONG_TTL]);
   });
 });
+
+/**
+ * The contract routes fold two path segments into one coinId
+ * (`${platform}:${contractAddress}`), so a ':' inside any caller-supplied
+ * field is indistinguishable from the key's own delimiter unless each field
+ * is encoded before it is joined.
+ */
+describe('cache-key field isolation', () => {
+  const keyFor = async (params) => {
+    storeInCache.mockClear();
+    await coingeckoRepository.saveCoinInfo(params, { id: 'x' }, {});
+    return storeInCache.mock.calls[0][0];
+  };
+
+  test('a ":" in currency cannot forge the key a contract lookup reads', async () => {
+    const attacker = await keyFor({ coinId: 'solana', currency: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v:usd' });
+    const victim = await keyFor({ coinId: 'solana:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', currency: 'usd' });
+
+    expect(attacker).not.toEqual(victim);
+  });
+
+  test('a ":" in coinId cannot forge a chart key either', async () => {
+    const keyForChart = async (params) => {
+      storeInCache.mockClear();
+      await coingeckoRepository.saveChart(params, chartData, {});
+      return storeInCache.mock.calls[0][0];
+    };
+
+    const attacker = await keyForChart({ coinId: 'solana', days: 1, currency: 'mint:usd' });
+    const victim = await keyForChart({ coinId: 'solana:mint', days: 1, currency: 'usd' });
+
+    expect(attacker).not.toEqual(victim);
+  });
+});
