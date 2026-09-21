@@ -1,4 +1,3 @@
-const https = require('https');
 const { isEmpty } = require('../object-utils');
 const { resolveClientIp } = require('../network-utils');
 
@@ -14,45 +13,6 @@ const STATUS = {
 const HEALTH = {
   UP: 'UP',
   DOWN: 'DOWN',
-};
-
-// Bound the probe: `https.get` has no default timeout, so a hung third party
-// used to keep the health check open until the Lambda itself timed out.
-const INTERNET_PROBE_TIMEOUT = 3000;
-
-/**
- * Egress reachability probe.
- *
- * Informational only: its result no longer decides `app_state`. It calls a
- * third party we do not control, so letting it fail the health check meant
- * icanhazip having a bad day could take a perfectly healthy service out of the
- * load balancer.
- */
-const internetStatus = async (info = {}) => {
-  info.network = {};
-  try {
-    const clientRequest = await new Promise((resolve, reject) => {
-      const request = https.get('https://icanhazip.com/', resolve);
-      request.setTimeout(INTERNET_PROBE_TIMEOUT, () => {
-        request.destroy(new Error('internet probe timed out'));
-      });
-      request.on('error', reject);
-    });
-    let data = await new Promise((resolve, reject) => {
-      let response = '';
-      clientRequest.on('data', (chunk) => (response += chunk));
-      clientRequest.on('error', (err) => reject(err));
-      clientRequest.on('end', () => resolve(response));
-    });
-
-    info.network.ip = data.trim();
-    info.network.internet = STATUS.OK;
-  } catch (error) {
-    info.network.internet = STATUS.ERROR;
-    info.network.error = error.message;
-  }
-
-  return undefined;
 };
 
 const shouldCheckConnection = (connectors, databaseType) => {
@@ -85,7 +45,9 @@ const healthCheck = async (req, connectors) => {
   let info = {};
   const promises = [];
 
-  promises.push(internetStatus(info));
+  // Liveness reflects only what this service controls. The egress probe to a
+  // third party was informational and never decided app_state, but it still
+  // cost every anonymous GET /health an outbound call with a 3s worst case.
   promises.push(checkRedisConnection(connectors, info));
 
   const status = await Promise.all(promises);
