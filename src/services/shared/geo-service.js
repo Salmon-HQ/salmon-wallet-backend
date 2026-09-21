@@ -17,11 +17,19 @@ const REQUEST_TIMEOUT_MS = 3000;
 /**
  * Fetch geolocation info for the caller's IP from ip-api.com.
  *
+ * The address must be passed. Asked without one, ip-api.com geolocates the
+ * TCP source it observes — which, called from the Lambda, is the Lambda's own
+ * egress address, so every caller would receive the service's location and
+ * outbound identity rather than their own.
+ *
+ * @param {string} [clientIp] - The caller's public address. Omitted only when
+ *   it cannot be resolved, in which case the answer describes this service.
  * @returns {Promise<object>} The ip-api.com JSON payload (country, query, etc.).
  * @throws {Error} Propagates any upstream/network error to the caller.
  */
-const getCallerGeo = async () => {
-  const { data } = await http.get(IP_API_URL, { timeout: REQUEST_TIMEOUT_MS });
+const getCallerGeo = async (clientIp) => {
+  const url = clientIp ? `${IP_API_URL}/${encodeURIComponent(clientIp)}` : IP_API_URL;
+  const { data } = await http.get(url, { timeout: REQUEST_TIMEOUT_MS });
   return data;
 };
 
