@@ -44,27 +44,68 @@ const getFee = (address, meta, accountKeys) => {
   return undefined;
 };
 
-/** Returns the source pubkey from the first transfer-style instruction. */
-const getSource = (transaction) => {
-  const { instructions } = transaction?.message || {};
-  return (
-    instructions?.[0]?.parsed?.info?.authority ||
-    instructions?.[0]?.parsed?.info?.source ||
-    instructions?.[1]?.parsed?.info?.source
+/**
+ * Maps each token account in the transaction to the wallet that owns it and
+ * the mint it holds, from the balance records the RPC already returns.
+ *
+ * SPL instructions name token accounts, not wallets, so without this the
+ * wallet is never on either side of its own token transfer.
+ *
+ * @param {Object} meta
+ * @param {string[]} accountKeys
+ * @returns {Map<string, {owner: string, mint: string}>}
+ */
+const tokenAccountOwners = (meta, accountKeys) => {
+  const entries = [...(meta?.preTokenBalances || []), ...(meta?.postTokenBalances || [])];
+
+  return new Map(
+    entries
+      .filter((entry) => entry && entry.owner && accountKeys[entry.accountIndex])
+      .map((entry) => [accountKeys[entry.accountIndex], { owner: entry.owner, mint: entry.mint }])
   );
 };
 
-/** Returns the destination pubkey of the first transfer instruction (or first instruction with a destination). */
-const getDestination = (transaction) => {
-  const { instructions } = transaction?.message || {};
-  return [
-    instructions?.filter((ins) => ins?.parsed?.type === 'transfer')?.[0],
-    instructions?.[0],
-    instructions?.[1],
-    instructions?.[2],
-  ]
-    .map((instruction) => instruction?.parsed?.info?.destination)
-    .filter(Boolean)?.[0];
+/**
+ * Counterparty for one leg, bound to that leg's asset.
+ *
+ * Only an instruction that moved this mint, with the wallet on the matching
+ * side, may name the other party. Reading the first instruction's `authority`
+ * or `source` by position instead lets whoever composed the transaction pick
+ * which address the wallet displays as the sender, and misattributes any
+ * ordinary multi-instruction transaction — a router swap, a batched payout —
+ * whose first instruction belongs to a different leg. This is the rule the
+ * enriched mapper's `counterpartyFor` already applies.
+ *
+ * @param {Object} transaction
+ * @param {string} address - the wallet the row is rendered for.
+ * @param {Object} leg - the input or output leg being rendered.
+ * @param {'in'|'out'} direction
+ * @param {Map<string, {owner: string, mint: string}>} owners
+ * @returns {string|undefined} the other party, or undefined when no movement
+ *   of this asset names one.
+ */
+const counterpartyForLeg = (transaction, address, leg, direction, owners) => {
+  const instructions = transaction?.message?.instructions || [];
+  const isNative = leg.contract === SOL_ADDRESS;
+
+  /** True when `account` is the wallet itself, or a token account it owns holding this leg's mint. */
+  const isWalletSide = (account) => {
+    if (account === address) return isNative;
+    const owned = owners.get(account);
+    return Boolean(owned && owned.owner === address && owned.mint === leg.contract);
+  };
+
+  const match = instructions.find((instruction) => {
+    const info = instruction?.parsed?.info;
+    if (!info) return false;
+    if (!isNative && info.mint && info.mint !== leg.contract) return false;
+    return isWalletSide(direction === 'in' ? info.destination : info.source);
+  })?.parsed?.info;
+
+  if (!match) return undefined;
+
+  const other = direction === 'in' ? match.authority || match.source : match.destination;
+  return owners.get(other)?.owner || other;
 };
 
 /** Strips the internal `_source` flag from an already-enriched tx payload before returning. */
@@ -157,17 +198,19 @@ const resolveType = (meta, legs, isFeePayer) => {
   return isFeePayer ? INTERACTION : UNKNOWN;
 };
 
-/** Counterparties from the instruction heuristics: who the inputs came from, where the outputs went. */
-const attachCounterparties = (type, legs, transaction) => {
-  const source = getSource(transaction);
-  const destination = getDestination(transaction);
-  return {
-    inputs: legs.inputs.map((leg) => (type === RECEIVE && source ? { ...leg, source } : leg)),
-    outputs: legs.outputs.map((leg) =>
-      type === SEND && destination ? { ...leg, destination } : leg
-    ),
-  };
-};
+/** Counterparties per leg: who sent that asset, where that asset went. */
+const attachCounterparties = (type, legs, transaction, address, owners) => ({
+  inputs: legs.inputs.map((leg) => {
+    const source =
+      type === RECEIVE ? counterpartyForLeg(transaction, address, leg, 'in', owners) : undefined;
+    return source ? { ...leg, source } : leg;
+  }),
+  outputs: legs.outputs.map((leg) => {
+    const destination =
+      type === SEND ? counterpartyForLeg(transaction, address, leg, 'out', owners) : undefined;
+    return destination ? { ...leg, destination } : leg;
+  }),
+});
 
 /** Assembles the bare-RPC fallback resource: id, timestamp, status, fee, type, inputs, outputs. */
 const buildResource = (transactionInfo, context) => {
@@ -177,7 +220,7 @@ const buildResource = (transactionInfo, context) => {
   const nft = getNft(signature, context);
   const legs = buildLegs(delta, nft, context.locals.tokens);
   const type = resolveType(meta, legs, accountKeys[0] === address);
-  const { inputs, outputs } = attachCounterparties(type, legs, transaction);
+  const { inputs, outputs } = attachCounterparties(type, legs, transaction, address, tokenAccountOwners(meta, accountKeys));
 
   return {
     id: signature,

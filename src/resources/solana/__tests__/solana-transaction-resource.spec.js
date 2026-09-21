@@ -66,27 +66,76 @@ describe('solana-transaction-resource rpc fallback parser', () => {
     ]);
   });
 
+  // Whoever composes the transaction that credits the wallet also chooses its
+  // instruction order, so a counterparty read by position is a counterparty
+  // they choose. A leg may only name the party that moved that leg's asset.
+  it('names no source when the first instruction moved a different asset', async () => {
+    const result = await resource(
+      tx({
+        signature: 'sig-decoy',
+        accountKeys: keys(other, address),
+        meta: {
+          preBalances: [10_000_000_000, 1_000_000],
+          postBalances: [8_749_995_000, 1_251_000_000],
+        },
+        instructions: [
+          {
+            parsed: {
+              type: 'transferChecked',
+              info: { authority: 'decoy-address', mint: 'mint-usdc', destination: 'ta-1' },
+            },
+          },
+        ],
+      }),
+      {},
+      'target',
+      context()
+    );
+
+    expect(result.type).toBe('receive');
+    expect(result.inputs[0].source).toBeUndefined();
+  });
+
   it('a token send: the mint the wallet lost, from the token list, with the fee on the payer', async () => {
     const result = await resource(
       tx({
         signature: 'sig-send',
-        accountKeys: keys(address, other),
+        // SPL instructions name token accounts, so the wallet and the
+        // counterparty are reached through the balance records' `owner`.
+        accountKeys: keys(address, other, 'ta-1', 'ta-2'),
         meta: {
-          preBalances: [1_000_000_000, 0],
-          postBalances: [999_995_000, 0],
+          preBalances: [1_000_000_000, 0, 0, 0],
+          postBalances: [999_995_000, 0, 0, 0],
           preTokenBalances: [
             {
+              accountIndex: 2,
               owner: address,
               mint: 'mint-usdc',
               uiTokenAmount: { amount: '2500000', decimals: 6 },
             },
           ],
           postTokenBalances: [
-            { owner: address, mint: 'mint-usdc', uiTokenAmount: { amount: '0', decimals: 6 } },
+            {
+              accountIndex: 2,
+              owner: address,
+              mint: 'mint-usdc',
+              uiTokenAmount: { amount: '0', decimals: 6 },
+            },
+            {
+              accountIndex: 3,
+              owner: other,
+              mint: 'mint-usdc',
+              uiTokenAmount: { amount: '2500000', decimals: 6 },
+            },
           ],
         },
         instructions: [
-          { parsed: { type: 'transferChecked', info: { source: 'ta-1', destination: 'ta-2' } } },
+          {
+            parsed: {
+              type: 'transferChecked',
+              info: { source: 'ta-1', destination: 'ta-2', mint: 'mint-usdc' },
+            },
+          },
         ],
       }),
       {},
@@ -105,7 +154,7 @@ describe('solana-transaction-resource rpc fallback parser', () => {
         name: 'USD Coin',
         logo: 'https://cdn.example/usdc.png',
         contract: 'mint-usdc',
-        destination: 'ta-2',
+        destination: other,
       },
     ]);
   });
