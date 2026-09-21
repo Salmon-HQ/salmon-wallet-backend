@@ -279,6 +279,24 @@ const collectAccountData = (rawTx) => {
 };
 
 /**
+ * Parses a provider-reported base-unit amount, degrading to zero rather than
+ * throwing. Every value here comes from an RPC response, and BigInt() rejects
+ * anything that is not a plain integer string — scientific notation, a decimal
+ * point, or text. One unparseable balance must cost that leg, not abort the
+ * whole parseTransaction call, which the module contracts never to throw.
+ *
+ * @param {string|number|null|undefined} value
+ * @returns {bigint}
+ */
+const toBigIntOrZero = (value) => {
+  try {
+    return BigInt(value ?? '0');
+  } catch {
+    return 0n;
+  }
+};
+
+/**
  * Token balance deltas by account index. A balance list names the token
  * account by `accountIndex` and carries `mint`, `owner` and the raw
  * `uiTokenAmount.amount`; an account present on one side only (opened or
@@ -302,7 +320,7 @@ const collectTokenBalanceChanges = (rawTx) => {
       pre: 0n,
       post: 0n,
     };
-    entry[side] = BigInt(balance.uiTokenAmount?.amount ?? '0');
+    entry[side] = toBigIntOrZero(balance.uiTokenAmount?.amount);
     if (balance.owner) entry.userAccount = balance.owner;
     byIndex.set(slotKey, entry);
   };

@@ -69,6 +69,28 @@ describe('parser orchestrator', () => {
     expect(parseTransaction(undefined)).toBeNull();
   });
 
+  // The parser's contract is that it never throws: every field here comes
+  // from an RPC provider, and one unparseable amount must degrade that leg,
+  // not the whole transaction.
+  it.each([['1.5e10'], ['0.5'], ['not-a-number'], [null]])(
+    'degrades a token balance of %s instead of throwing',
+    (amount) => {
+      const rawTx = buildRawTx({
+        instructions: [{ programId: SYSTEM, parsed: { type: 'transfer', info: {} } }],
+      });
+      rawTx.meta.postTokenBalances = [
+        {
+          accountIndex: 0,
+          mint: 'mint-1',
+          owner: 'owner-1',
+          uiTokenAmount: { amount, decimals: 6 },
+        },
+      ];
+
+      expect(() => parseTransaction(rawTx, { signature: 'SIG' })).not.toThrow();
+    }
+  );
+
   it('parses a System transfer as TRANSFER + SYSTEM_PROGRAM source', () => {
     const rawTx = buildRawTx({
       instructions: [
