@@ -117,4 +117,29 @@ describe('getOffchainMetadata', () => {
     expect(result).toBeNull();
     expect(http.get).not.toHaveBeenCalled();
   });
+
+  // Node never calls the agent's `lookup` hook for a host that is already an
+  // IP literal, so guardedLookup does not see these connections at all: the
+  // URL-level check is the only thing that stops them.
+  test.each([
+    ['http://169.254.169.254/latest/meta-data/', 'cloud instance metadata'],
+    ['http://127.0.0.1:8080/metadata.json', 'loopback'],
+    ['http://10.0.0.5/metadata.json', 'private range'],
+    ['http://[::1]:8080/metadata.json', 'IPv6 loopback'],
+    ['http://[::ffff:7f00:1]/metadata.json', 'IPv4-mapped loopback in hex groups'],
+  ])('refuses the IP-literal host in %s (%s)', async (url) => {
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(result).toBeNull();
+    expect(http.get).not.toHaveBeenCalled();
+  });
+
+  test('still fetches a hostname destination', async () => {
+    http.get.mockResolvedValue({ data: { description: 'ok', image: 'i', attributes: [] } });
+
+    const result = await repository.getOffchainMetadata('https://metadata.example/x.json', {});
+
+    expect(result).toEqual({ description: 'ok', image: 'i', attributes: [] });
+    expect(http.get).toHaveBeenCalled();
+  });
 });

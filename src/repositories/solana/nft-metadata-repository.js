@@ -125,11 +125,34 @@ const asMetadataObject = (payload) => {
   return value;
 };
 
+/**
+ * True when a URL's host is an IP literal.
+ *
+ * Node's `net.Socket` short-circuits `lookupAndConnect` when the host is
+ * already an IP, so the agents' `guardedLookup` hook is never called and the
+ * whole destination policy is off the connection path. No legitimate NFT
+ * metadata is served from a bare IP, so refusing literal hosts restores the
+ * guarantee without weakening the hostname case, which guardedLookup still
+ * covers against DNS rebinding.
+ *
+ * @param {string} url
+ * @returns {boolean}
+ */
+const hasIpLiteralHost = (url) => {
+  try {
+    return net.isIP(new URL(url).hostname.replace(/^\[|\]$/g, '')) !== 0;
+  } catch {
+    return true;
+  }
+};
+
 const fetchOffchainMetadata = async (url) => {
   const { protocol } = new URL(url);
   if (protocol !== 'https:' && protocol !== 'http:') {
     return null;
   }
+
+  if (hasIpLiteralHost(url)) return null;
 
   const response = await http.get(url, {
     timeout: FETCH_TIMEOUT_MS,
@@ -138,6 +161,15 @@ const fetchOffchainMetadata = async (url) => {
     httpsAgent,
     httpAgent,
     headers: { Accept: 'application/json' },
+    // A permitted hostname can redirect to an IP literal, which would put the
+    // destination back outside guardedLookup's reach, so every hop is checked.
+    beforeRedirect: (options) => {
+      if (hasIpLiteralHost(options.href)) {
+        const denied = new Error(`Refusing to fetch NFT metadata from ${options.href}`);
+        denied.code = 'BLOCKED_ADDRESS';
+        throw denied;
+      }
+    },
     validateStatus: (status) => status >= 200 && status < 300,
   });
 
