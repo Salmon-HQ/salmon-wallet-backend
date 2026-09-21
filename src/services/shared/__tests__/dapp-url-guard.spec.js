@@ -27,6 +27,10 @@ describe('dapp-url-guard', () => {
       ['unique local v6', 'fd00::1'],
       ['link local v6', 'fe80::1'],
       ['ipv4-mapped private', '::ffff:10.0.0.1'],
+      ['ipv4-mapped private, hex groups', '::ffff:a00:1'],
+      ['ipv4-mapped loopback, hex groups', '::ffff:7f00:1'],
+      ['ipv4-mapped cloud metadata, hex groups', '::ffff:a9fe:a9fe'],
+      ['ipv4-mapped private, uncompressed', '0:0:0:0:0:ffff:a00:1'],
       ['not an ip', 'example.com'],
     ])('blocks %s', (_label, address) => {
       expect(isBlockedAddress(address)).toBe(true);
@@ -36,6 +40,7 @@ describe('dapp-url-guard', () => {
       ['public v4', '93.184.216.34'],
       ['public v6', '2606:2800:220:1:248:1893:25c8:1946'],
       ['ipv4-mapped public', '::ffff:93.184.216.34'],
+      ['ipv4-mapped public, hex groups', '::ffff:5db8:d822'],
     ])('allows %s', (_label, address) => {
       expect(isBlockedAddress(address)).toBe(false);
     });
@@ -49,6 +54,19 @@ describe('dapp-url-guard', () => {
       expect(address).toBe('93.184.216.34');
       expect(family).toBe(4);
       expect(dns.lookup).toHaveBeenCalledWith('example.com', { all: true });
+    });
+
+    // `new URL()` rewrites every bracketed IPv6 host into hex groups, so these
+    // are the only spellings the guard ever sees from this entrypoint.
+    it.each([
+      ['loopback', 'http://[::ffff:127.0.0.1]/'],
+      ['loopback, hex groups', 'http://[::ffff:7f00:1]/'],
+      ['cloud metadata', 'http://[::ffff:169.254.169.254]/latest/meta-data/'],
+      ['cloud metadata, hex groups', 'http://[::ffff:a9fe:a9fe]/latest/meta-data/'],
+      ['private 10/8', 'http://[::ffff:10.0.0.1]/'],
+    ])('rejects an ipv4-mapped %s literal', async (_label, rawUrl) => {
+      await expect(assertFetchableUrl(rawUrl)).rejects.toBeInstanceOf(DappUrlError);
+      expect(dns.lookup).not.toHaveBeenCalled();
     });
 
     it('rejects a missing url with a 400 missing_parameter', async () => {
