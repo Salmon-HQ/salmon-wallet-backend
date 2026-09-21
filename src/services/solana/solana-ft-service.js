@@ -143,6 +143,11 @@ const merge = (listed, onChain) => {
     icon: listed?.icon || onChain?.icon || null,
     tags: listed ? listed.tags : [],
     coingeckoId: listed?.coingeckoId ?? null,
+    // Mint facts come from the mint, never from the off-chain price list: a
+    // wrong exponent here is a wrong amount in every balance the wallet
+    // formats and every transfer it sizes. Pinned explicitly, the way
+    // tokenProgram is, because the catalog spread above wins otherwise.
+    decimals: onChain?.decimals ?? listed?.decimals,
     tokenProgram: onChain?.tokenProgram ?? null,
   };
 };

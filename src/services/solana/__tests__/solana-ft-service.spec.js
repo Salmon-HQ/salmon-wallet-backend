@@ -110,6 +110,20 @@ describe('Solana FT Service - catalog + on-chain metadata', () => {
     ]);
   });
 
+  // `decimals` is the exponent every conversion between raw amounts and the
+  // figure a user reads and types depends on. It is a fact about the mint, so
+  // a stale or wrong value on the off-chain price list must not win.
+  test('getByMints takes decimals from the mint, not from the catalog listing', async () => {
+    metadata.getByMints.mockResolvedValue(new Map([[USDC, { id: USDC, symbol: 'USDC', decimals: 9 }]]));
+    catalog.byMints.mockResolvedValue(
+      new Map([[USDC, { id: USDC, symbol: 'USDC', decimals: 6, tags: ['verified'], coingeckoId: 'usd-coin' }]])
+    );
+
+    const [usdc] = await service.getByMints([USDC], locals);
+
+    expect(usdc.decimals).toBe(9);
+  });
+
   test('getByMints keeps the native SOL symbol/name over the catalog "WSOL" listing', async () => {
     const SOL = 'So11111111111111111111111111111111111111112';
     metadata.getByMints.mockResolvedValue(
