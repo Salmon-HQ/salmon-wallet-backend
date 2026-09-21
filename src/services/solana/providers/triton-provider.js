@@ -80,9 +80,26 @@ const dasRpc = async (id, method, params, environment, { timeout = 10000 } = {})
   return data?.result;
 };
 
-/** DAS getAsset for a single mint. @returns {Promise<Object|null>} Raw DAS asset, or null. */
+/**
+ * DAS getAsset for a single mint.
+ *
+ * `showFungible` is requested because the burn and transfer guards decide
+ * fungibility from `token_info.decimals`, and that block is what carries it.
+ * Triton reports USDC as interface `Custom` with a non-zero
+ * `supply.edition_nonce`, which the guard's interface allow-list does not
+ * catch, so `decimals` is the only arm that refuses it — asking for the block
+ * makes the guard's dependency part of the request rather than a default the
+ * provider is free to change.
+ *
+ * @returns {Promise<Object|null>} Raw DAS asset, or null.
+ */
 const dasGetAsset = async (mint, environment) =>
-  (await dasRpc('get-asset', 'getAsset', { id: mint }, environment)) || null;
+  (await dasRpc(
+    'get-asset',
+    'getAsset',
+    { id: mint, displayOptions: { showFungible: true } },
+    environment
+  )) || null;
 
 /** DAS getAssets (batch). @returns {Promise<Object[]>} Raw DAS assets, in request order where found. */
 const dasGetAssetBatch = async (mints, environment) =>

@@ -87,7 +87,10 @@ const fetchDasAssetByMint = async (nodeUrl, mintAddress, locals) => {
           jsonrpc: '2.0',
           id: 'get-asset',
           method: 'getAsset',
-          params: { id: mintAddress },
+          // See triton-provider.dasGetAsset: the burn and transfer guards read
+          // fungibility out of `token_info.decimals`, so the block they depend
+          // on is requested rather than assumed.
+          params: { id: mintAddress, displayOptions: { showFungible: true } },
         },
         {
           headers: { 'Content-Type': 'application/json' },
