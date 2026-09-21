@@ -96,6 +96,49 @@ describe('solana-transaction-resource rpc fallback parser', () => {
     expect(result.inputs[0].source).toBeUndefined();
   });
 
+  // logMessages is free text any invoked program can write, so a type read
+  // out of it by substring is a type the transaction's author picks.
+  it('ignores a Bubblegum program id printed in a log message', async () => {
+    const result = await resource(
+      tx({
+        signature: 'sig-log-mint',
+        accountKeys: keys(other, address),
+        meta: {
+          preBalances: [10_000_000_000, 1_000_000],
+          postBalances: [8_749_995_000, 1_251_000_000],
+          logMessages: [`Program log: memo BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`],
+        },
+        instructions: [
+          {
+            programId: '11111111111111111111111111111111',
+            parsed: { type: 'transfer', info: { source: other, destination: address } },
+          },
+        ],
+      }),
+      {},
+      'target',
+      context()
+    );
+
+    expect(result.type).toBe('receive');
+  });
+
+  it('calls a fee-only transaction that invoked Bubblegum a mint', async () => {
+    const result = await resource(
+      tx({
+        signature: 'sig-cnft-mint',
+        accountKeys: keys(address, other),
+        meta: { preBalances: [1_000_000_000, 0], postBalances: [999_995_000, 0] },
+        instructions: [{ programId: 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY' }],
+      }),
+      {},
+      'target',
+      context()
+    );
+
+    expect(result.type).toBe('mint');
+  });
+
   it('a token send: the mint the wallet lost, from the token list, with the fee on the payer', async () => {
     const result = await resource(
       tx({

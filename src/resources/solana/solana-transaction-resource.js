@@ -182,19 +182,44 @@ const buildLegs = (delta, nft, tokens) => {
 };
 
 /**
- * The type, once the legs are known (spec 016 FR-004 to FR-006): a Bubblegum
- * mint keeps precedence; then only outputs is a send, only inputs a receive,
- * both an interaction; nothing moved is an interaction when the wallet paid
- * the fee (it signed for something) and unknown otherwise.
+ * True when the transaction actually invoked Bubblegum, by exact program-id
+ * match over its outer and inner instructions.
+ *
+ * `logMessages` is free text that any invoked program can write, so matching
+ * a program id as a substring of it lets whoever composed the transaction
+ * choose the type the wallet displays.
+ *
+ * @param {Object} transaction
+ * @param {Object} meta
+ * @returns {boolean}
  */
-const resolveType = (meta, legs, isFeePayer) => {
-  const logMessages = meta?.logMessages || [];
-  if (logMessages.some((msg) => msg.includes(BUBBLEGUM_PROGRAM_ID))) return MINT;
+const invokesBubblegum = (transaction, meta) => {
+  const outer = transaction?.message?.instructions || [];
+  const inner = (meta?.innerInstructions || []).flatMap((entry) => entry?.instructions || []);
+
+  return [...outer, ...inner].some((instruction) => {
+    const { programId } = instruction || {};
+    const id = typeof programId === 'string' ? programId : programId?.toBase58?.();
+    return id === BUBBLEGUM_PROGRAM_ID;
+  });
+};
+
+/**
+ * The type, once the legs are known (spec 016 FR-004 to FR-006): only outputs
+ * is a send, only inputs a receive, both an interaction; nothing moved is a
+ * mint when the transaction invoked Bubblegum — a compressed mint credits no
+ * token or lamport balance, so it has no legs to read — else an interaction
+ * when the wallet paid the fee (it signed for something), and unknown
+ * otherwise. What the wallet's own ledger says outranks the mint case, so a
+ * cNFT transfer is not relabelled as a mint.
+ */
+const resolveType = (transaction, meta, legs, isFeePayer) => {
   const hasIn = legs.inputs.length > 0;
   const hasOut = legs.outputs.length > 0;
   if (hasIn && hasOut) return INTERACTION;
   if (hasOut) return SEND;
   if (hasIn) return RECEIVE;
+  if (invokesBubblegum(transaction, meta)) return MINT;
   return isFeePayer ? INTERACTION : UNKNOWN;
 };
 
@@ -219,7 +244,7 @@ const buildResource = (transactionInfo, context) => {
   const delta = computeRpcWalletDelta(meta, accountKeys, address);
   const nft = getNft(signature, context);
   const legs = buildLegs(delta, nft, context.locals.tokens);
-  const type = resolveType(meta, legs, accountKeys[0] === address);
+  const type = resolveType(transaction, meta, legs, accountKeys[0] === address);
   const { inputs, outputs } = attachCounterparties(type, legs, transaction, address, tokenAccountOwners(meta, accountKeys));
 
   return {
