@@ -72,12 +72,14 @@ const buildTokens = async () => {
   const [list, coinIds, ranks] = await Promise.all([
     coingecko.getSolanaTokenList(),
     coingecko.getSolanaCoinIds(),
-    coingecko.getSolanaMarketRanks().catch((error) => {
-      console.warn(
-        `Token catalog: market ranks unavailable (${error.message}); alphabetical order`
-      );
-      return new Map();
-    }),
+    // Not swallowed: with no ranks `tagsFor` labels every listed token
+    // `community`, and both the balance and activity spam filters read a
+    // missing `verified` tag as a spam verdict — so a rank-less build cached
+    // for 24h shows a holder nothing but native SOL while their funds sit
+    // untouched on chain. Letting it throw hands `withSingleFlight` the
+    // failure it already handles correctly: serve the last good snapshot,
+    // and error only when no copy exists.
+    coingecko.getSolanaMarketRanks(),
   ]);
   return list
     .filter((entry) => entry && entry.address && entry.symbol && typeof entry.decimals === 'number')

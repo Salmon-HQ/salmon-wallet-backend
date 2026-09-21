@@ -129,16 +129,15 @@ describe('token-catalog-service', () => {
     expect([...many.keys()]).toEqual([USDC]);
   });
 
-  it('falls back to alphabetical order when market ranks are unavailable', async () => {
+  // Without ranks every listed token — the real USDC included — is tagged
+  // `community`, and the balance and activity filters read a missing
+  // `verified` tag as a spam verdict. Publishing that build under the 24h TTL
+  // hides a holder's real tokens until it expires, so the failure has to
+  // propagate and let the last good snapshot stand.
+  it('propagates a market-rank failure instead of publishing a rank-less catalog', async () => {
     coingecko.getSolanaMarketRanks.mockRejectedValue(new Error('429'));
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
-    const tokens = await catalog.getVerified();
-
-    expect(tokens.map((t) => t.symbol)).toEqual(['Bonk', 'USDC', 'USDC', 'USDCet']);
-    // without ranks nothing can be told apart: everything listed is community
-    expect(tokens.every((t) => t.tags[0] === 'community')).toBe(true);
-    warn.mockRestore();
+    await expect(catalog.getVerified()).rejects.toThrow('429');
   });
 
   it('propagates a source failure instead of an empty catalog', async () => {
