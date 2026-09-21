@@ -37,6 +37,8 @@ const PRIORITY_FEE_MIN = 1000;
 const PRIORITY_FEE_MAX = 20000;
 /** Headroom over the simulated compute units; fallback when simulation is unavailable. */
 const COMPUTE_UNIT_HEADROOM = 1.15;
+/** Ceiling a transaction may request; used while simulating so the run is never capped. */
+const MAX_COMPUTE_UNIT_LIMIT = 1400000;
 const COMPUTE_UNIT_FALLBACK = 400000;
 /** getRecentPrioritizationFees accepts at most this many accounts. */
 const PRIORITY_FEE_MAX_ACCOUNTS = 128;
@@ -130,7 +132,9 @@ const fetchLookupTables = async (connection, addresses) => {
 /** Program id (base58) of every top-level instruction in `message`, lookup tables resolved. */
 const programIdsOf = (message, lookupTables) => {
   const keys = message.getAccountKeys({ addressLookupTableAccounts: lookupTables });
-  return message.compiledInstructions.map((ix) => keys.get(ix.programIdIndex).toBase58());
+  return [
+    ...new Set(message.compiledInstructions.map((ix) => keys.get(ix.programIdIndex).toBase58())),
+  ];
 };
 
 /**
@@ -176,8 +180,25 @@ const compileUnsigned = async ({
       instructions: ixs,
     }).compileToV0Message(lookupTables);
 
+  // The compute-budget instructions are part of what the caller executes, so
+  // they are part of what gets simulated. Measured without them, the limit is
+  // derived from a message that is not the one returned, and the proportional
+  // headroom has to cover their fixed cost out of a percentage of everything
+  // else: for a build simulating under ~2000 units, 15% is less than the two
+  // instructions cost, and the returned bytes exceed their own declared limit
+  // and fail on chain with the fee already charged. The placeholder limit only
+  // caps execution, so swapping it for the real one below changes no cost.
+  const budgetFor = (units) =>
+    priorityFee > 0
+      ? [
+          ComputeBudgetProgram.setComputeUnitLimit({ units }),
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }),
+        ]
+      : [];
+  const placeholderBudget = budgetFor(MAX_COMPUTE_UNIT_LIMIT);
+
   let applied = cleanup;
-  let simulated = compile([...instructions, ...applied]);
+  let simulated = compile([...placeholderBudget, ...instructions, ...applied]);
   let simulation = await simulate(connection, simulated);
   if (simulation.err && applied.length > 0) {
     console.warn('[CLEANUP_SKIPPED] intermediate account close rejected in simulation', {
@@ -186,7 +207,7 @@ const compileUnsigned = async ({
       logs: simulation.logs,
     });
     applied = [];
-    simulated = compile(instructions);
+    simulated = compile([...placeholderBudget, ...instructions]);
     simulation = await simulate(connection, simulated);
   }
   const base = {
@@ -206,14 +227,7 @@ const compileUnsigned = async ({
     });
   }
   const computeUnitLimit = computeUnitLimitFrom(simulation);
-  const budget =
-    priorityFee > 0
-      ? [
-          ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnitLimit }),
-          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee }),
-        ]
-      : [];
-  const message = compile([...budget, ...instructions, ...applied]);
+  const message = compile([...budgetFor(computeUnitLimit), ...instructions, ...applied]);
   const transaction = Buffer.from(new VersionedTransaction(message).serialize()).toString('base64');
 
   return {
