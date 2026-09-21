@@ -163,6 +163,29 @@ describe('error-handler middleware', () => {
     );
   });
 
+  // Helius and Triton authenticate with the secret inside the request URL
+  // itself, so the URL is a credential just as much as the header is.
+  it.each([
+    ['helius', 'https://mainnet.helius-rpc.com/?api-key=super-secret-key', 'https://mainnet.helius-rpc.com'],
+    [
+      'triton',
+      'https://tenant.solana-mainnet.rpcpool.com/super-secret-key',
+      'https://tenant.solana-mainnet.rpcpool.com',
+    ],
+  ])('never logs the %s credential embedded in the upstream url', (_label, url, origin) => {
+    const res = buildRes();
+    const err = Object.assign(new Error('Request failed with status code 500'), {
+      response: { status: 500, data: {} },
+      config: { url },
+    });
+
+    errorHandler(err, req, res, jest.fn());
+
+    const logged = JSON.stringify(console.error.mock.calls);
+    expect(logged).not.toContain('super-secret-key');
+    expect(console.error).toHaveBeenCalledWith('[error-handler]', expect.objectContaining({ upstreamUrl: origin }));
+  });
+
   it("logs the provider reason, not axios's opaque message, for client errors", () => {
     const res = buildRes();
     const err = Object.assign(new Error('Request failed with status code 400'), {

@@ -87,6 +87,25 @@ const describe = (err) => {
  * @param {string} error - the snake_case envelope code
  * @returns {Object}
  */
+/**
+ * Reduces an upstream URL to its origin. The scheme and host are the whole
+ * diagnostic value of the field — which provider was called — while the path
+ * and query are exactly where Helius (`?api-key=`) and Triton (trailing path
+ * segment) put their live credential, so dropping both closes every
+ * URL-embedded case without per-provider special-casing.
+ *
+ * @param {string|undefined} url
+ * @returns {string|undefined}
+ */
+const toOrigin = (url) => {
+  if (!url) return undefined;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
+  }
+};
+
 const toLogRecord = (err, req, status, error) => ({
   method: req?.method,
   path: req?.path,
@@ -95,7 +114,7 @@ const toLogRecord = (err, req, status, error) => ({
   reason: describe(err),
   message: err?.message,
   upstreamStatus: err?.response?.status,
-  upstreamUrl: err?.config?.url,
+  upstreamUrl: toOrigin(err?.config?.url),
   stack: err?.stack,
 });
 
