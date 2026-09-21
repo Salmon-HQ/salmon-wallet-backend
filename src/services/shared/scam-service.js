@@ -19,6 +19,27 @@ const BLACKLIST_URL = {
 };
 
 /**
+ * Normalizes a blocklist entry into the form a hostname takes.
+ *
+ * Entries are compared against `new URL(...).hostname`, which lowercases and
+ * punycodes. The feed lists internationalized domains in Unicode — the
+ * homographs that imitate real sites — so an entry stored unconverted can
+ * never be a suffix of the hostname it names, and the site it blocks is
+ * silently never flagged.
+ *
+ * @param {string} url - a blocklist entry, normally a bare hostname.
+ * @returns {string} the entry as a hostname, lowercased and punycoded.
+ */
+const normalizeHost = (url) => {
+  const entry = String(url).trim();
+  try {
+    return new URL(`https://${entry}`).hostname;
+  } catch {
+    return entry.toLowerCase();
+  }
+};
+
+/**
  * Return the list of blocklisted URLs for the given blockchain.
  * Reads from cache when available; otherwise fetches the upstream YAML,
  * normalises entries to lowercase, and writes the result back to the cache.
@@ -38,7 +59,7 @@ const listUrls = async (blockchain, locals) => {
   }
 
   const { data } = await http.get(blacklistUrl, { timeout: 30000 });
-  const urls = load(data).map(({ url }) => url.toLowerCase());
+  const urls = load(data).map(({ url }) => normalizeHost(url));
 
   await repository.saveUrls(blockchain, urls, locals);
 

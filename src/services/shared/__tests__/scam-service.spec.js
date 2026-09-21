@@ -52,4 +52,24 @@ describe('scam-service', () => {
       stage: 'test',
     });
   });
+
+  // The live Phantom feed lists IDN homograph domains in Unicode
+  // (metapléx.com, premínt.xyz, y00tś.com, åssetdäsh.com), while the hostname
+  // they are compared against comes from `new URL()` and is always punycode.
+  // Stored unconverted, those entries can never match the domain they name —
+  // and they name the phishing sites that imitate the real ones.
+  it('converts an internationalized domain to the punycode a hostname is', async () => {
+    repository.getUrls.mockResolvedValue(null);
+    http.get.mockResolvedValue({
+      data: `
+- url: metapléx.com
+- url: PREMÍNT.xyz
+`,
+    });
+
+    const result = await service.listUrls('solana', { stage: 'test' });
+
+    expect(result).toEqual(['xn--metaplx-gya.com', 'xn--premnt-6va.xyz']);
+    expect(new URL('https://metapléx.com/x').hostname.endsWith(result[0])).toBe(true);
+  });
 });
