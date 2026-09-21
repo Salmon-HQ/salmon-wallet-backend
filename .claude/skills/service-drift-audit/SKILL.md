@@ -8,6 +8,11 @@ description: Checks salmon-api's external service dependencies (0x, CoinGecko, T
 Manual invocation today; written to be cron-ready later (see bottom). No
 automation is wired up yet — running this skill is the whole audit.
 
+Scope: **upstream drift** — did a third party change its API, its plan
+limits, or its terms. This is not vulnerability hunting. A security audit of
+this repo runs the global `security-audit` skill and reads this baseline as
+prior evidence; the two do not overlap and neither replaces the other.
+
 ## Watchlist & baseline (as of 2026-07-30)
 
 ### CoinGecko (token catalog, prices, charts)
@@ -53,14 +58,15 @@ automation is wired up yet — running this skill is the whole audit.
 
 ### @solana/spl-token + spl-token-registry
 
-- `spl-token-registry` is deprecated upstream. Watch for security advisories
-  on both packages (`npm audit`, GitHub advisories).
+- `spl-token-registry` is deprecated upstream — that deprecation is the drift
+  signal to watch here. CVE tracking for both packages belongs to
+  `osv-scanner.toml` + the global security audit, not to this baseline.
 
 ### Node runtime
 
-- `engines` in `package.json` requires `>=20.0.0`; Lambda runtime is
-  `nodejs20.x` in `serverless.yml` (see `.claude/skills/deploy-runbook/SKILL.md`).
-- Watch AWS Lambda runtime deprecation notices for `nodejs20.x`.
+- `engines` in `package.json` requires `>=24.0.0`; Lambda runtime is
+  `nodejs24.x` in `serverless.yml` (see `.claude/skills/deploy-runbook/SKILL.md`).
+- Watch AWS Lambda runtime deprecation notices for `nodejs24.x`.
 
 ## Procedure
 
