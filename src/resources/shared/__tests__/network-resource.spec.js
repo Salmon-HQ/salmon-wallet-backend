@@ -51,7 +51,12 @@ describe('network-resource', () => {
   test('publishes only allow-listed config keys', () => {
     const { config } = resource({
       id: 'ethereum-mainnet',
-      config: { rpcUrl: 'https://eth.example', chainId: 1, nodeUrl: 'https://secret', apiKey: 'nope' },
+      config: {
+        rpcUrl: 'https://eth.example',
+        chainId: 1,
+        nodeUrl: 'https://secret',
+        apiKey: 'nope',
+      },
     });
 
     expect(config).toEqual({ rpcUrl: 'https://eth.example', chainId: 1 });

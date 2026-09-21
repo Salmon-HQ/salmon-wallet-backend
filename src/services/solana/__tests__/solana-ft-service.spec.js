@@ -114,9 +114,16 @@ describe('Solana FT Service - catalog + on-chain metadata', () => {
   // figure a user reads and types depends on. It is a fact about the mint, so
   // a stale or wrong value on the off-chain price list must not win.
   test('getByMints takes decimals from the mint, not from the catalog listing', async () => {
-    metadata.getByMints.mockResolvedValue(new Map([[USDC, { id: USDC, symbol: 'USDC', decimals: 9 }]]));
+    metadata.getByMints.mockResolvedValue(
+      new Map([[USDC, { id: USDC, symbol: 'USDC', decimals: 9 }]])
+    );
     catalog.byMints.mockResolvedValue(
-      new Map([[USDC, { id: USDC, symbol: 'USDC', decimals: 6, tags: ['verified'], coingeckoId: 'usd-coin' }]])
+      new Map([
+        [
+          USDC,
+          { id: USDC, symbol: 'USDC', decimals: 6, tags: ['verified'], coingeckoId: 'usd-coin' },
+        ],
+      ])
     );
 
     const [usdc] = await service.getByMints([USDC], locals);

@@ -114,13 +114,16 @@ describe('readMultiplier — scaled UI amount', () => {
     expect(multiplier).toBe(service.toFixedPoint('1.0032690125398187'));
   });
 
-  it.each([[undefined], [null]])('keeps the current multiplier when no timestamp is set (%s)', (effectiveAt) => {
-    const multiplier = service.readMultiplier(
-      mintAccount([scaledUiExtension({ newMultiplierEffectiveTimestamp: effectiveAt })]),
-      AAPLX_EFFECTIVE_AT
-    );
-    expect(multiplier).toBe(service.toFixedPoint('1.0026642075893797'));
-  });
+  it.each([[undefined], [null]])(
+    'keeps the current multiplier when no timestamp is set (%s)',
+    (effectiveAt) => {
+      const multiplier = service.readMultiplier(
+        mintAccount([scaledUiExtension({ newMultiplierEffectiveTimestamp: effectiveAt })]),
+        AAPLX_EFFECTIVE_AT
+      );
+      expect(multiplier).toBe(service.toFixedPoint('1.0026642075893797'));
+    }
+  );
 
   it('returns null for a mint carrying neither extension', () => {
     expect(service.readMultiplier(mintAccount([{ extension: 'transferHook' }]), 0)).toBeNull();

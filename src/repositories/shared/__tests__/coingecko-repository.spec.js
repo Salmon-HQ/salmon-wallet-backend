@@ -63,8 +63,14 @@ describe('cache-key field isolation', () => {
   };
 
   test('a ":" in currency cannot forge the key a contract lookup reads', async () => {
-    const attacker = await keyFor({ coinId: 'solana', currency: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v:usd' });
-    const victim = await keyFor({ coinId: 'solana:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', currency: 'usd' });
+    const attacker = await keyFor({
+      coinId: 'solana',
+      currency: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v:usd',
+    });
+    const victim = await keyFor({
+      coinId: 'solana:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      currency: 'usd',
+    });
 
     expect(attacker).not.toEqual(victim);
   });

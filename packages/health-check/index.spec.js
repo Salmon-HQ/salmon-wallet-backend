@@ -28,14 +28,12 @@ describe('healthCheck', () => {
   });
 
   it('resolves the client IP onto the payload', async () => {
-
     const { info } = await healthCheck(mockReq);
 
     expect(info['x-forwarded-for']).toBe('127.0.0.1');
   });
 
   it('skips the redis probe when no connectors are supplied', async () => {
-
     const { info } = await healthCheck(mockReq);
 
     expect(info.redis).toBeUndefined();

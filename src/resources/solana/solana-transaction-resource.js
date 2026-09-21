@@ -245,7 +245,13 @@ const buildResource = (transactionInfo, context) => {
   const nft = getNft(signature, context);
   const legs = buildLegs(delta, nft, context.locals.tokens);
   const type = resolveType(transaction, meta, legs, accountKeys[0] === address);
-  const { inputs, outputs } = attachCounterparties(type, legs, transaction, address, tokenAccountOwners(meta, accountKeys));
+  const { inputs, outputs } = attachCounterparties(
+    type,
+    legs,
+    transaction,
+    address,
+    tokenAccountOwners(meta, accountKeys)
+  );
 
   return {
     id: signature,
