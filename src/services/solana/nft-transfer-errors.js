@@ -15,6 +15,13 @@ class UnsupportedSolanaNftTransferError extends SolanaNftTransferError {
   }
 }
 
+/** The caller no longer holds the NFT: a distinct code, so the wallet can drop it from its list. */
+class NotOwnedSolanaNftTransferError extends SolanaNftTransferError {
+  constructor(message) {
+    super(message, 422, 'nft_not_owned');
+  }
+}
+
 class OversizedSolanaNftTransferTransactionError extends SolanaNftTransferError {
   constructor(size) {
     super(
@@ -28,5 +35,6 @@ class OversizedSolanaNftTransferTransactionError extends SolanaNftTransferError 
 module.exports = {
   SolanaNftTransferError,
   UnsupportedSolanaNftTransferError,
+  NotOwnedSolanaNftTransferError,
   OversizedSolanaNftTransferTransactionError,
 };

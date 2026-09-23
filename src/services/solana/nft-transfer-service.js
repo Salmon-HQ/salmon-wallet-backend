@@ -47,6 +47,7 @@ const { dasApi } = require('@metaplex-foundation/digital-asset-standard-api');
 const { fromWeb3JsPublicKey } = require('@metaplex-foundation/umi-web3js-adapters');
 const providers = require('./providers');
 const {
+  NotOwnedSolanaNftTransferError,
   OversizedSolanaNftTransferTransactionError,
   UnsupportedSolanaNftTransferError,
 } = require('./nft-transfer-errors');
@@ -108,7 +109,7 @@ const transferNftTransaction = async (mintAddress, owner, destination, locals) =
     ownerSigner.publicKey
   ).catch(
     rethrowAsOwnershipError(
-      UnsupportedSolanaNftTransferError,
+      NotOwnedSolanaNftTransferError,
       'Only the current owner can transfer this NFT.'
     )
   );
@@ -159,7 +160,7 @@ const transferNftTransaction = async (mintAddress, owner, destination, locals) =
  * @param {string} destination - Recipient wallet address.
  * @param {Object} locals - Request locals carrying `network.config.nodeUrl`.
  * @returns {Promise<Object>} Serialized transaction for the client to sign.
- * @throws {UnsupportedSolanaNftTransferError} If the caller is not the leaf owner.
+ * @throws {NotOwnedSolanaNftTransferError} If the caller is not the leaf owner.
  */
 const transferCompressedNftTransaction = async (assetId, owner, destination, locals) => {
   const { nodeUrl } = locals.network.config;
@@ -180,7 +181,7 @@ const transferCompressedNftTransaction = async (assetId, owner, destination, loc
   );
 
   if (String(assetWithProof.leafOwner) !== String(ownerSigner.publicKey)) {
-    throw new UnsupportedSolanaNftTransferError(
+    throw new NotOwnedSolanaNftTransferError(
       'Only the current owner can transfer this compressed NFT.'
     );
   }

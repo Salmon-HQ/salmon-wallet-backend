@@ -38,6 +38,7 @@ const lookupTableService = require('./address-lookup-table-service');
 const { usesCompressedLeafSchemaV2 } = require('./compressed-leaf-schema');
 const providers = require('./providers');
 const {
+  NotOwnedSolanaNftBurnError,
   OversizedSolanaNftBurnTransactionError,
   UnsupportedSolanaNftBurnError,
 } = require('./solana-nft-burn-errors');
@@ -221,7 +222,7 @@ const loadOwnedDigitalAsset = async (mintAddress, owner, locals) => {
     ownerSigner.publicKey
   ).catch(
     rethrowAsOwnershipError(
-      UnsupportedSolanaNftBurnError,
+      NotOwnedSolanaNftBurnError,
       'Only the current owner can burn this NFT.'
     )
   );
@@ -456,7 +457,7 @@ const burnCompressedNftTransaction = async (assetId, owner, locals) => {
   );
 
   if (String(assetWithProof.leafOwner) !== String(ownerSigner.publicKey)) {
-    throw new UnsupportedSolanaNftBurnError('Only the current owner can burn this compressed NFT.');
+    throw new NotOwnedSolanaNftBurnError('Only the current owner can burn this compressed NFT.');
   }
 
   const builder = prepareVersionedBurnBuilder(
