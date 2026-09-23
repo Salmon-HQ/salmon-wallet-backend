@@ -33,3 +33,24 @@ describe('transformDasAsset collection.verified', () => {
     ).toBe(false);
   });
 });
+
+describe('transformDasAsset edition.isOriginal', () => {
+  // As the indexer returns them on devnet: a master edition and a pNFT carry
+  // edition_nonce 255 / 254, the PDA bump, not an edition number.
+  const withSupply = (iface, tokenStandard, editionNonce) => ({
+    id: 'Mint111',
+    interface: iface,
+    content: { metadata: { token_standard: tokenStandard } },
+    supply: { print_max_supply: 0, print_current_supply: 0, edition_nonce: editionNonce },
+  });
+
+  test.each([
+    ['a master edition', 'V1_NFT', 'NonFungible', 255, true],
+    ['a programmable NFT', 'ProgrammableNFT', 'ProgrammableNonFungible', 254, true],
+    ['a print edition', 'V1_PRINT', 'NonFungibleEdition', 253, false],
+  ])('reads %s as original=%s', (_label, iface, standard, nonce, isOriginal) => {
+    expect(transformDasAsset(withSupply(iface, standard, nonce), 'o').edition).toEqual({
+      isOriginal,
+    });
+  });
+});

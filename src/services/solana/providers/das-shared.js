@@ -65,8 +65,18 @@ const transformDasAsset = (asset, owner) => {
     collection: collection
       ? { key: collection.group_value, verified: collection.verified !== false }
       : null,
+    // `edition_nonce` is the bump of the edition PDA, not an edition number: a
+    // master edition reports 255 as readily as a print does, so reading it as
+    // "0 means original" routed ordinary NFTs to the print-edition burn, which
+    // leaves the metadata and its rent behind. The indexer names prints
+    // outright.
     edition:
-      asset.supply?.edition_nonce != null ? { isOriginal: asset.supply.edition_nonce === 0 } : null,
+      asset.supply?.edition_nonce != null
+        ? {
+            isOriginal:
+              asset.interface !== 'V1_PRINT' && metadata.token_standard !== 'NonFungibleEdition',
+          }
+        : null,
     tokenStandard: asset.interface || null,
     // Mint decimals from the DAS `token_info` block. The burn/transfer guard in
     // `solana-nft-service` relies on this to tell an NFT (0) from a fungible
