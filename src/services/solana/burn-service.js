@@ -35,6 +35,7 @@ const {
 const BufferLayout = require('buffer-layout');
 const { BN } = require('bn.js');
 const lookupTableService = require('./address-lookup-table-service');
+const { usesCompressedLeafSchemaV2 } = require('./compressed-leaf-schema');
 const providers = require('./providers');
 const {
   OversizedSolanaNftBurnTransactionError,
@@ -159,11 +160,6 @@ const buildCompressedBurnTransactionResponse = async (umi, builder, owner, nodeU
     lookupTable: lookupTableFallback.lookupTable,
     message: 'Compressed NFT burn requires a temporary lookup table flow.',
   };
-};
-
-/** True when the DAS proof response uses the newer leaf-schema v2 fields. */
-const usesCompressedLeafSchemaV2 = (assetWithProof) => {
-  return assetWithProof.asset_data_hash !== undefined || assetWithProof.flags !== undefined;
 };
 
 /** Set the fee payer and force v0 message compilation on a burn builder. */

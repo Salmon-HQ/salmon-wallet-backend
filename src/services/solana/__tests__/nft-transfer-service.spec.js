@@ -9,6 +9,7 @@ const mockCreateNoopSigner = jest.fn();
 const mockSignerIdentity = jest.fn();
 const mockGetAssetWithProof = jest.fn();
 const mockTransferCompressed = jest.fn();
+const mockTransferCompressedV2 = jest.fn();
 const mockCreateTransactionResponseFromUmiBuilder = jest.fn();
 const mockDispatchDasRpc = jest.fn((_method, _environment, run) => run('https://das.example.com'));
 
@@ -29,6 +30,8 @@ jest.mock('@solana/spl-token', () => ({
 }));
 
 jest.mock('@metaplex-foundation/umi', () => ({
+  none: () => ({ __option: 'None' }),
+  some: (value) => ({ __option: 'Some', value }),
   createNoopSigner: (...args) => mockCreateNoopSigner(...args),
   signerIdentity: (...args) => mockSignerIdentity(...args),
 }));
@@ -45,6 +48,7 @@ jest.mock('@metaplex-foundation/mpl-bubblegum', () => ({
   getAssetWithProof: (...args) => mockGetAssetWithProof(...args),
   mplBubblegum: jest.fn(() => ({ name: 'mplBubblegum' })),
   transfer: (...args) => mockTransferCompressed(...args),
+  transferV2: (...args) => mockTransferCompressedV2(...args),
 }));
 
 jest.mock('@metaplex-foundation/digital-asset-standard-api', () => ({
@@ -97,10 +101,12 @@ describe('nft-transfer-service', () => {
       run('https://das.example.com')
     );
     mockGetAssetWithProof.mockResolvedValue({ leafOwner: OWNER });
-    mockTransferCompressed.mockReturnValue({
-      setFeePayer: jest.fn().mockReturnThis(),
-      useV0: jest.fn().mockReturnThis(),
-    });
+    for (const builder of [mockTransferCompressed, mockTransferCompressedV2]) {
+      builder.mockReturnValue({
+        setFeePayer: jest.fn().mockReturnThis(),
+        useV0: jest.fn().mockReturnThis(),
+      });
+    }
     mockCreateTransactionResponseFromUmiBuilder.mockResolvedValue({
       transaction: 'transfer-transaction',
     });
@@ -122,5 +128,30 @@ describe('nft-transfer-service', () => {
     // The proof lookup runs against the URL the resolver picked, not locals.nodeUrl.
     expect(mockCreateUmi).toHaveBeenCalledWith('https://das.example.com');
     expect(result).toEqual({ transaction: 'transfer-transaction' });
+  });
+
+  // Bubblegum refuses the V1 transfer on a V2 leaf (UnsupportedSchemaVersion),
+  // which every cNFT minted with the current program is.
+  test('transfers a leaf-schema v2 asset with transferV2', async () => {
+    mockGetAssetWithProof.mockResolvedValue({ leafOwner: OWNER, flags: 0, nonce: 3 });
+
+    await transferCompressedNftTransaction(ASSET_ID, OWNER, DESTINATION, {
+      network: { environment: 'devnet', config: { nodeUrl: 'https://rpc.example.com' } },
+    });
+
+    expect(mockTransferCompressed).not.toHaveBeenCalled();
+    expect(mockTransferCompressedV2).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ newLeafOwner: DESTINATION, leafOwner: OWNER, nonce: 3 })
+    );
+  });
+
+  test('keeps the V1 transfer for a leaf-schema v1 asset', async () => {
+    await transferCompressedNftTransaction(ASSET_ID, OWNER, DESTINATION, {
+      network: { environment: 'devnet', config: { nodeUrl: 'https://rpc.example.com' } },
+    });
+
+    expect(mockTransferCompressedV2).not.toHaveBeenCalled();
+    expect(mockTransferCompressed).toHaveBeenCalled();
   });
 });
