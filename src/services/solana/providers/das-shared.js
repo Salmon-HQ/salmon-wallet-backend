@@ -14,6 +14,22 @@ const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 
 /**
+ * Whether the owner actually holds the asset the indexer lists for them.
+ *
+ * The indexer keeps listing a token NFT whose token was burned without its
+ * metadata being closed: `ownership.owner` still names the last holder while
+ * the mint's supply is 0 and no balance is left. A wallet must not show what
+ * nobody holds. Compressed NFTs have no token and are judged by `burnt` alone;
+ * an asset with no `token_info` (e.g. Core) is kept.
+ */
+const isHeldByOwner = (asset) => {
+  if (asset?.burnt === true) return false;
+  if (asset?.compression?.compressed) return true;
+  const tokenInfo = asset?.token_info;
+  return tokenInfo?.supply !== 0 && tokenInfo?.balance !== 0;
+};
+
+/**
  * Canonical normalization for a DAS asset response into the FE NFT shape.
  * Used by both Triton and Helius DAS providers so the resolver returns a
  * single shape regardless of which provider served the call.
@@ -162,6 +178,7 @@ const getPagination = (options = {}) => ({
 });
 
 module.exports = {
+  isHeldByOwner,
   transformDasAsset,
   fetchToken2022NftsByOwner,
   paginateNfts,

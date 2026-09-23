@@ -25,6 +25,7 @@ const {
 } = require('../helius-transaction-service');
 
 const {
+  isHeldByOwner,
   transformDasAsset,
   fetchToken2022NftsByOwner,
   paginateNfts,
@@ -130,7 +131,9 @@ const provider = {
     // it also hid the failure from the provider resolver, so the Triton ->
     // Helius fallback could never fire for this leg.
     const assets = await fetchDasAssetsByOwner(nodeUrl, publicKeyStr, locals);
-    const dasNfts = assets.map((asset) => transformDasAsset(asset, publicKeyStr));
+    const dasNfts = assets
+      .filter(isHeldByOwner)
+      .map((asset) => transformDasAsset(asset, publicKeyStr));
 
     const token2022Nfts = await fetchToken2022NftsByOwner(connection, publicKeyStr);
     return paginateNfts([...dasNfts, ...token2022Nfts], limit, offset);
