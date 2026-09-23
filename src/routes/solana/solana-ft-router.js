@@ -9,6 +9,10 @@
  *   - GET  /verified              — verified-token list (cached 300s).
  *   - GET  /search                — token search (no-cache).
  *
+ * The surface is read-only: it lists and searches tokens and builds nothing.
+ * No route here moves an asset or asks a third party to move one, so an
+ * unauthenticated caller can read the catalogue and nothing else.
+ *
  * No auth middleware; network resolution happens upstream in the chain
  * mount, not per-route here.
  */
