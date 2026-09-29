@@ -4,8 +4,14 @@ jest.mock('../../../services/shared/scam-service', () => ({
   listUrls: jest.fn(),
 }));
 
+jest.mock('../../../services/shared/trustwallet-service', () => ({
+  listTokens: jest.fn(),
+  getNativeLogo: jest.fn((blockchain) => `https://cdn.example/${blockchain}/logo.png`),
+}));
+
 const scamService = require('../../../services/shared/scam-service');
-const { includeBlacklisted } = require('../resource-includes');
+const trustwalletService = require('../../../services/shared/trustwallet-service');
+const { includeBlacklisted, includeLogo } = require('../resource-includes');
 
 describe('includeBlacklisted', () => {
   const run = async (resource, context = {}) => {
@@ -41,5 +47,33 @@ describe('includeBlacklisted', () => {
     const resource = await run({ media: 'garbage', uri: 'https://scam.example/meta.json' });
 
     expect(resource.blacklisted).toBe(true);
+  });
+});
+
+describe('includeLogo', () => {
+  const run = async (resource) => {
+    await includeLogo(resource, { logo: true }, 'balance', {});
+    return resource;
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('resolves a native logo without fetching the token list', async () => {
+    const resource = await run({ type: 'native', blockchain: 'bitcoin' });
+
+    expect(trustwalletService.listTokens).not.toHaveBeenCalled();
+    expect(resource.logo).toBe('https://cdn.example/bitcoin/logo.png');
+  });
+
+  it('looks a token logo up in the token list by address', async () => {
+    trustwalletService.listTokens.mockResolvedValue([
+      { address: '0xABC', logoURI: 'https://l/abc.png' },
+    ]);
+
+    const resource = await run({ type: 'token', blockchain: 'ethereum', address: '0xabc' });
+
+    expect(resource.logo).toBe('https://l/abc.png');
   });
 });

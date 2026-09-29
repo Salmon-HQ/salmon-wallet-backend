@@ -29,7 +29,35 @@ describe('jobs/handler', () => {
 
   afterEach(() => {
     delete process.env.AWS_LAMBDA_FUNCTION_NAME;
+    delete process.env.COINGECKO_API_KEY;
     jest.useRealTimers();
+  });
+
+  it('listTokensJob sends the CoinGecko API key', async () => {
+    process.env.COINGECKO_API_KEY = 'test-key';
+    http.get.mockResolvedValue({ data: [] });
+    repository.getTokensList.mockResolvedValue(null);
+
+    await handler.listTokensJob({ platform: 'bitcoin' });
+
+    expect(http.get).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v3/coins/list'),
+      expect.objectContaining({ headers: { 'x-cg-demo-api-key': 'test-key' } })
+    );
+  });
+
+  it('refreshPricesJob sends the CoinGecko API key', async () => {
+    process.env.COINGECKO_API_KEY = 'test-key';
+    http.get.mockResolvedValue({ data: { bitcoin: { usd: 1 } } });
+    repository.getTokensList.mockResolvedValue([{ id: 'bitcoin', last_updated: null }]);
+    repository.getTokensPrices.mockResolvedValue([]);
+
+    await handler.refreshPricesJob({ platform: 'bitcoin' });
+
+    expect(http.get).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v3/simple/price'),
+      expect.objectContaining({ headers: { 'x-cg-demo-api-key': 'test-key' } })
+    );
   });
 
   it('listTokensJob filters tokens by platform and preserves existing timestamps', async () => {

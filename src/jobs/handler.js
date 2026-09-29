@@ -3,13 +3,13 @@ const { applyConnectTuning } = require('../infrastructure/connect-tuning');
 const http = require('axios');
 const repository = require('../repositories/shared/coingecko-repository');
 const { redis } = require('../repositories/data-source');
+const { BASE_ENDPOINT, apiHeaders } = require('../services/shared/coingecko-service');
 
 // Raise Node's 250ms per-address connect budget before any provider is
 // dialed; see `infrastructure/connect-tuning` for why the default turns a
 // slow handshake into a hard failure.
 applyConnectTuning();
 
-const BASE_ENDPOINT = 'https://api.coingecko.com';
 const COINS_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins/list`;
 const PRICE_ENDPOINT = `${BASE_ENDPOINT}/api/v3/simple/price`;
 
@@ -68,7 +68,10 @@ const listTokens = async (platform) => {
 
 // Fetch tokens from CoinGecko
 const fetchTokens = async () => {
-  const { data } = await http.get(COINS_ENDPOINT, { params: { include_platform: true } });
+  const { data } = await http.get(COINS_ENDPOINT, {
+    params: { include_platform: true },
+    headers: apiHeaders(),
+  });
   return data;
 };
 
@@ -237,7 +240,11 @@ const getPrices = async (tokensToUpdate) => {
   const ids = tokensToUpdate.map((token) => token.id);
   const params = { vs_currencies: 'usd', include_24hr_change: true, ids: ids.join(',') };
 
-  const { data: prices } = await http.get(PRICE_ENDPOINT, { params, timeout: 2000 });
+  const { data: prices } = await http.get(PRICE_ENDPOINT, {
+    params,
+    timeout: 2000,
+    headers: apiHeaders(),
+  });
 
   return tokensToUpdate.map((token) => ({
     ...token,
