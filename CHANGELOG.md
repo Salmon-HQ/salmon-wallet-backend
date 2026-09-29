@@ -2,7 +2,7 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
-## Unreleased
+## 0.19.0 — 2026-09-29
 
 - NFT media and metadata URIs no longer point at `ipfs.io` (the public gateway answers 429 with a `Sunset: 21 Sep 2026` header) or `dweb.link`: `ipfs://` URIs and links on those hosts are rewritten to `ipfs.filebase.io`, the gateway the clients already normalise to.
 
