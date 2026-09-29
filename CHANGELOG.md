@@ -6,6 +6,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 - The scheduled token-list and price-refresh jobs send the CoinGecko API key and honour `COINGECKO_API_URL`, like every other CoinGecko call. They called the public endpoint with no key, which CoinGecko answers with 403, so the hourly Bitcoin price refresh failed.
 
+- A balance no longer fetches the Trustwallet token list to resolve a native asset's logo. Bitcoin has no `tokenlist.json`, so every Bitcoin balance made a request that answered 404 and logged an error; the logo itself was unaffected.
+
 ## 0.19.0 — 2026-09-29
 
 - NFT media and metadata URIs no longer point at `ipfs.io` (the public gateway answers 429 with a `Sunset: 21 Sep 2026` header) or `dweb.link`: `ipfs://` URIs and links on those hosts are rewritten to `ipfs.filebase.io`, the gateway the clients already normalise to.
