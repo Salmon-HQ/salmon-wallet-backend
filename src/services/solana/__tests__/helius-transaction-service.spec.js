@@ -1,9 +1,8 @@
 'use strict';
 
 jest.mock('axios');
-jest.mock('../../../infrastructure/rate-limiting/helius-rate-limiter', () => ({
-  withRetry: jest.fn(async (fn) => fn()),
-  rateLimiter: { waitAndConsume: jest.fn().mockResolvedValue(undefined) },
+jest.mock('../../../infrastructure/providers/provider-client', () => ({
+  providerCall: jest.fn((name, fn) => fn({ timeout: 10000, signal: undefined })),
 }));
 
 const http = require('axios');
@@ -20,7 +19,7 @@ describe('helius-transaction-service (unit)', () => {
     test('should return true for parsed transactions', () => {
       const parsedTx = {
         signature: 'test',
-        type: 'SWAP',
+        type: 'NFT_SALE',
       };
 
       expect(heliusService.isTransactionParsed(parsedTx)).toBe(true);
@@ -80,13 +79,13 @@ describe('helius-transaction-service (unit)', () => {
   describe('getEnhancedTransactions()', () => {
     test('unwraps the response for a single signature', async () => {
       // Arrange
-      http.post.mockResolvedValue({ data: [{ signature: 'sigA', type: 'SWAP' }] });
+      http.post.mockResolvedValue({ data: [{ signature: 'sigA', type: 'NFT_SALE' }] });
 
       // Act
       const result = await heliusService.getEnhancedTransactions('sigA');
 
       // Assert
-      expect(result).toEqual({ signature: 'sigA', type: 'SWAP' });
+      expect(result).toEqual({ signature: 'sigA', type: 'NFT_SALE' });
     });
 
     test('returns the full array for an array of signatures', async () => {

@@ -7,17 +7,14 @@
  *
  * After Triton migration, this provider stays alive as the fallback in the
  * resolver. It must keep the same canonical return shape as TritonProvider so
- * the resolver can swap between them transparently.
+ * the resolver can switch between them transparently.
  */
 
 const axios = require('axios');
 const { Connection } = require('@solana/web3.js');
 
 const { getRpcUrl } = require('../../../infrastructure/helius-client');
-const {
-  withRetry,
-  rateLimiter,
-} = require('../../../infrastructure/rate-limiting/helius-rate-limiter');
+const { providerCall } = require('../../../infrastructure/providers/provider-client');
 
 const {
   getEnhancedTransactions,
@@ -28,6 +25,7 @@ const {
 } = require('../helius-transaction-service');
 
 const {
+  isHeldByOwner,
   transformDasAsset,
   fetchToken2022NftsByOwner,
   paginateNfts,
@@ -41,14 +39,15 @@ const NAME = 'helius';
  *
  * @param {string} nodeUrl - Helius RPC URL.
  * @param {string} ownerAddress - Owner pubkey to fetch DAS assets for.
+ * @param {Object} [locals] - request locals (budget + breaker scope).
  * @returns {Promise<Array<Object>>} Raw DAS asset items (`response.data.result.items`),
  *   or an empty array when the response is missing the expected shape.
  */
-const fetchDasAssetsByOwner = async (nodeUrl, ownerAddress) => {
-  const response = await withRetry(
-    async () => {
-      await rateLimiter.waitAndConsume();
-      return axios.post(
+const fetchDasAssetsByOwner = async (nodeUrl, ownerAddress, locals) => {
+  const response = await providerCall(
+    'helius',
+    ({ timeout, signal }) =>
+      axios.post(
         nodeUrl,
         {
           jsonrpc: '2.0',
@@ -61,10 +60,9 @@ const fetchDasAssetsByOwner = async (nodeUrl, ownerAddress) => {
             displayOptions: { showFungible: false },
           },
         },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
-      );
-    },
-    { operationName: 'Helius DAS getAssetsByOwner' }
+        { headers: { 'Content-Type': 'application/json' }, timeout, signal }
+      ),
+    { locals, operationName: 'Helius DAS getAssetsByOwner' }
   );
 
   return response.data?.result?.items || [];
@@ -76,25 +74,32 @@ const fetchDasAssetsByOwner = async (nodeUrl, ownerAddress) => {
  *
  * @param {string} nodeUrl - Helius RPC URL.
  * @param {string} mintAddress - Mint to fetch DAS metadata for.
+ * @param {Object} [locals] - request locals (budget + breaker scope).
  * @returns {Promise<Object|undefined>} Raw DAS asset (`response.data.result`),
  *   or undefined when the response is missing the expected shape.
  */
-const fetchDasAssetByMint = async (nodeUrl, mintAddress) => {
-  const response = await withRetry(
-    async () => {
-      await rateLimiter.waitAndConsume();
-      return axios.post(
+const fetchDasAssetByMint = async (nodeUrl, mintAddress, locals) => {
+  const response = await providerCall(
+    'helius',
+    ({ timeout, signal }) =>
+      axios.post(
         nodeUrl,
         {
           jsonrpc: '2.0',
           id: 'get-asset',
           method: 'getAsset',
-          params: { id: mintAddress },
+          // See triton-provider.dasGetAsset: the burn and transfer guards read
+          // fungibility out of `token_info.decimals`, so the block they depend
+          // on is requested rather than assumed.
+          params: { id: mintAddress, displayOptions: { showFungible: true } },
         },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
-      );
-    },
-    { operationName: 'Helius DAS getAsset' }
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: Math.min(10000, timeout),
+          signal,
+        }
+      ),
+    { locals, operationName: 'Helius DAS getAsset' }
   );
 
   return response.data?.result;
@@ -125,8 +130,10 @@ const provider = {
     // list, which reaches the wallet as a successful "you own no NFTs" — and
     // it also hid the failure from the provider resolver, so the Triton ->
     // Helius fallback could never fire for this leg.
-    const assets = await fetchDasAssetsByOwner(nodeUrl, publicKeyStr);
-    const dasNfts = assets.map((asset) => transformDasAsset(asset, publicKeyStr));
+    const assets = await fetchDasAssetsByOwner(nodeUrl, publicKeyStr, locals);
+    const dasNfts = assets
+      .filter(isHeldByOwner)
+      .map((asset) => transformDasAsset(asset, publicKeyStr));
 
     const token2022Nfts = await fetchToken2022NftsByOwner(connection, publicKeyStr);
     return paginateNfts([...dasNfts, ...token2022Nfts], limit, offset);
@@ -141,7 +148,7 @@ const provider = {
     // caller turns into 404 nft_not_found. An indexer failure must not borrow
     // that meaning: telling the owner their NFT does not exist is worse than
     // telling them the lookup failed.
-    const asset = await fetchDasAssetByMint(nodeUrl, mintAddress);
+    const asset = await fetchDasAssetByMint(nodeUrl, mintAddress, locals);
     if (!asset) return null;
     return transformDasAsset(asset, asset.ownership?.owner || null);
   },

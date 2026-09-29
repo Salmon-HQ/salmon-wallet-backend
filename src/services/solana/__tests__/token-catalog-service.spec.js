@@ -1,0 +1,147 @@
+'use strict';
+
+jest.mock('../../shared/coingecko-service', () => ({
+  getSolanaTokenList: jest.fn(),
+  getSolanaCoinIds: jest.fn(),
+  getSolanaMarketRanks: jest.fn(),
+}));
+
+jest.mock('../../../infrastructure/cache/cache-helper', () => ({
+  getCacheKey: jest.fn((suffix) => `test::${suffix}`),
+  withSingleFlight: jest.fn((key, { rebuild }) => rebuild()),
+}));
+
+const coingecko = require('../../shared/coingecko-service');
+const catalog = require('../token-catalog-service');
+
+const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const BONK = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+const list = [
+  { address: USDC, symbol: 'USDC', name: 'USD Coin', decimals: 6, logoURI: 'usdc.png' },
+  { address: BONK, symbol: 'Bonk', name: 'Bonk', decimals: 5, logoURI: 'bonk.png' },
+  { address: 'USDCet111', symbol: 'USDCet', name: 'USD Coin (Wormhole)', decimals: 6 },
+  { address: 'Cat111', symbol: 'USDC', name: 'UpSide Down Cat', decimals: 6 },
+  { address: 'broken', symbol: null, decimals: 6 },
+];
+
+describe('token-catalog-service', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    catalog.clearSnapshot();
+    coingecko.getSolanaTokenList.mockResolvedValue(list);
+    coingecko.getSolanaCoinIds.mockResolvedValue(
+      new Map([
+        [USDC, 'usd-coin'],
+        [BONK, 'bonk'],
+        ['Cat111', 'upside-down-cat'],
+      ])
+    );
+    coingecko.getSolanaMarketRanks.mockResolvedValue(
+      new Map([
+        ['usd-coin', 2],
+        ['bonk', 40],
+      ])
+    );
+  });
+
+  it('serves CoinGecko logos in the large size and leaves other hosts untouched', async () => {
+    coingecko.getSolanaTokenList.mockResolvedValue([
+      {
+        address: USDC,
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        logoURI: 'https://assets.coingecko.com/coins/images/6319/thumb/USDC.png?1696506694',
+      },
+      {
+        address: BONK,
+        symbol: 'Bonk',
+        name: 'Bonk',
+        decimals: 5,
+        logoURI: 'https://assets.coingecko.com/coins/images/28600/small/bonk.jpg',
+      },
+      {
+        address: 'Cat111',
+        symbol: 'CAT',
+        name: 'Cat',
+        decimals: 6,
+        logoURI: 'https://cdn.example/thumb/cat.png',
+      },
+    ]);
+
+    const icons = new Map((await catalog.getVerified()).map((t) => [t.id, t.icon]));
+
+    expect(icons.get(USDC)).toBe(
+      'https://assets.coingecko.com/coins/images/6319/large/USDC.png?1696506694'
+    );
+    expect(icons.get(BONK)).toBe('https://assets.coingecko.com/coins/images/28600/large/bonk.jpg');
+    expect(icons.get('Cat111')).toBe('https://cdn.example/thumb/cat.png');
+  });
+
+  it('builds the verified catalog in canonical shape, joined with coin ids, skipping malformed rows', async () => {
+    const tokens = await catalog.getVerified();
+
+    expect(tokens).toHaveLength(4);
+    expect(tokens[0]).toEqual({
+      id: USDC,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      icon: 'usdc.png',
+      tags: ['verified'],
+      coingeckoId: 'usd-coin',
+      rank: 2,
+    });
+    // ranked first (USDC 2, BONK 40), then the unranked alphabetically
+    expect(tokens.map((t) => t.name)).toEqual([
+      'USD Coin',
+      'Bonk',
+      'UpSide Down Cat',
+      'USD Coin (Wormhole)',
+    ]);
+    expect(tokens[3].coingeckoId).toBeNull();
+    await catalog.getVerified();
+    expect(coingecko.getSolanaTokenList).toHaveBeenCalledTimes(1);
+  });
+
+  it('ranks search: exact symbol, symbol prefix, name prefix, substring; case-insensitive', async () => {
+    const bySymbol = await catalog.search('usdc');
+    expect(bySymbol.map((t) => t.name)).toEqual([
+      'USD Coin',
+      'UpSide Down Cat',
+      'USD Coin (Wormhole)',
+    ]);
+
+    const byName = await catalog.search('usd coin');
+    expect(byName.map((t) => t.symbol)).toEqual(['USDC', 'USDCet']);
+
+    const byMint = await catalog.search(BONK);
+    expect(byMint.map((t) => t.symbol)).toEqual(['Bonk']);
+
+    expect(await catalog.search('   ')).toEqual([]);
+    expect(await catalog.search('zzz')).toEqual([]);
+  });
+
+  it('looks up listed tokens by mint', async () => {
+    expect((await catalog.byMint(USDC)).symbol).toBe('USDC');
+    expect(await catalog.byMint('nope')).toBeNull();
+    const many = await catalog.byMints([USDC, 'nope']);
+    expect([...many.keys()]).toEqual([USDC]);
+  });
+
+  // Without ranks every listed token — the real USDC included — is tagged
+  // `community`, and the balance and activity filters read a missing
+  // `verified` tag as a spam verdict. Publishing that build under the 24h TTL
+  // hides a holder's real tokens until it expires, so the failure has to
+  // propagate and let the last good snapshot stand.
+  it('propagates a market-rank failure instead of publishing a rank-less catalog', async () => {
+    coingecko.getSolanaMarketRanks.mockRejectedValue(new Error('429'));
+
+    await expect(catalog.getVerified()).rejects.toThrow('429');
+  });
+
+  it('propagates a source failure instead of an empty catalog', async () => {
+    coingecko.getSolanaTokenList.mockRejectedValue(new Error('503'));
+    await expect(catalog.getVerified()).rejects.toThrow('503');
+  });
+});

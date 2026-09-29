@@ -17,8 +17,6 @@ jest.mock('../../../../packages/middleware', () => ({
 jest.mock('../../../controllers/solana/solana-ft-controller', () => ({
   verified: 'verified',
   search: 'search',
-  order: 'order',
-  execute: 'execute',
 }));
 
 describe('solana-ft-router', () => {
@@ -36,13 +34,10 @@ describe('solana-ft-router', () => {
     expect(paths).toEqual(expect.arrayContaining(['/verified', '/search']));
   });
 
-  it('registers no swap endpoint', () => {
+  it('registers no transaction-building route (signing boundary)', () => {
     require('../solana-ft-router');
 
-    const paths = [...mockRouter.get.mock.calls, ...mockRouter.post.mock.calls].map(
-      ([path]) => path
-    );
-
-    expect(paths.some((path) => path.startsWith('/swap'))).toBe(false);
+    expect(mockRouter.get.mock.calls.map(([path]) => path)).toEqual(['/verified', '/search']);
+    expect(mockRouter.post).not.toHaveBeenCalled();
   });
 });

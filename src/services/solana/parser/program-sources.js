@@ -5,7 +5,7 @@
  * downstream resource layer and the FE source-badge keep working unchanged).
  *
  * Adding a source = drop a new entry below. Adding more program IDs to an
- * existing source (e.g. a new Jupiter program version) = append to its list.
+ * existing source (e.g. a new aggregator program version) = append to its list.
  *
  * Source name conventions:
  *   - UPPER_SNAKE_CASE
@@ -17,8 +17,8 @@
  */
 
 const {
-  JUPITER_PROGRAM_IDS,
-  JUPITER_LIMIT_PROGRAM_IDS,
+  AGGREGATOR_ROUTER_PROGRAM_IDS,
+  AGGREGATOR_LIMIT_PROGRAM_IDS,
   BUBBLEGUM_PROGRAM_ID,
 } = require('../../../constants/solana-program-ids');
 
@@ -39,13 +39,13 @@ const SOURCES = {
   // Compression / state Merkle (cNFT support program)
   ACCOUNT_COMPRESSION: ['cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'],
 
-  // Jupiter aggregator routers (canonical list lives in src/constants).
-  JUPITER: JUPITER_PROGRAM_IDS,
+  // aggregator routers (canonical list lives in src/constants).
+  AGGREGATOR: AGGREGATOR_ROUTER_PROGRAM_IDS,
 
-  // Jupiter Limit Orders v2.
-  JUPITER_LIMIT: JUPITER_LIMIT_PROGRAM_IDS,
+  // the aggregator limit-order program.
+  AGGREGATOR_LIMIT: AGGREGATOR_LIMIT_PROGRAM_IDS,
 
-  // Major DEX programs (also bucketed via SWAP downstream)
+  // Major DEX programs
   RAYDIUM: [
     '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8', // AMM v4
     'CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK', // Concentrated v3
@@ -78,7 +78,7 @@ const SOURCES = {
   // Stake program (Solana native)
   STAKE_PROGRAM: ['Stake11111111111111111111111111111111111111'],
 
-  // Memo (frequently used by some swaps for branding)
+  // Memo (frequently attached by routers for branding)
   MEMO_PROGRAM: ['MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'],
 
   MARINADE_FINANCE: ['MarBmsSgKXdrN1egZf5sqe1TMThczhMLJhJlsbXxy7Z'],
@@ -108,13 +108,15 @@ const SOURCES = {
 
   SNS: ['namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX'],
 
-  // PumpSwap AMM — graduated Pump.fun bonding-curve tokens settle here.
+  // Pump.fun AMM — graduated bonding-curve tokens settle here.
   // Verified via solscan + Bitquery docs (2026).
   PUMP_AMM: ['pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA'],
 
   // Photon trader — routing aggregator across multiple Solana DEXs.
   // Verified via Bitquery Solana Photon API docs (2026).
   PHOTON: ['BSfD6SHZigAfDWSjzD5Q41jw8LmKwtmjskPH9XW1mrRW'],
+  // DFlow — the aggregator the owner's 2026-08-17 swap routed through (spec 017).
+  DFLOW: ['DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH'],
 
   // Drift v2 — open-source perpetuals exchange. Verified via drift-labs/protocol-v2.
   DRIFT_V2: ['dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH'],
@@ -125,7 +127,7 @@ const SOURCES = {
   // Moonshot launchpad (DEX Screener). Verified via solanacompass + Bitquery.
   MOONSHOT: ['MoonCVVNZFSYkqNXP6bxHLPL6QQJiMagDL3qcqUQTrG'],
 
-  // Meteora Dynamic Bonding Curve — used by Jupiter LFG and others.
+  // Meteora Dynamic Bonding Curve — used by aggregator launchpads and others.
   // Verified via solscan + meteora docs.
   METEORA_DBC: ['dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN'],
 
@@ -136,7 +138,7 @@ const SOURCES = {
   // Squads Protocol v4 — Solana multisig. Verified via Squads-Protocol/v4.
   SQUADS_V4: ['SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf'],
 
-  // Mayan Finance — cross-chain swap (Solana ↔ EVM). Verified via Mayan SDK.
+  // Mayan Finance — cross-chain bridge (Solana ↔ EVM). Verified via Mayan SDK.
   MAYAN_FINANCE: ['FC4eXxkyrMPTjiYUpp4EAnkmwMbQyZ6NDCh1kfLn6vsf'],
 
   // deBridge cross-chain bridge. Verified via debridge-solana-sdk.
@@ -182,15 +184,15 @@ const PROGRAM_TO_SOURCE = (() => {
 /**
  * Resolve a program ID to its canonical source name.
  * @param {string} programId - Base58 program address
- * @returns {string|null} Canonical source name (e.g. 'JUPITER'), or `null` if unknown
+ * @returns {string|null} Canonical source name (e.g. 'AGGREGATOR'), or `null` if unknown
  */
 const getSource = (programId) => PROGRAM_TO_SOURCE.get(programId) || null;
 
 /**
  * @param {string} programId - Base58 program address
- * @returns {boolean} True for any Jupiter aggregator router program ID
+ * @returns {boolean} True for any aggregator router program ID
  */
-const isJupiter = (programId) => SOURCES.JUPITER.includes(programId);
+const isAggregator = (programId) => SOURCES.AGGREGATOR.includes(programId);
 /**
  * @param {string} programId - Base58 program address
  * @returns {boolean} True for the Metaplex token-metadata program
@@ -216,7 +218,7 @@ const isToken = (programId) =>
 /**
  * Source priority — when a transaction has instructions from multiple
  * sources, the source with the highest priority wins. Lower number = higher
- * priority. Aggregators (Jupiter) trump the underlying AMMs they route
+ * priority. Aggregators (aggregator) trump the underlying AMMs they route
  * through; marketplaces trump generic token programs.
  *
  * Priority bands group sources by semantic class so adding a new source is a
@@ -224,7 +226,7 @@ const isToken = (programId) =>
  * absolute integer values are an implementation detail of the sort order.
  */
 const PRIORITY_BANDS = {
-  AGGREGATOR: 0, // Jupiter, Sanctum LST router — wraps lower-tier protocols
+  AGGREGATOR: 0, // aggregator, Sanctum LST router — wraps lower-tier protocols
   LAUNCHPAD_NFT: 1, // Pump.fun, Magic Eden, Tensor — user-facing markets
   LENDING_LST: 2, // Solend / Kamino / MarginFi / Marinade / Stake Pool
   AMM: 3, // Raydium / Orca / Meteora / Phoenix / OpenBook / Lifinity / Saber
@@ -240,8 +242,8 @@ const PRIORITY_BANDS = {
 };
 
 const SOURCE_PRIORITY = {
-  JUPITER: PRIORITY_BANDS.AGGREGATOR,
-  JUPITER_LIMIT: PRIORITY_BANDS.AGGREGATOR,
+  AGGREGATOR: PRIORITY_BANDS.AGGREGATOR,
+  AGGREGATOR_LIMIT: PRIORITY_BANDS.AGGREGATOR,
   SANCTUM: PRIORITY_BANDS.AGGREGATOR,
 
   PUMP_FUN: PRIORITY_BANDS.LAUNCHPAD_NFT,
@@ -279,6 +281,7 @@ const SOURCE_PRIORITY = {
 
   // Aggregators (route across DEXs)
   PHOTON: PRIORITY_BANDS.AGGREGATOR,
+  DFLOW: PRIORITY_BANDS.AGGREGATOR,
   SANCTUM_INFINITY: PRIORITY_BANDS.AGGREGATOR,
 
   // Launchpads + memecoin markets
@@ -329,7 +332,7 @@ module.exports = {
   SOURCE_PRIORITY,
   getSource,
   pickPrimarySource,
-  isJupiter,
+  isAggregator,
   isMetaplex,
   isBubblegum,
   isStakeProgram,

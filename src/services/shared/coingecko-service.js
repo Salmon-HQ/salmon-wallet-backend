@@ -16,14 +16,32 @@
 
 const http = require('axios');
 const repository = require('../../repositories/shared/coingecko-repository');
-const {
-  withRetry,
-  rateLimiter,
-} = require('../../infrastructure/rate-limiting/coingecko-rate-limiter');
+const { providerCall } = require('../../infrastructure/providers/provider-client');
 
-const BASE_ENDPOINT = 'https://api.coingecko.com';
+const { readCachedQuotes, setCachedQuotes } = require('../../infrastructure/cache/price-cache');
+
+// Demo keys go to api.coingecko.com with `x-cg-demo-api-key`; paid plans go
+// to pro-api.coingecko.com with `x-cg-pro-api-key`. One variable picks both.
+const BASE_ENDPOINT = process.env.COINGECKO_API_URL || 'https://api.coingecko.com';
+const API_KEY_HEADER = BASE_ENDPOINT.includes('pro-api') ? 'x-cg-pro-api-key' : 'x-cg-demo-api-key';
 const MARKET_CHART_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins`;
 const EXCHANGE_RATES_ENDPOINT = `${BASE_ENDPOINT}/api/v3/exchange_rates`;
+const SOLANA_TOKEN_LIST_ENDPOINT = `${BASE_ENDPOINT}/api/v3/token_lists/solana/all.json`;
+const COINS_LIST_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins/list`;
+const COINS_MARKETS_ENDPOINT = `${BASE_ENDPOINT}/api/v3/coins/markets`;
+/** Top-N Solana-ecosystem coins by market cap: 4 pages of 250, once per catalog TTL. */
+const MARKET_RANK_PAGES = 4;
+const MARKET_RANK_PAGE_SIZE = 250;
+const SOLANA_TOKEN_PRICE_ENDPOINT = `${BASE_ENDPOINT}/api/v3/simple/token_price/solana`;
+/**
+ * `simple/token_price` documents 515 addresses per call, but the GET URL 414s
+ * somewhere between 100 and 200 base58 mints (~8 KB); 100 (~4.6 KB) is safe.
+ */
+const MAX_ADDRESSES_PER_PRICE_CALL = 100;
+/** CoinGecko API Terms §6.1: cached Data must be refreshed at least every 24 hours. */
+const CATALOG_TTL_SECONDS = 24 * 60 * 60;
+/** Wording + link CoinGecko's attribution guide accepts; clients render it verbatim. */
+const ATTRIBUTION = { text: 'Data provided by CoinGecko', url: 'https://www.coingecko.com/en/api' };
 const SUPPORTED_FIAT_CURRENCIES = [
   'usd',
   'eur',
@@ -42,12 +60,21 @@ const SUPPORTED_FIAT_CURRENCIES = [
   'try',
 ];
 
-const fetchFromCoinGecko = async (url, params, timeout, operationName) => {
-  await rateLimiter.waitAndConsume();
+const apiHeaders = () =>
+  process.env.COINGECKO_API_KEY ? { [API_KEY_HEADER]: process.env.COINGECKO_API_KEY } : {};
 
-  const { data } = await withRetry(async () => http.get(url, { params, timeout }), {
-    operationName,
-  });
+const fetchFromCoinGecko = async (url, params, timeout, operationName, locals) => {
+  const { data } = await providerCall(
+    'coingecko',
+    (ctx) =>
+      http.get(url, {
+        params,
+        timeout: Math.min(timeout, ctx.timeout),
+        signal: ctx.signal,
+        headers: apiHeaders(),
+      }),
+    { locals, operationName }
+  );
 
   return data;
 };
@@ -193,7 +220,8 @@ const getMarketChart = async (params, locals) => {
         `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(coinId)}/market_chart`,
         { vs_currency: currency, days },
         5000,
-        `CoinGecko getMarketChart (${coinId}, ${days} days)`
+        `CoinGecko getMarketChart (${coinId}, ${days} days)`,
+        locals
       );
 
       return {
@@ -235,7 +263,8 @@ const getCoinInfo = async (params, locals) => {
           sparkline: false,
         },
         5000,
-        `CoinGecko getCoinInfo (${coinId})`
+        `CoinGecko getCoinInfo (${coinId})`,
+        locals
       );
 
       return mapCoinInfo(data, currency);
@@ -265,7 +294,8 @@ const getExchangeRates = async (locals) => {
         EXCHANGE_RATES_ENDPOINT,
         {},
         2000,
-        'CoinGecko exchange rates'
+        'CoinGecko exchange rates',
+        locals
       );
 
       return normalizeExchangeRates(data);
@@ -297,7 +327,8 @@ const getContractMarketChart = async (params, locals) => {
         `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(platform)}/contract/${encodeURIComponent(contractAddress)}/market_chart`,
         { vs_currency: currency, days },
         5000,
-        `CoinGecko getContractMarketChart (${platform}:${contractAddress}, ${days} days)`
+        `CoinGecko getContractMarketChart (${platform}:${contractAddress}, ${days} days)`,
+        locals
       );
 
       return {
@@ -340,7 +371,8 @@ const getContractCoinInfo = async (params, locals) => {
         `${MARKET_CHART_ENDPOINT}/${encodeURIComponent(platform)}/contract/${encodeURIComponent(contractAddress)}`,
         {},
         5000,
-        `CoinGecko getContractCoinInfo (${platform}:${contractAddress})`
+        `CoinGecko getContractCoinInfo (${platform}:${contractAddress})`,
+        locals
       );
 
       return mapCoinInfo(data, currency);
@@ -351,7 +383,164 @@ const getContractCoinInfo = async (params, locals) => {
   });
 };
 
+/**
+ * CoinGecko's curated Solana token list (standard token-list schema), cached
+ * for the 24 h their terms allow. The authority for "verified" and the
+ * search corpus; `coingeckoId` is joined from `coins/list`.
+ *
+ * @returns {Promise<Array<{address:string, symbol:string, name:string, decimals:number, logoURI?:string}>>}
+ * @throws when the source is down and no cached copy exists (never an empty list).
+ */
+const getSolanaTokenList = async () => {
+  const cached = await repository.getSolanaTokenList();
+  if (cached && cached.length > 0) {
+    return cached;
+  }
+  const data = await fetchFromCoinGecko(
+    SOLANA_TOKEN_LIST_ENDPOINT,
+    {},
+    10000,
+    'CoinGecko Solana token list'
+  );
+  const tokens = Array.isArray(data?.tokens) ? data.tokens : [];
+  if (tokens.length === 0) {
+    throw new Error('CoinGecko Solana token list came back empty');
+  }
+  await repository.saveSolanaTokenList(tokens, CATALOG_TTL_SECONDS);
+  return tokens;
+};
+
+/**
+ * Solana mint → CoinGecko coin id, from `coins/list?include_platform=true`
+ * (one ~15k-entry call, cached 24 h).
+ *
+ * @returns {Promise<Map<string, string>>}
+ */
+const getSolanaCoinIds = async () => {
+  const cached = await repository.getSolanaCoinIds();
+  if (cached) {
+    return new Map(Object.entries(cached));
+  }
+  const data = await fetchFromCoinGecko(
+    COINS_LIST_ENDPOINT,
+    { include_platform: true },
+    15000,
+    'CoinGecko coins list (platforms)'
+  );
+  if (!Array.isArray(data)) {
+    throw new Error('CoinGecko coins list came back in an unexpected shape');
+  }
+  const byMint = {};
+  for (const coin of data) {
+    const mint = coin?.platforms?.solana;
+    if (mint && coin.id) {
+      byMint[mint] = coin.id;
+    }
+  }
+  if (Object.keys(byMint).length === 0) {
+    throw new Error('CoinGecko coins list carried no Solana platform entries');
+  }
+  await repository.saveSolanaCoinIds(byMint, CATALOG_TTL_SECONDS);
+  return new Map(Object.entries(byMint));
+};
+
+/**
+ * CoinGecko coin id → position (1-based) among the top Solana-ecosystem
+ * coins by market cap. Orders the catalog so the real USDC outranks a
+ * look-alike. Cached with the catalog; a failed read yields an empty map
+ * (ordering degrades, nothing else does).
+ *
+ * @returns {Promise<Map<string, number>>}
+ */
+const getSolanaMarketRanks = async () => {
+  const cached = await repository.getSolanaMarketRanks();
+  if (cached) {
+    return new Map(Object.entries(cached));
+  }
+  const ranks = {};
+  for (let page = 1; page <= MARKET_RANK_PAGES; page += 1) {
+    const data = await fetchFromCoinGecko(
+      COINS_MARKETS_ENDPOINT,
+      {
+        vs_currency: 'usd',
+        category: 'solana-ecosystem',
+        order: 'market_cap_desc',
+        per_page: MARKET_RANK_PAGE_SIZE,
+        page,
+      },
+      10000,
+      `CoinGecko Solana market ranks (page ${page})`
+    );
+    if (!Array.isArray(data) || data.length === 0) {
+      break;
+    }
+    data.forEach((coin, index) => {
+      if (coin?.id && ranks[coin.id] === undefined) {
+        ranks[coin.id] = (page - 1) * MARKET_RANK_PAGE_SIZE + index + 1;
+      }
+    });
+  }
+  if (Object.keys(ranks).length > 0) {
+    await repository.saveSolanaMarketRanks(ranks, CATALOG_TTL_SECONDS);
+  }
+  return new Map(Object.entries(ranks));
+};
+
+const chunk = (items, size) =>
+  Array.from({ length: Math.ceil(items.length / size) }, (_, i) =>
+    items.slice(i * size, (i + 1) * size)
+  );
+
+/**
+ * USD price + 24 h change per Solana mint. Unlisted mints are absent from
+ * the map (never a 0 price). Short-cached per mint via `price-cache`.
+ *
+ * @param {string[]} mints
+ * @param {Object} [locals]
+ * @returns {Promise<Map<string, {usdPrice:number, priceChange24h:number|null}>>}
+ */
+const getTokenPrices = async (mints, locals = {}) => {
+  const wanted = [...new Set(mints)].filter(Boolean);
+  if (wanted.length === 0) {
+    return new Map();
+  }
+  const { hits, misses } = await readCachedQuotes(wanted, locals);
+  for (const addresses of chunk(misses, MAX_ADDRESSES_PER_PRICE_CALL)) {
+    const data = await fetchFromCoinGecko(
+      SOLANA_TOKEN_PRICE_ENDPOINT,
+      {
+        contract_addresses: addresses.join(','),
+        vs_currencies: 'usd',
+        include_24hr_change: true,
+      },
+      8000,
+      `CoinGecko token prices (${addresses.length} mints)`,
+      locals
+    );
+    // CoinGecko lower-cases EVM addresses; Solana keys come back verbatim, but
+    // match case-insensitively to be safe.
+    const byLower = new Map(Object.entries(data || {}).map(([k, v]) => [k.toLowerCase(), v]));
+    const fresh = new Map();
+    for (const mint of addresses) {
+      const entry = byLower.get(mint.toLowerCase());
+      if (entry && typeof entry.usd === 'number') {
+        const quote = { usdPrice: entry.usd, priceChange24h: entry.usd_24h_change ?? null };
+        hits.set(mint, quote);
+        fresh.set(mint, quote);
+      }
+    }
+    await setCachedQuotes(fresh, locals);
+  }
+  return hits;
+};
+
 module.exports = {
+  getSolanaTokenList,
+  getSolanaCoinIds,
+  getSolanaMarketRanks,
+  getTokenPrices,
+  ATTRIBUTION,
+  MAX_ADDRESSES_PER_PRICE_CALL,
   getMarketChart,
   getContractMarketChart,
   getCoinInfo,

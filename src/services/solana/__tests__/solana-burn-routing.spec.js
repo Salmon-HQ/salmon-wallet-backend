@@ -39,6 +39,22 @@ describe('solana burn routing', () => {
     ).rejects.toBeInstanceOf(SolanaNftNotFoundError);
   });
 
+  // A distinct code lets the wallet drop an NFT it no longer holds from its
+  // list, instead of reporting a failed transaction.
+  test.each([
+    ['burn', () => service.createBurnTransaction('mint', 'owner-address', locals)],
+    ['transfer', () => service.createTransferTransaction('mint', 'owner-address', 'dest', locals)],
+  ])('refuses to %s an NFT someone else holds with nft_not_owned', async (_action, run) => {
+    repository.findFromSourceWithMint.mockResolvedValue({
+      tokenStandard: 'V1_NFT',
+      compressed: false,
+      owner: 'someone-else',
+      edition: { isOriginal: true },
+    });
+
+    await expect(run()).rejects.toMatchObject({ statusCode: 422, errorCode: 'nft_not_owned' });
+  });
+
   test('routes compressed NFTs to the compressed burn service', async () => {
     repository.findFromSourceWithMint.mockResolvedValue({
       tokenStandard: 'V1_NFT',

@@ -48,15 +48,39 @@ const isBlockedIpv4 = (address) => {
 
 /**
  * IPv6 equivalents: unspecified, loopback, unique-local (fc00::/7) and
- * link-local (fe80::/10). IPv4-mapped addresses are unwrapped so a private
- * IPv4 cannot slip through as `::ffff:10.0.0.1`.
+ * link-local (fe80::/10). IPv4-mapped addresses are unwrapped — in either
+ * spelling, dotted or hex groups — so a private IPv4 cannot slip through as
+ * `::ffff:10.0.0.1` or as its canonical form `::ffff:a00:1`.
  */
+const expandIpv6 = (address) => {
+  const halves = address.split('::');
+  if (halves.length > 2) return null;
+  const left = halves[0] ? halves[0].split(':') : [];
+  const right = halves.length === 2 && halves[1] ? halves[1].split(':') : [];
+  const fill = halves.length === 2 ? 8 - left.length - right.length : 0;
+  if (fill < 0) return null;
+  const groups = [...left, ...Array(fill).fill('0'), ...right];
+  if (groups.length !== 8 || groups.some((group) => !/^[0-9a-f]{1,4}$/.test(group))) return null;
+  return groups.map((group) => parseInt(group, 16));
+};
+
 const isBlockedIpv6 = (address) => {
   const normalized = address.toLowerCase().split('%')[0];
   if (normalized === '::' || normalized === '::1') return true;
 
   const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
   if (mapped) return isBlockedIpv4(mapped[1]);
+
+  // The same address is equally valid written as two hex groups
+  // (`::ffff:7f00:1` === `::ffff:127.0.0.1`), and `new URL()` rewrites the
+  // dotted spelling into exactly that before the guard sees it — so without
+  // this branch every IPv4 range check above is bypassed by a bracketed
+  // literal such as http://[::ffff:127.0.0.1]/.
+  const groups = expandIpv6(normalized);
+  if (groups && groups[5] === 0xffff && groups.slice(0, 5).every((group) => group === 0)) {
+    const [high, low] = groups.slice(6);
+    return isBlockedIpv4([high >> 8, high & 0xff, low >> 8, low & 0xff].join('.'));
+  }
 
   const head = normalized.slice(0, 4);
   if (/^f[cd]/.test(head)) return true;

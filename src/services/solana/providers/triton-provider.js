@@ -28,10 +28,12 @@ const axios = require('axios');
 const { Connection } = require('@solana/web3.js');
 
 const tritonClient = require('../../../infrastructure/triton-client');
+const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const { ProviderNotImplementedError } = require('./solana-data-provider');
 const tritonRpc = require('../parser/triton-rpc');
 const { parseTransaction } = require('../parser');
 const {
+  isHeldByOwner,
   transformDasAsset,
   fetchToken2022NftsByOwner,
   paginateNfts,
@@ -41,6 +43,11 @@ const {
 const NAME = 'triton';
 
 const MAX_HISTORY_BATCH = 25;
+const JSON_RPC_METHOD_NOT_FOUND = -32601;
+let historyMethodMissingLogged = false;
+
+/** `getTransactionsForAddress` is a custom method; an endpoint without it says -32601. */
+const isMethodMissing = (error) => error?.rpcError?.code === JSON_RPC_METHOD_NOT_FOUND;
 
 const getRpcUrl = (environment = 'mainnet') => tritonClient.getRpcUrl(environment);
 
@@ -57,17 +64,43 @@ const getRpcUrl = (environment = 'mainnet') => tritonClient.getRpcUrl(environmen
  */
 const dasRpc = async (id, method, params, environment, { timeout = 10000 } = {}) => {
   const url = getRpcUrl(environment);
-  const { data } = await axios.post(
-    url,
-    { jsonrpc: '2.0', id, method, params },
-    { headers: { 'Content-Type': 'application/json' }, timeout }
+  const { data } = await providerCall(
+    'triton',
+    (ctx) =>
+      axios.post(
+        url,
+        { jsonrpc: '2.0', id, method, params },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: Math.min(timeout, ctx.timeout),
+          signal: ctx.signal,
+        }
+      ),
+    { environment, operationName: `Triton DAS ${method}` }
   );
   return data?.result;
 };
 
-/** DAS getAsset for a single mint. @returns {Promise<Object|null>} Raw DAS asset, or null. */
+/**
+ * DAS getAsset for a single mint.
+ *
+ * `showFungible` is requested because the burn and transfer guards decide
+ * fungibility from `token_info.decimals`, and that block is what carries it.
+ * Triton reports USDC as interface `Custom` with a non-zero
+ * `supply.edition_nonce`, which the guard's interface allow-list does not
+ * catch, so `decimals` is the only arm that refuses it — asking for the block
+ * makes the guard's dependency part of the request rather than a default the
+ * provider is free to change.
+ *
+ * @returns {Promise<Object|null>} Raw DAS asset, or null.
+ */
 const dasGetAsset = async (mint, environment) =>
-  (await dasRpc('get-asset', 'getAsset', { id: mint }, environment)) || null;
+  (await dasRpc(
+    'get-asset',
+    'getAsset',
+    { id: mint, displayOptions: { showFungible: true } },
+    environment
+  )) || null;
 
 /** DAS getAssets (batch). @returns {Promise<Object[]>} Raw DAS assets, in request order where found. */
 const dasGetAssetBatch = async (mints, environment) =>
@@ -190,23 +223,36 @@ const provider = {
     // stays a signature end-to-end — compatible with the Helius fallback and
     // bare-RPC fallback, which both paginate by signature.
     if (!before) {
-      const { transactions } = await tritonRpc.getTransactionsForAddress(
-        address,
-        { limit },
-        environment
-      );
+      try {
+        const { transactions } = await tritonRpc.getTransactionsForAddress(
+          address,
+          { limit },
+          environment
+        );
 
-      if (transactions.length === 0) {
-        return { data: [], meta: { nextPageToken: undefined } };
+        if (transactions.length === 0) {
+          return { data: [], meta: { nextPageToken: undefined } };
+        }
+
+        const data = enrichFullTransactions(transactions);
+        return {
+          data,
+          meta: {
+            nextPageToken: data[data.length - 1]?.signature,
+          },
+        };
+      } catch (error) {
+        // The endpoint has no single-call history method: stay on Triton
+        // through the standard signature-cursor pair rather than losing the
+        // primary provider to the fallback for a missing optimisation.
+        if (!isMethodMissing(error)) throw error;
+        if (!historyMethodMissingLogged) {
+          historyMethodMissingLogged = true;
+          console.warn(
+            `[TRITON_HISTORY_METHOD_MISSING] getTransactionsForAddress not enabled on the ${environment} endpoint; paging by signatures (ask Triton to enable it)`
+          );
+        }
       }
-
-      const data = enrichFullTransactions(transactions);
-      return {
-        data,
-        meta: {
-          nextPageToken: data[data.length - 1]?.signature,
-        },
-      };
     }
 
     const signatureInfos = await tritonRpc.getSignaturesForAddress(
@@ -311,7 +357,9 @@ const provider = {
     // it also hid the failure from the provider resolver, so the Triton ->
     // Helius fallback could never fire for this leg.
     const assets = await dasGetAssetsByOwner(publicKeyStr, environment);
-    const dasNfts = assets.map((asset) => transformDasAsset(asset, publicKeyStr));
+    const dasNfts = assets
+      .filter(isHeldByOwner)
+      .map((asset) => transformDasAsset(asset, publicKeyStr));
 
     const token2022Nfts = await fetchToken2022NftsByOwner(connection, publicKeyStr);
     return paginateNfts([...dasNfts, ...token2022Nfts], limit, offset);

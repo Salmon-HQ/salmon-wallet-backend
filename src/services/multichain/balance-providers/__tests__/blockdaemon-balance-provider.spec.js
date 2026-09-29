@@ -1,5 +1,9 @@
 'use strict';
 
+jest.mock('../../../../infrastructure/providers/provider-client', () => ({
+  providerCall: jest.fn((name, fn) => fn({ timeout: 10000, signal: undefined })),
+}));
+
 jest.mock('axios', () => ({
   get: jest.fn(),
 }));

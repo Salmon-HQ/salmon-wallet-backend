@@ -25,6 +25,7 @@ const compression = require('compression');
 const { logger } = require('../packages/middleware');
 const rateLimit = require('./middlewares/rate-limit');
 const errorHandler = require('./middlewares/error-handler');
+const { requestDeadline } = require('./infrastructure/providers/request-deadline');
 const handler = require('./handler');
 const NETWORKS = require('./constants/networks');
 const { BLOCKCHAINS } = require('./constants/blockchains');
@@ -51,11 +52,13 @@ app.use(
   })
 );
 app.use(logger);
+// Every provider call downstream reads `res.locals.deadline` (default 25 s).
+app.use(requestDeadline);
 
 // Per-IP rate limiting (fixed window in Redis, fail-open). One global
 // limiter over every route (the unversioned /health, /status and /ip info
 // endpoints included — /ip calls a third party per request), plus a stricter one over the
-// transaction-building routes (Solana NFT burn/transfer) —
+// transaction-building routes (Solana NFT burn/transfer, Powerups) —
 // those are the expensive/abusable endpoints. Mode/limits come from env.
 // RATE_LIMIT_MODE falls back to 'log' here (count and log, don't block);
 // prod sets it to 'enforce' via config/env.prod.yml.
@@ -73,6 +76,7 @@ const txRateLimit = rateLimit({
   prefix: 'tx',
 });
 app.use('/v1/solana-:env/nft', txRateLimit);
+app.use('/v1/solana-:env/powerups', txRateLimit);
 
 app.use('/', require('./routes/shared/info-router'));
 app.use('/v1', require('./routes/multichain'));

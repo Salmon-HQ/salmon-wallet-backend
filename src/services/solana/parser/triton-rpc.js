@@ -20,6 +20,7 @@
  */
 
 const axios = require('axios');
+const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const tritonClient = require('../../../infrastructure/triton-client');
 
 const DEFAULT_COMMITMENT = 'confirmed';
@@ -38,10 +39,16 @@ const buildRequest = (id, method, params) => ({
 
 const post = async (environment, body) => {
   const url = tritonClient.getRpcUrl(environment);
-  const { data } = await axios.post(url, body, {
-    headers: { 'Content-Type': 'application/json' },
-    timeout: DEFAULT_TIMEOUT_MS,
-  });
+  const { data } = await providerCall(
+    'triton',
+    ({ timeout, signal }) =>
+      axios.post(url, body, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: Math.min(DEFAULT_TIMEOUT_MS, timeout),
+        signal,
+      }),
+    { environment, operationName: `Triton RPC ${Array.isArray(body) ? 'batch' : body.method}` }
+  );
   return data;
 };
 

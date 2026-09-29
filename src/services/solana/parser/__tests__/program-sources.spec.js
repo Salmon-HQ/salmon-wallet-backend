@@ -7,7 +7,7 @@ const {
   PRIORITY_BANDS,
   getSource,
   pickPrimarySource,
-  isJupiter,
+  isAggregator,
   isMetaplex,
   isBubblegum,
   isStakeProgram,
@@ -45,7 +45,7 @@ describe('program-sources — coverage and consistency', () => {
 
 describe('getSource', () => {
   test('returns the source name for a known program id', () => {
-    expect(getSource(SOURCES.JUPITER[0])).toBe('JUPITER');
+    expect(getSource(SOURCES.AGGREGATOR[0])).toBe('AGGREGATOR');
     expect(getSource(SOURCES.RAYDIUM[0])).toBe('RAYDIUM');
   });
 
@@ -60,16 +60,16 @@ describe('pickPrimarySource — priority matrix', () => {
     expect(pickPrimarySource(undefined)).toBeNull();
   });
 
-  test('JUPITER beats every AMM (aggregator > AMM)', () => {
-    expect(pickPrimarySource(['RAYDIUM', 'JUPITER'])).toBe('JUPITER');
-    expect(pickPrimarySource(['ORCA', 'METEORA', 'JUPITER'])).toBe('JUPITER');
+  test('AGGREGATOR beats every AMM (aggregator > AMM)', () => {
+    expect(pickPrimarySource(['RAYDIUM', 'AGGREGATOR'])).toBe('AGGREGATOR');
+    expect(pickPrimarySource(['ORCA', 'METEORA', 'AGGREGATOR'])).toBe('AGGREGATOR');
   });
 
-  test('JUPITER_LIMIT shares JUPITER priority — first-come wins among same band', () => {
+  test('AGGREGATOR_LIMIT shares AGGREGATOR priority — first-come wins among same band', () => {
     // Both at AGGREGATOR=0; the sorted-set order depends on input. Just assert
     // the winner is in the AGGREGATOR band, not a lower-tier source.
-    const winner = pickPrimarySource(['RAYDIUM', 'JUPITER_LIMIT', 'TOKEN_PROGRAM']);
-    expect(['JUPITER', 'JUPITER_LIMIT']).toContain(winner);
+    const winner = pickPrimarySource(['RAYDIUM', 'AGGREGATOR_LIMIT', 'TOKEN_PROGRAM']);
+    expect(['AGGREGATOR', 'AGGREGATOR_LIMIT']).toContain(winner);
   });
 
   test('SANCTUM (aggregator) beats STAKE_POOL (LENDING_LST band)', () => {
@@ -95,19 +95,19 @@ describe('pickPrimarySource — priority matrix', () => {
   });
 
   test('unknown source falls to lowest priority (sorts last)', () => {
-    expect(pickPrimarySource(['JUPITER', 'TOTALLY_UNKNOWN'])).toBe('JUPITER');
+    expect(pickPrimarySource(['AGGREGATOR', 'TOTALLY_UNKNOWN'])).toBe('AGGREGATOR');
     expect(pickPrimarySource(['TOTALLY_UNKNOWN', 'TOKEN_PROGRAM'])).toBe('TOKEN_PROGRAM');
   });
 
   test('deduplicates input', () => {
-    expect(pickPrimarySource(['JUPITER', 'JUPITER', 'JUPITER'])).toBe('JUPITER');
+    expect(pickPrimarySource(['AGGREGATOR', 'AGGREGATOR', 'AGGREGATOR'])).toBe('AGGREGATOR');
   });
 });
 
 describe('predicate helpers', () => {
-  test('isJupiter matches every aggregator program id', () => {
-    SOURCES.JUPITER.forEach((id) => expect(isJupiter(id)).toBe(true));
-    expect(isJupiter('not-jupiter')).toBe(false);
+  test('isAggregator matches every aggregator program id', () => {
+    SOURCES.AGGREGATOR.forEach((id) => expect(isAggregator(id)).toBe(true));
+    expect(isAggregator('not-aggregator')).toBe(false);
   });
 
   test('isMetaplex / isBubblegum / isStakeProgram', () => {

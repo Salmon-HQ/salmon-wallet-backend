@@ -33,7 +33,7 @@ describe('analytics ingest handler', () => {
         context: { installId: 'abc', sessionId: 'sess', platform: 'web', appVersion: '3.0.0' },
         events: [
           {
-            event: 'swap_completed',
+            event: 'send_completed',
             props: { from_chain: 'solana', to_chain: 'solana', success: true },
             ts: 1,
           },
@@ -45,7 +45,7 @@ describe('analytics ingest handler', () => {
     expect(JSON.parse(res.body)).toEqual({ accepted: 1, rejected: 0 });
     expect(records).toHaveLength(1);
     expect(records[0]).toMatchObject({
-      event: 'swap_completed',
+      event: 'send_completed',
       install_id: 'abc',
       platform: 'web',
     });

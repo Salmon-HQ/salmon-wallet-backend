@@ -8,6 +8,10 @@ const DEAD_DOMAINS = [
 ];
 
 const BROKEN_GATEWAY_PATTERNS = [
+  // ipfs.io answers with 429 and a `Sunset: 21 Sep 2026` header — the public
+  // gateway is going away (2026-09-17); dweb.link is the same operator.
+  /https?:\/\/(?:www\.)?ipfs\.io\/ipfs\/(.+)/,
+  /https?:\/\/(?:www\.)?dweb\.link\/ipfs\/(.+)/,
   /https?:\/\/(?:www\.)?cf-ipfs\.com\/ipfs\/(.+)/,
   /https?:\/\/(?:www\.)?cloudflare-ipfs\.com\/ipfs\/(.+)/,
   /https?:\/\/(?:www\.)?ipfs\.infura\.io\/ipfs\/(.+)/,
@@ -16,7 +20,8 @@ const BROKEN_GATEWAY_PATTERNS = [
 ];
 
 const SUBDOMAIN_IPFS_PATTERN = /https?:\/\/([a-zA-Z0-9]+)\.ipfs\.([^/]+)\/?(.*)$/;
-const DEFAULT_IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+// The same gateway the clients normalise to (`packages/shared/src/utils/url.ts`).
+const DEFAULT_IPFS_GATEWAY = 'https://ipfs.filebase.io/ipfs/';
 
 /**
  * Strips the query string and fragment from an IPFS hash/path.

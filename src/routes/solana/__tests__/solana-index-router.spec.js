@@ -10,6 +10,7 @@ jest.mock('express', () => ({
 jest.mock('../solana-ft-router', () => 'solana-ft-router');
 jest.mock('../solana-account-router', () => 'solana-account-router');
 jest.mock('../solana-nft-router', () => 'solana-nft-router');
+jest.mock('../solana-powerups-router', () => 'solana-powerups-router');
 
 describe('solana index router', () => {
   beforeEach(() => {
@@ -23,5 +24,6 @@ describe('solana index router', () => {
     expect(mockRouter.use).toHaveBeenCalledWith('/ft', 'solana-ft-router');
     expect(mockRouter.use).toHaveBeenCalledWith('/account', 'solana-account-router');
     expect(mockRouter.use).toHaveBeenCalledWith('/nft', 'solana-nft-router');
+    expect(mockRouter.use).toHaveBeenCalledWith('/powerups', 'solana-powerups-router');
   });
 });

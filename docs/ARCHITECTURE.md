@@ -158,7 +158,7 @@ Important subfolders:
 
 - `src/services/solana/`
   - the densest domain in the project
-  - groups transactions, NFTs, FT, swaps, burn, and Helius/Jupiter
+  - groups transactions, NFTs, FT, Powerup builds, burn, and Helius/DAS/CoinGecko
     wrappers
 - `src/services/bitcoin/`
   - Bitcoin vertical slice: transactions, UTXO (read-only); HTTP client
@@ -221,7 +221,7 @@ Important subfolders:
 
 - `src/resources/solana/`
   - serialization and transformation for transactions, accounts, FT,
-    NFT, and swaps
+    NFT, and Powerup builds
 - `src/resources/bitcoin/`
   - Bitcoin transaction and UTXO shapes
 - `src/resources/shared/`
@@ -244,8 +244,12 @@ Important subfolders:
 
 - `src/infrastructure/cache/`
   - cache primitives and helpers
+- `src/infrastructure/providers/`
+  - `providerCall`: the one door to every upstream provider (request
+    budget, Redis-shared token bucket, circuit breaker, bounded retry, EMF
+    metrics); provider numbers in `profiles.js`
 - `src/infrastructure/rate-limiting/`
-  - rate-limit control for external integrations
+  - pure helpers behind `providers/` (in-process bucket, retry math)
 
 #### `src/middlewares/`
 
@@ -331,7 +335,8 @@ backend.
 
 - integration with Solana data providers (Triton primary, Helius
   fallback, bare RPC as last resort)
-- Jupiter integration
+- Powerup builds (`powerups/`): adapter instructions → unsigned v0 transaction
+- token catalog + metadata (CoinGecko list + Triton DAS) and USD pricing (CoinGecko)
 - transaction orchestration
 - enrichment preloading for both transaction paths: the service batches
   the lookups each mapper needs (`loadEnrichment` for the enriched path,
@@ -339,7 +344,7 @@ backend.
   stay pure mappers with no network I/O
 - burn routing
 - FT/NFT fetching
-- account- and swap-specific logic
+- account-specific logic
 
 ### Solana data providers
 
@@ -365,7 +370,7 @@ public RPC is the last resort.
   Enhanced Transactions. It classifies transactions from each
   instruction's program IDs.
 - `src/services/solana/parser/parsers/` contains the per-program
-  parsers: `system`, `spl-token`, `metaplex`, `bubblegum`, `jupiter`,
+  parsers: `system`, `spl-token`, `metaplex`, `bubblegum`, `aggregator`,
   `stake`, `staking`, `lending`, `dex`, plus the `_hint-parser.js`
   helper.
 - The HTTP/RPC clients live in `src/infrastructure/triton-client.js`
@@ -377,7 +382,12 @@ public RPC is the last resort.
 
 - transaction serialization
 - final shape for FT/NFT/account responses
-- input/output mappings consumed by the frontend
+- input/output mappings consumed by the frontend. A leg is the wallet's
+  **net balance change for one asset** (`wallet-delta.js`, read from the
+  ledger's `accountData`), never one row per provider transfer; the
+  provider's transfers only name the counterparty, and its type only picks
+  the semantic buckets (mint, burn, stake, loan, interaction) — direction
+  is read off the legs (spec 016).
 
 ### Two-stage transaction shaping (deliberate)
 
@@ -394,7 +404,9 @@ the internal `_source` discriminator:
 2. The controller then applies `solana-transaction-resource` via the
    generic decorator. For enriched transactions this is a passthrough
    that strips the `_source` tag; for bare-RPC fallback transactions it
-   builds the full shape from the lookups preloaded by
+   builds the full shape from the parsed result's pre/post balances (the
+   wallet's net change per asset, spec 016 — the same rule the enriched
+   mapper reads off `accountData`) and the lookups preloaded by
    `solana-rpc-enrichment.js`.
 
 Do not merge the two mappers or move the enriched shaping into the
@@ -442,7 +454,7 @@ Today: balance.
   `index.js#PROVIDERS_BY_CHAIN` maps chain -> provider for future
   overrides.
 - `src/services/multichain/price-enrichers/` — per-chain USD price
-  decoration of balance items (Solana via Jupiter Price v3, Bitcoin
+  decoration of balance items (Solana via CoinGecko token prices, Bitcoin
   via the CoinGecko repository). Same registry pattern as
   balance-providers; see the folder's `AGENTS.md`.
 

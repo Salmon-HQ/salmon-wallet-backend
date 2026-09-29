@@ -105,5 +105,4 @@ program name, not the removed product.
 
 ## Out of scope
 
-- Swap (Jupiter) — untouched in this feature.
 - Bitcoin send broadcast — feature 009.

@@ -9,6 +9,17 @@
 
 const { redis } = require('../../repositories/data-source');
 const { name } = require('../../../package.json');
+const { sleep } = require('../rate-limiting/rate-limiter');
+const { remainingMs } = require('../providers/request-deadline');
+const metrics = require('../providers/metrics');
+
+const LOCK_POLL_MS = 100;
+
+const countCache = (family, hit) =>
+  metrics.emit({
+    dimensions: { Provider: 'cache', Environment: family, Outcome: hit ? 'hit' : 'miss' },
+    metrics: { CacheHit: hit ? 1 : 0, CacheMiss: hit ? 0 : 1 },
+  });
 
 /**
  * Build a namespaced Redis key: `<package name>:<STAGE>:<network id>:<suffix>`.
@@ -74,9 +85,106 @@ const storeInCache = async (key, item, ttl) => {
   }
 };
 
+/**
+ * Read many keys in one MGET.
+ * @param {string[]} keys
+ * @returns {Promise<Map<string, any>>} key → parsed value; a missing key or
+ *   any Redis/parse error maps to `null` (never throws).
+ */
+const getManyFromCache = async (keys) => {
+  const result = new Map(keys.map((key) => [key, null]));
+  if (keys.length === 0) return result;
+  try {
+    const values = await redis.mGet(keys);
+    keys.forEach((key, i) => {
+      result.set(key, values[i] ? JSON.parse(values[i]) : null);
+    });
+  } catch (e) {
+    console.warn(e);
+  }
+  return result;
+};
+
+/**
+ * Store many `[key, value]` pairs with one TTL in one MULTI.
+ * @param {Array<[string, any]>} entries
+ * @param {number} ttl - expiry in seconds.
+ */
+const storeManyInCache = async (entries, ttl) => {
+  if (entries.length === 0) return;
+  try {
+    await redis.setMany(
+      entries.map(([key, item]) => [key, JSON.stringify(item)]),
+      { ex: ttl }
+    );
+  } catch (e) {
+    console.warn(e);
+  }
+};
+
+const tryLock = async (lockKey, lockMs) => {
+  try {
+    return (await redis.set(lockKey, '1', { nx: true, px: lockMs })) === 'OK';
+  } catch (e) {
+    console.warn(e);
+    return true; // no Redis → every process is its own single flight
+  }
+};
+
+/**
+ * Single-flight rebuild with stale-while-revalidate: a fresh value is
+ * returned as-is; otherwise one caller (the `SET NX` lock holder) runs
+ * `rebuild` and writes `key` (ttl) plus `key:stale` (staleTtl), while the
+ * others serve the stale copy, or poll for the fresh one when none exists
+ * (bounded by `lockMs` and the request budget). A failing rebuild falls back
+ * to the stale copy when there is one — this is what keeps a catalog served
+ * while its provider's circuit is open.
+ *
+ * @param {string} key
+ * @param {{ ttl: number, staleTtl: number, lockMs: number, rebuild: () => Promise<any>, locals?: Object }} options
+ */
+const withSingleFlight = async (key, { ttl, staleTtl, lockMs, rebuild, locals }) => {
+  const family = key.split(':').pop();
+  const fresh = await getFromCache(key);
+  countCache(family, fresh !== null);
+  if (fresh !== null) return fresh;
+
+  const staleKey = `${key}:stale`;
+  const lockKey = `${key}:lock`;
+  if (await tryLock(lockKey, lockMs)) {
+    try {
+      const value = await rebuild();
+      await storeInCache(key, value, ttl);
+      await storeInCache(staleKey, value, staleTtl);
+      return value;
+    } catch (error) {
+      const stale = await getFromCache(staleKey);
+      if (stale === null) throw error;
+      console.warn(`[cache] serving stale ${family} after rebuild failed: ${error.message}`);
+      return stale;
+    } finally {
+      await redis.del(lockKey).catch(console.warn);
+    }
+  }
+
+  const stale = await getFromCache(staleKey);
+  if (stale !== null) return stale;
+
+  const until = Date.now() + Math.min(lockMs, remainingMs(locals));
+  while (Date.now() < until) {
+    await sleep(LOCK_POLL_MS);
+    const value = await getFromCache(key);
+    if (value !== null) return value;
+  }
+  return rebuild(); // lock holder died or ran out of time; the budget bounds us too
+};
+
 module.exports = {
   getCacheKey,
   getCacheKeyFor,
   getFromCache,
   storeInCache,
+  getManyFromCache,
+  storeManyInCache,
+  withSingleFlight,
 };

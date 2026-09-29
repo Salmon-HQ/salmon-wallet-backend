@@ -5,8 +5,11 @@
  *
  * Transforms enriched transactions (Helius Enhanced API or Triton parser
  * output, both produce the same canonical shape) into the public API
- * payload, mapping provider type strings to the system's transaction types
- * and pivoting transfers by the user wallet into inputs / outputs.
+ * payload. The legs (`inputs` / `outputs`) are the wallet's net balance
+ * change per asset, read from the ledger's `accountData` through
+ * `./wallet-delta`; the provider's transfers name the counterparty and its
+ * type is a hint for the semantic buckets, never the source of direction
+ * (spec 016).
  *
  * DESIGN NOTE — two-stage shaping, deliberate:
  * This mapper is applied INSIDE `solana-transaction-service`
@@ -26,13 +29,13 @@
 const {
   SEND,
   RECEIVE,
-  SWAP,
   MINT,
   BURN,
   STAKE,
   LOAN,
   INTERACTION,
   UNKNOWN,
+  MEMO,
 } = require('../../constants/transaction-types');
 const {
   SOL_SYMBOL,
@@ -41,24 +44,58 @@ const {
   SOL_NAME,
   SOL_LOGO,
 } = require('../../constants/solana-constants');
-const {
-  JUPITER_PROGRAM_IDS,
-  JUPITER_LIMIT_PROGRAM_IDS,
-} = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
-
-const JUPITER_ALL_IDS = new Set([...JUPITER_PROGRAM_IDS, ...JUPITER_LIMIT_PROGRAM_IDS]);
+const imageOverrides = require('../../services/solana/nft-image-override-service');
+const { computeWalletDelta } = require('./wallet-delta');
+const { isNftTokenStandard } = require('../../constants/token-standards');
+const { deriveAction } = require('./transaction-action');
 
 /**
- * True if the transaction touches any Jupiter program (aggregator router or
- * Limit Order v2). Jupiter Ultra executes from its own escrow accounts, so
- * the user never appears in `tokenTransfers` — programId detection is the
- * only reliable signal.
+ * One public vocabulary whichever provider enriched the page: the local
+ * parser names the token programs by program, Helius names plain SPL
+ * transfers `SOLANA_PROGRAM_LIBRARY`; the wallet must not see two labels for
+ * the same thing depending on which provider answered.
  */
-const hasJupiterProgram = (transaction) => {
-  const instructions = transaction.instructions || [];
-  return instructions.some((ix) => JUPITER_ALL_IDS.has(ix.programId));
+const MEMO_PROGRAM_ID = 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
+const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+/** Minimal base58 → utf8, enough for a memo's instruction data. */
+const base58ToUtf8 = (encoded) => {
+  let value = 0n;
+  for (const char of encoded) {
+    const digit = BASE58.indexOf(char);
+    if (digit < 0) return null;
+    value = value * 58n + BigInt(digit);
+  }
+  const bytes = [];
+  while (value > 0n) {
+    bytes.unshift(Number(value % 256n));
+    value /= 256n;
+  }
+  for (const char of encoded) {
+    if (char !== '1') break;
+    bytes.unshift(0);
+  }
+  return Buffer.from(bytes).toString('utf8');
 };
+
+/**
+ * The note an SPL Memo instruction carries, whichever provider enriched the
+ * transaction: the local parser puts the text on `memo`; Helius leaves the
+ * instruction's base58 data.
+ */
+const extractMemo = (transaction) => {
+  if (typeof transaction.memo === 'string') return transaction.memo;
+  const memoIx = (transaction.instructions || []).find((ix) => ix.programId === MEMO_PROGRAM_ID);
+  return memoIx && typeof memoIx.data === 'string' ? base58ToUtf8(memoIx.data) : null;
+};
+
+const PUBLIC_SOURCE_ALIASES = {
+  TOKEN_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
+  TOKEN_2022_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
+  ASSOCIATED_TOKEN_PROGRAM: 'SOLANA_PROGRAM_LIBRARY',
+};
+const publicSource = (source) => PUBLIC_SOURCE_ALIASES[source] || source;
 
 /**
  * Truncate a mint address for UI display.
@@ -133,71 +170,9 @@ const toRawAmount = (tokenAmount, decimals) => {
   return String(Math.round(amount * Math.pow(10, decimals || 0)));
 };
 
-/**
- * Group items (inputs/outputs) by contract/mint and sum their amounts.
- * Used to consolidate multiple transfers of the same token in a single tx.
- * @param {Array} items
- * @returns {Array}
- */
-const groupByToken = (items) => {
-  const grouped = new Map();
-
-  items.forEach((item) => {
-    const key = item.contract;
-    if (grouped.has(key)) {
-      const existing = grouped.get(key);
-      // Sumar amounts (ambos son strings de raw amounts)
-      const totalAmount = BigInt(existing.amount) + BigInt(item.amount);
-      existing.amount = totalAmount.toString();
-    } else {
-      grouped.set(key, { ...item });
-    }
-  });
-
-  return Array.from(grouped.values());
-};
-
-const buildTokenItem = (transfer, tokens, directionField, directionValue) => {
-  const cachedToken = findTokenInCache(transfer.mint, tokens);
-  const decimals = transfer.decimals ?? cachedToken?.decimals ?? 0;
-
-  return {
-    amount: toRawAmount(transfer.tokenAmount, decimals),
-    decimals,
-    symbol: transfer.symbol || cachedToken?.symbol || truncateMint(transfer.mint),
-    name: transfer.name || cachedToken?.name,
-    logo: normalizeIpfsUrl(transfer.logoURI || cachedToken?.logoURI),
-    contract: transfer.mint,
-    [directionField]: directionValue,
-  };
-};
-
-const buildNativeItem = (transfer, directionField, directionValue) => ({
-  amount: transfer.amount?.toString(),
-  decimals: SOL_DECIMALS,
-  symbol: SOL_SYMBOL,
-  name: SOL_NAME,
-  logo: SOL_LOGO,
-  contract: SOL_ADDRESS,
-  [directionField]: directionValue,
-});
-
 const getTransfers = (transaction) => ({
   nativeTransfers: transaction.nativeTransfers || [],
   tokenTransfers: transaction.tokenTransfers || [],
-});
-
-const getDirectionalTransfers = (transfers, address) => ({
-  incomingTokens: transfers.tokenTransfers.filter((transfer) => transfer.toUserAccount === address),
-  outgoingTokens: transfers.tokenTransfers.filter(
-    (transfer) => transfer.fromUserAccount === address
-  ),
-  incomingNative: transfers.nativeTransfers.filter(
-    (transfer) => transfer.toUserAccount === address
-  ),
-  outgoingNative: transfers.nativeTransfers.filter(
-    (transfer) => transfer.fromUserAccount === address
-  ),
 });
 
 /**
@@ -206,7 +181,6 @@ const getDirectionalTransfers = (transfers, address) => ({
  */
 const HELIUS_TYPE_MAPPING = {
   TRANSFER: 'TRANSFER',
-  SWAP: SWAP,
 
   TOKEN_MINT: MINT,
   MINT_NFT: MINT,
@@ -254,93 +228,155 @@ const HELIUS_TYPE_MAPPING = {
   WITHDRAW: INTERACTION,
 
   UNKNOWN: UNKNOWN,
+  MEMO: MEMO,
 };
 
 /**
- * Single-pass collection of incoming/outgoing mint sets for the user.
- * SOL natives normalize to `SOL_ADDRESS` so SPL ↔ SOL swaps register as
- * "different tokens" too.
+ * The provider's own word for the transaction, in the system's buckets.
+ * `'TRANSFER'` is returned as is: a transfer's direction is not the
+ * provider's to say — it is read off the wallet's balance change
+ * (`resolveType`). Everything the table does not name is an interaction.
+ * @returns {string} SEND, RECEIVE, MINT, INTERACTION, UNKNOWN, ... or 'TRANSFER'
  */
-const collectMintSets = (address, nativeTransfers, tokenTransfers) => {
-  const outgoing = new Set();
-  const incoming = new Set();
-  for (const t of tokenTransfers) {
-    if (t.fromUserAccount === address) outgoing.add(t.mint);
-    if (t.toUserAccount === address) incoming.add(t.mint);
-  }
-  for (const t of nativeTransfers) {
-    if (t.fromUserAccount === address) outgoing.add(SOL_ADDRESS);
-    if (t.toUserAccount === address) incoming.add(SOL_ADDRESS);
-  }
-  return { outgoing, incoming };
+const mapProviderType = (heliusType) => HELIUS_TYPE_MAPPING[heliusType] || INTERACTION;
+
+/**
+ * A SOL leg riding beside token legs is rent, a royalty or a tip below
+ * this, and folds into the transaction rather than becoming a second row:
+ * two associated-token-account rents (2 × 2,039,280 lamports), so a single
+ * account opened for the counterparty never shows, and three or more
+ * accounts reclaimed at once do. A SOL leg that is the only asset moving is
+ * always reported, whatever its size (spec 016 FR-007).
+ */
+const NATIVE_SIDE_LEG_MIN_LAMPORTS = 5000000n;
+
+const absBig = (value) => (value < 0n ? -value : value);
+
+/**
+ * The other side of one asset's movement: the counterparty that received
+ * the most of it from the wallet (an output) or sent the most of it to the
+ * wallet (an input). Undefined when the transfers name nobody — a closed
+ * account's rent has no sender.
+ */
+const counterpartyFor = (transaction, address, mint, direction) => {
+  const isNative = mint === SOL_ADDRESS;
+  const transfers = isNative
+    ? (transaction.nativeTransfers || []).map((t) => ({ ...t, weight: toBigInt(t.amount) }))
+    : (transaction.tokenTransfers || [])
+        .filter((t) => t.mint === mint)
+        .map((t) => ({ ...t, weight: toBigInt(toRawAmount(t.tokenAmount, t.decimals ?? 0)) }));
+  const ownSide = direction === 'out' ? 'fromUserAccount' : 'toUserAccount';
+  const otherSide = direction === 'out' ? 'toUserAccount' : 'fromUserAccount';
+  const best = transfers
+    .filter((t) => t[ownSide] === address && t[otherSide] && t[otherSide] !== address)
+    .sort((a, b) => (a.weight < b.weight ? 1 : a.weight > b.weight ? -1 : 0))[0];
+  return best ? best[otherSide] : undefined;
 };
 
-const hasMintAsymmetry = (outgoing, incoming) => {
-  if (outgoing.size === 0 || incoming.size === 0) return false;
-  for (const m of outgoing) if (!incoming.has(m)) return true;
-  for (const m of incoming) if (!outgoing.has(m)) return true;
-  return false;
+const toBigInt = (value) => {
+  if (typeof value === 'bigint') return value;
+  if (value === undefined || value === null || value === '') return 0n;
+  if (typeof value === 'number') return BigInt(Math.round(value));
+  try {
+    return BigInt(value);
+  } catch {
+    return 0n;
+  }
+};
+
+/** A token leg from the delta: metadata from the transfers first, then the catalog. */
+const buildTokenLeg = (transaction, tokens, mint, entry) => {
+  const transfer = (transaction.tokenTransfers || []).find((t) => t.mint === mint) || {};
+  const cachedToken = findTokenInCache(mint, tokens);
+  const decimals = entry.decimals ?? transfer.decimals ?? cachedToken?.decimals ?? 0;
+  return {
+    amount: absBig(toBigInt(entry.amount)).toString(),
+    decimals,
+    symbol: transfer.symbol || cachedToken?.symbol || truncateMint(mint),
+    name: transfer.name || cachedToken?.name,
+    logo: normalizeIpfsUrl(transfer.logoURI || cachedToken?.logoURI),
+    contract: mint,
+  };
+};
+
+const buildNativeLeg = (lamports) => ({
+  amount: absBig(lamports).toString(),
+  decimals: SOL_DECIMALS,
+  symbol: SOL_SYMBOL,
+  name: SOL_NAME,
+  logo: SOL_LOGO,
+  contract: SOL_ADDRESS,
+});
+
+/**
+ * One leg per asset the wallet gained or lost (spec 016 FR-003): a
+ * negative net is an output, a positive net an input. The SOL leg follows
+ * FR-007 when token legs ride with it.
+ * @returns {{inputs: object[], outputs: object[]}} legs without counterparties
+ */
+const buildLegs = (transaction, address, tokens, delta) => {
+  const inputs = [];
+  const outputs = [];
+  const place = (leg, signed) => (signed < 0n ? outputs : inputs).push(leg);
+
+  delta.tokens.forEach((entry, mint) => {
+    place(buildTokenLeg(transaction, tokens, mint, entry), toBigInt(entry.amount));
+  });
+
+  const native = toBigInt(delta.native);
+  const hasTokenLegs = delta.tokens.size > 0;
+  if (native !== 0n && (!hasTokenLegs || absBig(native) >= NATIVE_SIDE_LEG_MIN_LAMPORTS)) {
+    place(buildNativeLeg(native), native);
+  }
+
+  return { inputs, outputs };
 };
 
 /**
- * Pure-direction inference for TRANSFER and unknown-type transactions:
- * `RECEIVE` / `SEND` / `INTERACTION` / undefined (no transfers seen).
+ * The type, once the legs are known (spec 016 FR-004 to FR-006).
+ *
+ * A semantic provider type (mint, burn, stake, loan, interaction) keeps
+ * precedence. A transfer or an unknown reads its direction off the legs:
+ * only outputs is a send, only inputs a receive, both an interaction.
+ * Nothing moved: the note when one was written, an interaction when the
+ * wallet signed for it, unknown otherwise. SOL that only came back to a
+ * wallet that signed the transaction — rent from its own closed accounts,
+ * a refund — is not something anyone sent: an interaction, not a receive.
  */
-const inferDirectionalType = (isSender, isReceiver) => {
-  if (isReceiver && !isSender) return RECEIVE;
-  if (isSender && !isReceiver) return SEND;
-  if (isSender && isReceiver) return INTERACTION;
-  return undefined;
+const resolveType = (providerType, transaction, address, legs, memo) => {
+  if (providerType !== 'TRANSFER' && providerType !== UNKNOWN) return providerType;
+  const signed = transaction.feePayer === address;
+  const { inputs, outputs } = legs;
+
+  if (outputs.length > 0 && inputs.length === 0) return SEND;
+  if (inputs.length > 0 && outputs.length === 0) {
+    const onlySolBack = inputs.length === 1 && inputs[0].contract === SOL_ADDRESS && signed;
+    return onlySolBack ? INTERACTION : RECEIVE;
+  }
+  if (inputs.length > 0 && outputs.length > 0) return INTERACTION;
+  if (memo !== null) return MEMO;
+  return signed ? INTERACTION : UNKNOWN;
 };
 
 /**
- * Heuristic: when both sides of a TRANSFER touch the user but with different
- * mints (e.g. swap-by-different-mints from a non-Jupiter aggregator), classify
- * as SWAP. Returns SWAP or undefined.
+ * Sends and receives name their other side on the leg (`destination` /
+ * `source`), the way the wallet's rows read them; an interaction's legs
+ * carry none (FR-008).
  */
-const inferSwapByMintMix = (address, nativeTransfers, tokenTransfers) => {
-  const { outgoing, incoming } = collectMintSets(address, nativeTransfers, tokenTransfers);
-  return hasMintAsymmetry(outgoing, incoming) ? SWAP : undefined;
-};
-
-/**
- * Determine the system transaction type from the provider's type string.
- * @returns {string} SEND, RECEIVE, SWAP, MINT, INTERACTION, UNKNOWN, ...
- */
-const mapTransactionType = (heliusType, address, transaction) => {
-  // Jupiter Ultra executes from its own escrow accounts — the user never
-  // appears in transfers, so programId detection is the only reliable signal.
-  if (hasJupiterProgram(transaction)) return SWAP;
-
-  const mappedType = HELIUS_TYPE_MAPPING[heliusType] || INTERACTION;
-  const { nativeTransfers, tokenTransfers } = getTransfers(transaction);
-
-  const isReceiver = [...nativeTransfers, ...tokenTransfers].some(
-    (t) => t.toUserAccount === address
-  );
-  const isSender = [...nativeTransfers, ...tokenTransfers].some(
-    (t) => t.fromUserAccount === address
-  );
-
-  if (mappedType === 'TRANSFER') {
-    const directional = inferDirectionalType(isSender, isReceiver);
-    if (directional === RECEIVE || directional === SEND) return directional;
-
-    if (isSender && isReceiver) {
-      const swapByMix = inferSwapByMintMix(address, nativeTransfers, tokenTransfers);
-      if (swapByMix) return swapByMix;
-    }
-    return SEND;
+const attachCounterparties = (type, transaction, address, legs) => {
+  if (type === SEND) {
+    legs.outputs.forEach((leg) => {
+      const destination = counterpartyFor(transaction, address, leg.contract, 'out');
+      if (destination) leg.destination = destination;
+    });
   }
-
-  if (mappedType === UNKNOWN) {
-    if (nativeTransfers.length > 0 || tokenTransfers.length > 0) {
-      return inferDirectionalType(isSender, isReceiver) || UNKNOWN;
-    }
-    return UNKNOWN;
+  if (type === RECEIVE) {
+    legs.inputs.forEach((leg) => {
+      const source = counterpartyFor(transaction, address, leg.contract, 'in');
+      if (source) leg.source = source;
+    });
   }
-
-  return mappedType;
+  return legs;
 };
 
 /**
@@ -365,65 +401,6 @@ const getFee = (address, transaction) => {
   return undefined;
 };
 
-const DIRECTIONS = {
-  in: {
-    tokensField: 'incomingTokens',
-    nativeField: 'incomingNative',
-    item: 'source',
-    counterparty: (t) => t.fromUserAccount,
-    feePayerMatch: (t, fp) => t.toUserAccount === fp,
-    transferType: RECEIVE,
-  },
-  out: {
-    tokensField: 'outgoingTokens',
-    nativeField: 'outgoingNative',
-    item: 'destination',
-    counterparty: (t) => t.toUserAccount,
-    feePayerMatch: (t, fp) => t.fromUserAccount === fp,
-    transferType: SEND,
-  },
-};
-
-/**
- * Build the directional list (inputs when `direction='in'`, outputs when
- * `direction='out'`). Mirrors getInputs/getOutputs in a single function.
- */
-const getDirectional = (direction, type, address, transaction, tokens) => {
-  const dir = DIRECTIONS[direction];
-  const items = [];
-  const transfers = getTransfers(transaction);
-  const directional = getDirectionalTransfers(transfers, address);
-
-  if (type === SWAP) {
-    let directionalTokens = directional[dir.tokensField];
-    if (directionalTokens.length === 0 && transaction.feePayer) {
-      directionalTokens = transfers.tokenTransfers.filter((t) =>
-        dir.feePayerMatch(t, transaction.feePayer)
-      );
-    }
-    directionalTokens.forEach((t) => {
-      items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
-    });
-  }
-
-  if (type === dir.transferType) {
-    directional[dir.tokensField].forEach((t) => {
-      items.push(buildTokenItem(t, tokens, dir.item, dir.counterparty(t)));
-    });
-    directional[dir.nativeField].forEach((t) => {
-      items.push(buildNativeItem(t, dir.item, dir.counterparty(t)));
-    });
-  }
-
-  return type === SWAP ? groupByToken(items) : items;
-};
-
-const getInputs = (type, address, transaction, tokens) =>
-  getDirectional('in', type, address, transaction, tokens);
-
-const getOutputs = (type, address, transaction, tokens) =>
-  getDirectional('out', type, address, transaction, tokens);
-
 /**
  * Enriquece inputs/outputs con metadata de NFTs
  * @param {Array} items - Array de inputs u outputs
@@ -435,116 +412,17 @@ const enrichWithNftMetadata = (items, nftMetadata) => {
       const metadata = nftMetadata.get(item.contract);
       if (metadata.name) item.name = metadata.name;
       if (metadata.symbol) item.symbol = metadata.symbol;
-      if (metadata.image) item.logo = normalizeIpfsUrl(metadata.image);
+      // Same precedence as the NFT list: the curated override (a mirror for
+      // collections whose origin no longer serves) wins over the asset image.
+      const image = imageOverrides.lookup(item.contract) || metadata.image;
+      if (image) item.logo = normalizeIpfsUrl(image);
     }
   });
 };
 
-const RATE_PRECISION_DIGITS = 6;
-const RATE_PRECISION_SCALE = 10n ** BigInt(RATE_PRECISION_DIGITS);
-
-/**
- * Decimal-aware ratio with `RATE_PRECISION_DIGITS` digits, computed in
- * BigInt to survive token amounts that exceed `Number.MAX_SAFE_INTEGER`
- * (e.g. BONK at 18 decimals where 1 BONK = 10^18 raw).
- *
- *   rate = (recv / 10^recvDec) / (sent / 10^sentDec)
- *        = (recv * 10^sentDec) / (sent * 10^recvDec)
- *
- * Returns a string with the precision baked in, or `undefined` when sent=0
- * or any input is non-numeric.
- */
-const computeConversionRate = (sentRaw, sentDec, recvRaw, recvDec) => {
-  let sentBig;
-  let recvBig;
-  try {
-    sentBig = BigInt(sentRaw);
-    recvBig = BigInt(recvRaw);
-  } catch {
-    return undefined;
-  }
-  if (sentBig <= 0n) return undefined;
-
-  const sentScale = 10n ** BigInt(sentDec || 0);
-  const recvScale = 10n ** BigInt(recvDec || 0);
-
-  const numerator = recvBig * sentScale * RATE_PRECISION_SCALE;
-  const denominator = sentBig * recvScale;
-  const scaled = numerator / denominator;
-
-  const intPart = scaled / RATE_PRECISION_SCALE;
-  const fracPart = (scaled % RATE_PRECISION_SCALE).toString().padStart(RATE_PRECISION_DIGITS, '0');
-  return `${intPart}.${fracPart}`;
-};
-
-/**
- * Build a single-hop swapRoute from the user-pivoted inputs/outputs.
- *
- * Semantics:
- *   - `outputs` are tokens the user SENT (the swap's "input from user")
- *   - `inputs` are tokens the user RECEIVED (the swap's "output to user")
- *
- * The FE `SwapRouteHop` flips the naming: hop.inputToken = what enters the
- * hop (= user sent) and hop.outputToken = what leaves the hop (= user
- * received). We honor the FE contract.
- *
- * Multi-hop detail (`innerSwaps`) is left null for now — that requires
- * walking inner instructions per-program. The single-hop view is enough to
- * unlock the SwapRoute / conversion-rate UI in the FE today.
- */
-const buildSwapRoute = (inputs, outputs, source) => {
-  if (!inputs || !outputs) return null;
-  const sentToken = outputs[0];
-  const receivedToken = inputs[0];
-  if (!sentToken || !receivedToken) return null;
-
-  const sentAmount = sentToken.amount || '0';
-  const receivedAmount = receivedToken.amount || '0';
-
-  const hop = {
-    dex: source || 'UNKNOWN',
-    percent: 100,
-    inputToken: {
-      symbol: sentToken.symbol,
-      amount: sentAmount,
-      decimals: sentToken.decimals,
-      logo: sentToken.logo || null,
-    },
-    outputToken: {
-      symbol: receivedToken.symbol,
-      amount: receivedAmount,
-      decimals: receivedToken.decimals,
-      logo: receivedToken.logo || null,
-    },
-  };
-
-  const rate = computeConversionRate(
-    sentAmount,
-    sentToken.decimals,
-    receivedAmount,
-    receivedToken.decimals
-  );
-
-  return {
-    hops: [hop],
-    inputAmount: sentAmount,
-    outputAmount: receivedAmount,
-    conversionRate: rate
-      ? {
-          fromSymbol: sentToken.symbol,
-          toSymbol: receivedToken.symbol,
-          rate,
-        }
-      : undefined,
-  };
-};
-
 const collectNftMints = (transaction) => {
   return getTransfers(transaction)
-    .tokenTransfers.filter(
-      (transfer) =>
-        transfer.tokenStandard === 'NonFungible' || transfer.tokenStandard === 'NonFungibleEdition'
-    )
+    .tokenTransfers.filter((transfer) => isNftTokenStandard(transfer.tokenStandard))
     .map((transfer) => transfer.mint);
 };
 
@@ -597,10 +475,16 @@ const normalizeInstructions = (instructions) => {
  */
 const transformTransaction = async (heliusTransaction, address, tokens = [], options = {}) => {
   const tokenLookup = buildTokenLookup(tokens);
-  const type = mapTransactionType(heliusTransaction.type, address, heliusTransaction);
+  const memo = extractMemo(heliusTransaction);
+  const providerType = mapProviderType(heliusTransaction.type);
+  const source = publicSource(heliusTransaction.source);
 
-  const inputs = getInputs(type, address, heliusTransaction, tokenLookup);
-  const outputs = getOutputs(type, address, heliusTransaction, tokenLookup);
+  // What the wallet gained or lost, per asset, from the ledger's balance
+  // changes; the transfers only name the other side (spec 016).
+  const delta = computeWalletDelta(heliusTransaction, address, { toRawAmount });
+  const legs = buildLegs(heliusTransaction, address, tokenLookup, delta);
+  const type = resolveType(providerType, heliusTransaction, address, legs, memo);
+  const { inputs, outputs } = attachCounterparties(type, heliusTransaction, address, legs);
 
   const nftMints = collectNftMints(heliusTransaction);
   markNftTransfers([...inputs, ...outputs], nftMints);
@@ -610,11 +494,15 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
     enrichWithNftMetadata(outputs, options.nftMetadataByMint);
   }
 
-  // Populate swapRoute when this is a swap so the FE's SwapRoute /
-  // ConversionRate UI lights up. Works for both Helius- and Triton-parsed
-  // transactions because both paths feed the same canonical inputs/outputs.
-  const swapRoute =
-    type === SWAP ? buildSwapRoute(inputs, outputs, heliusTransaction.source) : undefined;
+  // The verb inside an interaction, and the app the user knows the program
+  // by, for the detail (spec 017).
+  const { action, actionMeta, app } = deriveAction(
+    heliusTransaction,
+    address,
+    { inputs, outputs },
+    type,
+    source
+  );
 
   return {
     id: heliusTransaction.signature,
@@ -622,16 +510,21 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
     status: heliusTransaction.transactionError ? 'failed' : 'completed',
     fee: getFee(address, heliusTransaction),
     type,
+    action,
+    actionMeta,
+    app,
     inputs,
     outputs,
+    // The note of an SPL Memo instruction (null when none); the type is
+    // `memo` only when nothing else moved.
+    memo,
 
     // Provider-enriched fields forwarded to the FE
     description: heliusTransaction.description,
-    source: heliusTransaction.source,
+    source,
     events: heliusTransaction.events,
     // Original provider type — FE uses tx.heliusType.startsWith('NFT_')
     heliusType: heliusTransaction.type,
-    swapRoute,
 
     // Parser-derived fields. Helius enriched txs already carry these; the
     // Triton parser pipeline computes them too. Forwarding the full set
@@ -657,14 +550,13 @@ module.exports.buildTokenLookup = buildTokenLookup;
  * Not part of the public resource API — do not consume from application code.
  */
 module.exports.__testing = {
-  buildSwapRoute,
+  extractMemo,
   toRawAmount,
-  computeConversionRate,
-  mapTransactionType,
-  inferDirectionalType,
-  inferSwapByMintMix,
-  collectMintSets,
-  hasMintAsymmetry,
+  mapProviderType,
+  resolveType,
+  buildLegs,
+  counterpartyFor,
+  NATIVE_SIDE_LEG_MIN_LAMPORTS,
   collectNftMints,
   markNftTransfers,
   enrichWithNftMetadata,

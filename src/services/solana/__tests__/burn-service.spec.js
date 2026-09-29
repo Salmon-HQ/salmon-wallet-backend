@@ -99,7 +99,10 @@ jest.mock('../transaction-serialization', () => ({
     mockCreateTransactionResponseFromUmiBuilder(...args),
 }));
 
-const { UnsupportedSolanaNftBurnError } = require('../solana-nft-burn-errors');
+const {
+  NotOwnedSolanaNftBurnError,
+  UnsupportedSolanaNftBurnError,
+} = require('../solana-nft-burn-errors');
 const burnService = require('../burn-service');
 
 const createBuilder = ({
@@ -290,7 +293,7 @@ describe('burn-service', () => {
 
     await expect(
       burnService.burnCompressedNftTransaction(ASSET_ID, OWNER, locals)
-    ).rejects.toBeInstanceOf(UnsupportedSolanaNftBurnError);
+    ).rejects.toBeInstanceOf(NotOwnedSolanaNftBurnError);
   });
 
   test('routes the compressed asset proof lookup through the provider resolver', async () => {

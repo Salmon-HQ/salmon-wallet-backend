@@ -423,7 +423,7 @@ paths:
             enum: ['true', 'false', '1', '0']
           description: |
             When truthy (`true`/`1`), opts out of the chain-specific spam
-            filter (e.g. Solana drops tokens with only `unknown` Jupiter tags
+            filter (e.g. Solana drops tokens without a `verified` tag — top-1000 market cap; `community` = listed long tail
             by default).
       responses:
         '200':
@@ -1034,6 +1034,15 @@ components:
           type: object
           additionalProperties: true
           description: Stage-derived feature-section flags; always an object
+        attribution:
+          type: object
+          nullable: true
+          description: 'Data-provider credit the client must render verbatim on screens showing this network''s catalog or prices (CoinGecko terms); null when none applies'
+          properties:
+            text:
+              type: string
+            url:
+              type: string
       required: [id, blockchain, environment, name, enabled, sections]
 
     BalanceItem:
@@ -1076,7 +1085,7 @@ components:
           type: array
           items:
             type: string
-          description: Token entries only, when the enricher attached Jupiter tags
+          description: Token entries only, when the enricher attached catalog tags
         price:
           type: number
           description: USD unit price (when price enrichment resolved)
@@ -1121,7 +1130,7 @@ components:
         coingeckoId:
           type: string
           nullable: true
-          description: 'Null for Jupiter-v2-sourced tokens (v2 omits it)'
+          description: 'CoinGecko coin id when the token is listed there, else null'
       required: [chainId, address, symbol, name, decimals, logo, tags, coingeckoId]
 
     Nft:
@@ -1199,7 +1208,7 @@ components:
         bare-RPC fallback (`src/resources/solana/solana-transaction-resource.js`).
         The fields listed here are the stable core; the enriched path adds
         provider fields (`description`, `source`, `events`, `heliusType`,
-        `swapRoute`, `instructions`, `feePayer`, `slot`, `blockTime`,
+        `instructions`, `feePayer`, `slot`, `blockTime`,
         `confirmationStatus`) whose inner structure is provider-defined —
         hence `additionalProperties: true`.
       properties:
@@ -1226,7 +1235,19 @@ components:
               type: string
         type:
           type: string
-          description: 'Canonical transaction type (e.g. `send`, `receive`, `swap`, `interaction`, `mint`, `unknown` — see `src/constants/transaction-types.js`)'
+          description: 'Canonical transaction type (`send`, `receive`, `interaction`, `mint`, `burn`, `stake`, `loan`, `memo`, `unknown` — see `src/constants/transaction-types.js`). For transfers the direction is read off the legs: outputs only is `send`, inputs only `receive`, both `interaction`; SOL that only came back to a wallet that signed the transaction (rent from its own closed accounts) is `interaction`.'
+        action:
+          type: string
+          nullable: true
+          description: 'The verb inside an `interaction`, as a stable key: `swap`, `nft_sale`, `nft_purchase`, `accounts_closed`, `program_call`. Absent on every other type.'
+        actionMeta:
+          type: object
+          nullable: true
+          description: 'What the verb needs said: `{ count }` for `accounts_closed`.'
+        app:
+          type: string
+          nullable: true
+          description: 'The name the user knows the program family by (Jupiter, Raydium, Magic Eden, Marinade…), for the detail. Absent for the platform’s own programs.'
         inputs:
           type: array
           items:
@@ -1240,7 +1261,7 @@ components:
 
     TransferLeg:
       type: object
-      description: One transfer leg (token, native, or NFT) of a transaction
+      description: "One asset the queried address gained (`inputs`) or lost (`outputs`) in the transaction: its net balance change, one leg per asset, never one per instruction. A SOL leg beside token legs is reported only from 0.005 SOL; alone it is always reported. The transaction fee is never a leg (see `fee`)." 
       properties:
         amount:
           description: Raw amount in base units (number or numeric string depending on source)
@@ -1326,7 +1347,7 @@ components:
           type: string
         type:
           type: string
-          description: '`send` | `receive` | `swap` (address is both source and destination) | `unknown`'
+          description: '`send` | `receive` | `unknown` (address is both source and destination, or neither)'
         fee:
           type: object
           nullable: true

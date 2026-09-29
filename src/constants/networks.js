@@ -21,6 +21,25 @@ const solanaNodeUrl = (environment) => {
   return heliusClient.getRpcUrl(environment);
 };
 
+/**
+ * Credential-free Solana RPC URL published to wallet clients in the anonymous
+ * `/v1/networks` response. `nodeUrl` cannot be published because it carries
+ * the provider secret, and clients that receive nothing fall back to the
+ * public cluster — so set `SOLANA_PUBLIC_RPC_URL_<ENV>` to a proxy or a paid
+ * public endpoint to keep clients off the rate-limited default.
+ *
+ * @param {string} environment - Solana cluster ('mainnet' | 'testnet' | 'devnet').
+ * @returns {string} JSON-RPC URL carrying no credential.
+ */
+const solanaPublicNodeUrl = (environment) => {
+  const configured = process.env[`SOLANA_PUBLIC_RPC_URL_${environment.toUpperCase()}`];
+  if (configured) return configured;
+
+  return environment === 'mainnet'
+    ? 'https://api.mainnet-beta.solana.com'
+    : `https://api.${environment}.solana.com`;
+};
+
 const ETHEREUM_MAINNET_RPC_URL = process.env.ETHEREUM_MAINNET_RPC_URL || 'https://eth.llamarpc.com';
 const ETHEREUM_SEPOLIA_RPC_URL = process.env.ETHEREUM_SEPOLIA_RPC_URL || 'https://rpc.sepolia.org';
 
@@ -67,6 +86,7 @@ module.exports = [
     },
     config: {
       nodeUrl: solanaNodeUrl('mainnet'),
+      publicNodeUrl: solanaPublicNodeUrl('mainnet'),
     },
   },
   {
@@ -81,6 +101,7 @@ module.exports = [
     },
     config: {
       nodeUrl: solanaNodeUrl('testnet'),
+      publicNodeUrl: solanaPublicNodeUrl('testnet'),
     },
   },
   {
@@ -95,6 +116,7 @@ module.exports = [
     },
     config: {
       nodeUrl: solanaNodeUrl('devnet'),
+      publicNodeUrl: solanaPublicNodeUrl('devnet'),
     },
   },
   {

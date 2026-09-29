@@ -1,13 +1,6 @@
 'use strict';
 
-const {
-  SEND,
-  RECEIVE,
-  SWAP,
-  INTERACTION,
-  UNKNOWN,
-  MINT,
-} = require('../../constants/transaction-types');
+const { SEND, RECEIVE, INTERACTION, UNKNOWN, MINT } = require('../../constants/transaction-types');
 const {
   SOL_NAME,
   SOL_SYMBOL,
@@ -15,59 +8,104 @@ const {
   SOL_ADDRESS,
   SOL_LOGO,
 } = require('../../constants/solana-constants');
-
-const {
-  JUPITER_PROGRAM_IDS,
-  JUPITER_LIMIT_PROGRAM_IDS,
-  BUBBLEGUM_PROGRAM_ID,
-} = require('../../constants/solana-program-ids');
+const { BUBBLEGUM_PROGRAM_ID } = require('../../constants/solana-program-ids');
 const { normalizeIpfsUrl } = require('./content-urls');
+const { computeRpcWalletDelta } = require('./wallet-delta');
+const imageOverrides = require('../../services/solana/nft-image-override-service');
 
-const PROGRAMS = {
-  JUPITER: [...JUPITER_PROGRAM_IDS, ...JUPITER_LIMIT_PROGRAM_IDS],
-  BUBBLEGUM: BUBBLEGUM_PROGRAM_ID,
+/**
+ * FR-007 of spec 016, the same number the enriched mapper uses: SOL that
+ * rides with a token leg is a side effect (rent, wrapped SOL dust) unless it
+ * is at least this much.
+ */
+const NATIVE_SIDE_LEG_MIN_LAMPORTS = 5000000n;
+
+const toBigInt = (value) => {
+  try {
+    return BigInt(value ?? 0);
+  } catch {
+    return 0n;
+  }
 };
+const absBig = (value) => (value < 0n ? -value : value);
+const truncateMint = (mint) => `${mint.slice(0, 4)}…${mint.slice(-4)}`;
 
-const TRANSFER_TYPES = ['transfer', 'transferChecked'];
-const INTERACTION_TYPES = ['getAccountDataSize', 'createAccount', 'closeAccount', 'create'];
+/** Base58 keys in message order; the parsed result carries them as PublicKeys or strings. */
+const accountKeysOf = (transaction) =>
+  (transaction?.message?.accountKeys || []).map(({ pubkey }) =>
+    typeof pubkey === 'string' ? pubkey : pubkey?.toBase58?.()
+  );
 
-/** Returns the SOL fee object when `address` is the first signer, else `undefined`. */
-const getFee = (address, meta, transaction) => {
-  if (meta?.fee) {
-    const signers = transaction?.message?.accountKeys
-      ?.filter(({ signer }) => signer)
-      ?.map(({ pubkey }) => pubkey.toBase58());
-
-    if (signers?.[0] === address) {
-      return { amount: meta.fee, decimals: SOL_DECIMALS, symbol: SOL_SYMBOL };
-    }
+/** Returns the SOL fee object when `address` is the fee payer (first key), else `undefined`. */
+const getFee = (address, meta, accountKeys) => {
+  if (meta?.fee && accountKeys[0] === address) {
+    return { amount: meta.fee, decimals: SOL_DECIMALS, symbol: SOL_SYMBOL };
   }
   return undefined;
 };
 
-/** Returns the source pubkey from the first transfer-style instruction. */
-const getSource = (transaction) => {
-  const { instructions } = transaction?.message || {};
+/**
+ * Maps each token account in the transaction to the wallet that owns it and
+ * the mint it holds, from the balance records the RPC already returns.
+ *
+ * SPL instructions name token accounts, not wallets, so without this the
+ * wallet is never on either side of its own token transfer.
+ *
+ * @param {Object} meta
+ * @param {string[]} accountKeys
+ * @returns {Map<string, {owner: string, mint: string}>}
+ */
+const tokenAccountOwners = (meta, accountKeys) => {
+  const entries = [...(meta?.preTokenBalances || []), ...(meta?.postTokenBalances || [])];
 
-  return (
-    instructions?.[0]?.parsed?.info?.authority ||
-    instructions?.[0]?.parsed?.info?.source ||
-    instructions?.[1]?.parsed?.info?.source
+  return new Map(
+    entries
+      .filter((entry) => entry && entry.owner && accountKeys[entry.accountIndex])
+      .map((entry) => [accountKeys[entry.accountIndex], { owner: entry.owner, mint: entry.mint }])
   );
 };
 
-/** Returns the destination pubkey of the first transfer instruction (or first instruction with a destination). */
-const getDestination = (transaction) => {
-  const { instructions } = transaction?.message || {};
+/**
+ * Counterparty for one leg, bound to that leg's asset.
+ *
+ * Only an instruction that moved this mint, with the wallet on the matching
+ * side, may name the other party. Reading the first instruction's `authority`
+ * or `source` by position instead lets whoever composed the transaction pick
+ * which address the wallet displays as the sender, and misattributes any
+ * ordinary multi-instruction transaction — a router swap, a batched payout —
+ * whose first instruction belongs to a different leg. This is the rule the
+ * enriched mapper's `counterpartyFor` already applies.
+ *
+ * @param {Object} transaction
+ * @param {string} address - the wallet the row is rendered for.
+ * @param {Object} leg - the input or output leg being rendered.
+ * @param {'in'|'out'} direction
+ * @param {Map<string, {owner: string, mint: string}>} owners
+ * @returns {string|undefined} the other party, or undefined when no movement
+ *   of this asset names one.
+ */
+const counterpartyForLeg = (transaction, address, leg, direction, owners) => {
+  const instructions = transaction?.message?.instructions || [];
+  const isNative = leg.contract === SOL_ADDRESS;
 
-  return [
-    instructions?.filter((ins) => ins?.parsed?.type === 'transfer')?.[0],
-    instructions?.[0],
-    instructions?.[1],
-    instructions?.[2],
-  ]
-    .map((instruction) => instruction?.parsed?.info?.destination)
-    .filter(Boolean)?.[0];
+  /** True when `account` is the wallet itself, or a token account it owns holding this leg's mint. */
+  const isWalletSide = (account) => {
+    if (account === address) return isNative;
+    const owned = owners.get(account);
+    return Boolean(owned && owned.owner === address && owned.mint === leg.contract);
+  };
+
+  const match = instructions.find((instruction) => {
+    const info = instruction?.parsed?.info;
+    if (!info) return false;
+    if (!isNative && info.mint && info.mint !== leg.contract) return false;
+    return isWalletSide(direction === 'in' ? info.destination : info.source);
+  })?.parsed?.info;
+
+  if (!match) return undefined;
+
+  const other = direction === 'in' ? match.authority || match.source : match.destination;
+  return owners.get(other)?.owner || other;
 };
 
 /** Strips the internal `_source` flag from an already-enriched tx payload before returning. */
@@ -75,65 +113,6 @@ const cleanHeliusTransaction = (transactionInfo) => {
   const cleanTransaction = { ...transactionInfo };
   delete cleanTransaction._source;
   return cleanTransaction;
-};
-
-/** Assembles the bare-RPC fallback resource: id, timestamp, status, fee, type, inputs, outputs. */
-const buildResource = async (transactionInfo, context) => {
-  const { address, signature, blockTime, meta, transaction } = transactionInfo;
-  const source = getSource(transaction);
-  const destination = getDestination(transaction);
-  const nft = getNft(signature, context);
-  const type = getType(address, meta, transaction, destination);
-
-  return {
-    id: signature,
-    timestamp: blockTime,
-    status: meta?.err ? 'failed' : 'completed',
-    fee: getFee(address, meta, transaction),
-    type,
-    inputs: await getInputs(address, type, meta, transaction, source, destination, nft, context),
-    outputs: await getOutputs(address, type, meta, transaction, source, destination, nft, context),
-  };
-};
-
-/** Classifies the tx as `SWAP` | `MINT` | `RECEIVE` | `SEND` | `INTERACTION` | `UNKNOWN`. */
-const getType = (address, meta, transaction, destination) => {
-  const logMessages = meta?.logMessages || [];
-  const instructions = transaction?.message?.instructions || [];
-  const innerInstructions = meta?.innerInstructions?.flatMap((inner) => inner.instructions) || [];
-
-  // Helper: Check if log messages contain a specific program ID
-  const containsProgramInLogs = (programId) => logMessages.some((msg) => msg.includes(programId));
-
-  // 1. Check for SWAP
-  if (
-    containsProgramInLogs('SetTokenLedger') ||
-    instructions.some(({ programId }) => PROGRAMS.JUPITER.includes(programId?.toString()))
-  ) {
-    return SWAP;
-  }
-
-  // 2. Check for MINT
-  if (containsProgramInLogs(PROGRAMS.BUBBLEGUM)) {
-    return MINT;
-  }
-
-  // Combine all instructions (transaction + inner)
-  const allInstructions = [...instructions, ...innerInstructions];
-  const types = allInstructions.map((instruction) => instruction?.parsed?.type).filter(Boolean);
-
-  // 3. Check for TRANSFER
-  if (TRANSFER_TYPES.some((t) => types.includes(t))) {
-    return destination === address ? RECEIVE : SEND;
-  }
-
-  // 4. Check for INTERACTION
-  if (INTERACTION_TYPES.some((t) => types.includes(t))) {
-    return INTERACTION;
-  }
-
-  // 5. Default to UNKNOWN
-  return UNKNOWN;
 };
 
 /**
@@ -146,216 +125,143 @@ const getNft = (signature, context) => {
   return nft?.json?.collection ? nft : undefined;
 };
 
-/** Returns the `parsed.info` payloads for inner instructions at `meta.innerInstructions[index]`. */
-const getParsedInstructionInfos = (meta, index = -1) => {
-  return meta?.innerInstructions
-    ?.at(index)
-    ?.instructions?.map(({ parsed }) => parsed)
-    ?.filter(Boolean)
-    ?.map(({ info }) => info);
-};
-
-/** Returns the mint of the parsed instruction whose destination is one of the user's token accounts (falls back to the last instruction). */
-const getMatchedMint = (parsedInstructions, tokenAccounts) => {
-  return (
-    parsedInstructions?.filter((info) => tokenAccounts?.includes(info?.destination))?.[0] ||
-    parsedInstructions?.at(-1) ||
-    {}
-  ).mint;
-};
-
-/** Returns the lamport amount transferred by the first system-program instruction (or first inner instruction). */
-const getLamports = (transaction, meta) => {
-  return (
-    transaction?.message?.instructions[1]?.parsed?.info?.lamports ||
-    transaction?.message?.instructions[0]?.parsed?.info?.lamports ||
-    meta?.innerInstructions?.[0]?.instructions?.[0]?.parsed?.info?.lamports
-  );
-};
-
-/** Builds an NFT transfer leg (`amount: 1, decimals: 0`) tagged with `directionField → directionValue`. */
-const buildNftTransfer = (nft, directionField, directionValue) => ({
+const buildNftLeg = (nft) => ({
   amount: 1,
   decimals: 0,
   symbol: nft.symbol,
   name: nft.json.collection?.name,
-  logo: normalizeIpfsUrl(nft.json.image),
+  logo: normalizeIpfsUrl(imageOverrides.lookup(nft.mint?.address?.toBase58()) || nft.json.image),
   contract: nft.mint?.address?.toBase58(),
-  [directionField]: directionValue,
 });
 
-/** Builds a native SOL transfer leg in lamports tagged with `directionField → directionValue`. */
-const buildNativeTransfer = (amount, directionField, directionValue) => ({
-  amount,
+const buildNativeLeg = (lamports) => ({
+  amount: absBig(lamports).toString(),
   decimals: SOL_DECIMALS,
   symbol: SOL_SYMBOL,
   name: SOL_NAME,
   logo: SOL_LOGO,
   contract: SOL_ADDRESS,
-  [directionField]: directionValue,
 });
 
-/** Builds an SPL-token transfer leg from a `transferToken` metadata record tagged with `directionField → directionValue`. */
-const buildTokenTransfer = (transferToken, amount, directionField, directionValue) => {
-  const { symbol, name, decimals, logoURI: logo, address: contract } = transferToken;
-
+/** A token leg from the token list the enrichment preloaded, or the bare mint when the list does not know it. */
+const buildTokenLeg = (mint, entry, nft, tokens) => {
+  if (nft && nft.mint?.address?.toBase58() === mint) return buildNftLeg(nft);
+  const token = (tokens || []).find((candidate) => candidate.address === mint);
   return {
-    amount,
-    decimals,
-    symbol,
-    name,
-    logo: normalizeIpfsUrl(logo),
-    contract,
-    [directionField]: directionValue,
+    amount: absBig(toBigInt(entry.amount)).toString(),
+    decimals: entry.decimals ?? token?.decimals ?? 0,
+    symbol: token?.symbol || truncateMint(mint),
+    name: token?.name,
+    logo: normalizeIpfsUrl(token?.logoURI),
+    contract: mint,
   };
 };
 
-/** Looks up a token in `context.locals.tokens` by mint, falling back to a token-account address. */
-const getTransferToken = async (fallbackAddress, mint, context) => {
-  const { tokens } = context.locals;
-  return tokens?.find((token) => token.address === mint || token.address === fallbackAddress);
+/**
+ * One leg per asset the wallet gained or lost (spec 016 FR-003), read off
+ * the ledger's pre/post balances rather than off the instructions: a
+ * negative net is an output, a positive net an input. The SOL leg follows
+ * FR-007 when token legs ride with it.
+ */
+const buildLegs = (delta, nft, tokens) => {
+  const inputs = [];
+  const outputs = [];
+  const place = (leg, signed) => (signed < 0n ? outputs : inputs).push(leg);
+
+  delta.tokens.forEach((entry, mint) => {
+    place(buildTokenLeg(mint, entry, nft, tokens), toBigInt(entry.amount));
+  });
+
+  const native = toBigInt(delta.native);
+  const hasTokenLegs = delta.tokens.size > 0;
+  if (native !== 0n && (!hasTokenLegs || absBig(native) >= NATIVE_SIDE_LEG_MIN_LAMPORTS)) {
+    place(buildNativeLeg(native), native);
+  }
+
+  return { inputs, outputs };
 };
 
-/** Returns the input leg(s) of a SWAP — the token credited to one of the user's token accounts (or the last parsed instruction as fallback). */
-const getSwapInputs = async (meta, source, context) => {
-  const parsedInstructions = getParsedInstructionInfos(meta);
-  const { tokenAccounts } = context.locals;
-  const {
-    destination: tokenAddress,
-    mint,
-    amount,
-  } = parsedInstructions?.filter((info) => tokenAccounts?.includes(info?.destination))?.[0] ||
-  parsedInstructions?.at(-1) ||
-  {};
+/**
+ * True when the transaction actually invoked Bubblegum, by exact program-id
+ * match over its outer and inner instructions.
+ *
+ * `logMessages` is free text that any invoked program can write, so matching
+ * a program id as a substring of it lets whoever composed the transaction
+ * choose the type the wallet displays.
+ *
+ * @param {Object} transaction
+ * @param {Object} meta
+ * @returns {boolean}
+ */
+const invokesBubblegum = (transaction, meta) => {
+  const outer = transaction?.message?.instructions || [];
+  const inner = (meta?.innerInstructions || []).flatMap((entry) => entry?.instructions || []);
 
-  const { tokens } = context.locals;
-  const {
-    address: contract,
-    symbol,
-    name,
-    decimals,
-    logoURI,
-  } = tokens?.find((token) => token.address === tokenAddress || token.address === mint) || {};
-
-  return [
-    {
-      amount,
-      decimals,
-      symbol,
-      name,
-      logo: normalizeIpfsUrl(logoURI),
-      contract,
-      source,
-    },
-  ];
+  return [...outer, ...inner].some((instruction) => {
+    const { programId } = instruction || {};
+    const id = typeof programId === 'string' ? programId : programId?.toBase58?.();
+    return id === BUBBLEGUM_PROGRAM_ID;
+  });
 };
 
-/** Returns the input leg(s) of a RECEIVE — NFT, SPL token (using `postTokenBalances`), or native SOL lamports. */
-const getReceiveInputs = async (address, meta, transaction, source, destination, nft, context) => {
-  if (nft) {
-    return [buildNftTransfer(nft, 'source', source)];
-  }
-
-  const parsedInstructions = getParsedInstructionInfos(meta);
-  const { tokenAccounts } = context.locals;
-  const mint = getMatchedMint(parsedInstructions, tokenAccounts);
-  const transferToken = await getTransferToken(destination, mint, context);
-
-  if (transferToken) {
-    const transferAmount = meta?.postTokenBalances?.filter(({ owner }) => owner === address)?.[0]
-      ?.uiTokenAmount;
-
-    if (transferAmount) {
-      return [buildTokenTransfer(transferToken, transferAmount.amount, 'source', source)];
-    }
-  }
-
-  const lamports = getLamports(transaction, meta);
-  return lamports ? [buildNativeTransfer(lamports, 'source', source)] : [];
+/**
+ * The type, once the legs are known (spec 016 FR-004 to FR-006): only outputs
+ * is a send, only inputs a receive, both an interaction; nothing moved is a
+ * mint when the transaction invoked Bubblegum — a compressed mint credits no
+ * token or lamport balance, so it has no legs to read — else an interaction
+ * when the wallet paid the fee (it signed for something), and unknown
+ * otherwise. What the wallet's own ledger says outranks the mint case, so a
+ * cNFT transfer is not relabelled as a mint.
+ */
+const resolveType = (transaction, meta, legs, isFeePayer) => {
+  const hasIn = legs.inputs.length > 0;
+  const hasOut = legs.outputs.length > 0;
+  if (hasIn && hasOut) return INTERACTION;
+  if (hasOut) return SEND;
+  if (hasIn) return RECEIVE;
+  if (invokesBubblegum(transaction, meta)) return MINT;
+  return isFeePayer ? INTERACTION : UNKNOWN;
 };
 
-/** Dispatches to `getSwapInputs` / `getReceiveInputs` based on `type`, or returns `[]` for SEND/INTERACTION/UNKNOWN/MINT. */
-const getInputs = async (address, type, meta, transaction, source, destination, nft, context) => {
-  if (type === SWAP) {
-    return getSwapInputs(meta, source, context);
-  }
+/** Counterparties per leg: who sent that asset, where that asset went. */
+const attachCounterparties = (type, legs, transaction, address, owners) => ({
+  inputs: legs.inputs.map((leg) => {
+    const source =
+      type === RECEIVE ? counterpartyForLeg(transaction, address, leg, 'in', owners) : undefined;
+    return source ? { ...leg, source } : leg;
+  }),
+  outputs: legs.outputs.map((leg) => {
+    const destination =
+      type === SEND ? counterpartyForLeg(transaction, address, leg, 'out', owners) : undefined;
+    return destination ? { ...leg, destination } : leg;
+  }),
+});
 
-  if (type === RECEIVE) {
-    return getReceiveInputs(address, meta, transaction, source, destination, nft, context);
-  }
+/** Assembles the bare-RPC fallback resource: id, timestamp, status, fee, type, inputs, outputs. */
+const buildResource = (transactionInfo, context) => {
+  const { address, signature, blockTime, meta, transaction } = transactionInfo;
+  const accountKeys = accountKeysOf(transaction);
+  const delta = computeRpcWalletDelta(meta, accountKeys, address);
+  const nft = getNft(signature, context);
+  const legs = buildLegs(delta, nft, context.locals.tokens);
+  const type = resolveType(transaction, meta, legs, accountKeys[0] === address);
+  const { inputs, outputs } = attachCounterparties(
+    type,
+    legs,
+    transaction,
+    address,
+    tokenAccountOwners(meta, accountKeys)
+  );
 
-  return [];
-};
-
-/** Returns the output leg(s) of a SWAP — the token authority-debited from `address`, taken from one of the last two inner-instruction groups. */
-const getSwapOutputs = async (address, meta, destination, context) => {
-  const {
-    destination: tokenAddress,
-    mint,
-    amount,
-  } = meta.innerInstructions
-    ?.at(-2)
-    ?.instructions?.find(({ parsed }) => parsed?.info?.authority === address)?.parsed?.info ||
-  meta.innerInstructions
-    ?.at(-1)
-    ?.instructions?.find(({ parsed }) => parsed?.info?.authority === address)?.parsed?.info ||
-  {};
-
-  const { tokens } = context.locals;
-  const {
-    address: contract,
-    symbol,
-    decimals,
-    logoURI,
-  } = tokens?.find((token) => token.address === tokenAddress || token.address === mint) || {};
-
-  return [
-    {
-      amount,
-      decimals,
-      symbol,
-      logo: normalizeIpfsUrl(logoURI),
-      contract,
-      destination,
-    },
-  ];
-};
-
-/** Returns the output leg(s) of a SEND — NFT, SPL token (using `preTokenBalances`), or native SOL lamports. */
-const getSendOutputs = async (address, meta, transaction, destination, nft, context) => {
-  if (nft) {
-    return [buildNftTransfer(nft, 'destination', destination)];
-  }
-
-  const parsedInstructions = getParsedInstructionInfos(meta);
-  const { tokenAccounts } = context.locals;
-  const mint = getMatchedMint(parsedInstructions, tokenAccounts);
-  const transferToken = await getTransferToken(destination, mint, context);
-
-  if (transferToken) {
-    const transferAmount = meta?.preTokenBalances?.filter(({ owner }) => owner === address)?.[0]
-      ?.uiTokenAmount;
-
-    if (transferAmount) {
-      return [buildTokenTransfer(transferToken, transferAmount.amount, 'destination', destination)];
-    }
-  }
-
-  const lamports = getLamports(transaction, meta);
-  return lamports ? [buildNativeTransfer(lamports, 'destination', destination)] : [];
-};
-
-/** Dispatches to `getSwapOutputs` / `getSendOutputs` based on `type`, or returns `[]` for RECEIVE/INTERACTION/UNKNOWN/MINT. */
-const getOutputs = async (address, type, meta, transaction, source, destination, nft, context) => {
-  if (type === SWAP) {
-    return getSwapOutputs(address, meta, destination, context);
-  }
-
-  if (type === SEND) {
-    return getSendOutputs(address, meta, transaction, destination, nft, context);
-  }
-
-  return [];
+  return {
+    id: signature,
+    timestamp: blockTime,
+    status: meta?.err ? 'failed' : 'completed',
+    fee: getFee(address, meta, accountKeys),
+    type,
+    inputs,
+    outputs,
+  };
 };
 
 /**
@@ -364,12 +270,15 @@ const getOutputs = async (address, type, meta, transaction, source, destination,
  * When `transactionInfo._source === 'enriched'` (Triton-parsed or Helius
  * Enhanced API, already normalized upstream via `buildEnhancedTransaction`),
  * strips the internal `_source` marker and returns the payload as-is.
- * Otherwise builds the bare-RPC fallback shape via `buildResource`.
+ * Otherwise builds the bare-RPC fallback shape via `buildResource`: the
+ * legs are the wallet's net balance change per asset (spec 016), read off
+ * the parsed result's pre/post balances — the same rule the enriched mapper
+ * applies to the ledger — never a guess from the first transfer instruction.
  *
  * Pure mapper: performs no I/O. The lookup data it reads —
- * `locals.tokens`, `locals.tokenAccounts`, `locals.rpcNftBySignature` — is
- * preloaded by `src/services/solana/solana-rpc-enrichment.js` before the
- * controller decorates the payload.
+ * `locals.tokens`, `locals.rpcNftBySignature` — is preloaded by
+ * `src/services/solana/solana-rpc-enrichment.js` before the controller
+ * decorates the payload.
  *
  * DESIGN NOTE — two-stage shaping, deliberate:
  * Enriched transactions are already shaped inside the service by
@@ -387,8 +296,7 @@ const getOutputs = async (address, type, meta, transaction, source, destination,
  * @param {Object} include - relation include map
  * @param {string} key - decorator chain key
  * @param {Object} context - per-request context (`locals.tokens` /
- *   `locals.tokenAccounts` / `locals.rpcNftBySignature` are read here for
- *   the bare-RPC path)
+ *   `locals.rpcNftBySignature` are read here for the bare-RPC path)
  * @returns {Promise<Object>} resource - enriched passthrough, or the
  *   bare-RPC shape `{ id, timestamp, status, fee, type, inputs, outputs }`
  *   built by `buildResource`

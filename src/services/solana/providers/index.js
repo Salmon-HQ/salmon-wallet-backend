@@ -258,8 +258,37 @@ const tryProvider = (provider, method, args) => tryRun(() => provider[method](..
  * @throws {Error} The primary error when the fallback is not eligible or the
  *   budget is exhausted; the fallback error when the fallback also fails.
  */
+/**
+ * The 503 raised when a Helius call cannot be admitted under the shared
+ * `SOLANA_FALLBACK_MAX_RPS` budget.
+ *
+ * @returns {Error}
+ */
+const budgetExhaustedError = () => {
+  const error = new Error('Upstream provider is rate limited, please retry shortly.');
+  error.statusCode = 503;
+  error.errorCode = 'upstream_rate_limited';
+  return error;
+};
+
 const dispatchWithFallback = async (baseLog, primary, fallback) => {
   if (!tritonClient.isConfigured(baseLog.env)) {
+    // Triton is hardcoded as unconfigured for testnet, so this branch carries
+    // ordinary per-request traffic rather than an edge case. It reaches the
+    // same quota-limited Helius account as the error-triggered fallback below
+    // and must consume the same budget, or the guardrail meters one of the two
+    // paths to the resource and bounds neither.
+    if (!consumeFallbackBudget()) {
+      log('warn', {
+        ...baseLog,
+        provider: FALLBACK_NAME,
+        fallback_used: false,
+        fallback_blocked: true,
+        reason: `budget_exhausted_max_${FALLBACK_MAX_RPS}_rps`,
+      });
+      throw budgetExhaustedError();
+    }
+
     const out = await fallback();
     if (out.ok) {
       log('info', {
@@ -381,6 +410,7 @@ const resolver = {
    */
   getRpcUrl: (environment) => {
     if (!tritonClient.isConfigured(environment)) {
+      if (!consumeFallbackBudget()) throw budgetExhaustedError();
       return heliusProvider.getRpcUrl(environment);
     }
     try {
@@ -446,6 +476,7 @@ module.exports = {
   ...resolver,
   __testing: {
     resetBudget,
+    dispatchWithFallback,
     consumeFallbackBudget,
     isFallbackEligibleError,
     extractEnvironment,

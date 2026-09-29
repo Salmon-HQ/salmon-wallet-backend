@@ -1,5 +1,9 @@
 'use strict';
 
+jest.mock('../../../infrastructure/providers/provider-client', () => ({
+  providerCall: jest.fn((name, fn) => fn({ timeout: 10000, signal: undefined })),
+}));
+
 /**
  * Provider abstraction tests.
  *
@@ -290,7 +294,10 @@ describe('TritonProvider', () => {
 
     expect(axios.post).toHaveBeenCalledWith(
       'https://test.solana-mainnet.rpcpool.com/test-token',
-      expect.objectContaining({ method: 'getAsset', params: { id: 'mint-1' } }),
+      expect.objectContaining({
+        method: 'getAsset',
+        params: { id: 'mint-1', displayOptions: { showFungible: true } },
+      }),
       expect.any(Object)
     );
     expect(result).toEqual({ name: 'Cool NFT', symbol: 'COOL', image: 'https://img/x.png' });

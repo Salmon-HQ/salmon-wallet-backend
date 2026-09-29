@@ -31,12 +31,12 @@
  *
  *     // Required classification (downstream maps these to the 9 FE buckets)
  *     type:             string,                  // canonical Helius-shape type
- *                                                 // e.g. 'TRANSFER' | 'SWAP' |
+ *                                                 // e.g. 'TRANSFER' |
  *                                                 // 'TOKEN_MINT' | 'NFT_MINT' |
  *                                                 // 'BURN' | 'STAKE_TOKEN' |
  *                                                 // 'COMPRESSED_NFT_MINT' |
  *                                                 // 'UNKNOWN'
- *     source?:          string,                  // 'JUPITER' | 'RAYDIUM' | ...
+ *     source?:          string,                  // 'AGGREGATOR' | 'RAYDIUM' | ...
  *     description?:     string,                  // human-readable line
  *
  *     // Required transfer arrays (post-enrichment, the resource decorator
@@ -67,9 +67,6 @@
  *       innerInstructionsCount?: number,
  *     }],
  *     events?:         object,
- *     swapRoute?:      object,                   // hops, conversionRate, etc.
- *     innerSwaps?:     object[],                 // multi-hop detail
- *     swapFees?:       object,
  *   }
  *
  * Both providers must produce this same shape so the downstream resource

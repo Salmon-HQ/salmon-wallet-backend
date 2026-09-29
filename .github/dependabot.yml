@@ -40,15 +40,15 @@ updates:
         patterns: ['*']
 
   # Dockerfile base image is pinned by digest (Scorecard Pinned-Dependencies);
-  # this keeps the digest moving with the node:20 tag instead of by hand.
+  # this keeps the digest moving with the node:24 tag instead of by hand.
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
       day: monday
     ignore:
-      # The Lambda runtime is nodejs20.x and .nvmrc pins 20: a Node major in
+      # The Lambda runtime is nodejs24.x and .nvmrc pins 24: a Node major in
       # the Dockerfile would diverge dev/CI from prod. Digest refreshes and
-      # 20.x patch/minor bumps still arrive.
+      # 24.x patch/minor bumps still arrive.
       - dependency-name: node
         update-types: [version-update:semver-major]

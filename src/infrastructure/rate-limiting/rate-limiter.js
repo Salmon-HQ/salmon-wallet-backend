@@ -2,8 +2,8 @@
 
 /**
  * In-memory token-bucket rate limiter shared across the per-provider
- * limiters (Jupiter, CoinGecko, Helius). For multi-instance deployments,
- * consider swapping this for a Redis-backed implementation.
+ * limiters (0x, CoinGecko, Helius). For multi-instance deployments,
+ * consider replacing this with a Redis-backed implementation.
  */
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

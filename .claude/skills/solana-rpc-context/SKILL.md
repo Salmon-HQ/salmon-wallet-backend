@@ -1,6 +1,6 @@
 ---
 name: solana-rpc-context
-description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, Jupiter over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/swap/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
+description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, Powerup builds, CoinGecko catalog + prices over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/Powerup/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
 ---
 
 # Solana / RPC Context — salmon-api
@@ -13,20 +13,32 @@ description: RPC, provider, and caching architecture of this multichain (Solana-
 - `src/infrastructure/blockdaemon-client.js`: multichain balances (Universal API), not a Solana RPC.
 - Service-level providers: `src/services/solana/providers/{triton,helius}-provider.js` (create `@solana/web3.js` `Connection`s).
 
-## Jupiter — REST, not the SDK
+## Token data — Triton DAS + CoinGecko
 
-`@jup-ag/api` is in package.json but **unused** (0 imports). Jupiter is consumed over REST with axios against `JUPITER_PRICE_URL`/`JUPITER_SWAP_URL`:
+- `src/services/solana/token-metadata-service.js` — Triton DAS `getAssetBatch` (`showFungible`, ≤1000 ids, Redis 1 h) for symbol/name/decimals/logo/token program and Token-2022 routability.
+- `src/services/solana/token-catalog-service.js` — CoinGecko Solana token list + `coins/list?include_platform` (Redis ≤24 h per their terms): verified catalog, `coingeckoId`, local search.
+- `src/services/shared/coingecko-service.js` — `getTokenPrices` (`simple/token_price/solana`, ≤515 mints/call, `price-cache` 5 min) plus charts/coin info/exchange rates. Paid plan → `COINGECKO_API_URL=https://pro-api.coingecko.com`.
 
-- `src/services/solana/jupiter-service.js` — Price v3 with rate limiting + Redis cache.
-- `src/infrastructure/rate-limiting/jupiter-rate-limiter.js` — respect it; Jupiter bans on bursts.
-- Swap: `solana-ft-swap-service.js`; Jupiter transaction parser in `src/services/solana/parser/parsers/jupiter.js`.
+### Provider limiter table (`src/infrastructure/providers/profiles.js`)
+
+Every upstream call goes through `providerCall(name, fn, { locals, environment, operationName })`; the numbers below are the defaults, `<PROVIDER>_MAX_RPS` overrides the rate. Bucket is shared across containers in Redis (`ratelimit:<STAGE>:<provider>`), in-memory fallback when Redis is down.
+
+| Provider      | rps (burst)                                  | timeout | retries | breaker        |
+| ------------- | -------------------------------------------- | ------- | ------- | -------------- |
+| `coingecko`   | 25/60 (30) demo · 500/60 (100) pro-api + key | 15 s    | 6       | 5 fails / 30 s |
+| `helius`      | 10 (20) · 50 (100) with `HELIUS_TIER=paid`   | 30 s    | 4       | 5 fails / 30 s |
+| `triton`      | 50 (100)                                     | 30 s    | 2       | 5 fails / 30 s |
+| `blockdaemon` | 20 (40)                                      | 6 s     | 1       | 5 fails / 30 s |
+| `dapp`        | 10 (20)                                      | 5 s     | 1       | none           |
+
+Every call is also bounded by the request budget (`res.locals.deadline`, `REQUEST_BUDGET_MS` default 25 s): a wait or retry that would land past it fails now (`503 upstream_rate_limited` / the last provider error). Open circuit → `503 upstream_unavailable`; the token catalog serves its stale Redis snapshot instead.
 
 ## Cache layers — pick the right one
 
 | Layer                          | Where                                                   | TTL       | Purpose                                                     |
 | ------------------------------ | ------------------------------------------------------- | --------- | ----------------------------------------------------------- |
 | In-memory + request coalescing | `src/infrastructure/cache/transaction-history-cache.js` | 15s       | tx history (first page only; coalesces concurrent requests) |
-| Redis                          | `src/infrastructure/cache/price-cache.js`               | 5min      | Jupiter quotes (`getQuoteWithCache`)                        |
+| Redis                          | `src/infrastructure/cache/price-cache.js`               | 5min      | token USD quotes (`getQuoteWithCache`)                      |
 | Redis                          | `src/infrastructure/cache/token-list-cache.js`          | —         | token lists                                                 |
 | HTTP `Cache-Control`           | `cacheControl(...)` middleware per route                | per route | CDN/client-cacheable responses                              |
 
@@ -40,11 +52,11 @@ For Metaplex/NFT work (burn, transfer, Bubblegum, DAS), agents can install the o
 
 ## Route map
 
-Entry `src/index.js` (Express → serverless-http; CORS: `*.salmonwallet.io` + localhost). Dynamic per-chain mounting at `/v1/<chain>-<env>`: `routes/solana/index.js` (`/ft` verified/search/swap, `/account`, `/nft` incl. burn), `routes/bitcoin/`, `routes/ethereum/`. Also: coingecko market data (`/v1/exchange-rates`, `/v1/chart/:coinId`, `/v1/coin/:coinId`), dapp metadata, internal allowlist (auth `allowlistAdmin`).
+Entry `src/index.js` (Express → serverless-http; CORS: `*.salmonwallet.io` + localhost). Dynamic per-chain mounting at `/v1/<chain>-<env>`: `routes/solana/index.js` (`/ft` verified/search, `/account`, `/nft` incl. burn, `/powerups` build), `routes/bitcoin/`, `routes/ethereum/`. Also: coingecko market data (`/v1/exchange-rates`, `/v1/chart/:coinId`, `/v1/coin/:coinId`), dapp metadata, internal allowlist (auth `allowlistAdmin`).
 
 ## Security
 
-Any change to swap/send/burn flows moves user value, so it needs a security
+Any change to Powerup build/send/burn flows moves user value, so it needs a security
 review pass: amounts in base units with BigInt/BN, mint/address validation,
 and never RPC metadata as the source of truth for token identity. If your
 environment provides a web3 security review skill or agent, run it; otherwise

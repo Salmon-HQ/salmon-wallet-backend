@@ -19,8 +19,8 @@
   `src/constants/networks.js` and be absent from every `enable` list —
   the FE never sees it. That is the intended state for code-present /
   not-yet-launched chains (today: Ethereum).
-- Sections (`overview`, `token_detail`, `collectibles`, `swap`,
-  `exchange`, `transactions`) declare which features are active per
+- Sections (`overview`, `token_detail`, `collectibles`,
+  `transactions`) declare which features are active per
   blockchain. Use `'*'` to mean "all enabled networks", or an explicit
   list of blockchain ids / network ids.
 - This folder owns gating data, not behavior. Service / route logic

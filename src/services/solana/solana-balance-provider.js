@@ -6,23 +6,26 @@
  * Wraps the default Blockdaemon Universal provider with Solana-specific
  * post-processing:
  *
- *   1. **Jupiter v2 metadata** for SPL tokens — overrides Blockdaemon's
+ *   1. **catalog + on-chain metadata** for SPL tokens — overrides Blockdaemon's
  *      thin `currency.symbol/name` and side-loaded TrustWallet logo with
- *      richer Jupiter data (icon, name, symbol, coingeckoId, tags). Native
+ *      richer catalog/DAS data (icon, name, symbol, coingeckoId, tags). Native
  *      SOL passes through untouched (Blockdaemon already nails it).
  *   2. **Zero-amount filter** — drops SPL token entries with
  *      `confirmed_balance === '0'` (junk dust accounts). Native items
  *      pass through even at zero balance so the wallet always shows the
  *      base asset.
  *   3. **Spam filter** — when `locals.includeSpam !== true`, drops SPL
- *      tokens that Jupiter only tags as `unknown` (or that have no tags
+ *      tokens that carry no `verified` tag (or that have no tags
  *      at all). Devs opt-in via `?includeSpam=true` to surface unverified
  *      tokens.
+ *   4. **UI amount** — for the Token-2022 mints still standing, resolves the
+ *      Scaled UI Amount / Interest Bearing multiplier and attaches `_uiAmount`.
+ *      Runs last so the mint reads cost only what the wallet actually shows.
  *
  * The merged shape is still Blockdaemon-flavoured raw items; downstream
  * (`account-balance-resource`) reads internal markers `_logo`, `_name`,
- * `_symbol`, `_coingeckoId`, `_tags` and forwards them to the public
- * payload.
+ * `_symbol`, `_coingeckoId`, `_tags`, `_uiAmount` and forwards them to the
+ * public payload.
  *
  * Registered in `multichain/balance-providers/index.js#PROVIDERS_BY_CHAIN`
  * for `solana`.
@@ -31,6 +34,7 @@
 const blockdaemonBalanceProvider = require('../multichain/balance-providers/blockdaemon-balance-provider');
 const rpcBalanceProvider = require('./solana-rpc-balance-provider');
 const tokenService = require('./solana-ft-service');
+const uiAmountService = require('./token-ui-amount-service');
 
 /**
  * True for failures the caller cannot act on: a transport error (timeout,
@@ -85,13 +89,14 @@ const extractTokenMint = (item) => {
   return null;
 };
 
-/** True when a token has no Jupiter tags, or every tag is `'unknown'`. */
-const isUnknownOnlyTags = (tags) => {
-  if (!Array.isArray(tags) || tags.length === 0) return true;
-  return tags.every((tag) => tag === 'unknown');
-};
+/**
+ * True unless the catalog tags carry `verified` (top market-cap tier).
+ * `community` (listed, long tail) and unlisted mints are hidden by default;
+ * `includeSpam` shows them.
+ */
+const isUnknownOnlyTags = (tags) => !(Array.isArray(tags) && tags.includes('verified'));
 
-/** Index a Jupiter token-metadata array by mint (`id` or `address`). */
+/** Index a token-metadata array by mint (`id` or `address`). */
 const indexMetadataByMint = (metadata) => {
   const map = new Map();
   metadata.forEach((entry) => {
@@ -102,11 +107,11 @@ const indexMetadataByMint = (metadata) => {
 };
 
 /**
- * Overlay Jupiter metadata onto each balance item as internal `_logo`,
+ * Overlay token metadata onto each balance item as internal `_logo`,
  * `_name`, `_symbol`, `_coingeckoId`, `_tags` fields. Items whose mint has
- * no Jupiter match (or that are not SPL tokens) pass through unchanged.
+ * no metadata match (or that are not SPL tokens) pass through unchanged.
  */
-const enrichWithJupiterMetadata = (items, metadataByMint) => {
+const enrichWithTokenMetadata = (items, metadataByMint) => {
   return items.map((item) => {
     const mint = extractTokenMint(item);
     if (!mint) return item;
@@ -135,7 +140,7 @@ const filterZeroAmountTokens = (items) => {
   });
 };
 
-/** Drop SPL token items whose Jupiter tags are empty or only `'unknown'`. Native items always pass through. */
+/** Drop SPL token items without the `verified` tag. Native items always pass through. */
 const filterSpamTokens = (items) => {
   return items.filter((item) => {
     if (item?.currency?.type !== 'token') return true;
@@ -144,11 +149,57 @@ const filterSpamTokens = (items) => {
 };
 
 /**
+ * Attach `_uiAmount` to items whose mint scales the displayed amount (Scaled UI
+ * Amount, Interest Bearing — see `token-ui-amount-service`). Neither provider
+ * reports it, so a rebasing token such as a tokenised equity otherwise renders
+ * `amount / 10^decimals`, which is not what the holder owns.
+ *
+ * Runs last, on the items that survived the filters, and only for mints the
+ * catalog marks `token-2022` — the two extensions exist nowhere else, so a
+ * wallet of classic SPL tokens makes no request.
+ *
+ * A failure here is non-fatal, matching the metadata precedent above: the item
+ * keeps the raw amount it has today and the miss is logged. Failing the whole
+ * balance over one exotic mint would hide the wallet the user does own.
+ */
+const enrichWithUiAmounts = async (items, metadataByMint, locals) => {
+  const holdings = [];
+  for (const item of items) {
+    const mint = extractTokenMint(item);
+    if (!mint) continue;
+    if (metadataByMint.get(mint)?.tokenProgram !== 'token-2022') continue;
+    holdings.push({
+      mint,
+      amount: item.confirmed_balance,
+      decimals: item.currency?.decimals ?? 0,
+    });
+  }
+  if (holdings.length === 0) return items;
+
+  let uiAmounts;
+  try {
+    uiAmounts = await uiAmountService.getUiAmounts(holdings, locals);
+  } catch (error) {
+    console.warn(
+      `[solana-balance-provider] mint extension lookup failed, serving unscaled amounts: ${error.message}`
+    );
+    return items;
+  }
+  if (uiAmounts.size === 0) return items;
+
+  return items.map((item) => {
+    const mint = extractTokenMint(item);
+    const uiAmount = mint ? uiAmounts.get(mint) : undefined;
+    return uiAmount === undefined ? item : { ...item, _uiAmount: uiAmount };
+  });
+};
+
+/**
  * Fetch Solana balances for `address` via the Blockdaemon Universal
- * provider, then enrich with Jupiter v2 metadata and apply the zero-amount
+ * provider, then enrich with catalog + on-chain metadata and apply the zero-amount
  * and spam filters described in the file header.
  *
- * Jupiter enrichment failure is non-fatal: on error the raw Blockdaemon
+ * Metadata enrichment failure is non-fatal: on error the raw Blockdaemon
  * items are used as-is (metadata fields simply stay unpopulated) rather
  * than failing the whole balance response.
  *
@@ -166,31 +217,32 @@ const getBalance = async (address, tokens, locals) => {
   const tokenMints = [...new Set(items.map(extractTokenMint).filter(Boolean))];
 
   let enriched = items;
-  // The spam filter is only meaningful once Jupiter tags are attached. If the
+  // The spam filter is only meaningful once catalog tags are attached. If the
   // metadata call fails, every token looks untagged and filtering would drop
   // the caller's entire SPL balance, leaving a wallet that shows only SOL —
   // a false zero the user reads as "my tokens are gone". Track the failure and
   // skip the filter instead: showing possible spam beats hiding real funds.
   let metadataAvailable = true;
+  let metadataByMint = new Map();
   if (tokenMints.length > 0) {
     try {
       const metadata = await tokenService.getByMints(tokenMints, locals);
-      enriched = enrichWithJupiterMetadata(items, indexMetadataByMint(metadata));
+      metadataByMint = indexMetadataByMint(metadata);
+      enriched = enrichWithTokenMetadata(items, metadataByMint);
     } catch (error) {
       metadataAvailable = false;
       console.warn(
-        `[solana-balance-provider] Jupiter metadata enrichment failed, serving unfiltered balance: ${error.message}`
+        `[solana-balance-provider] token metadata enrichment failed, serving unfiltered balance: ${error.message}`
       );
     }
   }
 
   const nonZero = filterZeroAmountTokens(enriched);
 
-  if (locals?.includeSpam === true || !metadataAvailable) {
-    return nonZero;
-  }
+  const visible =
+    locals?.includeSpam === true || !metadataAvailable ? nonZero : filterSpamTokens(nonZero);
 
-  return filterSpamTokens(nonZero);
+  return enrichWithUiAmounts(visible, metadataByMint, locals);
 };
 
 module.exports = { getBalance };

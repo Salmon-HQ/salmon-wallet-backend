@@ -39,6 +39,13 @@ class UnsupportedSolanaNftBurnError extends SolanaNftBurnError {
 }
 
 /** Burn exceeds Solana's 1232-byte tx limit even after the lookup-table fallback. Maps to 422 `burn_transaction_too_large`. */
+/** The caller no longer holds the NFT: a distinct code, so the wallet can drop it from its list. */
+class NotOwnedSolanaNftBurnError extends SolanaNftBurnError {
+  constructor(message) {
+    super(message, 422, 'nft_not_owned');
+  }
+}
+
 class OversizedSolanaNftBurnTransactionError extends SolanaNftBurnError {
   constructor(size) {
     super(
@@ -53,5 +60,6 @@ module.exports = {
   SolanaNftBurnError,
   SolanaNftNotFoundError,
   UnsupportedSolanaNftBurnError,
+  NotOwnedSolanaNftBurnError,
   OversizedSolanaNftBurnTransactionError,
 };

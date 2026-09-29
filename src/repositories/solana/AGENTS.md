@@ -7,7 +7,7 @@
 ## Rules
 
 - Keep Solana data-access logic here, not in controllers.
-- Avoid pushing high-level transaction, burn, or swap orchestration into repositories.
+- Avoid pushing high-level transaction, burn, or Powerup build orchestration into repositories.
 - Keep constants and source-specific access close to the Solana repository layer.
 
 ## Testing

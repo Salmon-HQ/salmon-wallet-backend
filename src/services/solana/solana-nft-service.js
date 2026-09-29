@@ -21,10 +21,14 @@ const burnService = require('./burn-service');
 const transferService = require('./nft-transfer-service');
 const addressService = require('./solana-address-service');
 const {
+  NotOwnedSolanaNftBurnError,
   SolanaNftNotFoundError,
   UnsupportedSolanaNftBurnError,
 } = require('./solana-nft-burn-errors');
-const { UnsupportedSolanaNftTransferError } = require('./nft-transfer-errors');
+const {
+  NotOwnedSolanaNftTransferError,
+  UnsupportedSolanaNftTransferError,
+} = require('./nft-transfer-errors');
 
 const normalizeTokenStandard = (tokenStandard) => String(tokenStandard || '').toLowerCase();
 
@@ -222,7 +226,7 @@ const createBurnTransaction = async (mintAddress, owner, locals) => {
     );
   }
 
-  assertOwnership(nft, owner, UnsupportedSolanaNftBurnError, 'burn');
+  assertOwnership(nft, owner, NotOwnedSolanaNftBurnError, 'burn');
 
   if (nft.compressed) {
     return burnService.burnCompressedNftTransaction(mintAddress, owner, locals);
@@ -276,7 +280,7 @@ const createTransferTransaction = async (mintAddress, owner, destination, locals
     );
   }
 
-  assertOwnership(nft, owner, UnsupportedSolanaNftTransferError, 'transfer');
+  assertOwnership(nft, owner, NotOwnedSolanaNftTransferError, 'transfer');
 
   if (nft.compressed) {
     return transferService.transferCompressedNftTransaction(

@@ -10,7 +10,7 @@
  * `getParsedTransaction`.
  *
  * `loadEnrichment` batches the per-page lookups the decorator needs
- * (token metadata via Jupiter, NFT metadata via DAS) so a page of N txs
+ * (token metadata via the catalog + DAS, NFT metadata via DAS) so a page of N txs
  * costs at most one tokens fetch + one NFT-metadata batch.
  */
 
@@ -22,8 +22,11 @@ const solanaProvider = require('./providers');
 const { getEnhancedTransactionHistory, getNftMetadataBatch, isEnhancedApiSupported } =
   solanaProvider;
 const heliusTransactionResource = require('../../resources/solana/helius-transaction-resource');
-const { list: listTokens } = require('./solana-ft-service');
+const { getByMints } = require('./solana-ft-service');
 const { loadRpcEnrichment } = require('./solana-rpc-enrichment');
+const { RECEIVE } = require('../../constants/transaction-types');
+const { isNftTokenStandard } = require('../../constants/token-standards');
+const { SOL_ADDRESS } = require('../../constants/solana-constants');
 
 const COMMITMENT = 'confirmed';
 // Integer 1, never the string "1": opts this reader into v1 (4096-byte)
@@ -34,8 +37,6 @@ const TRANSACTION_CONFIG = {
   maxSupportedTransactionVersion: 1,
 };
 
-const { buildTokenLookup } = heliusTransactionResource;
-
 // NOTE: deliberately NOT the resource's `collectNftMints` — that one is
 // per-transaction, keeps duplicates and falsy mints. This one aggregates a
 // whole page, dedupes, and drops falsy mints before the metadata batch call.
@@ -44,11 +45,7 @@ const collectNftMints = (transactions = []) => {
 
   transactions.forEach((transaction) => {
     (transaction.tokenTransfers || []).forEach((transfer) => {
-      if (
-        transfer?.mint &&
-        (transfer.tokenStandard === 'NonFungible' ||
-          transfer.tokenStandard === 'NonFungibleEdition')
-      ) {
+      if (transfer?.mint && isNftTokenStandard(transfer.tokenStandard)) {
         mints.add(transfer.mint);
       }
     });
@@ -57,9 +54,58 @@ const collectNftMints = (transactions = []) => {
   return [...mints];
 };
 
-const hasTokenTransfers = (transactions = []) => {
-  return transactions.some((transaction) => (transaction.tokenTransfers || []).length > 0);
+/** Every fungible mint moved on the page, deduped. */
+const collectFungibleMints = (transactions = []) => {
+  const mints = new Set();
+  transactions.forEach((transaction) => {
+    (transaction.tokenTransfers || []).forEach((transfer) => {
+      if (transfer?.mint && !isNftTokenStandard(transfer.tokenStandard)) {
+        mints.add(transfer.mint);
+      }
+    });
+  });
+  return [...mints];
 };
+
+/**
+ * mint → token, in the shape the resource reads (`address`, `logoURI`) plus
+ * the catalog `tags` the activity spam rule needs.
+ */
+const toTokenLookup = (tokens) =>
+  new Map(
+    tokens.map((token) => {
+      const address = token.id || token.address;
+      return [address, { ...token, address, logoURI: token.icon || token.logoURI }];
+    })
+  );
+
+const VERIFIED_TAG = 'verified';
+
+/**
+ * Activity hides what the balance hides: an incoming transfer of tokens the
+ * catalog does not rank as verified (airdrop spam, dust that baits the user
+ * into a link). Never anything the user signed, never native SOL, never an
+ * NFT. `includeSpam=true` shows everything; `meta.hidden` counts the rest.
+ */
+const isSpamReceive = (item, address, tokenLookup) =>
+  item.type === RECEIVE &&
+  item.feePayer !== address &&
+  item.inputs.length > 0 &&
+  item.inputs.every(
+    (leg) =>
+      leg.contract !== SOL_ADDRESS &&
+      !leg.isNft &&
+      !(tokenLookup.get(leg.contract)?.tags || []).includes(VERIFIED_TAG)
+  );
+
+const wantsSpam = (value) => value === true || String(value).toLowerCase() === 'true';
+
+/**
+ * Housekeeping the user does not read as money moving: token accounts closed
+ * for their rent (spec 017, owner: "no suma nada"). The rent is in the
+ * balance; the row would only need explaining. Counted in `meta.hidden`.
+ */
+const isHousekeeping = (item) => item.action === 'accounts_closed';
 
 /**
  * Batch the per-page lookups the decorator (`heliusTransactionResource`)
@@ -70,16 +116,16 @@ const hasTokenTransfers = (transactions = []) => {
  * @returns {Promise<{tokenLookup: Map, nftMetadataByMint: Map}>}
  */
 const loadEnrichment = async (transactions, locals, environment) => {
-  const shouldLoadTokens = hasTokenTransfers(transactions);
+  const fungibleMints = collectFungibleMints(transactions);
   const nftMints = collectNftMints(transactions);
 
   const [tokens, nftMetadataByMint] = await Promise.all([
-    shouldLoadTokens ? listTokens(locals) : Promise.resolve([]),
+    fungibleMints.length > 0 ? getByMints(fungibleMints, locals) : Promise.resolve([]),
     nftMints.length > 0 ? getNftMetadataBatch(nftMints, environment) : Promise.resolve(new Map()),
   ]);
 
   return {
-    tokenLookup: buildTokenLookup(tokens),
+    tokenLookup: toTokenLookup(tokens),
     nftMetadataByMint,
   };
 };
@@ -134,10 +180,15 @@ const getEnhancedHistory = async (address, filters, locals, environment) => {
       buildEnhancedTransaction(transaction, address, tokenLookup, nftMetadataByMint)
     )
   );
+  const visible = (
+    wantsSpam(filters.includeSpam)
+      ? data
+      : data.filter((item) => !isSpamReceive(item, address, tokenLookup))
+  ).filter((item) => !isHousekeeping(item));
 
   return {
-    data,
-    meta: result.meta,
+    data: visible,
+    meta: { ...result.meta, hidden: data.length - visible.length },
   };
 };
 
@@ -266,6 +317,7 @@ const getTransactions = (address, filters, locals) => {
         {
           before: pageToken,
           limit: clampPageSize(pageSize, ENHANCED_MAX_PAGE_SIZE) ?? 10,
+          includeSpam: filters.includeSpam,
         },
         locals,
         environment

@@ -22,6 +22,18 @@
 
 const CACHE_TTL = 15 * 1000; // 15 seconds
 
+/**
+ * Hard ceiling on retained entries. The key folds in the caller's whole query
+ * object, so an anonymous caller varying any parameter mints a key that is
+ * never looked up again — and the only reclamation path is the lazy TTL check
+ * inside `getCachedValue`, which fires only on a second lookup of that exact
+ * key. Without a cap the map grows for the life of the warm container.
+ *
+ * ponytail: fixed cap with oldest-first eviction; move to an LRU if hit-rate
+ * data later shows FIFO is evicting keys that are still hot.
+ */
+const MAX_CACHE_ENTRIES = 500;
+
 const cache = new Map();
 const pending = new Map();
 
@@ -111,6 +123,10 @@ const getCachedValue = (key) => {
  * @returns {void}
  */
 const setCachedValue = (key, value) => {
+  if (!cache.has(key) && cache.size >= MAX_CACHE_ENTRIES) {
+    cache.delete(cache.keys().next().value);
+  }
+
   cache.set(key, {
     value: clone(value),
     expiresAt: Date.now() + CACHE_TTL,
@@ -169,6 +185,8 @@ const clearTransactionHistoryCache = () => {
 
 module.exports = {
   CACHE_TTL,
+  MAX_CACHE_ENTRIES,
+  __testing: { size: () => cache.size },
   buildCacheKey,
   clearTransactionHistoryCache,
   isFirstPageQuery,

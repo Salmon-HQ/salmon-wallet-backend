@@ -3,7 +3,7 @@
 const { createSink, createGa4Sink, toGa4Event } = require('../sink');
 
 const RECORD = {
-  event: 'swap_completed',
+  event: 'send_completed',
   props: { chain: 'solana', success: true, amount_bucket: '10-100' },
   ts: 1783979939147,
   received_at: 1783979979715,
@@ -17,7 +17,7 @@ const RECORD = {
 describe('toGa4Event', () => {
   it('maps a record to an MP event with context and allow-listed props as params', () => {
     expect(toGa4Event(RECORD)).toEqual({
-      name: 'swap_completed',
+      name: 'send_completed',
       params: {
         session_id: 'session-xyz',
         engagement_time_msec: 1,

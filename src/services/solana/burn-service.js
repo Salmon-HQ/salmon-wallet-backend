@@ -35,8 +35,10 @@ const {
 const BufferLayout = require('buffer-layout');
 const { BN } = require('bn.js');
 const lookupTableService = require('./address-lookup-table-service');
+const { usesCompressedLeafSchemaV2 } = require('./compressed-leaf-schema');
 const providers = require('./providers');
 const {
+  NotOwnedSolanaNftBurnError,
   OversizedSolanaNftBurnTransactionError,
   UnsupportedSolanaNftBurnError,
 } = require('./solana-nft-burn-errors');
@@ -161,11 +163,6 @@ const buildCompressedBurnTransactionResponse = async (umi, builder, owner, nodeU
   };
 };
 
-/** True when the DAS proof response uses the newer leaf-schema v2 fields. */
-const usesCompressedLeafSchemaV2 = (assetWithProof) => {
-  return assetWithProof.asset_data_hash !== undefined || assetWithProof.flags !== undefined;
-};
-
 /** Set the fee payer and force v0 message compilation on a burn builder. */
 const prepareVersionedBurnBuilder = (builder, ownerSigner) => {
   return builder.setFeePayer(ownerSigner).useV0();
@@ -224,10 +221,7 @@ const loadOwnedDigitalAsset = async (mintAddress, owner, locals) => {
     mintPublicKey,
     ownerSigner.publicKey
   ).catch(
-    rethrowAsOwnershipError(
-      UnsupportedSolanaNftBurnError,
-      'Only the current owner can burn this NFT.'
-    )
+    rethrowAsOwnershipError(NotOwnedSolanaNftBurnError, 'Only the current owner can burn this NFT.')
   );
 
   return { umi, ownerSigner, mintPublicKey, digitalAsset };
@@ -460,7 +454,7 @@ const burnCompressedNftTransaction = async (assetId, owner, locals) => {
   );
 
   if (String(assetWithProof.leafOwner) !== String(ownerSigner.publicKey)) {
-    throw new UnsupportedSolanaNftBurnError('Only the current owner can burn this compressed NFT.');
+    throw new NotOwnedSolanaNftBurnError('Only the current owner can burn this compressed NFT.');
   }
 
   const builder = prepareVersionedBurnBuilder(

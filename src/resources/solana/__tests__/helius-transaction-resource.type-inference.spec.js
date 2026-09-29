@@ -1,224 +1,205 @@
 'use strict';
 
 /**
- * Unit tests for the small helpers extracted out of mapTransactionType:
- *   - inferDirectionalType (sender/receiver flags → SEND / RECEIVE / INTERACTION)
- *   - collectMintSets (sets of mints touched by the user, with SOL_ADDRESS
- *                      normalization)
- *   - hasMintAsymmetry (different in/out mint sets ⇒ swap-by-mix)
- *   - inferSwapByMintMix (full swap-by-mint-mix heuristic)
- *   - mapTransactionType (top-level mapping covering Jupiter, TRANSFER,
- *                         UNKNOWN, and Helius-typed flows)
+ * Direction is read off the wallet's balance change, never off the
+ * provider's transfer lists (spec 016). The provider's type only picks the
+ * semantic buckets.
  */
-
+const transformTransaction = require('../helius-transaction-resource');
 const { __testing } = require('../helius-transaction-resource');
-const {
-  inferDirectionalType,
-  collectMintSets,
-  hasMintAsymmetry,
-  inferSwapByMintMix,
-  mapTransactionType,
-} = __testing;
 const {
   SEND,
   RECEIVE,
-  SWAP,
   INTERACTION,
   UNKNOWN,
+  STAKE,
+  MEMO,
 } = require('../../../constants/transaction-types');
 const { SOL_ADDRESS } = require('../../../constants/solana-constants');
 
-const USER = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
+const { mapProviderType, resolveType, NATIVE_SIDE_LEG_MIN_LAMPORTS } = __testing;
+const WALLET = 'user-wallet';
+const OTHER = 'other-wallet';
+const MINT = 'mint-a';
 
-describe('inferDirectionalType', () => {
-  test('receiver only → RECEIVE', () => {
-    expect(inferDirectionalType(false, true)).toBe(RECEIVE);
+const solLeg = { contract: SOL_ADDRESS };
+const tokenLeg = { contract: MINT };
+
+describe('mapProviderType', () => {
+  test('keeps TRANSFER as a transfer for the legs to direct', () => {
+    expect(mapProviderType('TRANSFER')).toBe('TRANSFER');
+    expect(mapProviderType('COMPRESSED_NFT_TRANSFER')).toBe('TRANSFER');
   });
-  test('sender only → SEND', () => {
-    expect(inferDirectionalType(true, false)).toBe(SEND);
-  });
-  test('both → INTERACTION', () => {
-    expect(inferDirectionalType(true, true)).toBe(INTERACTION);
-  });
-  test('neither → undefined', () => {
-    expect(inferDirectionalType(false, false)).toBeUndefined();
+  test('names the semantic buckets, and calls the rest an interaction', () => {
+    expect(mapProviderType('STAKE_TOKEN')).toBe(STAKE);
+    expect(mapProviderType('UNKNOWN')).toBe(UNKNOWN);
+    expect(mapProviderType('SWAP')).toBe(INTERACTION);
+    expect(mapProviderType('SOMETHING_NEW')).toBe(INTERACTION);
   });
 });
 
-describe('collectMintSets', () => {
-  test('collects outgoing token mints when fromUserAccount === user', () => {
-    const { outgoing, incoming } = collectMintSets(
-      USER,
-      [],
-      [{ fromUserAccount: USER, toUserAccount: 'other', mint: 'M1' }]
-    );
-    expect([...outgoing]).toEqual(['M1']);
-    expect(incoming.size).toBe(0);
-  });
-
-  test('collects incoming token mints when toUserAccount === user', () => {
-    const { outgoing, incoming } = collectMintSets(
-      USER,
-      [],
-      [{ fromUserAccount: 'other', toUserAccount: USER, mint: 'M2' }]
-    );
-    expect([...incoming]).toEqual(['M2']);
-    expect(outgoing.size).toBe(0);
-  });
-
-  test('normalizes native transfers to SOL_ADDRESS', () => {
-    const { outgoing, incoming } = collectMintSets(
-      USER,
-      [
-        { fromUserAccount: USER, toUserAccount: 'other' },
-        { fromUserAccount: 'other', toUserAccount: USER },
-      ],
-      []
-    );
-    expect([...outgoing]).toEqual([SOL_ADDRESS]);
-    expect([...incoming]).toEqual([SOL_ADDRESS]);
-  });
-});
-
-describe('hasMintAsymmetry', () => {
-  test('false when either side empty', () => {
-    expect(hasMintAsymmetry(new Set(), new Set(['A']))).toBe(false);
-    expect(hasMintAsymmetry(new Set(['A']), new Set())).toBe(false);
-  });
-  test('false when sides match exactly', () => {
-    expect(hasMintAsymmetry(new Set(['A']), new Set(['A']))).toBe(false);
-  });
-  test('true when outgoing has mint not in incoming', () => {
-    expect(hasMintAsymmetry(new Set(['A']), new Set(['B']))).toBe(true);
-  });
-  test('true on partial overlap', () => {
-    expect(hasMintAsymmetry(new Set(['A', 'B']), new Set(['A']))).toBe(true);
-  });
-});
-
-describe('inferSwapByMintMix', () => {
-  test('returns SWAP for token-A-out, token-B-in', () => {
-    const result = inferSwapByMintMix(
-      USER,
-      [],
-      [
-        { fromUserAccount: USER, toUserAccount: 'pool', mint: 'A' },
-        { fromUserAccount: 'pool', toUserAccount: USER, mint: 'B' },
-      ]
-    );
-    expect(result).toBe(SWAP);
-  });
-
-  test('returns SWAP for SOL-out, token-in (native + SPL combo)', () => {
-    const result = inferSwapByMintMix(
-      USER,
-      [{ fromUserAccount: USER, toUserAccount: 'pool' }],
-      [{ fromUserAccount: 'pool', toUserAccount: USER, mint: 'B' }]
-    );
-    expect(result).toBe(SWAP);
-  });
-
-  test('returns undefined when same mint goes in and out (no asymmetry)', () => {
-    const result = inferSwapByMintMix(
-      USER,
-      [],
-      [
-        { fromUserAccount: USER, toUserAccount: 'pool', mint: 'A' },
-        { fromUserAccount: 'pool', toUserAccount: USER, mint: 'A' },
-      ]
-    );
-    expect(result).toBeUndefined();
-  });
-});
-
-describe('mapTransactionType', () => {
-  const buildTx = (overrides = {}) => ({
-    instructions: [],
-    nativeTransfers: [],
-    tokenTransfers: [],
-    ...overrides,
-  });
-
-  test('Jupiter program present forces SWAP regardless of Helius type', () => {
-    const result = mapTransactionType('TRANSFER', USER, {
-      ...buildTx(),
-      instructions: [{ programId: 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4' }],
-    });
-    expect(result).toBe(SWAP);
-  });
-
-  test('Jupiter LIMIT program also triggers SWAP', () => {
-    const result = mapTransactionType('TRANSFER', USER, {
-      ...buildTx(),
-      instructions: [{ programId: 'j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X' }],
-    });
-    expect(result).toBe(SWAP);
-  });
-
-  test('TRANSFER with sender-only → SEND', () => {
-    const result = mapTransactionType(
-      'TRANSFER',
-      USER,
-      buildTx({
-        nativeTransfers: [{ fromUserAccount: USER, toUserAccount: 'other' }],
-      })
-    );
-    expect(result).toBe(SEND);
-  });
-
-  test('TRANSFER with receiver-only → RECEIVE', () => {
-    const result = mapTransactionType(
-      'TRANSFER',
-      USER,
-      buildTx({
-        nativeTransfers: [{ fromUserAccount: 'other', toUserAccount: USER }],
-      })
-    );
-    expect(result).toBe(RECEIVE);
-  });
-
-  test('TRANSFER with self-loop → SEND fallback', () => {
-    const result = mapTransactionType(
-      'TRANSFER',
-      USER,
-      buildTx({
-        nativeTransfers: [{ fromUserAccount: USER, toUserAccount: USER }],
-      })
-    );
-    expect(result).toBe(SEND);
-  });
-
-  test('TRANSFER with bidirectional different mints → SWAP', () => {
-    const result = mapTransactionType(
-      'TRANSFER',
-      USER,
-      buildTx({
-        tokenTransfers: [
-          { fromUserAccount: USER, toUserAccount: 'pool', mint: 'A' },
-          { fromUserAccount: 'pool', toUserAccount: USER, mint: 'B' },
-        ],
-      })
-    );
-    expect(result).toBe(SWAP);
-  });
-
-  test('UNKNOWN type with token transfer touching user → directional', () => {
+describe('resolveType', () => {
+  const tx = (feePayer) => ({ feePayer });
+  test('outputs only → send; inputs only → receive; both → interaction', () => {
     expect(
-      mapTransactionType(
-        'UNKNOWN',
-        USER,
-        buildTx({
-          tokenTransfers: [{ fromUserAccount: 'other', toUserAccount: USER, mint: 'A' }],
-        })
-      )
+      resolveType('TRANSFER', tx(WALLET), WALLET, { inputs: [], outputs: [tokenLeg] }, null)
+    ).toBe(SEND);
+    expect(
+      resolveType('TRANSFER', tx(OTHER), WALLET, { inputs: [tokenLeg], outputs: [] }, null)
+    ).toBe(RECEIVE);
+    expect(
+      resolveType('TRANSFER', tx(WALLET), WALLET, { inputs: [solLeg], outputs: [tokenLeg] }, null)
+    ).toBe(INTERACTION);
+  });
+  test('SOL that only came back to the wallet that signed is an interaction, not a receive', () => {
+    expect(
+      resolveType('TRANSFER', tx(WALLET), WALLET, { inputs: [solLeg], outputs: [] }, null)
+    ).toBe(INTERACTION);
+    expect(
+      resolveType('TRANSFER', tx(OTHER), WALLET, { inputs: [solLeg], outputs: [] }, null)
     ).toBe(RECEIVE);
   });
+  test('nothing moved: the note, else an interaction the wallet signed, else unknown', () => {
+    const none = { inputs: [], outputs: [] };
+    expect(resolveType(UNKNOWN, tx(WALLET), WALLET, none, 'gm')).toBe(MEMO);
+    expect(resolveType(UNKNOWN, tx(WALLET), WALLET, none, null)).toBe(INTERACTION);
+    expect(resolveType(UNKNOWN, tx(OTHER), WALLET, none, null)).toBe(UNKNOWN);
+  });
+  test('a semantic provider type keeps precedence over the legs', () => {
+    expect(resolveType(STAKE, tx(WALLET), WALLET, { inputs: [], outputs: [tokenLeg] }, null)).toBe(
+      STAKE
+    );
+  });
+});
 
-  test('UNKNOWN type with no transfers → UNKNOWN', () => {
-    expect(mapTransactionType('UNKNOWN', USER, buildTx())).toBe(UNKNOWN);
+describe('transformTransaction, end to end on hand-rolled ledgers', () => {
+  const ledger = (rows) => ({
+    signature: 'sig',
+    type: 'TRANSFER',
+    timestamp: 1,
+    fee: 5000,
+    feePayer: WALLET,
+    nativeTransfers: [],
+    tokenTransfers: [],
+    accountData: rows,
+  });
+  const change = (userAccount, mint, tokenAmount, decimals = 6) => ({
+    userAccount,
+    tokenAccount: `${userAccount}-${mint}`,
+    mint,
+    rawTokenAmount: { tokenAmount, decimals },
   });
 
-  test('Helius mapped type passes through (e.g. STAKE)', () => {
-    expect(mapTransactionType('STAKE_TOKEN', USER, buildTx())).not.toBe(UNKNOWN);
+  test('a token that hopped between two of the wallet’s accounts leaves no leg and reads as an interaction', async () => {
+    const tx = ledger([
+      { account: WALLET, nativeBalanceChange: -5000, tokenBalanceChanges: [] },
+      {
+        account: 'a',
+        nativeBalanceChange: 0,
+        tokenBalanceChanges: [change(WALLET, MINT, '-1', 0)],
+      },
+      { account: 'b', nativeBalanceChange: 0, tokenBalanceChanges: [change(WALLET, MINT, '1', 0)] },
+    ]);
+    tx.tokenTransfers = [
+      {
+        fromUserAccount: WALLET,
+        toUserAccount: WALLET,
+        mint: MINT,
+        tokenAmount: '1',
+        decimals: 0,
+        tokenStandard: 'NonFungible',
+      },
+    ];
+    const result = await transformTransaction(tx, WALLET);
+    expect(result.type).toBe(INTERACTION);
+    expect(result.inputs).toEqual([]);
+    expect(result.outputs).toEqual([]);
+  });
+
+  test("the parser's token-program sources surface under the provider-neutral SOLANA_PROGRAM_LIBRARY label", async () => {
+    const tx = { ...ledger([]), source: 'TOKEN_PROGRAM' };
+    const result = await transformTransaction(tx, WALLET);
+    expect(result.source).toBe('SOLANA_PROGRAM_LIBRARY');
+  });
+
+  test('a SOL leg beside a token leg folds under the side-leg floor, and shows above it', async () => {
+    const below = ledger([
+      { account: WALLET, nativeBalanceChange: -5000 - 2039280, tokenBalanceChanges: [] },
+      {
+        account: 'ata',
+        nativeBalanceChange: 0,
+        tokenBalanceChanges: [change(WALLET, MINT, '-1000000')],
+      },
+    ]);
+    const folded = await transformTransaction(below, WALLET);
+    expect(folded.type).toBe(SEND);
+    expect(folded.outputs.map((leg) => leg.contract)).toEqual([MINT]);
+
+    const above = ledger([
+      {
+        account: WALLET,
+        nativeBalanceChange: -5000 - Number(NATIVE_SIDE_LEG_MIN_LAMPORTS),
+        tokenBalanceChanges: [],
+      },
+      {
+        account: 'ata',
+        nativeBalanceChange: 0,
+        tokenBalanceChanges: [change(WALLET, MINT, '-1000000')],
+      },
+    ]);
+    const shown = await transformTransaction(above, WALLET);
+    expect(shown.outputs.map((leg) => leg.contract).sort()).toEqual([MINT, SOL_ADDRESS].sort());
+  });
+
+  test('a SOL leg that is the only asset moving is always reported, however small', async () => {
+    const tx = ledger([
+      { account: WALLET, nativeBalanceChange: -5000 - 1, tokenBalanceChanges: [] },
+    ]);
+    tx.nativeTransfers = [{ fromUserAccount: WALLET, toUserAccount: OTHER, amount: 1 }];
+    const result = await transformTransaction(tx, WALLET);
+    expect(result.type).toBe(SEND);
+    expect(result.outputs).toEqual([
+      expect.objectContaining({ contract: SOL_ADDRESS, amount: '1', destination: OTHER }),
+    ]);
+  });
+
+  test('the counterparty is the one that received the most of that asset', async () => {
+    const tx = ledger([
+      { account: WALLET, nativeBalanceChange: -5000, tokenBalanceChanges: [] },
+      {
+        account: 'ata',
+        nativeBalanceChange: 0,
+        tokenBalanceChanges: [change(WALLET, MINT, '-300')],
+      },
+    ]);
+    tx.tokenTransfers = [
+      {
+        fromUserAccount: WALLET,
+        toUserAccount: 'fee-taker',
+        mint: MINT,
+        tokenAmount: '100',
+        decimals: 6,
+      },
+      {
+        fromUserAccount: WALLET,
+        toUserAccount: OTHER,
+        mint: MINT,
+        tokenAmount: '200',
+        decimals: 6,
+      },
+    ];
+    const result = await transformTransaction(tx, WALLET);
+    expect(result.outputs[0].destination).toBe(OTHER);
+  });
+
+  test('without a ledger the transfers decide, incoming minus outgoing', async () => {
+    const tx = ledger(undefined);
+    delete tx.accountData;
+    tx.tokenTransfers = [
+      { fromUserAccount: OTHER, toUserAccount: WALLET, mint: MINT, tokenAmount: '5', decimals: 0 },
+    ];
+    const result = await transformTransaction(tx, WALLET);
+    expect(result.type).toBe(RECEIVE);
+    expect(result.inputs[0]).toMatchObject({ contract: MINT, amount: '5', source: OTHER });
   });
 });

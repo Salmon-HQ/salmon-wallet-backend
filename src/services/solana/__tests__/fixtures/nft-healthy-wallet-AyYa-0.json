@@ -1463,10 +1463,10 @@
     {
       "mint": "21PvrTppAChrgUgdXvCmTKA6BQjiqYgmBczGmFLQtYwP",
       "owner": "AyYa1NUgnaSUjK2AKgmMv4KjxBuHf272uqam3TW6KyRy",
-      "name": "100 SOL JUPDAO.COM",
+      "name": "100 SOL AGGDAO.COM",
       "symbol": "SA",
       "uri": "https://ipfs.io/ipfs/bafybeiew5sdgvaeqgoulakjonr5gam5x4tmy5whyjpsdupsdsx5f4nsfha/daojup.json",
-      "description": "Jupiter Airdrop. For Claim https://JUPDAO.com",
+      "description": "Aggregator Airdrop. For Claim https://AGGDAO.com",
       "media": "https://ipfs.io/ipfs/bafybeiewqmozddfe6s3ul3tbsllrqdsbmsuxml74uo5b7svjs722jiefly/jupdao.gift",
       "extras": {
         "creators": [
@@ -1479,7 +1479,7 @@
         "attributes": [
           { "value": "100 SOL", "trait_type": "Amount" },
           { "value": "1 Hour", "trait_type": "TIME LEFT" },
-          { "value": "http://JUPDAO.COM", "trait_type": "WEBSITE" }
+          { "value": "http://AGGDAO.COM", "trait_type": "WEBSITE" }
         ]
       },
       "spamScore": 2,

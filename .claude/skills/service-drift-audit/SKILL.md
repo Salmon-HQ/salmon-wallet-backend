@@ -1,6 +1,6 @@
 ---
 name: service-drift-audit
-description: Checks salmon-api's external service dependencies (Jupiter, Helius, Triton, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did Jupiter/Helius/Metaplex change anything", or similar drift-check requests.
+description: Checks salmon-api's external service dependencies (0x, CoinGecko, Triton, Helius, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did CoinGecko/Helius/Metaplex change anything", or similar drift-check requests.
 ---
 
 # Service Drift Audit — salmon-api
@@ -8,15 +8,26 @@ description: Checks salmon-api's external service dependencies (Jupiter, Helius,
 Manual invocation today; written to be cron-ready later (see bottom). No
 automation is wired up yet — running this skill is the whole audit.
 
+Scope: **upstream drift** — did a third party change its API, its plan
+limits, or its terms. This is not vulnerability hunting. A security audit of
+this repo runs the global `security-audit` skill and reads this baseline as
+prior evidence; the two do not overlap and neither replaces the other.
+
 ## Watchlist & baseline (as of 2026-07-30)
 
-### Jupiter Swap
+### CoinGecko (token catalog, prices, charts)
 
-- On the unified `api.jup.ag/swap/v2` endpoints (`order`/`execute`). The
-  older `ultra`/`v1` surface is deprecated with no announced shutdown date.
-- Pricing structure is in transition; Price v3 is current (see
-  `src/services/solana/jupiter-service.js`).
-- Sources: dev.jup.ag/updates, developers.jup.ag/docs/swap, portal.jup.ag.
+- `token_lists/solana/all.json`, `coins/list?include_platform=true`,
+  `simple/token_price/solana` (≤515 addresses), `coins/{id}`, `exchange_rates`.
+  Watch plan limits (Basic 100k calls/mo, 300/min), the 24 h caching clause
+  (API Terms §6.1) and the attribution wording (brand attribution guide).
+- Sources: docs.coingecko.com/reference, coingecko.com/en/api_terms, brand.coingecko.com.
+
+### Triton DAS (token metadata)
+
+- `getAssetBatch` with `displayOptions.showFungible` on our RPC URL; fields
+  `content.metadata`, `token_info`, `mint_extensions`. Watch docs.triton.one
+  digital-assets-api for shape changes.
 
 ### Helius
 
@@ -47,14 +58,15 @@ automation is wired up yet — running this skill is the whole audit.
 
 ### @solana/spl-token + spl-token-registry
 
-- `spl-token-registry` is deprecated upstream. Watch for security advisories
-  on both packages (`npm audit`, GitHub advisories).
+- `spl-token-registry` is deprecated upstream — that deprecation is the drift
+  signal to watch here. CVE tracking for both packages belongs to
+  `osv-scanner.toml` + the global security audit, not to this baseline.
 
 ### Node runtime
 
-- `engines` in `package.json` requires `>=20.0.0`; Lambda runtime is
-  `nodejs20.x` in `serverless.yml` (see `.claude/skills/deploy-runbook/SKILL.md`).
-- Watch AWS Lambda runtime deprecation notices for `nodejs20.x`.
+- `engines` in `package.json` requires `>=24.0.0`; Lambda runtime is
+  `nodejs24.x` in `serverless.yml` (see `.claude/skills/deploy-runbook/SKILL.md`).
+- Watch AWS Lambda runtime deprecation notices for `nodejs24.x`.
 
 ## Procedure
 

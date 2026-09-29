@@ -15,13 +15,13 @@
  *   build ctx (accountKeys, tokenAccount → owner, tokenAccount → mint)
  *                │
  *   walk top-level instructions ──► parser registry (System, SPL Token,
- *                │                  Metaplex, Bubblegum, Jupiter, Stake,
+ *                │                  Metaplex, Bubblegum, aggregator, Stake,
  *                │                  Staking, Lending, DEX) — each contributes
  *                │                  transfers / hints to the building shape
  *                │
  *   walk inner instructions ─► same registry
  *                │
- *   post-process pass (Jupiter swapRoute, type derivation, source pick)
+ *   post-process pass (type derivation, source pick)
  *                │
  *                ▼
  *   enriched tx ─► returned to TritonProvider
@@ -41,22 +41,20 @@ const systemParser = require('./parsers/system');
 const splTokenParser = require('./parsers/spl-token');
 const metaplexParser = require('./parsers/metaplex');
 const bubblegumParser = require('./parsers/bubblegum');
-const jupiterParser = require('./parsers/jupiter');
 const stakeParser = require('./parsers/stake');
 const stakingParser = require('./parsers/staking');
 const lendingParser = require('./parsers/lending');
-const dexParser = require('./parsers/dex');
+const memoParser = require('./parsers/memo');
 
 const PARSERS = [
   systemParser,
   splTokenParser,
   metaplexParser,
   bubblegumParser,
-  jupiterParser,
   stakeParser,
   stakingParser,
   lendingParser,
-  dexParser,
+  memoParser,
 ];
 
 /**
@@ -87,6 +85,15 @@ const POST_PROCESSORS = PARSERS.filter((p) => typeof p.postProcess === 'function
  * touched by the tx. They're keyed by accountIndex into accountKeys, so we
  * walk both and populate two maps.
  */
+/** Parsed instruction types that open a token account, and the field naming its owner. */
+const INITIALIZE_OWNER_FIELD = {
+  initializeAccount: 'owner',
+  initializeAccount2: 'owner',
+  initializeAccount3: 'owner',
+  create: 'wallet',
+  createIdempotent: 'wallet',
+};
+
 const buildAccountMaps = (rawTx) => {
   const accountKeys = rawTx?.transaction?.message?.accountKeys || [];
   const pre = rawTx?.meta?.preTokenBalances || [];
@@ -102,6 +109,22 @@ const buildAccountMaps = (rawTx) => {
     if (!key) continue;
     if (balance.owner) tokenAccountOwners.set(key, balance.owner);
     if (balance.mint) tokenAccountMints.set(key, balance.mint);
+  }
+
+  // A token account opened and closed within the transaction (a router's
+  // hop account, a wrapped-SOL wrapper) is in neither balance list; its
+  // owner is only on the instruction that initialised it.
+  const top = rawTx?.transaction?.message?.instructions || [];
+  const inner = (rawTx?.meta?.innerInstructions || []).flatMap((g) => g.instructions || []);
+  for (const ix of [...top, ...inner]) {
+    const info = ix?.parsed?.info;
+    if (!info?.account) continue;
+    const owner =
+      INITIALIZE_OWNER_FIELD[ix.parsed?.type] && info[INITIALIZE_OWNER_FIELD[ix.parsed.type]];
+    if (!owner) continue;
+    if (!tokenAccountOwners.has(info.account)) tokenAccountOwners.set(info.account, owner);
+    if (info.mint && !tokenAccountMints.has(info.account))
+      tokenAccountMints.set(info.account, info.mint);
   }
 
   return { tokenAccountOwners, tokenAccountMints };
@@ -156,14 +179,12 @@ const collectInstructionMetadata = (rawTx) => {
 };
 
 /**
- * Hint → tx-type precedence (first match wins). Aggregator/DEX swaps share
- * a single SWAP bucket on the FE. Liquid staking buckets as STAKE_TOKEN
+ * Hint → tx-type precedence (first match wins). Liquid staking buckets as STAKE_TOKEN
  * (deposit/withdraw direction comes from inputs/outputs, not the type).
  *
  * Ordering is the contract — earlier rows take priority over later rows.
  */
 const TYPE_PRECEDENCE = [
-  { hint: (h) => h.hasJupiter || h.hasDexSwap, type: 'SWAP' },
   { hint: (h) => h.hasCnftMint, type: 'COMPRESSED_NFT_MINT' },
   { hint: (h) => h.hasCnftBurn, type: 'COMPRESSED_NFT_BURN' },
   { hint: (h) => h.hasCnftTransfer, type: 'COMPRESSED_NFT_TRANSFER' },
@@ -196,6 +217,9 @@ const deriveType = (building) => {
     return 'TRANSFER';
   }
 
+  // Nothing moved and a note was written: the note is the transaction.
+  if (h.hasMemo) return 'MEMO';
+
   // Bubblegum operates without SPL transfers (Merkle tree only). When the
   // discriminator decoder didn't match a known op, fall back to
   // COMPRESSED_NFT_TRANSFER — the most common Bubblegum op — so the FE
@@ -221,6 +245,102 @@ const cleanInternalKeys = (building) => {
     delete t._burnEvent;
   }
   return building;
+};
+
+/**
+ * Per-account balance deltas in the Helius `accountData` shape: lamports
+ * from `preBalances` / `postBalances`, tokens from `preTokenBalances` /
+ * `postTokenBalances`. Transfers alone miss what a `closeAccount` refunds,
+ * what rent locks, or a token that only hopped between two accounts of one
+ * owner, so the resource reads what the wallet actually gained or lost
+ * from here (spec 016).
+ *
+ * A token change sits on its token account's row with `userAccount` = the
+ * owner, exactly as Helius emits it; a row is kept when either its lamports
+ * or one of its token balances moved.
+ * @param {object} rawTx - Solana parsed RPC tx response
+ * @returns {Array<{account: string, nativeBalanceChange: number, tokenBalanceChanges: Array<{userAccount: string, tokenAccount: string, mint: string, rawTokenAmount: {tokenAmount: string, decimals: number}}>}>}
+ */
+const collectAccountData = (rawTx) => {
+  const keys = rawTx?.transaction?.message?.accountKeys || [];
+  const pre = rawTx?.meta?.preBalances || [];
+  const post = rawTx?.meta?.postBalances || [];
+  const tokenChangesByIndex = collectTokenBalanceChanges(rawTx);
+  return keys
+    .map((key, index) => ({
+      account: key?.pubkey || key,
+      nativeBalanceChange: (post[index] ?? 0) - (pre[index] ?? 0),
+      tokenBalanceChanges: tokenChangesByIndex.get(index) || [],
+    }))
+    .filter(
+      (entry) =>
+        entry.account && (entry.nativeBalanceChange !== 0 || entry.tokenBalanceChanges.length > 0)
+    );
+};
+
+/**
+ * Parses a provider-reported base-unit amount, degrading to zero rather than
+ * throwing. Every value here comes from an RPC response, and BigInt() rejects
+ * anything that is not a plain integer string — scientific notation, a decimal
+ * point, or text. One unparseable balance must cost that leg, not abort the
+ * whole parseTransaction call, which the module contracts never to throw.
+ *
+ * @param {string|number|null|undefined} value
+ * @returns {bigint}
+ */
+const toBigIntOrZero = (value) => {
+  try {
+    return BigInt(value ?? '0');
+  } catch {
+    return 0n;
+  }
+};
+
+/**
+ * Token balance deltas by account index. A balance list names the token
+ * account by `accountIndex` and carries `mint`, `owner` and the raw
+ * `uiTokenAmount.amount`; an account present on one side only (opened or
+ * closed in the transaction) counts from or to zero.
+ * @param {object} rawTx
+ * @returns {Map<number, Array>}
+ */
+const collectTokenBalanceChanges = (rawTx) => {
+  const keys = rawTx?.transaction?.message?.accountKeys || [];
+  const byIndex = new Map();
+  const note = (balance, side) => {
+    const index = balance?.accountIndex;
+    if (index === undefined || !balance?.mint) return;
+    const slotKey = `${index}:${balance.mint}`;
+    const entry = byIndex.get(slotKey) || {
+      index,
+      userAccount: balance.owner ?? null,
+      tokenAccount: keys[index]?.pubkey || keys[index] || null,
+      mint: balance.mint,
+      decimals: balance.uiTokenAmount?.decimals ?? 0,
+      pre: 0n,
+      post: 0n,
+    };
+    entry[side] = toBigIntOrZero(balance.uiTokenAmount?.amount);
+    if (balance.owner) entry.userAccount = balance.owner;
+    byIndex.set(slotKey, entry);
+  };
+  (rawTx?.meta?.preTokenBalances || []).forEach((balance) => note(balance, 'pre'));
+  (rawTx?.meta?.postTokenBalances || []).forEach((balance) => note(balance, 'post'));
+
+  const changes = new Map();
+  byIndex.forEach((entry) => {
+    const delta = entry.post - entry.pre;
+    if (delta === 0n) return;
+    const list = changes.get(entry.index) || [];
+    list.push({
+      userAccount: entry.userAccount,
+      tokenAccount: entry.tokenAccount,
+      mint: entry.mint,
+      rawTokenAmount: { tokenAmount: delta.toString(), decimals: entry.decimals },
+    });
+    changes.set(entry.index, list);
+  });
+  return changes;
 };
 
 /**
@@ -265,16 +385,12 @@ const parseTransaction = (rawTx, options = {}) => {
       description: null,
       nativeTransfers: [],
       tokenTransfers: [],
+      memo: null,
       instructions: [],
-      // `events`, `swapRoute`, `innerSwaps`, `swapFees` are part of the FE
-      // contract but the parser does not populate them: the resource layer
-      // (helius-transaction-resource.buildSwapRoute) fills `swapRoute` from
-      // inputs/outputs, and the rest are Helius-only fields the FE treats as
-      // optional. We forward them as-is from the raw tx if present.
+      // `events` is part of the FE contract but the parser does not populate
+      // it: a Helius-only field the FE treats as optional, forwarded as-is
+      // from the raw tx if present.
       events: {},
-      swapRoute: null,
-      innerSwaps: [],
-      swapFees: null,
       _hints: {},
       _sources: [],
     },
@@ -294,10 +410,11 @@ const parseTransaction = (rawTx, options = {}) => {
     }
   }
 
-  // 3. Instruction metadata for FE debug pane
+  // 3. Instruction metadata for FE debug pane + per-account SOL deltas
   ctx.building.instructions = collectInstructionMetadata(rawTx);
+  ctx.building.accountData = collectAccountData(rawTx);
 
-  // 4. Post-process passes (Jupiter swapRoute, etc.)
+  // 4. Post-process passes
   for (const parser of POST_PROCESSORS) {
     try {
       parser.postProcess(ctx);
@@ -329,6 +446,8 @@ module.exports = {
   __testing: {
     deriveType,
     buildAccountMaps,
+    collectAccountData,
+    collectTokenBalanceChanges,
     collectInstructionMetadata,
   },
 };

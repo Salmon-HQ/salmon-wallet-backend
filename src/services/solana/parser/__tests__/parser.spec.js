@@ -21,7 +21,7 @@ const TOKEN = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const TOKEN_2022 = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
 const METAPLEX = 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s';
 const BUBBLEGUM = 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY';
-const JUPITER_V6 = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
+const AGGREGATOR_V6 = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
 const STAKE = 'Stake11111111111111111111111111111111111111';
 
 const MARINADE = 'MarBmsSgKXdrN1egZf5sqe1TMThczhMLJhJlsbXxy7Z';
@@ -31,9 +31,6 @@ const SOLEND = 'So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo';
 const KAMINO = 'KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD';
 const MARGINFI = 'MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA';
 const PHOENIX = 'PhoeNiCXqGVXLVHSKvXBLPjeBxz4Hpm5JhmJaDMkEQ4';
-const OPENBOOK_V2 = 'opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb';
-const LIFINITY = '2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c';
-const SABER = 'SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ';
 const WORMHOLE_TOKEN = 'wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb';
 const SNS = 'namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX';
 
@@ -71,6 +68,28 @@ describe('parser orchestrator', () => {
     expect(parseTransaction(null)).toBeNull();
     expect(parseTransaction(undefined)).toBeNull();
   });
+
+  // The parser's contract is that it never throws: every field here comes
+  // from an RPC provider, and one unparseable amount must degrade that leg,
+  // not the whole transaction.
+  it.each([['1.5e10'], ['0.5'], ['not-a-number'], [null]])(
+    'degrades a token balance of %s instead of throwing',
+    (amount) => {
+      const rawTx = buildRawTx({
+        instructions: [{ programId: SYSTEM, parsed: { type: 'transfer', info: {} } }],
+      });
+      rawTx.meta.postTokenBalances = [
+        {
+          accountIndex: 0,
+          mint: 'mint-1',
+          owner: 'owner-1',
+          uiTokenAmount: { amount, decimals: 6 },
+        },
+      ];
+
+      expect(() => parseTransaction(rawTx, { signature: 'SIG' })).not.toThrow();
+    }
+  );
 
   it('parses a System transfer as TRANSFER + SYSTEM_PROGRAM source', () => {
     const rawTx = buildRawTx({
@@ -269,7 +288,7 @@ describe('parser orchestrator', () => {
 
     const result = parseTransaction(rawTx);
     expect(result.type).toBe('NFT_MINT');
-    expect(['JUPITER', 'METAPLEX_TOKEN_METADATA']).toContain(result.source);
+    expect(['AGGREGATOR', 'METAPLEX_TOKEN_METADATA']).toContain(result.source);
   });
 
   it('detects Bubblegum cNFT instruction and tags COMPRESSED_NFT type', () => {
@@ -332,50 +351,6 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('COMPRESSED_NFT_TRANSFER');
   });
 
-  it('detects Jupiter v6 program and tags type=SWAP source=JUPITER', () => {
-    const rawTx = buildRawTx({
-      instructions: [{ programId: JUPITER_V6, accounts: [], data: 'opaque' }],
-      inner: [
-        {
-          index: 0,
-          instructions: [
-            {
-              programId: TOKEN,
-              parsed: {
-                type: 'transferChecked',
-                info: {
-                  authority: 'USER',
-                  source: 'A',
-                  destination: 'B',
-                  mint: 'IN_MINT',
-                  tokenAmount: { amount: '1000', decimals: 6 },
-                },
-              },
-            },
-            {
-              programId: TOKEN,
-              parsed: {
-                type: 'transferChecked',
-                info: {
-                  authority: 'JUPITER',
-                  source: 'B',
-                  destination: 'C',
-                  mint: 'OUT_MINT',
-                  tokenAmount: { amount: '999', decimals: 9 },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    });
-
-    const result = parseTransaction(rawTx);
-    expect(result.type).toBe('SWAP');
-    expect(result.source).toBe('JUPITER');
-    expect(result.tokenTransfers).toHaveLength(2);
-  });
-
   it('detects Stake program delegate as STAKE_TOKEN', () => {
     const rawTx = buildRawTx({
       instructions: [{ programId: STAKE, parsed: { type: 'delegate', info: {} } }],
@@ -419,17 +394,17 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('TRANSFER');
   });
 
-  it('produces deterministic source priority: JUPITER beats RAYDIUM in sources mix', () => {
+  it('produces deterministic source priority: AGGREGATOR beats RAYDIUM in sources mix', () => {
     const RAYDIUM_AMM = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8';
     const rawTx = buildRawTx({
       instructions: [
-        { programId: JUPITER_V6, accounts: [], data: 'op' },
+        { programId: AGGREGATOR_V6, accounts: [], data: 'op' },
         { programId: RAYDIUM_AMM, accounts: [], data: 'op' },
       ],
     });
 
     const result = parseTransaction(rawTx);
-    expect(result.source).toBe('JUPITER');
+    expect(result.source).toBe('AGGREGATOR');
   });
 
   it('resolves token account → owner via pre/post token balances', () => {
@@ -523,23 +498,6 @@ describe('parser orchestrator', () => {
     }
   );
 
-  it.each([
-    ['Phoenix', PHOENIX, 'PHOENIX'],
-    ['OpenBook v2', OPENBOOK_V2, 'OPENBOOK_V2'],
-    ['Lifinity', LIFINITY, 'LIFINITY'],
-    ['Saber', SABER, 'SABER'],
-  ])(
-    'classifies direct %s call as SWAP (no Jupiter present)',
-    (_name, programId, expectedSource) => {
-      const rawTx = buildRawTx({
-        instructions: [{ programId, accounts: [], data: 'op' }],
-      });
-      const result = parseTransaction(rawTx);
-      expect(result.type).toBe('SWAP');
-      expect(result.source).toBe(expectedSource);
-    }
-  );
-
   it('detects Wormhole bridge as TRANSFER with WORMHOLE source', () => {
     const rawTx = buildRawTx({
       instructions: [
@@ -582,16 +540,15 @@ describe('parser orchestrator', () => {
     expect(result.type).toBe('TRANSFER');
   });
 
-  it('Jupiter still wins source priority over a direct DEX program in the same tx', () => {
+  it('aggregator wins source priority over a direct AMM program in the same tx', () => {
     const rawTx = buildRawTx({
       instructions: [
-        { programId: JUPITER_V6, accounts: [], data: 'op' },
+        { programId: AGGREGATOR_V6, accounts: [], data: 'op' },
         { programId: PHOENIX, accounts: [], data: 'op' },
       ],
     });
     const result = parseTransaction(rawTx);
-    expect(result.type).toBe('SWAP');
-    expect(result.source).toBe('JUPITER');
+    expect(result.source).toBe('AGGREGATOR');
   });
 
   it('Sanctum (LST aggregator) wins over STAKE_POOL when both are present', () => {
@@ -604,5 +561,252 @@ describe('parser orchestrator', () => {
     const result = parseTransaction(rawTx);
     expect(result.source).toBe('SANCTUM');
     expect(result.type).toBe('STAKE_TOKEN');
+  });
+
+  describe('accountData', () => {
+    test('emits the per-account lamport delta for every key whose balance moved', () => {
+      const rawTx = {
+        slot: 1,
+        blockTime: 1,
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [{ pubkey: 'payer' }, { pubkey: 'untouched' }, { pubkey: 'receiver' }],
+            instructions: [],
+          },
+        },
+        meta: { fee: 5000, preBalances: [100000, 50, 0], postBalances: [80000, 50, 15000] },
+      };
+
+      const parsed = parseTransaction(rawTx);
+
+      expect(parsed.accountData).toEqual([
+        { account: 'payer', nativeBalanceChange: -20000, tokenBalanceChanges: [] },
+        { account: 'receiver', nativeBalanceChange: 15000, tokenBalanceChanges: [] },
+      ]);
+    });
+
+    test('emits the raw token delta per token account, owner attached, from pre/post token balances', () => {
+      const rawTx = {
+        slot: 1,
+        blockTime: 1,
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [
+              { pubkey: 'payer' },
+              { pubkey: 'ata-out' },
+              { pubkey: 'ata-in' },
+              { pubkey: 'ata-closed' },
+            ],
+            instructions: [],
+          },
+        },
+        meta: {
+          fee: 5000,
+          preBalances: [10000, 2039280, 2039280, 2039280],
+          postBalances: [5000, 2039280, 2039280, 0],
+          preTokenBalances: [
+            {
+              accountIndex: 1,
+              mint: 'USDC',
+              owner: 'payer',
+              uiTokenAmount: { amount: '1000000', decimals: 6 },
+            },
+            {
+              accountIndex: 2,
+              mint: 'USDC',
+              owner: 'friend',
+              uiTokenAmount: { amount: '0', decimals: 6 },
+            },
+            {
+              accountIndex: 3,
+              mint: 'DUST',
+              owner: 'payer',
+              uiTokenAmount: { amount: '7', decimals: 0 },
+            },
+          ],
+          postTokenBalances: [
+            {
+              accountIndex: 1,
+              mint: 'USDC',
+              owner: 'payer',
+              uiTokenAmount: { amount: '250000', decimals: 6 },
+            },
+            {
+              accountIndex: 2,
+              mint: 'USDC',
+              owner: 'friend',
+              uiTokenAmount: { amount: '750000', decimals: 6 },
+            },
+          ],
+        },
+      };
+
+      const parsed = parseTransaction(rawTx);
+
+      expect(parsed.accountData).toEqual([
+        { account: 'payer', nativeBalanceChange: -5000, tokenBalanceChanges: [] },
+        {
+          account: 'ata-out',
+          nativeBalanceChange: 0,
+          tokenBalanceChanges: [
+            {
+              userAccount: 'payer',
+              tokenAccount: 'ata-out',
+              mint: 'USDC',
+              rawTokenAmount: { tokenAmount: '-750000', decimals: 6 },
+            },
+          ],
+        },
+        {
+          account: 'ata-in',
+          nativeBalanceChange: 0,
+          tokenBalanceChanges: [
+            {
+              userAccount: 'friend',
+              tokenAccount: 'ata-in',
+              mint: 'USDC',
+              rawTokenAmount: { tokenAmount: '750000', decimals: 6 },
+            },
+          ],
+        },
+        {
+          account: 'ata-closed',
+          nativeBalanceChange: -2039280,
+          tokenBalanceChanges: [
+            {
+              userAccount: 'payer',
+              tokenAccount: 'ata-closed',
+              mint: 'DUST',
+              rawTokenAmount: { tokenAmount: '-7', decimals: 0 },
+            },
+          ],
+        },
+      ]);
+    });
+  });
+
+  describe('buildAccountMaps', () => {
+    const { buildAccountMaps } = require('..').__testing;
+
+    test('resolves the owner of a token account opened inside the transaction', () => {
+      const rawTx = {
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [{ pubkey: 'user' }],
+            instructions: [
+              {
+                program: 'spl-associated-token-account',
+                programId: 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+                parsed: {
+                  type: 'createIdempotent',
+                  info: { account: 'hopAta', mint: 'PYUSD', wallet: 'user', source: 'user' },
+                },
+              },
+            ],
+          },
+        },
+        meta: {
+          preTokenBalances: [],
+          postTokenBalances: [],
+          innerInstructions: [
+            {
+              index: 0,
+              instructions: [
+                {
+                  program: 'spl-token',
+                  programId: 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
+                  parsed: {
+                    type: 'initializeAccount3',
+                    info: {
+                      account: 'wrapper',
+                      mint: 'So11111111111111111111111111111111111111112',
+                      owner: 'user',
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const { tokenAccountOwners, tokenAccountMints } = buildAccountMaps(rawTx);
+
+      expect(tokenAccountOwners.get('hopAta')).toBe('user');
+      expect(tokenAccountMints.get('hopAta')).toBe('PYUSD');
+      expect(tokenAccountOwners.get('wrapper')).toBe('user');
+    });
+
+    test('a balance-list owner wins over the instruction when both exist', () => {
+      const rawTx = {
+        transaction: {
+          signatures: ['sig'],
+          message: {
+            accountKeys: [{ pubkey: 'ata' }],
+            instructions: [
+              {
+                program: 'spl-token',
+                programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+                parsed: {
+                  type: 'initializeAccount3',
+                  info: { account: 'ata', mint: 'M', owner: 'stale' },
+                },
+              },
+            ],
+          },
+        },
+        meta: {
+          preTokenBalances: [],
+          postTokenBalances: [{ accountIndex: 0, owner: 'fresh', mint: 'M' }],
+        },
+      };
+
+      expect(buildAccountMaps(rawTx).tokenAccountOwners.get('ata')).toBe('fresh');
+    });
+  });
+
+  describe('memo', () => {
+    const memoIx = (text) => ({
+      program: 'spl-memo',
+      programId: 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
+      parsed: text,
+    });
+    const rawTx = (instructions) => ({
+      slot: 1,
+      blockTime: 1,
+      transaction: {
+        signatures: ['sig'],
+        message: { accountKeys: [{ pubkey: 'user' }], instructions },
+      },
+      meta: {
+        fee: 5000,
+        preBalances: [10],
+        postBalances: [5],
+        preTokenBalances: [],
+        postTokenBalances: [],
+        innerInstructions: [],
+      },
+    });
+
+    test('a memo-only transaction derives to MEMO with the note text', () => {
+      const parsed = parseTransaction(rawTx([memoIx('gm from salmon')]));
+      expect(parsed.type).toBe('MEMO');
+      expect(parsed.memo).toBe('gm from salmon');
+      expect(parsed.source).toBe('MEMO_PROGRAM');
+    });
+
+    test('a memo next to a transfer keeps the transfer type and carries the note', () => {
+      const transfer = {
+        program: 'system',
+        programId: '11111111111111111111111111111111',
+        parsed: { type: 'transfer', info: { source: 'user', destination: 'other', lamports: 5 } },
+      };
+      const parsed = parseTransaction(rawTx([transfer, memoIx('rent')]));
+      expect(parsed.type).toBe('TRANSFER');
+      expect(parsed.memo).toBe('rent');
+    });
   });
 });

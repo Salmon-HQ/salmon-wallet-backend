@@ -65,8 +65,34 @@ const saveTokensPrices = async (prices, platform) => {
  * @param {object} [locals]
  * @returns {string}
  */
+/** CoinGecko Solana token list (raw), 24 h at most per their terms. */
+const getSolanaTokenList = async () => getFromCache('solana:coingecko_token_list');
+const saveSolanaTokenList = async (tokens, ttl) =>
+  storeInCache('solana:coingecko_token_list', tokens, ttl);
+/** Solana mint → CoinGecko coin id map, same TTL. */
+const getSolanaCoinIds = async () => getFromCache('solana:coingecko_coin_ids');
+const saveSolanaCoinIds = async (byMint, ttl) =>
+  storeInCache('solana:coingecko_coin_ids', byMint, ttl);
+
+/** CoinGecko coin id → market-cap position among top Solana coins, same TTL. */
+const getSolanaMarketRanks = async () => getFromCache('solana:coingecko_market_ranks');
+const saveSolanaMarketRanks = async (ranks, ttl) =>
+  storeInCache('solana:coingecko_market_ranks', ranks, ttl);
+
+/**
+ * Encodes one caller-derived field so a ':' inside its value can never be
+ * read as the key's delimiter. The contract routes fold two path segments
+ * into a single `coinId` (`${platform}:${contractAddress}`), so without this
+ * two structurally different requests can produce one byte-identical key and
+ * each can serve the other's cached payload.
+ *
+ * @param {string|number} value
+ * @returns {string}
+ */
+const keyPart = (value) => encodeURIComponent(String(value));
+
 const getChartKey = (type, { coinId, days, currency }, locals) => {
-  return getCacheKey(`${type}:${coinId}:${currency}:${days}`, locals);
+  return getCacheKey(`${type}:${keyPart(coinId)}:${keyPart(currency)}:${keyPart(days)}`, locals);
 };
 
 /**
@@ -127,7 +153,7 @@ const saveChart = async (params, chartData, locals) => {
  * @returns {string}
  */
 const getCoinInfoKey = (type, { coinId, currency }, locals) => {
-  return getCacheKey(`${type}:${coinId}:${currency}`, locals);
+  return getCacheKey(`${type}:${keyPart(coinId)}:${keyPart(currency)}`, locals);
 };
 
 /**
@@ -210,6 +236,12 @@ const saveExchangeRates = async (rates, locals) => {
 };
 
 module.exports = {
+  getSolanaTokenList,
+  saveSolanaTokenList,
+  getSolanaCoinIds,
+  saveSolanaCoinIds,
+  getSolanaMarketRanks,
+  saveSolanaMarketRanks,
   saveTokensList,
   saveTokensPrices,
   getTokensList,

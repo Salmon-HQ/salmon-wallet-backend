@@ -2,15 +2,15 @@
 
 /**
  * Factory for parsers whose only job is to set a single hint flag on the
- * orchestrator's `building._hints` map. The DEX, lending, and liquid-staking
- * parsers all share this shape — distinguishing per-instruction behavior
+ * orchestrator's `building._hints` map. The lending and liquid-staking
+ * parsers share this shape — distinguishing per-instruction behavior
  * would require decoding each program's IDL.
  *
  * Usage:
  *
  *   module.exports = createHintParser({
- *     programIds: [...SOURCES.RAYDIUM, ...SOURCES.ORCA],
- *     hint: 'hasDexSwap',
+ *     programIds: [...SOURCES.SOLEND, ...SOURCES.KAMINO],
+ *     hint: 'hasLoan',
  *   });
  *
  * The orchestrator's `deriveType` reads the hint and emits the right tx
