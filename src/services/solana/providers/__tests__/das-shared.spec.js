@@ -67,7 +67,11 @@ describe('isHeldByOwner', () => {
   test.each([
     ['a held NFT', { burnt: false, token_info: { supply: 1, balance: 1 } }, true],
     ['a burned token whose metadata was left behind', ghost, false],
-    ['a token with no balance left', { burnt: false, token_info: { supply: 1, balance: 0 } }, false],
+    [
+      'a token with no balance left',
+      { burnt: false, token_info: { supply: 1, balance: 0 } },
+      false,
+    ],
     ['a burnt asset', { burnt: true, token_info: { supply: 1, balance: 1 } }, false],
     ['a compressed NFT', { burnt: false, compression: { compressed: true } }, true],
     ['a burnt compressed NFT', { burnt: true, compression: { compressed: true } }, false],

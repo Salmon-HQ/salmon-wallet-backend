@@ -221,10 +221,7 @@ const loadOwnedDigitalAsset = async (mintAddress, owner, locals) => {
     mintPublicKey,
     ownerSigner.publicKey
   ).catch(
-    rethrowAsOwnershipError(
-      NotOwnedSolanaNftBurnError,
-      'Only the current owner can burn this NFT.'
-    )
+    rethrowAsOwnershipError(NotOwnedSolanaNftBurnError, 'Only the current owner can burn this NFT.')
   );
 
   return { umi, ownerSigner, mintPublicKey, digitalAsset };
