@@ -12,6 +12,11 @@ jest.mock('../../../infrastructure/providers/provider-client', () => ({
 
 jest.mock('axios', () => ({ post: jest.fn() }));
 
+// The service asks the Triton client for its endpoint; the request itself is
+// the mocked axios, so any URL does. Set here so the spec does not depend on
+// the machine's own TRITON_RPC_URL.
+process.env.TRITON_RPC_URL = 'https://test.solana-mainnet.rpcpool.com';
+
 const axios = require('axios');
 const cacheHelper = require('../../../infrastructure/cache/cache-helper');
 const service = require('../token-ui-amount-service');
