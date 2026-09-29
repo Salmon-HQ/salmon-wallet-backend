@@ -2,6 +2,10 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.19.1 — 2026-09-29
+
+- The scheduled token-list and price-refresh jobs send the CoinGecko API key and honour `COINGECKO_API_URL`, like every other CoinGecko call. They called the public endpoint with no key, which CoinGecko answers with 403, so the hourly Bitcoin price refresh failed.
+
 ## 0.19.0 — 2026-09-29
 
 - NFT media and metadata URIs no longer point at `ipfs.io` (the public gateway answers 429 with a `Sunset: 21 Sep 2026` header) or `dweb.link`: `ipfs://` URIs and links on those hosts are rewritten to `ipfs.filebase.io`, the gateway the clients already normalise to.
