@@ -535,6 +535,8 @@ const getTokenPrices = async (mints, locals = {}) => {
 };
 
 module.exports = {
+  BASE_ENDPOINT,
+  apiHeaders,
   getSolanaTokenList,
   getSolanaCoinIds,
   getSolanaMarketRanks,

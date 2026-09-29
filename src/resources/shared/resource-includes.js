@@ -80,6 +80,9 @@ const includeLogo = async (resource, include, key, context) => {
   const { type, blockchain } = resource;
 
   const eagerLoad = async () => {
+    // The native logo is built from the blockchain alone, and a chain with no
+    // tokens (bitcoin) has no tokenlist.json to fetch.
+    if (type === 'native') return [];
     try {
       return await trustwalletService.listTokens(blockchain);
     } catch (err) {
