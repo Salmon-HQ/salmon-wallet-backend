@@ -147,9 +147,10 @@ any quote; and a build request from that country is refused before any
 provider is called. The same person on a different platform may get a
 different answer, because the stores' rules differ.
 
-**Why this priority**: It is what 0x's licence makes Salmon warrant
-(§8.2(b): no user prohibited under the OFAC programmes), what Apple's
-guideline 3.1.5(iii) asks about, and the owner's United States decision.
+**Why this priority**: It is what Jupiter's terms require of Salmon (no
+wallet in its prohibited localities), what 0x's licence makes Salmon warrant
+(§8.2(b)), what Apple's guideline 3.1.5(iii) asks about, and the owner's
+United States decision.
 
 **Independent Test**: With the table configured, requests carrying a blocked
 country header get `403 region_restricted` on the build route and
