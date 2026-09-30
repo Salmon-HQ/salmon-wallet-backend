@@ -1,4 +1,4 @@
-# Feature Specification: Swap on 0x, offered where it may be offered
+# Feature Specification: Swap on Jupiter, 0x where Jupiter cannot, offered where it may be offered
 
 **Feature Branch**: `018-swap-jupiter-availability`
 
@@ -6,7 +6,7 @@
 
 **Status**: Draft — owner decisions of 2026-09-30 recorded below; not implemented
 
-**Input**: User description: "Swap on 0x with availability by country, platform and provider; Jupiter as the second provider; United States off until confirmed"
+**Input**: User description: "Swap with Jupiter as the default provider and 0x only where Jupiter cannot serve; availability by country, platform and provider; United States off until confirmed"
 
 > Continues `specs/012-swap-v2-build` (0x, implemented on branch
 > `feat/powerup-swap`) and amends `specs/011-capability-availability` (the
@@ -23,21 +23,20 @@ sees the signed bytes. That model is in production for NFTs and Powerups
 
 What is settled on 2026-09-30:
 
-1. **Provider.** Salmon holds 0x's Standard plan (0.15% swap fee charged
-   on-chain to the user, 5 requests per second), confirmed by the owner in
-   the 0x dashboard. 0x names no country, screens every wallet address
-   itself against the US, EU, UK and UN lists with no opt-out, and serves the
-   United States. Its adapter, fee-account resolution, fee verification and
-   the `SwapBuild` response shape are implemented on `feat/powerup-swap`.
-   Salmon also holds a Jupiter Developer plan (10 requests per second, no
-   Jupiter fee on the Router path); Jupiter is the **second provider**,
-   selectable per country and platform, for territories where saving the
-   user 0x's 0.15% is worth taking on the duties below.
+1. **Providers.** Salmon holds both plans: Jupiter Developer (10 requests
+   per second, no Jupiter fee on the Router path) and 0x Standard (0.15%
+   swap fee charged on-chain to the user, 5 requests per second). **Jupiter
+   is the default because it costs the user nothing extra; 0x exists only
+   for the countries Jupiter refuses to serve.** 0x names no country and
+   screens every wallet address itself; its adapter, fee-account
+   resolution, fee verification and the `SwapBuild` response shape are
+   implemented on `feat/powerup-swap` and are reused. The Jupiter adapter is
+   new. The response shape does not change between providers: the provider
+   name and attribution arrive as data.
 2. **Territory.** The **United States is off** on every platform until the
-   owner confirms in writing. The response shape does not change between
-   providers: the provider name and attribution arrive as data.
+   owner confirms in writing.
 
-Jupiter's terms shape what using it as the second provider costs Salmon:
+Jupiter's terms shape two requirements of this spec:
 
 - Jupiter "does not interact with digital wallets located in, established
   in, or a resident of" the United States, the Republic of China, Singapore,
@@ -45,39 +44,45 @@ Jupiter's terms shape what using it as the second provider costs Salmon:
   Libya, Mali, Nicaragua, North Korea, Somalia, Sudan, Syria, Yemen,
   Zimbabwe, or any territory under US, UK or EU sanctions (Terms of Use,
   "Prohibited Localities"). A table row may name Jupiter only outside that
-  list.
+  list; those countries are where 0x serves.
 - The API licence makes the integrator "perform transaction screening and
   monitoring of all digital wallets interacting with the Client's Product,
   including blocking of sanctioned ... digital wallets" (§7.3) and puts all
   KYC/AML duties on the integrator (§7.4). 0x's screening happens inside
-  0x's own request and cannot be borrowed for a Jupiter request, so a
-  Jupiter row requires Salmon's own screening (User Story 3).
+  0x's own request and cannot be borrowed, so every Jupiter request is
+  screened by Salmon (User Story 3). With Jupiter as the default, that
+  screening ships in the first release.
 
 ## Owner decisions (2026-09-30)
 
 1. **Both providers, each where it may be used.** Availability is a table
-   of capability × platform × country → provider or "not available". The
-   first release fills it with 0x; Jupiter rows are added per country when
-   the owner decides the saving is worth the screening duty.
+   of capability × platform × country → provider or "not available".
+   Jupiter is the default row; 0x is the row for every country Jupiter's
+   terms exclude; no country gets 0x while Jupiter can serve it.
 2. **United States: not available** on iOS, Android and the extension,
    until the owner confirms in writing. Opening it means adding 0x
    (Jupiter excludes the United States), a legal opinion for the United
    States, and the App Review evidence package described in the SOT's
    Apple Exchange Compliance Plan.
-3. **Initial blocked list, every platform:** the comprehensively embargoed
-   territories (Cuba, Iran, North Korea, Syria, and the Crimea, Donetsk and
-   Luhansk regions) and the United States. The twelve other countries
-   Jupiter names are not blocked for 0x, but a table row for any of them may
-   never name Jupiter.
-4. **Wallet screening.** On a 0x row, 0x screens and Salmon renders its
-   refusal as `wallet_restricted`. On a Jupiter row, Salmon screens with its
-   own copy of the public sanctions list of the US Treasury (its
+3. **Initial table, every platform:** unavailable in the comprehensively
+   embargoed territories (Cuba, Iran, North Korea, Syria, and the Crimea,
+   Donetsk and Luhansk regions) and in the United States; **0x** in the
+   twelve other countries Jupiter names (Republic of China, Singapore,
+   Myanmar, Côte d'Ivoire, DR Congo, Iraq, Libya, Mali, Nicaragua, Somalia,
+   Sudan, Yemen, Zimbabwe), several of which sit under partial US sanctions
+   programmes — counsel confirms that list before it goes live; **Jupiter**
+   everywhere else.
+4. **Wallet screening.** On a Jupiter row, Salmon screens with its own copy
+   of the public sanctions list of the US Treasury (its
    digital-currency-address entries cover Solana), refreshed daily, exact
-   match. A paid screening provider only if counsel asks for one.
-5. **Salmon fee: 50 bps** (decision of 2026-09-14, unchanged), passed to
-   the provider as Salmon's fee and delivered into a fee account Salmon
-   controls (the multisig confirmed in DEV-54), shown on the confirmation
-   screen as its own line, separate from 0x's own 0.15%.
+   match. On a 0x row, 0x screens and Salmon renders its refusal as
+   `wallet_restricted`. A paid screening provider only if counsel asks for
+   one.
+5. **Salmon fee: 50 bps** (decision of 2026-09-14, confirmed 2026-09-30),
+   passed to the provider as Salmon's fee and delivered into a fee account
+   Salmon controls (the multisig confirmed in DEV-54), shown on the
+   confirmation screen as its own line. On a 0x row the user also pays 0x's
+   0.15% while 0x charges it; the owner revisits the rate then.
 6. **Plans:** 0x Standard and Jupiter Developer, both held by Salmon.
 
 ## What already exists, and is not to be rebuilt
@@ -90,8 +95,8 @@ Jupiter's terms shape what using it as the second provider costs Salmon:
   route (SOT, Swap Overview).
 - The 0x adapter, fee-account resolution, fee verification, the
   `SwapBuild` response shape and their tests, on branch `feat/powerup-swap`.
-  All of it is reused as is; this spec wraps it in the gate and adds the
-  second adapter.
+  All of it is reused as is; this spec adds the Jupiter adapter, the table
+  and the gate around both.
 - The token catalogue, prices and attribution (spec 013).
 
 ## User Scenarios & Testing _(mandatory)_
@@ -100,7 +105,7 @@ Jupiter's terms shape what using it as the second provider costs Salmon:
 
 A user in a country where swap is offered picks two tokens and an amount,
 sees the amount in, the estimated amount out, the minimum after slippage,
-the route provider ("Powered by 0x"), the price impact, the USD values
+the route provider ("Powered by Jupiter"), the price impact, the USD values
 and **the Salmon fee as its own line**, signs on the device, and the app
 sends the transaction to the network itself.
 
@@ -117,7 +122,7 @@ broadcasts (mainnet only — neither provider has a devnet).
 
 1. **Given** a mainnet pair and amount from an allowed country, **When** a
    build is requested, **Then** the response carries an unsigned base64 v0
-   transaction, `provider: '0x'`, `attribution: 'Powered by 0x'`,
+   transaction, `provider: 'jupiter'`, `attribution: 'Powered by Jupiter'`,
    `input`/`output` legs with the minimum received, `route`, `slippageBps`,
    `expiresAt` and a `salmonFee` line of 50 bps.
 2. **Given** the returned transaction, **When** decoded, **Then** it has no
@@ -149,7 +154,7 @@ guideline 3.1.5(iii) asks about, and the owner's United States decision.
 **Independent Test**: With the table configured, requests carrying a blocked
 country header get `403 region_restricted` on the build route and
 `enabled: false, reason: 'region'` on the availability route; requests from
-an allowed country get a 0x build. Changing a row in the table changes
+an allowed country get a Jupiter build. Changing a row in the table changes
 the answer on the next call, with no deploy.
 
 **Acceptance Scenarios**:
@@ -162,7 +167,7 @@ the answer on the next call, with no deploy.
    `403 region_restricted` and no provider is called.
 3. **Given** the caller's country is allowed for their platform, **When**
    availability is requested, **Then** swap comes back enabled with
-   `provider: '0x'`, and a build succeeds.
+   `provider: 'jupiter'`, and a build succeeds.
 4. **Given** the country cannot be resolved, **When** a build is requested,
    **Then** it proceeds and the failure to resolve is logged (a denylist
    that cannot resolve has not found a blocked country).
@@ -179,9 +184,10 @@ the answer on the next call, with no deploy.
 
 ### User Story 3 - A sanctioned wallet cannot swap (Priority: P1)
 
-A caller whose wallet address is sanctioned asks for a build. On a 0x row,
-0x refuses and the backend renders `wallet_restricted`. On a Jupiter row,
-the backend refuses before calling Jupiter, from its own copy of the list.
+A caller whose wallet address is sanctioned asks for a build. On a Jupiter
+row (the default), the backend refuses before calling Jupiter, from its own
+copy of the list. On a 0x row, 0x refuses and the backend renders
+`wallet_restricted`.
 Either way the app shows the unavailable state it already has for a
 restricted wallet.
 
@@ -215,20 +221,20 @@ good copy.
 
 ---
 
-### User Story 4 - The second provider slots in without touching the apps (Priority: P2)
+### User Story 4 - The second provider serves where the first cannot, without touching the apps (Priority: P1)
 
-The owner decides that a country is served by Jupiter. Ops sets that
-table row to `jupiter`, and the apps render "Powered by Jupiter" on those
-requests with no client release. The same mechanism opens the United States
-on 0x the day the owner confirms it: one row per platform.
+A user in a country Jupiter refuses to serve gets the same swap through
+0x: the table row names `0x`, the 0x adapter builds, and the apps render
+"Powered by 0x" and 0x's fee line with no client branch. The same mechanism
+opens the United States the day the owner confirms it: one row per
+platform.
 
 **Acceptance Scenarios**:
 
-1. **Given** a table row that names `jupiter` for a country outside
-   Jupiter's prohibited list, **When** a build is requested from that
-   country and platform, **Then** the Jupiter adapter builds it and the
-   response carries `provider: 'jupiter'` in the same shape, with Salmon's
-   fee via Jupiter's platform-fee parameters.
+1. **Given** a table row that names `0x`, **When** a build is requested
+   from that country and platform, **Then** the 0x adapter builds it and the
+   response carries `provider: '0x'` in the same shape, with Salmon's fee
+   and 0x's own fee as separate lines.
 2. **Given** a table row that names a provider whose credential is not
    configured, **When** a build is requested, **Then** 503
    `upstream_unavailable` and an error log, never a silent fallback to the
@@ -255,11 +261,10 @@ on 0x the day the owner confirms it: one row per platform.
   swap with `[SWAP_FEE_SKIPPED]` logged as an error. A build whose
   instructions never reference the chosen fee account answers 502
   `provider_fee_mismatch`.
-- **Rate limits.** 0x Standard is 5 requests per second and Jupiter
-  Developer 10; a process-wide limiter per provider fronts the calls, and a
+- **Rate limits.** Jupiter Developer is 10 requests per second and 0x
+  Standard 5; a process-wide limiter per provider fronts the calls, and a
   429 reads as `upstream_rate_limited`, which the existing alert counts.
-  Five per second is the tighter of the two: ten users quoting at once
-  already queue, and the client must not re-quote on every keystroke.
+  The client quotes on confirm and on a timer, never on every keystroke.
 - **Provider outage.** The provider's circuit opens after repeated
   failures → 503 `upstream_unavailable`; no fallback to another provider.
 - **Traveller.** Nothing is stored on the device; the answer is per
@@ -276,7 +281,9 @@ on 0x the day the owner confirms it: one row per platform.
   Salmon's fee (50 bps) and fee account, compile them into an unsigned v0
   transaction with the caller as fee payer, and return the `SwapBuild` shape
   of spec 012 with the provider's name. On any other network it MUST answer
-  400 before any provider call. The 0x path is the one spec 012 implemented.
+  400 before any provider call. The 0x path is the one spec 012
+  implemented; the Jupiter path uses Jupiter's Router build endpoint with
+  Salmon's fee as `platformFeeBps` into Salmon's fee account.
 - **FR-002**: The client MUST NOT be able to influence fee parameters; only
   `inputMint`, `outputMint`, `publicKey`, `amount` / `uiAmount` and
   `slippageBps` are read from the request.
@@ -297,13 +304,13 @@ on 0x the day the owner confirms it: one row per platform.
   backend. A request without it MUST be evaluated as the most restrictive
   platform.
 - **FR-007**: On a row that names a provider which does not screen wallet
-  addresses itself (Jupiter), the backend MUST screen `publicKey` against a
-  locally held copy of the US Treasury sanctions list's digital-currency
-  addresses before the build, answer `403 wallet_restricted` on a match,
-  refresh the copy daily, serve the last copy when a refresh fails (logging
-  the staleness after 48 hours), and answer 503 when no copy exists. On a 0x
-  row the provider's refusal MUST be rendered as `wallet_restricted`. The
-  local list MUST NOT be loaded at all while no row names Jupiter.
+  addresses itself (Jupiter, the default), the backend MUST screen
+  `publicKey` against a locally held copy of the US Treasury sanctions
+  list's digital-currency addresses before the build, answer
+  `403 wallet_restricted` on a match, refresh the copy daily, serve the
+  last copy when a refresh fails (logging the staleness after 48 hours),
+  and answer 503 when no copy exists. On a 0x row the provider's refusal
+  MUST be rendered as `wallet_restricted`.
 - **FR-008**: The provider adapter MUST be selected from the table row, and
   a row naming a provider without a configured credential MUST answer 503,
   never fall back to another provider. A row naming Jupiter for a country on
@@ -337,11 +344,10 @@ amountOut, minAmountOut, routePlan, providerRequestId }`), so the build
   | unavailable; configuration, not code; every change carries who approved
   it and when, outside the repo.
 - **Build response**: the `SwapBuild` shape of spec 012, provider-agnostic.
-- **Provider adapter**: one per provider (0x existing, Jupiter new), same
+- **Provider adapter**: one per provider (Jupiter new, 0x existing), same
   internal shape out.
 - **Sanctions copy**: the set of digital-currency addresses from the US
-  Treasury list, with the time it was fetched; loaded only while a row
-  names Jupiter.
+  Treasury list, with the time it was fetched.
 
 ## Success Criteria _(mandatory)_
 
@@ -366,11 +372,11 @@ amountOut, minAmountOut, routePlan, providerRequestId }`), so the build
 
 ## Assumptions
 
-- 0x Standard (5 requests per second) covers the initial volume; the
-  client quotes on confirm and on a timer, not on every keystroke.
-- 0x's 0.15% fee is charged on-chain to the user; while the Solana beta
-  waives it the user pays Salmon's 50 bps only, and 65 bps once it applies.
-  The owner revisits the rate then.
+- Jupiter Developer (10 requests per second) covers the initial volume;
+  0x Standard (5) covers the countries it serves.
+- 0x's 0.15% fee is charged on-chain to the user on 0x rows only; while
+  the Solana beta waives it the user pays Salmon's 50 bps, and 65 bps once
+  it applies. The owner revisits the rate then.
 - Jupiter Router's build endpoint keeps returning instructions, lookup
   tables and a blockhash with expiry, and takes no fee on that path
   (documentation read 2026-09-30).

@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Swap on 0x, offered where it may be offered
+# Specification Quality Checklist: Swap on Jupiter, 0x where Jupiter cannot
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-30
@@ -36,5 +36,6 @@
   under Assumptions, not as clarifications, because neither changes scope.
 - The amendment to spec 011 (platform dimension, provider in the answer,
   screening Salmon's only on a Jupiter row) is in the same branch.
-- Revised 2026-09-30 after the owner confirmed the 0x Standard plan: 0x
-  first, Jupiter second.
+- Revised 2026-09-30 after the owner confirmed both plans: Jupiter by
+  default because it costs the user nothing extra; 0x only where Jupiter
+  cannot serve.
