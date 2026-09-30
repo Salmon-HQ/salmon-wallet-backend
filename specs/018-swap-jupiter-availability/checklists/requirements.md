@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Swap on Jupiter Router, offered where it may be offered
+# Specification Quality Checklist: Swap on 0x, offered where it may be offered
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-30
@@ -35,4 +35,6 @@
   facts (who pays the Jupiter plan, store-availability owner) are listed
   under Assumptions, not as clarifications, because neither changes scope.
 - The amendment to spec 011 (platform dimension, provider in the answer,
-  screening no longer the provider's) is in the same branch.
+  screening Salmon's only on a Jupiter row) is in the same branch.
+- Revised 2026-09-30 after the owner confirmed the 0x Standard plan: 0x
+  first, Jupiter second.
