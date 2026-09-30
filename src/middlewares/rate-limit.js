@@ -1,38 +1,12 @@
 'use strict';
 
+const { resolveSourceIp } = require('../../packages/network-utils');
+
 const { redis } = require('../repositories/data-source');
 
 // Hard cap on how long a single limiter check may hold the request; a slow
 // or hung Redis must never add user-visible latency (fail-open).
 const REDIS_TIMEOUT_MS = 250;
-
-/**
- * Resolve the caller IP. Order matters for spoof resistance:
- *   1. API Gateway's `requestContext.identity.sourceIp` (attached to the
- *      Express request by serverless-http) — authoritative.
- *   2. The LAST entry of `X-Forwarded-For` — API Gateway appends the real
- *      client IP at the end; earlier entries are client-controlled.
- *   3. `req.socket.remoteAddress` — direct connections (local dev).
- *
- * @param {object} req - Express request.
- * @returns {string|undefined} The caller IP, or undefined if none is
- *   determinable (in which case the request is not rate limited).
- */
-const resolveIp = (req) => {
-  const sourceIp = req.requestContext?.identity?.sourceIp;
-  if (sourceIp) return sourceIp;
-
-  const forwarded = req.headers?.['x-forwarded-for'];
-  if (forwarded) {
-    const entries = forwarded
-      .split(',')
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-    if (entries.length) return entries[entries.length - 1];
-  }
-
-  return req.socket?.remoteAddress || undefined;
-};
 
 const withTimeout = (promise, ms) => {
   let timer;
@@ -66,7 +40,7 @@ module.exports = ({ max, windowSeconds, prefix }) => {
     const mode = process.env.RATE_LIMIT_MODE || 'log';
     if (mode === 'off') return next();
 
-    const ip = resolveIp(req);
+    const ip = resolveSourceIp(req);
     if (!ip) return next();
 
     const nowSeconds = Math.floor(Date.now() / 1000);
