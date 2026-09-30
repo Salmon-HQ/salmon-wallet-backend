@@ -12,7 +12,7 @@
 - Delegate all behavior to Solana controllers.
 - Do not shape transaction, token, or NFT payloads here.
 - `solana-nft-router.js` exposes only `GET /` (list), `POST /:mintAddress` (burn), and `POST /:mintAddress/transfer`.
-- `solana-powerups-router.js` exposes only `GET /:id/build`, behind `src/middlewares/powerup-gate.js` (the spec 011 seam). Never add an execute/relay route under `/powerups`.
+- `solana-powerups-router.js` exposes only `GET /availability` (declared first, so the literal path wins over `/:id`) and `GET /:id/build`, the latter behind `src/middlewares/powerup-gate.js` (`powerupGate('param')`, spec 018). Never add an execute/relay route under `/powerups`.
 
 ## Testing
 

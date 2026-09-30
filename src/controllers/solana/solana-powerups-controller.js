@@ -3,6 +3,11 @@
 const { decorator } = require('../../../packages/api-utils');
 const buildService = require('../../services/solana/powerups/powerup-build-service');
 const decorateBuild = require('../../resources/solana/solana-powerup-build-resource');
+const decorateAvailability = require('../../resources/solana/solana-powerup-availability-resource');
+const { platformOf } = require('../../availability/platform');
+const { countryOfRequest } = require('../../availability/country-resolver');
+const { loadTable } = require('../../availability/availability-table');
+const availabilityService = require('../../availability/availability-service');
 const { isValidSolanaAddress } = require('../../utils/solana-address');
 
 /**
@@ -45,4 +50,24 @@ const build = async (req, res) => {
   }
 };
 
-module.exports = { build };
+/**
+ * What this caller may use on the network (`capability-availability`
+ * contract): every registered Powerup plus `swap`, decided from the source
+ * address and `X-Salmon-Platform`. Informs only — the build route refuses.
+ * `Cache-Control: no-store` because the answer depends on the caller.
+ *
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
+const availability = async (req, res) => {
+  const network = res.locals.network.id;
+  const platform = platformOf(req);
+  const country = countryOfRequest(req);
+  const entries = availabilityService.listFor(await loadTable(), network, platform, country);
+  console.info('[POWERUP_AVAILABILITY]', { network, platform, country });
+  res.set('Cache-Control', 'no-store');
+  res.status(200).send({ data: entries.map(decorateAvailability) });
+};
+
+module.exports = { build, availability };

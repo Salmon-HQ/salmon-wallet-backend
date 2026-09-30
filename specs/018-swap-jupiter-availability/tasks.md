@@ -10,24 +10,24 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Add `@ip-location-db/dbip-country-mmdb` and `mmdb-lib` to `package.json` (npm ci, lockfile), attribution line in `NOTICE` and `AGENTS.md`
-- [ ] T002 Move `resolveIp` from `src/middlewares/rate-limit.js` into `packages/network-utils/index.js` as `resolveSourceIp(req)`; rate-limit and health-check import it; existing tests pass
-- [ ] T003 [P] Add `iamRoleStatements` for `ssm:GetParameter` on `arn:aws:ssm:*:*:parameter/salmon-api/${stage}/AVAILABILITY_TABLE` in `serverless.yml`; new env keys in `config/env.prod.yml`, `config/env.local.yml`, `.env.example`: `TRM_API_KEY`, `TRM_MAX_RPS`, `SANCTIONS_SOURCE_URL`, `JUPITER_API_KEY`, `JUPITER_MAX_RPS`, `JUPITER_SWAP_URL`, `ZEROEX_*`, `SWAP_*`, `AVAILABILITY_TABLE_JSON` (local only), `AVAILABILITY_COUNTRY_OVERRIDE` (local only)
+- [x] T001 Add `@ip-location-db/dbip-country-mmdb` and `mmdb-lib` to `package.json` (npm ci, lockfile), attribution line in `NOTICE` and `AGENTS.md`
+- [x] T002 Move `resolveIp` from `src/middlewares/rate-limit.js` into `packages/network-utils/index.js` as `resolveSourceIp(req)`; rate-limit and health-check import it; existing tests pass
+- [x] T003 [P] Add `iamRoleStatements` for `ssm:GetParameter` on `arn:aws:ssm:*:*:parameter/salmon-api/${stage}/AVAILABILITY_TABLE` in `serverless.yml`; new env keys in `config/env.prod.yml`, `config/env.local.yml`, `.env.example`: `TRM_API_KEY`, `TRM_MAX_RPS`, `SANCTIONS_SOURCE_URL`, `JUPITER_API_KEY`, `JUPITER_MAX_RPS`, `JUPITER_SWAP_URL`, `ZEROEX_*`, `SWAP_*`, `AVAILABILITY_TABLE_JSON` (local only), `AVAILABILITY_COUNTRY_OVERRIDE` (local only)
 
 ## Phase 2: Foundational — geolocation (User Story 2 depends on all of it)
 
-- [ ] T004 [P] `src/availability/platform.js` + spec: header → `ios|android|extension`, default `ios`
-- [ ] T005 [P] `src/availability/country-resolver.js` + spec: open the mmdb once per container, `countryOf(ip)` → alpha-2 or null (private/invalid/unknown → null); local-only `AVAILABILITY_COUNTRY_OVERRIDE` honoured when `NODE_ENV !== 'prod'`
-- [ ] T006 `src/availability/availability-table.js` + spec: built-in default (spec decision 3, `data-model.md`), `AVAILABILITY_TABLE_JSON` local override, runtime SSM read with 5-min cache, validation (providers, platforms, Jupiter prohibited list constant, version), keep-last-good on failure with `[AVAILABILITY_TABLE]` error log
-- [ ] T007 `src/availability/availability-service.js` + spec: `decide(capability, platform, country)` → `{ enabled, reason?, provider? }` (platform override merge, unavailable, providers, default; null country → default provider); `listFor(networkId, platform, country)` = registry ∩ stage config ∩ decide
-- [ ] T008 `src/middlewares/powerup-gate.js` + spec: `powerupGate(capability)` (string or `'param'` for `:id`), resolves platform + country, `403 region_restricted` with no provider call, sets `res.locals.availability`, logs `{ capability, platform, country, enabled, provider }` and never the address
+- [x] T004 [P] `src/availability/platform.js` + spec: header → `ios|android|extension`, default `ios`
+- [x] T005 [P] `src/availability/country-resolver.js` + spec: open the mmdb once per container, `countryOf(ip)` → alpha-2 or null (private/invalid/unknown → null); local-only `AVAILABILITY_COUNTRY_OVERRIDE` honoured when `NODE_ENV !== 'prod'`
+- [x] T006 `src/availability/availability-table.js` + spec: built-in default (spec decision 3, `data-model.md`), `AVAILABILITY_TABLE_JSON` local override, runtime SSM read with 5-min cache, validation (providers, platforms, Jupiter prohibited list constant, version), keep-last-good on failure with `[AVAILABILITY_TABLE]` error log
+- [x] T007 `src/availability/availability-service.js` + spec: `decide(capability, platform, country)` → `{ enabled, reason?, provider? }` (platform override merge, unavailable, providers, default; null country → default provider); `listFor(networkId, platform, country)` = registry ∩ stage config ∩ decide
+- [x] T008 `src/middlewares/powerup-gate.js` + spec: `powerupGate(capability)` (string or `'param'` for `:id`), resolves platform + country, `403 region_restricted` with no provider call, sets `res.locals.availability`, logs `{ capability, platform, country, enabled, provider }` and never the address
 
 ## Phase 3: User Story 2 — offered only where it may be offered (P1) 🎯 MVP of the geolocation
 
-- [ ] T009 [US2] `GET /availability` in `src/routes/solana/solana-powerups-router.js` (declared before `/:id/build`), `Cache-Control: no-store`, controller `availability` in `src/controllers/solana/solana-powerups-controller.js`, resource `src/resources/solana/solana-powerup-availability-resource.js`; spec per `contracts/availability.md`
-- [ ] T010 [US2] Mount `powerupGate('param')` on `/:id/build` (replacing the no-op) and keep `signing-boundary.spec.js` green
-- [ ] T011 [US2] Gate tests for every table outcome (blocked country, allowed, null country, platform override, US on every platform, invalid table keeps previous), in `src/middlewares/__tests__/powerup-gate.spec.js`
-- [ ] T012 [US2] `docs/openapi.yaml`: the availability route and the `X-Salmon-Platform` header; `AGENTS.md` contract `capability-availability`
+- [x] T009 [US2] `GET /availability` in `src/routes/solana/solana-powerups-router.js` (declared before `/:id/build`), `Cache-Control: no-store`, controller `availability` in `src/controllers/solana/solana-powerups-controller.js`, resource `src/resources/solana/solana-powerup-availability-resource.js`; spec per `contracts/availability.md`
+- [x] T010 [US2] Mount `powerupGate('param')` on `/:id/build` (replacing the no-op) and keep `signing-boundary.spec.js` green
+- [x] T011 [US2] Gate tests for every table outcome (blocked country, allowed, null country, platform override, US on every platform, invalid table keeps previous), in `src/middlewares/__tests__/powerup-gate.spec.js`
+- [x] T012 [US2] `docs/openapi.yaml`: the availability route and the `X-Salmon-Platform` header; `AGENTS.md` contract `capability-availability`
 
 ## Phase 4: User Story 3 — screening (P1)
 

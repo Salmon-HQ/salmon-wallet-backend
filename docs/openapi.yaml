@@ -744,6 +744,121 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /v1/solana-{env}/powerups/availability:
+    get:
+      tags: [solana]
+      operationId: getSolanaPowerupAvailability
+      summary: What this caller may use on the network
+      description: |
+        `capability-availability` contract. One entry per registered Powerup
+        on the network plus the `swap` capability, decided per request from
+        the caller's country (the source address API Gateway attaches, never
+        a header) and the `X-Salmon-Platform` header. Informs only: the build
+        route is what refuses. Never cached (`Cache-Control: no-store`).
+        A country that cannot be resolved gets the default provider.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - $ref: '#/components/parameters/SalmonPlatform'
+      responses:
+        '200':
+          description: Availability per capability
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CapabilityAvailability'
+                required: [data]
+        '400':
+          $ref: '#/components/responses/InvalidNetwork'
+        '503':
+          description: '`network_catalog_unavailable` — the stage catalog failed to load'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/solana-{env}/powerups/{id}/build:
+    get:
+      tags: [solana]
+      operationId: buildSolanaPowerupTransaction
+      summary: Build an unsigned Powerup transaction
+      description: |
+        `community-powerups` contract. Returns an UNSIGNED v0 transaction
+        (caller = fee payer, zero signatures) for a registered
+        transaction-building Powerup; the backend never receives a signed
+        transaction and no execute/broadcast route exists. Passes the
+        availability gate first: a caller in a country where the capability
+        is not offered on their platform gets 403 `region_restricted` before
+        any provider is called.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - $ref: '#/components/parameters/SalmonPlatform'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Powerup id from the registry
+        - name: publicKey
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Caller's public key (fee payer and only signer)
+      responses:
+        '200':
+          description: Unsigned Powerup build envelope (`provider`, `transaction`, `expiresAt`, fee lines, contributor, display fields)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: '`missing_parameter` / `invalid_parameter`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: '`region_restricted` — not offered in the caller''s country on this platform'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: '`not_found` — unknown, disabled or undeclared-network Powerup'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`simulation_failed`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: '`provider_program_mismatch` / `provider_signer_mismatch`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: '`simulation_unavailable` or a resilience 503'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   # ──────────────────────── bitcoin ───────────────────────
   /v1/bitcoin-{env}/account/{address}/transactions:
     get:
@@ -924,6 +1039,16 @@ components:
       description: |
         Bitcoin network environment (`bitcoin-mainnet`, `bitcoin-testnet`).
         An unknown combination responds 400 `bad_request`.
+    SalmonPlatform:
+      name: X-Salmon-Platform
+      in: header
+      required: false
+      schema:
+        type: string
+        enum: [ios, android, extension]
+      description: |
+        The platform the app runs on. Missing or unknown values are
+        evaluated as `ios`, the most restrictive platform.
     MintAddress:
       name: mintAddress
       in: path
@@ -959,7 +1084,7 @@ components:
         `burn_not_supported`, `burn_transaction_too_large`,
         `burn_transaction`, `transfer_not_supported`,
         `transfer_transaction_too_large`, `transfer_transaction`,
-        `server_error`.
+        `region_restricted`, `server_error`.
       properties:
         error:
           type: string
@@ -969,6 +1094,26 @@ components:
           type: string
           description: Human-readable message
       required: [error, error_description]
+
+    CapabilityAvailability:
+      type: object
+      description: |
+        One capability as seen by this caller. `reason` only when
+        `enabled: false`; `provider` only when `enabled: true` and the
+        capability routes through one.
+      properties:
+        id:
+          type: string
+          example: swap
+        enabled:
+          type: boolean
+        reason:
+          type: string
+          enum: [region, maintenance, deprecated]
+        provider:
+          type: string
+          enum: [jupiter, '0x']
+      required: [id, enabled]
 
     HealthInfo:
       type: object
