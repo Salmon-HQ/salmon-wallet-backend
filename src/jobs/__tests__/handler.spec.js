@@ -11,6 +11,10 @@ jest.mock('../../repositories/shared/coingecko-repository', () => ({
   saveTokensPrices: jest.fn(),
 }));
 
+jest.mock('../../repositories/shared/sanctions-repository', () => ({
+  replaceLocalList: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock('../../repositories/data-source', () => ({
   redis: {
     quit: jest.fn().mockResolvedValue(undefined),
@@ -18,8 +22,13 @@ jest.mock('../../repositories/data-source', () => ({
 }));
 
 const http = require('axios');
+const fs = require('fs');
+const path = require('path');
 const repository = require('../../repositories/shared/coingecko-repository');
+const sanctionsRepository = require('../../repositories/shared/sanctions-repository');
 const handler = require('../handler');
+
+const SDN_FIXTURE = fs.readFileSync(path.join(__dirname, 'fixtures/sdn-sample.csv'), 'utf8');
 
 describe('jobs/handler', () => {
   beforeEach(() => {
@@ -137,6 +146,52 @@ describe('jobs/handler', () => {
     expect(response).toEqual({
       statusCode: 200,
       body: JSON.stringify({ message: 'Prices refresh job completed!' }),
+    });
+  });
+
+  describe('refreshSanctionsJob', () => {
+    let error;
+    beforeEach(() => {
+      error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterEach(() => error.mockRestore());
+
+    it('extracts every digital-currency address from the SDN CSV, any chain, and replaces the set', async () => {
+      http.get.mockResolvedValue({ data: SDN_FIXTURE });
+
+      const result = await handler.refreshSanctionsJob();
+
+      expect(http.get).toHaveBeenCalledWith(
+        'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV',
+        expect.objectContaining({ responseType: 'text', maxRedirects: 5 })
+      );
+      const [addresses] = sanctionsRepository.replaceLocalList.mock.calls[0];
+      expect(addresses).toContain('42RLPACwZPx3vYYmxSueqsogfynBDqXK298EDsNoyoHi'); // SOL
+      expect(addresses).toContain('37fKFZQGMqdBkjSUub1jCDWGgSHwv9VxfZ'); // XBT
+      expect(addresses).toContain('TNiq9AXBp9EjUqhDhrwrfvAA8U3GUQZH81'); // TRX
+      expect(new Set(addresses).size).toBe(addresses.length);
+      expect(addresses.length).toBeGreaterThan(10);
+      expect(JSON.parse(result.body).message).toMatch(/completed: \d+ addresses/);
+    });
+
+    it('keeps the live set when the download parses to zero addresses', async () => {
+      http.get.mockResolvedValue({ data: 'ent_num,name\n1,"nobody"\n' });
+
+      const result = await handler.refreshSanctionsJob();
+
+      expect(sanctionsRepository.replaceLocalList).not.toHaveBeenCalled();
+      expect(JSON.parse(result.body).message).toMatch(/failed/);
+      expect(error).toHaveBeenCalledWith(
+        '[SANCTIONS_REFRESH]',
+        expect.objectContaining({ outcome: 'failed' })
+      );
+    });
+
+    it('keeps the live set when the download fails', async () => {
+      http.get.mockRejectedValue(new Error('ETIMEDOUT'));
+      const result = await handler.refreshSanctionsJob();
+      expect(sanctionsRepository.replaceLocalList).not.toHaveBeenCalled();
+      expect(JSON.parse(result.body).message).toMatch(/failed: ETIMEDOUT/);
     });
   });
 });

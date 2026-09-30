@@ -12,7 +12,16 @@ describe('profiles', () => {
   });
 
   it('lists every provider with a complete row', () => {
-    expect(PROVIDER_NAMES).toEqual(['coingecko', 'helius', 'triton', 'blockdaemon', 'dapp']);
+    expect(PROVIDER_NAMES).toEqual([
+      'coingecko',
+      'helius',
+      'triton',
+      'blockdaemon',
+      'dapp',
+      'trm',
+      'jupiter',
+      'zeroex',
+    ]);
     for (const name of PROVIDER_NAMES) {
       expect(getProfile(name)).toMatchObject({
         name,

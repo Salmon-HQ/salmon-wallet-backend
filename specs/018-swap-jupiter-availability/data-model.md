@@ -44,7 +44,7 @@
 - `sanctions:addresses` — set of strings, every `Digital Currency Address - *` value from the SDN CSV, any symbol, verbatim (the local fallback).
 - `sanctions:fetched_at` — ISO timestamp of the last successful refresh.
 - Refresh: download (follow redirects) → parse → `SADD` into `sanctions:addresses:next` → `RENAME` over the live key → set `fetched_at`. Zero addresses parsed = failure, live set untouched.
-- Check order on a row that requires screening: cache → TRM (bounded, `providerCall` profile `trm`) → local set; TRM unreachable and set missing → 503. `fetched_at` older than 48 h → error log.
+- Check order on a row that requires screening: local set (authoritative) → TRM cache → TRM (bounded, `providerCall` profile `trm`); listed by either → refused; set unreadable and TRM unreachable → 503. `fetched_at` older than 48 h → `[SANCTIONS_STALE]` error log.
 
 ## Provider profiles (`profiles.js`)
 

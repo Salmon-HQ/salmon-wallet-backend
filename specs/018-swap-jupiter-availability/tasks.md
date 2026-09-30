@@ -31,11 +31,11 @@
 
 ## Phase 4: User Story 3 — screening (P1)
 
-- [ ] T013 [P] [US3] `src/repositories/shared/sanctions-repository.js` + spec: TRM cache get/set (24 h), local set membership, atomic replace (`:next` + `RENAME`), `fetched_at`
-- [ ] T014 [P] [US3] `src/infrastructure/providers/profiles.js`: `trm` row (1 rps default, `TRM_MAX_RPS`, 5 s, no retry); `jupiter` (10 rps) and `zeroex` (5 rps) rows for later phases
-- [ ] T015 [US3] `src/services/shared/sanctions-service.js` + spec: `isListed(address)` = cache → TRM via `providerCall('trm')` (header `TRM-API-Key` when set) → local set; both unavailable → `SanctionsUnavailableError` (503 `upstream_unavailable`); staleness > 48 h logs `[SANCTIONS_STALE]`
-- [ ] T016 [US3] `refreshSanctionsJob` in `src/jobs/handler.js` + spec with a recorded CSV fixture: follow redirects, extract every `Digital Currency Address - <SYMBOL> <address>`, zero addresses = failure; schedule `rate(1 day)` in `serverless.yml`
-- [ ] T017 [US3] Gate: on rows whose provider is in `SCREENED_BY_SALMON` (Jupiter), call `isListed` → `403 wallet_restricted`; 0x rows skip; spec cases in `powerup-gate.spec.js`
+- [x] T013 [P] [US3] `src/repositories/shared/sanctions-repository.js` + spec: TRM cache get/set (24 h), local set membership, atomic replace (`:next` + `RENAME`), `fetched_at`
+- [x] T014 [P] [US3] `src/infrastructure/providers/profiles.js`: `trm` row (1 rps default, `TRM_MAX_RPS`, 5 s, no retry); `jupiter` (10 rps) and `zeroex` (5 rps) rows for later phases
+- [x] T015 [US3] `src/services/shared/sanctions-service.js` + spec: `isListed(address)` = cache → TRM via `providerCall('trm')` (header `TRM-API-Key` when set) → local set; both unavailable → `SanctionsUnavailableError` (503 `upstream_unavailable`); staleness > 48 h logs `[SANCTIONS_STALE]`
+- [x] T016 [US3] `refreshSanctionsJob` in `src/jobs/handler.js` + spec with a recorded CSV fixture: follow redirects, extract every `Digital Currency Address - <SYMBOL> <address>`, zero addresses = failure; schedule `rate(1 day)` in `serverless.yml`
+- [x] T017 [US3] Gate: on rows whose provider is in `SCREENED_BY_SALMON` (Jupiter), call `isListed` → `403 wallet_restricted`; 0x rows skip; spec cases in `powerup-gate.spec.js`
 
 ## Phase 5: User Story 1 — the swap build, 0x behind the gate first (P1)
 

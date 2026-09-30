@@ -7,13 +7,18 @@ jest.mock('../../availability/availability-table', () => ({
 }));
 jest.mock('../../services/solana/powerups/powerup-catalog-service', () => ({ listFor: jest.fn() }));
 jest.mock('../../services/shared/network-capabilities-service', () => ({ getPowerups: jest.fn() }));
+jest.mock('../../services/shared/sanctions-service', () => ({ isListed: jest.fn() }));
 
 const powerupGate = require('../powerup-gate');
 const { countryOfRequest } = require('../../availability/country-resolver');
 const { loadTable, DEFAULT_TABLE } = require('../../availability/availability-table');
+const { isListed } = require('../../services/shared/sanctions-service');
 
-const req = (platform, id = 'swap') => ({
+const WALLET = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
+
+const req = (platform, id = 'swap', query = { publicKey: WALLET }) => ({
   params: { id },
+  query,
   headers: platform ? { 'x-salmon-platform': platform } : {},
 });
 const createRes = () => ({
@@ -36,6 +41,7 @@ describe('powerup-gate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     info = jest.spyOn(console, 'info').mockImplementation(() => {});
+    isListed.mockResolvedValue(false);
   });
 
   afterEach(() => info.mockRestore());
@@ -108,7 +114,7 @@ describe('powerup-gate', () => {
 
   it('logs the decision without the address', async () => {
     countryOfRequest.mockReturnValue('BR');
-    await run(DEFAULT_TABLE, { ...req('android'), query: { publicKey: 'WALLET' } });
+    await run(DEFAULT_TABLE, req('android'));
     expect(info).toHaveBeenCalledWith('[POWERUP_GATE]', {
       capability: 'swap',
       platform: 'android',
@@ -116,6 +122,54 @@ describe('powerup-gate', () => {
       enabled: true,
       provider: 'jupiter',
     });
-    expect(JSON.stringify(info.mock.calls)).not.toContain('WALLET');
+    expect(JSON.stringify(info.mock.calls)).not.toContain(WALLET);
+  });
+
+  describe('sanctions screening', () => {
+    it('screens the wallet on a Jupiter row and refuses a listed one with 403 wallet_restricted', async () => {
+      countryOfRequest.mockReturnValue('AR');
+      isListed.mockResolvedValue(true);
+      const { res, next } = await run(DEFAULT_TABLE, req('android'));
+      expect(isListed).toHaveBeenCalledWith(WALLET, { locals: res.locals });
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'wallet_restricted' })
+      );
+      expect(next).not.toHaveBeenCalled();
+      expect(JSON.stringify(info.mock.calls)).not.toContain(WALLET);
+    });
+
+    it('does not screen on a 0x row', async () => {
+      countryOfRequest.mockReturnValue('SG');
+      const { next } = await run(DEFAULT_TABLE, req('android'));
+      expect(isListed).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('does not screen a blocked country (no provider call at all)', async () => {
+      countryOfRequest.mockReturnValue('US');
+      await run(DEFAULT_TABLE, req('android'));
+      expect(isListed).not.toHaveBeenCalled();
+    });
+
+    it('leaves a missing or malformed publicKey to the controller', async () => {
+      countryOfRequest.mockReturnValue('AR');
+      const { next } = await run(DEFAULT_TABLE, req('android', 'swap', { publicKey: 'nope!' }));
+      expect(isListed).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('lets a screening outage surface as the service error (503)', async () => {
+      countryOfRequest.mockReturnValue('AR');
+      const outage = Object.assign(new Error('down'), {
+        statusCode: 503,
+        errorCode: 'upstream_unavailable',
+      });
+      isListed.mockRejectedValue(outage);
+      loadTable.mockResolvedValue(DEFAULT_TABLE);
+      await expect(powerupGate('swap')(req('android'), createRes(), jest.fn())).rejects.toBe(
+        outage
+      );
+    });
   });
 });

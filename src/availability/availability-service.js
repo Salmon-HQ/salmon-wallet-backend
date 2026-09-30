@@ -11,6 +11,9 @@ const catalog = require('../services/solana/powerups/powerup-catalog-service');
 const networkCapabilitiesService = require('../services/shared/network-capabilities-service');
 const { rowsFor } = require('./availability-table');
 
+/** Providers that do not screen wallets themselves, so Salmon screens (Jupiter §7.3/§7.4). */
+const SCREENED_BY_SALMON = ['jupiter'];
+
 /** Capabilities that live outside the Powerup registry but sit in the table. */
 const SWAP = { id: 'swap', networks: ['solana-mainnet'] };
 
@@ -55,4 +58,4 @@ const listFor = (table, networkId, platform, country) => {
   return entries;
 };
 
-module.exports = { decide, listFor, SWAP };
+module.exports = { decide, listFor, SWAP, SCREENED_BY_SALMON };

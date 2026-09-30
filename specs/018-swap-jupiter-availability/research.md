@@ -93,40 +93,39 @@ header cannot open a country that is blocked on every platform; "most
 restrictive by default" means an old client that never sends the header
 gets the iOS answer, which is the safe one.
 
-## R6 — Sanctions screening: two layers
+## R6 — Sanctions screening: two layers, the Treasury copy authoritative
 
 **Decision**: on rows whose provider does not screen (Jupiter), the gate
-asks **TRM Labs' free sanctions screening API**
-(`POST https://api.trmlabs.com/public/v1/sanctions/screening`, header
-`TRM-API-Key` when configured) for the wallet address, caches the answer
-per address in Redis for 24 h, and falls back to a **daily copy of the US
-Treasury SDN list** held in Redis when TRM does not answer. With neither
-available, 503 `upstream_unavailable` on those rows: screening is never
-skipped silently. Refusals render as `403 wallet_restricted`.
+checks the wallet address against a **daily copy of the US Treasury SDN
+list** held in Redis (exact match, every `Digital Currency Address - *`
+value, any chain) and, in addition, asks **TRM Labs' free sanctions
+screening API** (`POST https://api.trmlabs.com/public/v1/sanctions/screening`,
+header `TRM-API-Key` when configured), caching TRM's answer per address for
+24 h. Either layer listing the address refuses with `403 wallet_restricted`.
+With neither layer able to answer, 503 `upstream_unavailable`: screening
+is never skipped silently. The local copy alone is enough to answer; TRM
+alone answers too, with `[SANCTIONS_LOCAL_MISSING]` logged as an ops error.
 
 **Verified 2026-09-30**:
 
-- TRM answers without a key: two addresses in one call → `isSanctioned:
-true` for a known listed Bitcoin address, `false` for the test wallet;
-  response headers `x-ratelimit-limit: 60` per minute. The documentation
-  describes a free API key that raises the limit to 100,000 requests per
-  day (DEV-76 asks for it, `TRM_API_KEY` in SSM).
-- The Treasury's list service serves the SDN CSV by code after one
-  redirect to a signed S3 URL:
+- The Treasury's list service serves the SDN CSV after one redirect to a
+  signed S3 URL:
   `https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV`
   (5.7 MB; 513 `Digital Currency Address - <SYMBOL> <address>` entries,
-  2 with symbol `SOL`). The job follows redirects and extracts every
-  symbol, not only `SOL`, since a listed person may use any chain.
+  2 with symbol `SOL`).
+- TRM's free endpoint answers without a key (`x-ratelimit-limit: 60` per
+  minute) but returned `isSanctioned: false` for **both** Solana addresses
+  and for two Bitcoin addresses that are on the SDN CSV of the same day.
+  It rejects a `chain` field. So it cannot be the primary layer: it adds
+  coverage when it flags something, and proves nothing when it does not.
 
-**Rationale**: an on-demand provider covers more lists than the Treasury's
-and updates instantly, which is what "prevailing best market practice" in
-Jupiter's §7.3 points at; the local copy keeps the hot path alive when the
-provider is down. Both cost nothing.
+**Rationale**: the Treasury list is the source the Jupiter terms point at
+and the one the wallet can hold verbatim; TRM adds whatever its free tier
+covers at no cost. Both cost nothing.
 
-**Open — UNVERIFIED**: which lists TRM's free API covers beyond OFAC, and
-whether its terms allow commercial use without a paid plan (DEV-76). If
-they do not, the local copy becomes the only layer and the spec's
-"exact-match against the Treasury list" is what ships.
+**Open — UNVERIFIED**: which lists TRM's free API covers and whether its
+terms allow commercial use without a paid plan (DEV-76). If they do not,
+the local copy is the only layer and nothing else changes.
 
 **Alternatives considered**: Chainalysis free screening API (needs a key,
 not probed); Elliptic (paid); a community feed on GitHub (adds a third
