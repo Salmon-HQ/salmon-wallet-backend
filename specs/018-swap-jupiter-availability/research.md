@@ -93,29 +93,44 @@ header cannot open a country that is blocked on every platform; "most
 restrictive by default" means an old client that never sends the header
 gets the iOS answer, which is the safe one.
 
-## R6 — Sanctions copy
+## R6 — Sanctions screening: two layers
 
-**Decision**: a daily scheduled Lambda (`refreshSanctionsJob`, same shape
-as `listTokensJob`) downloads the OFAC SDN list, extracts every value
-introduced by `Digital Currency Address - <SYMBOL>` regardless of symbol,
-and replaces a Redis set atomically (write to a new key, rename), storing
-the fetch time beside it. `sanctions-service.isListed(address)` is a set
-membership check; the gate calls it only on rows whose provider does not
-screen (Jupiter). Staleness over 48 h logs an error; an empty copy answers
-503 `upstream_unavailable` on those rows.
+**Decision**: on rows whose provider does not screen (Jupiter), the gate
+asks **TRM Labs' free sanctions screening API**
+(`POST https://api.trmlabs.com/public/v1/sanctions/screening`, header
+`TRM-API-Key` when configured) for the wallet address, caches the answer
+per address in Redis for 24 h, and falls back to a **daily copy of the US
+Treasury SDN list** held in Redis when TRM does not answer. With neither
+available, 503 `upstream_unavailable` on those rows: screening is never
+skipped silently. Refusals render as `403 wallet_restricted`.
 
-**Source and format — UNVERIFIED on 2026-09-30**: the OFAC site refused
-automated reads. Public documentation of the format (e.g. the
-`0xB10C/ofac-sanctioned-digital-currency-addresses` extractor) describes
-the fields as `Digital Currency Address - XBT|ETH|…|SOL <address>` inside
-the SDN entries, available as `sdn.csv` (remarks column) and
-`sdn_advanced.xml` (feature type). The job must be written against the
-real file and the URL confirmed by hand; `SANCTIONS_SOURCE_URL` is
-configuration so a moved file is a config change.
+**Verified 2026-09-30**:
 
-**Alternatives considered**: a paid screening provider (TRM, Chainalysis,
-Elliptic, CipherOwl): out of scope unless counsel asks; a community feed
-on GitHub (adds a third party between Salmon and the Treasury; rejected).
+- TRM answers without a key: two addresses in one call → `isSanctioned:
+true` for a known listed Bitcoin address, `false` for the test wallet;
+  response headers `x-ratelimit-limit: 60` per minute. The documentation
+  describes a free API key that raises the limit to 100,000 requests per
+  day (DEV-76 asks for it, `TRM_API_KEY` in SSM).
+- The Treasury's list service serves the SDN CSV by code after one
+  redirect to a signed S3 URL:
+  `https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV`
+  (5.7 MB; 513 `Digital Currency Address - <SYMBOL> <address>` entries,
+  2 with symbol `SOL`). The job follows redirects and extracts every
+  symbol, not only `SOL`, since a listed person may use any chain.
+
+**Rationale**: an on-demand provider covers more lists than the Treasury's
+and updates instantly, which is what "prevailing best market practice" in
+Jupiter's §7.3 points at; the local copy keeps the hot path alive when the
+provider is down. Both cost nothing.
+
+**Open — UNVERIFIED**: which lists TRM's free API covers beyond OFAC, and
+whether its terms allow commercial use without a paid plan (DEV-76). If
+they do not, the local copy becomes the only layer and the spec's
+"exact-match against the Treasury list" is what ships.
+
+**Alternatives considered**: Chainalysis free screening API (needs a key,
+not probed); Elliptic (paid); a community feed on GitHub (adds a third
+party between Salmon and the Treasury, rejected as a source).
 
 ## R7 — Jupiter adapter and fee mapping
 

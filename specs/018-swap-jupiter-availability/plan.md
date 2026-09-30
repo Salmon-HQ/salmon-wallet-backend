@@ -15,8 +15,9 @@ every build route that refuses with `403 region_restricted` before any
 provider is called. The swap build route from spec 012 comes back behind
 that gate with a provider chosen by the table row: a new Jupiter Router
 adapter by default, the existing 0x adapter where Jupiter's terms do not
-allow it. Jupiter rows are screened against Salmon's own daily copy of the
-US Treasury sanctions list; 0x rows rely on 0x's screening. Nothing about
+allow it. Jupiter rows are screened through TRM Labs' free screening API with a
+daily copy of the US Treasury sanctions list as fallback; 0x rows rely on
+0x's screening. Nothing about
 signing changes: the transaction leaves unsigned, the device signs and
 broadcasts.
 
@@ -85,7 +86,7 @@ src/routes/solana/solana-ft-router.js         # + GET /swap/build behind powerup
 src/controllers/solana/solana-powerups-controller.js  # + availability(req, res)
 src/resources/solana/solana-powerup-availability-resource.js
 
-src/services/shared/sanctions-service.js      # isListed(address); staleness; 503 when empty
+src/services/shared/sanctions-service.js      # isListed(address): 24 h cache → TRM (providerCall 'trm') → local SDN copy; 503 when neither answers
 src/repositories/shared/sanctions-repository.js
 src/jobs/handler.js                           # + refreshSanctionsJob (daily): download, extract Digital Currency Address values, replace the set atomically
 serverless.yml                                # + refreshSanctionsJob schedule; iamRoleStatements for ssm:GetParameter on /salmon-api/${stage}/AVAILABILITY_TABLE
@@ -97,7 +98,7 @@ src/services/solana/swap/                      # from feat/powerup-swap, unchang
 ├── unsigned-transaction-builder.js           # unchanged
 └── __tests__/                                # + jupiter fixtures; gate tests; screening tests
 src/infrastructure/providers/profiles.js      # + jupiter (10 rps), zeroex (5 rps)
-config/env.prod.yml, config/env.local.yml, .env.example   # + JUPITER_*, ZEROEX_*, SWAP_*, SANCTIONS_SOURCE_URL
+config/env.prod.yml, config/env.local.yml, .env.example   # + JUPITER_*, ZEROEX_*, SWAP_*, TRM_API_KEY, TRM_MAX_RPS, SANCTIONS_SOURCE_URL
 docs/openapi.yaml, AGENTS.md, CHANGELOG.md, NOTICE (DB-IP attribution)
 
 Frontend (salmon-wallet-frontend, spec 027; its own branch feat/powerup-swap):
@@ -117,7 +118,7 @@ because it is a property of a wallet address, not of Solana.
 - **Phase 1 — design**: done, `data-model.md`, `contracts/`, `quickstart.md`.
 - **Phase 2 — tasks** (`/speckit-tasks`), in this order:
   1. Geolocation: resolver, platform, table, service, gate, availability route, tests.
-  2. Sanctions copy: repository, service, daily job, tests.
+  2. Screening: TRM client, local SDN copy, repository, service, daily job, tests.
   3. Swap route back behind the gate with the 0x adapter from the old branch; provider selection from the row.
   4. Jupiter adapter, profile row, fixtures, fee mapping.
   5. Config, docs, changelog, nightly integration tests.

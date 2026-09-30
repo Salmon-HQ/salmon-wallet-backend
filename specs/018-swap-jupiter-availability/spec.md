@@ -72,12 +72,12 @@ Jupiter's terms shape two requirements of this spec:
    Sudan, Yemen, Zimbabwe), several of which sit under partial US sanctions
    programmes — counsel confirms that list before it goes live; **Jupiter**
    everywhere else.
-4. **Wallet screening.** On a Jupiter row, Salmon screens with its own copy
-   of the public sanctions list of the US Treasury (its
-   digital-currency-address entries cover Solana), refreshed daily, exact
-   match. On a 0x row, 0x screens and Salmon renders its refusal as
-   `wallet_restricted`. A paid screening provider only if counsel asks for
-   one.
+4. **Wallet screening.** On a Jupiter row, Salmon screens the wallet
+   address through TRM Labs' free screening service (answer cached per
+   address for a day), with its own daily copy of the public sanctions list
+   of the US Treasury as fallback when TRM does not answer. On a 0x row, 0x
+   screens and Salmon renders its refusal as `wallet_restricted`. A paid
+   screening plan only if counsel asks for one.
 5. **Salmon fee: 50 bps** (decision of 2026-09-14, confirmed 2026-09-30),
    passed to the provider as Salmon's fee and delivered into a fee account
    Salmon controls (the multisig confirmed in DEV-54), shown on the

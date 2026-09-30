@@ -38,19 +38,21 @@
 - `country: null` (unresolvable address) → `enabled: true` with the default provider (fail open, logged).
 - Never persisted; logged as `{ capability, platform, country, enabled, provider }` without the wallet address.
 
-## Sanctions copy (Redis)
+## Sanctions screening (Redis)
 
-- `sanctions:addresses` — set of strings, every `Digital Currency Address - *` value from the SDN list, any symbol, verbatim.
+- `sanctions:trm:<address>` — cached TRM answer `{ isSanctioned, checkedAt }`, TTL 24 h.
+- `sanctions:addresses` — set of strings, every `Digital Currency Address - *` value from the SDN CSV, any symbol, verbatim (the local fallback).
 - `sanctions:fetched_at` — ISO timestamp of the last successful refresh.
-- Refresh: download → parse → `SADD` into `sanctions:addresses:next` → `RENAME` over the live key → set `fetched_at`. A parse that yields zero addresses is treated as a failure and leaves the live set alone.
-- Read: `SISMEMBER sanctions:addresses <publicKey>`; `fetched_at` older than 48 h → error log; key missing → 503 on rows that require screening.
+- Refresh: download (follow redirects) → parse → `SADD` into `sanctions:addresses:next` → `RENAME` over the live key → set `fetched_at`. Zero addresses parsed = failure, live set untouched.
+- Check order on a row that requires screening: cache → TRM (bounded, `providerCall` profile `trm`) → local set; TRM unreachable and set missing → 503. `fetched_at` older than 48 h → error log.
 
 ## Provider profiles (`profiles.js`)
 
-| name    | rps                    | burst | timeout | retry                                   | breaker |
-| ------- | ---------------------- | ----- | ------- | --------------------------------------- | ------- |
-| jupiter | 10 (`JUPITER_MAX_RPS`) | 10    | 10 s    | 429/5xx, honour Retry-After, 3 attempts | default |
-| zeroex  | 5 (`ZEROEX_MAX_RPS`)   | 5     | 10 s    | same                                    | default |
+| name    | rps                                   | burst | timeout | retry                                   | breaker |
+| ------- | ------------------------------------- | ----- | ------- | --------------------------------------- | ------- |
+| jupiter | 10 (`JUPITER_MAX_RPS`)                | 10    | 10 s    | 429/5xx, honour Retry-After, 3 attempts | default |
+| zeroex  | 5 (`ZEROEX_MAX_RPS`)                  | 5     | 10 s    | same                                    | default |
+| trm     | 1 (`TRM_MAX_RPS`; 60/min without key) | 5     | 5 s     | none (fallback to the local copy)       | default |
 
 ## Swap build response (`SwapBuild`, unchanged from spec 012 except values)
 
