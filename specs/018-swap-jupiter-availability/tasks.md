@@ -59,10 +59,10 @@
 
 ## Frontend (salmon-wallet-frontend, branch `feat/powerup-swap`, spec 027)
 
-- [ ] F001 `X-Salmon-Platform` in `packages/shared/src/api/client.ts` from the build's platform + test
-- [ ] F002 `useNetworkPowerups` reads `/powerups/availability` (uncached) and exposes `provider`; `/v1/networks.powerups` no longer read; tests
-- [ ] F003 Swap screens mounted in mobile and extension per spec 027, attribution and fee lines from data; `region` / `wallet` unavailable states on the shared surface; i18n en/es; DOM parity
-- [ ] F004 iOS build keeps the flag as the emergency switch only; all three builds ship with swap on
+- [x] F001 `X-Salmon-Platform` in `packages/shared/src/api/client.ts` from the build's platform + test
+- [x] F002 `useNetworkPowerups` reads `/powerups/availability` (uncached) and exposes `provider`; `/v1/networks.powerups` no longer read; tests
+- [x] F003 Swap screens mounted in mobile and extension per spec 027, attribution and fee lines from data; `region` / `wallet` unavailable states on the shared surface; i18n en/es; DOM parity
+- [x] F004 iOS build keeps the flag as the emergency switch only; all three builds ship with swap on — frontend branch `feat/powerup-swap` (commit 941e73fa): `EXPO_PUBLIC_POWERUPS=on` on the production EAS profile and `VITE_POWERUPS=on` on the extension's production env; the Spanish copy under `powerups/swap/locales/es.json` is a draft for the owner's review
 
 ## Dependencies
 
