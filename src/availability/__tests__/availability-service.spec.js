@@ -8,7 +8,6 @@ jest.mock('../../services/shared/network-capabilities-service', () => ({
 }));
 
 const catalog = require('../../services/solana/powerups/powerup-catalog-service');
-const capabilities = require('../../services/shared/network-capabilities-service');
 const { DEFAULT_TABLE } = require('../availability-table');
 const { decide, listFor } = require('../availability-service');
 
@@ -67,19 +66,17 @@ describe('availability-service', () => {
       catalog.listFor.mockReturnValue([
         { id: 'payments', enabled: true },
         { id: 'memo', enabled: false, reason: 'maintenance' },
+        { id: 'swap', enabled: true },
       ]);
-      capabilities.getPowerups.mockReturnValue({
-        payments: { enabled: true },
-        swap: { enabled: true },
-      });
     });
 
-    it('merges the per-viewer decision into the catalogue and appends swap', () => {
+    it('merges the per-viewer decision into every enabled catalogue entry', () => {
       expect(listFor(table(), 'solana-mainnet', 'android', 'AR')).toEqual([
         { id: 'payments', enabled: true },
         { id: 'memo', enabled: false, reason: 'maintenance' },
         { id: 'swap', enabled: true, provider: 'jupiter' },
       ]);
+      expect(catalog.listFor).toHaveBeenCalledWith('solana-mainnet');
     });
 
     it('marks swap unavailable by region for a blocked country', () => {
@@ -90,26 +87,11 @@ describe('availability-service', () => {
       });
     });
 
-    it('omits swap when the stage switch is off or the network is not mainnet', () => {
-      capabilities.getPowerups.mockReturnValue({ payments: { enabled: true } });
-      expect(listFor(table(), 'solana-mainnet', 'ios', 'AR').map((e) => e.id)).toEqual([
-        'payments',
-        'memo',
+    it('keeps the stage reason when the stage disables swap, without consulting the table', () => {
+      catalog.listFor.mockReturnValue([{ id: 'swap', enabled: false, reason: 'maintenance' }]);
+      expect(listFor(table(), 'solana-mainnet', 'ios', 'AR')).toEqual([
+        { id: 'swap', enabled: false, reason: 'maintenance' },
       ]);
-      capabilities.getPowerups.mockReturnValue({ swap: { enabled: true } });
-      expect(listFor(table(), 'solana-devnet', 'ios', 'AR').map((e) => e.id)).toEqual([
-        'payments',
-        'memo',
-      ]);
-    });
-
-    it('carries the stage reason when the stage disables swap', () => {
-      capabilities.getPowerups.mockReturnValue({ swap: { enabled: false, reason: 'maintenance' } });
-      expect(listFor(table(), 'solana-mainnet', 'ios', 'AR')).toContainEqual({
-        id: 'swap',
-        enabled: false,
-        reason: 'maintenance',
-      });
     });
   });
 });

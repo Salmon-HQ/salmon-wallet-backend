@@ -22,6 +22,14 @@ provider:
   # Per-stage values live in config/env.<stage>.yml (see custom.envFile below).
   # local -> plain env vars from .env (no AWS needed); prod -> SSM Parameter Store.
   environment: ${self:custom.envFile.provider}
+  # The availability table is the one parameter read at runtime (spec 018):
+  # a country change is an SSM edit, never a release.
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: ssm:GetParameter
+          Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/salmon-api/${sls:stage}/AVAILABILITY_TABLE
 
 functions:
   listTokensJob:

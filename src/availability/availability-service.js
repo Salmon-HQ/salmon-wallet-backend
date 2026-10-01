@@ -8,14 +8,10 @@
  */
 
 const catalog = require('../services/solana/powerups/powerup-catalog-service');
-const networkCapabilitiesService = require('../services/shared/network-capabilities-service');
 const { rowsFor } = require('./availability-table');
 
 /** Providers that do not screen wallets themselves, so Salmon screens (Jupiter §7.3/§7.4). */
 const SCREENED_BY_SALMON = ['jupiter'];
-
-/** Capabilities that live outside the Powerup registry but sit in the table. */
-const SWAP = { id: 'swap', networks: ['solana-mainnet'] };
 
 /**
  * @param {object} table - a validated availability table.
@@ -43,19 +39,13 @@ const decide = (table, capability, platform, country) => {
 
 /**
  * The catalogue's `[{ id, enabled, reason? }]` for `networkId` with this
- * caller's decision merged in, plus the swap capability when the stage
- * switch names it and the network carries it.
+ * caller's decision merged into every enabled entry.
  */
-const listFor = (table, networkId, platform, country) => {
-  const merge = (entry) =>
-    entry.enabled ? { id: entry.id, ...decide(table, entry.id, platform, country) } : entry;
-  const entries = catalog.listFor(networkId).map(merge);
-  const stage = networkCapabilitiesService.getPowerups() || {};
-  if (SWAP.networks.includes(networkId) && stage[SWAP.id]) {
-    const { enabled, reason } = stage[SWAP.id];
-    entries.push(enabled ? merge({ id: SWAP.id, enabled }) : { id: SWAP.id, enabled, reason });
-  }
-  return entries;
-};
+const listFor = (table, networkId, platform, country) =>
+  catalog
+    .listFor(networkId)
+    .map((entry) =>
+      entry.enabled ? { id: entry.id, ...decide(table, entry.id, platform, country) } : entry
+    );
 
-module.exports = { decide, listFor, SWAP, SCREENED_BY_SALMON };
+module.exports = { decide, listFor, SCREENED_BY_SALMON };

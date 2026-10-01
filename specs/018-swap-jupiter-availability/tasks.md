@@ -39,10 +39,10 @@
 
 ## Phase 5: User Story 1 — the swap build, 0x behind the gate first (P1)
 
-- [ ] T018 [US1] Bring `src/services/solana/swap/*` (build service, 0x adapter, unsigned builder, cleanup, errors, tests), `src/resources/solana/solana-swap-build-resource.js` + spec, the `build` controller in `src/controllers/solana/solana-ft-controller.js`, and the `SwapBuild` schema in `docs/openapi.yaml` from `origin/feat/powerup-swap` onto this branch (cherry-pick or copy; no history rewrite)
-- [ ] T019 [US1] Replace the branch's `zeroex-rate-limiter` with `providerCall('zeroex')`; `PROVIDER` constants move into `zeroex-swap-provider.js`; build service takes the adapter from `res.locals.availability.provider`
-- [ ] T020 [US1] `router.get('/swap/build', powerupGate('swap'), safe(controller.build))` in `src/routes/solana/solana-ft-router.js`; 400 on non-mainnet before any provider call; `signing-boundary.spec.js` green
-- [ ] T021 [US1] Fixture tests: build on a 0x row → unsigned v0, fee payer = caller, fee account referenced, `provider: '0x'`; `provider_fee_mismatch`; `no_route`; row without credential → 503
+- [x] T018 [US1] Bring `src/services/solana/swap/*` (build service, 0x adapter, unsigned builder, cleanup, errors, tests), `src/resources/solana/solana-swap-build-resource.js` + spec, the `build` controller in `src/controllers/solana/solana-ft-controller.js`, and the `SwapBuild` schema in `docs/openapi.yaml` from `origin/feat/powerup-swap` onto this branch (cherry-pick or copy; no history rewrite)
+- [x] T019 [US1] Replace the branch's `zeroex-rate-limiter` with `providerCall('zeroex')`; `PROVIDER` constants move into `zeroex-swap-provider.js`; build service takes the adapter from `res.locals.availability.provider`
+- [x] T020 [US1] `router.get('/swap/build', powerupGate('swap'), safe(controller.build))` in `src/routes/solana/solana-ft-router.js`; 400 on non-mainnet before any provider call; `signing-boundary.spec.js` green
+- [x] T021 [US1] Fixture tests: build on a 0x row → unsigned v0, fee payer = caller, fee account referenced, `provider: '0x'`; `provider_fee_mismatch`; `no_route`; row without credential → 503
 
 ## Phase 6: User Story 4 — Jupiter adapter (P1)
 
@@ -53,9 +53,9 @@
 
 ## Phase 7: Polish
 
-- [ ] T026 `CHANGELOG.md` (0.20.0), `AGENTS.md` (availability, screening, swap contracts), `docs/openapi.yaml` final pass, `README`/`.env.example`
-- [ ] T027 `npm run lint:check`, `format:check`, `test:unit`, hermetic integration; `scripts` smoke per `quickstart.md`
-- [ ] T028 Load `AVAILABILITY_TABLE` (initial document) and `TRM_API_KEY` (when DEV-76 delivers it) into SSM; `SANCTIONS_SOURCE_URL`
+- [x] T026 `CHANGELOG.md` (0.20.0), `AGENTS.md` (availability, screening, swap contracts), `docs/openapi.yaml` final pass, `README`/`.env.example`
+- [x] T027 `npm run lint:check`, `format:check`, `test:unit`, hermetic integration; `scripts` smoke per `quickstart.md`
+- [~] T028 Load `AVAILABILITY_TABLE` (initial document) and `TRM_API_KEY` (when DEV-76 delivers it) into SSM; `SANCTIONS_SOURCE_URL` — `AVAILABILITY_TABLE` loaded 2026-09-30; `TRM_API_KEY` waits for DEV-76
 
 ## Frontend (salmon-wallet-frontend, branch `feat/powerup-swap`, spec 027)
 

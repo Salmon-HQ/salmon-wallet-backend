@@ -254,6 +254,7 @@ const getPrices = async (tokensToUpdate) => {
 };
 
 const SDN_CSV_URL =
+  process.env.SANCTIONS_SOURCE_URL ||
   'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV';
 const DIGITAL_CURRENCY_ADDRESS = /Digital Currency Address - [A-Z0-9]+ ([A-Za-z0-9]+)/g;
 
