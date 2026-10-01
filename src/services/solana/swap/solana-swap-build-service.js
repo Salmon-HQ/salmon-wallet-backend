@@ -39,6 +39,7 @@ const {
   compileUnsigned,
 } = require('../powerups/unsigned-transaction-builder');
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
+const { PowerupSimulationError } = require('../powerups/powerup-errors');
 
 /** Adapters by the provider name the availability table uses. */
 const ADAPTERS = { [zeroex.PROVIDER.id]: zeroex, [jupiter.PROVIDER.id]: jupiter };
@@ -285,7 +286,14 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     instructions: quote.instructions,
     lookupTableAddresses: quote.lookupTableAddresses,
     cleanup,
+    // A quote the runtime rejects (slippage already exceeded, a stale pool)
+    // is refused here: the user must never sign bytes that are known to fail
+    // and pay the fee to watch them fail.
+    simulationFallback: false,
   });
+  if (built.simulation.err) {
+    throw new PowerupSimulationError(built.simulation);
+  }
 
   return {
     provider: adapter.PROVIDER,

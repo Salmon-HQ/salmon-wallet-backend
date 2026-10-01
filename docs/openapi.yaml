@@ -619,7 +619,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: '`token_not_supported` — unknown mint, Token-2022 with transfer fee/hook, or a token 0x will not trade'
+          description: '`token_not_supported` — unknown mint, Token-2022 with transfer fee/hook, or a token the provider will not trade; `simulation_failed` — the runtime rejected the quote (slippage already exceeded), so nothing is returned to sign'
           content:
             application/json:
               schema:

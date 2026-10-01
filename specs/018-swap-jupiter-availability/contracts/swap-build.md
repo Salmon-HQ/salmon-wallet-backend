@@ -2,7 +2,7 @@
 
 `GET /v1/solana-mainnet/ft/swap/build?inputMint&outputMint&publicKey&(amount|uiAmount)&slippageBps`
 
-Unchanged: the `SwapBuild` shape, the unsigned v0 transaction, the fee lines, error codes `missing_parameter`, `invalid_parameter`, `unknown_mint`, `token_not_supported`, `no_route`, `provider_fee_mismatch`, `swap_misconfigured`, `upstream_rate_limited`, `upstream_unavailable`, `request_budget_exhausted`.
+Unchanged: the `SwapBuild` shape, the unsigned v0 transaction, the fee lines, error codes `missing_parameter`, `invalid_parameter`, `unknown_mint`, `token_not_supported`, `no_route`, `provider_fee_mismatch`, `swap_misconfigured`, `upstream_rate_limited`, `upstream_unavailable`, `request_budget_exhausted`; plus `422 simulation_failed` / `503 simulation_unavailable` like every Powerup build — a quote the runtime rejects is refused, never returned for the user to sign.
 
 New, in this order before any provider call:
 

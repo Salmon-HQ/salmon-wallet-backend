@@ -371,18 +371,21 @@ describe('solana-swap-build-service', () => {
     });
   });
 
-  it('falls back to a fixed CU limit when the simulation fails, still returning the quote', async () => {
+  it('refuses a quote the runtime rejects with 422 simulation_failed, and 503 when the RPC could not simulate', async () => {
     zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction()]));
     mockConnection.simulateTransaction.mockResolvedValue({
-      value: { err: { InstructionError: [0, 'Custom'] }, unitsConsumed: 0, logs: [] },
+      value: { err: { InstructionError: [0, { Custom: 6001 }] }, unitsConsumed: 0, logs: [] },
     });
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    await expect(service.build(params(), locals)).rejects.toMatchObject({
+      statusCode: 422,
+      errorCode: 'simulation_failed',
+    });
 
-    const result = await service.build(params(), locals);
-
-    expect(result.computeUnitLimit).toBe(400000);
-    expect(result.transaction).toEqual(expect.any(String));
-    warn.mockRestore();
+    mockConnection.simulateTransaction.mockRejectedValue(new Error('ECONNRESET'));
+    await expect(service.build(params(), locals)).rejects.toMatchObject({
+      statusCode: 503,
+      errorCode: 'simulation_unavailable',
+    });
   });
 
   it('falls back to the minimum priority fee when the RPC read fails', async () => {
