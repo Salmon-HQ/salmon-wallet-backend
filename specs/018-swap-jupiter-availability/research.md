@@ -174,6 +174,22 @@ prepend and intermediate-account cleanup come from `feat/powerup-swap`
 unchanged. Profile row `zeroex` at 5 rps replaces the branch's ad-hoc
 `zeroex-rate-limiter`.
 
+**Response signatures (verified 2026-10-01)**: 0x signs any response on
+request (`Accept-Signature: sig=()`) with RFC 9421 HTTP Message Signatures,
+Ed25519, key `0x-signing-key-prod-24092026` published at
+https://docs.0x.org/docs/developer-resources/response-signatures; for a
+POST the request's `Content-Digest` is covered too, binding the quote to
+the order. The adapter verifies every answer (port of 0x's reference
+`verify.ts`, `node:crypto` only) and refuses anything else as 502
+`provider_bad_response`. Live: USDC→SOL and SOL→USDC builds verified. Jupiter
+offers nothing comparable.
+
+**Minimum amount (probed 2026-10-01)**: neither provider documents or
+enforces one. Jupiter built 0.000001 USDC → SOL; 0x built 0.001 USDC and
+refused 0.000001 USDC only through a failed simulation and 1000 lamports
+through `no_route`. The wallet therefore sets no floor of its own: a dust
+amount surfaces as the provider's own refusal.
+
 ## R9 — What the availability route returns and who reads it
 
 **Decision**: `GET /v1/solana-{env}/powerups/availability`, `Cache-Control:

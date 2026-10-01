@@ -7,6 +7,7 @@ jest.mock('../../../../infrastructure/providers/provider-client', () => ({
 // a mapped 4xx must reach the caller unretried — asserted via call counts below
 
 const http = require('axios');
+const { createHash, generateKeyPairSync, sign } = require('node:crypto');
 const { PublicKey } = require('@solana/web3.js');
 const { requestSwapInstructions, ZEROEX_NATIVE_SOL } = require('../zeroex-swap-provider');
 const { SolanaSwapNoRouteError } = require('../solana-swap-errors');
@@ -47,14 +48,139 @@ const zeroexResponse = () => ({
   zid: '0xabc',
 });
 
+// A stand-in for 0x's signing key: the adapter trusts whatever ZEROEX_SIGNING_KEYS names.
+const TEST_KEY_ID = '0x-signing-key-test';
+const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+process.env.ZEROEX_SIGNING_KEYS = JSON.stringify({
+  [TEST_KEY_ID]: publicKey.export({ format: 'jwk' }).x,
+});
+
+const digest = (data) => `sha-256=:${createHash('sha256').update(data).digest('base64')}:`;
+
+/**
+ * Answers like 0x does with `Accept-Signature`: raw JSON body, Content-Digest,
+ * and an RFC 9421 signature over status, body digest and the request's
+ * method, host, path, query and body digest.
+ */
+const signedResponse = (url, requestBody, config, payload, { keyId = TEST_KEY_ID, body } = {}) => {
+  const raw = body ?? JSON.stringify(payload);
+  const u = new URL(url);
+  // [identifier as it appears in Signature-Input, value]
+  const components = [
+    ['"@status"', '200'],
+    ['"content-type"', 'application/json'],
+    ['"content-digest"', digest(raw)],
+    ['"@method";req', 'POST'],
+    ['"@authority";req', u.host],
+    ['"@path";req', u.pathname],
+    ['"@query";req', u.search || '?'],
+    ['"content-digest";req', config.headers['content-digest']],
+  ];
+  const params = `(${components.map(([n]) => n).join(' ')});created=${Math.floor(Date.now() / 1000)};keyid="${keyId}";alg="ed25519";tag="0x-swap-api"`;
+  const lines = components.map(([n, v]) => `${n}: ${v}`);
+  lines.push(`"@signature-params": ${params}`);
+  const signature = sign(null, Buffer.from(lines.join('\n')), privateKey).toString('base64');
+  return {
+    status: 200,
+    headers: {
+      'content-type': 'application/json',
+      'content-digest': digest(raw),
+      'signature-input': `sig=${params}`,
+      signature: `sig=:${signature}:`,
+    },
+    data: raw,
+  };
+};
+
+/** The happy path: whatever the adapter sends, 0x answers it signed. */
+const answerSigned = (payload = zeroexResponse(), opts) =>
+  http.post.mockImplementation((url, body, config) =>
+    Promise.resolve(signedResponse(url, body, config, payload, opts))
+  );
+
 describe('zeroex-swap-provider', () => {
   beforeEach(() => {
     process.env.ZEROEX_API_KEY = 'test-key';
     http.post.mockReset();
   });
 
+  describe('response signature', () => {
+    const request = () =>
+      requestSwapInstructions({
+        inputMint: USDC,
+        outputMint: SOL,
+        amount: '1',
+        taker: TAKER,
+        slippageBps: 50,
+        fee: null,
+        reserveBytes: 0,
+      });
+
+    it('opts in to signing and binds the body with Content-Digest', async () => {
+      answerSigned();
+      await request();
+      const [, body, config] = http.post.mock.calls[0];
+      expect(config.headers['accept-signature']).toBe('sig=()');
+      expect(config.headers['content-digest']).toBe(digest(body));
+    });
+
+    it('refuses an unsigned response', async () => {
+      http.post.mockResolvedValue({
+        status: 200,
+        headers: {},
+        data: JSON.stringify(zeroexResponse()),
+      });
+      await expect(request()).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_bad_response',
+      });
+    });
+
+    it('refuses a body that was altered after signing', async () => {
+      http.post.mockImplementation((url, body, config) => {
+        const res = signedResponse(url, body, config, zeroexResponse());
+        res.data = res.data.replace('"amount_out":623000000', '"amount_out":999000000');
+        return Promise.resolve(res);
+      });
+      await expect(request()).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_bad_response',
+      });
+    });
+
+    it('refuses a signature from a key 0x did not publish', async () => {
+      answerSigned(zeroexResponse(), { keyId: 'someone-else' });
+      await expect(request()).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_bad_response',
+      });
+    });
+
+    it('refuses a signed answer to a different order', async () => {
+      http.post.mockImplementation((url, body, config) =>
+        Promise.resolve(
+          signedResponse(
+            url,
+            body,
+            {
+              headers: {
+                ...config.headers,
+                'content-digest': digest(body.replace('"amount_in":1,', '"amount_in":2,')),
+              },
+            },
+            zeroexResponse()
+          )
+        )
+      );
+      await expect(request()).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_bad_response',
+      });
+    });
+  });
+
   it('posts the snake_case body with the fee in ppm and decodes instructions', async () => {
-    http.post.mockResolvedValue({ data: zeroexResponse() });
+    answerSigned();
 
     const result = await requestSwapInstructions({
       inputMint: USDC,
@@ -68,7 +194,7 @@ describe('zeroex-swap-provider', () => {
 
     const [url, body, config] = http.post.mock.calls[0];
     expect(url).toMatch(/\/swap-instructions$/);
-    expect(body).toEqual({
+    expect(JSON.parse(body)).toEqual({
       token_in: USDC,
       token_out: ZEROEX_NATIVE_SOL, // SOL_ADDRESS (WSOL mint) → 0x native-SOL sentinel
       amount_in: 1000000,
@@ -96,7 +222,7 @@ describe('zeroex-swap-provider', () => {
   });
 
   it('omits every fee field when no fee is configured', async () => {
-    http.post.mockResolvedValue({ data: zeroexResponse() });
+    answerSigned();
 
     await requestSwapInstructions({
       inputMint: USDC,

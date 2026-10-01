@@ -17,6 +17,7 @@ const { PublicKey, TransactionInstruction } = require('@solana/web3.js');
 const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const { SOL_ADDRESS } = require('../../../constants/solana-constants');
 const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
+const { verifySignedResponse, contentDigest } = require('./zeroex-response-signature');
 
 const PROVIDER = { id: '0x', displayName: '0x', attribution: 'Powered by 0x' };
 /** Fee from either side; native SOL may pay the wallet itself (probed 2026-09-10). */
@@ -46,10 +47,27 @@ const DISABLED_SOURCES = (process.env.ZEROEX_DISABLED_SOURCES || '')
 /** The table may name 0x for a country only if the credential is there. */
 const isConfigured = () => Boolean(process.env.ZEROEX_API_KEY);
 
-const headers = () => ({
-  'Content-Type': 'application/json',
+/**
+ * Lower-cased so the same object serves the request and the signature base.
+ * `accept-signature` asks 0x to sign the response; `content-digest` binds
+ * the order in the body to that signature.
+ */
+const headers = (body) => ({
+  'content-type': 'application/json',
   '0x-api-key': process.env.ZEROEX_API_KEY || '',
+  'accept-signature': 'sig=()',
+  'content-digest': contentDigest(body),
 });
+
+/** 0x bodies arrive raw (the digest covers the bytes); errors are JSON too. */
+const parseBody = (raw) => {
+  if (typeof raw !== 'string') return raw;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { message: raw };
+  }
+};
 
 const toInstruction = (raw) =>
   new TransactionInstruction({
@@ -162,20 +180,26 @@ const requestSwapInstructions = async ({
     ...(DISABLED_SOURCES.length > 0 ? { disabled_sources: DISABLED_SOURCES } : {}),
   };
 
-  let data;
+  const url = `${ZEROEX_API_URL}/swap-instructions`;
+  const rawBody = JSON.stringify(body);
+  const requestHeaders = headers(rawBody);
+  let response;
   try {
-    ({ data } = await providerCall(
+    response = await providerCall(
       'zeroex',
       ({ timeout, signal }) =>
-        http.post(`${ZEROEX_API_URL}/swap-instructions`, body, {
+        http.post(url, rawBody, {
           timeout: Math.min(REQUEST_TIMEOUT, timeout),
           signal,
-          headers: headers(),
+          headers: requestHeaders,
+          // Keep the bytes: the signature covers the body as sent, not as parsed.
+          transformResponse: [(raw) => raw],
         }),
       { operationName: `0x swap-instructions (${inputMint} → ${outputMint})` }
-    ));
+    );
   } catch (error) {
     const status = error.response?.status;
+    if (error.response) error.response.data = parseBody(error.response.data);
     // 0x answers 4xx with `{ code, error, zid }`: 400 for bad input or bad
     // integrator config, 422 for a pair it cannot serve, 403 when its own
     // sanctions screening refuses the taker. `ZEROEX_ERROR_MAP` turns the
@@ -198,6 +222,18 @@ const requestSwapInstructions = async ({
     }
     throw error;
   }
+
+  // Only a response 0x signed for exactly this order may become a transaction.
+  try {
+    verifySignedResponse(
+      { method: 'POST', url, headers: requestHeaders, body: rawBody },
+      { status: response.status, headers: response.headers, body: response.data }
+    );
+  } catch (error) {
+    console.error('[SWAP_PROVIDER_SIGNATURE]', { provider: '0x', reason: error.message });
+    throw new SolanaSwapError('0x response could not be verified', 502, 'provider_bad_response');
+  }
+  const data = parseBody(response.data);
 
   return {
     instructions: data.instructions.map(toInstruction),
