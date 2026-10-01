@@ -153,9 +153,17 @@ broadcast on Jupiter's side, which the signing boundary forbids.
 `x-ratelimit-remaining: 9` after one call (Developer plan, 10 rps); the
 Router path charges no Jupiter fee (docs, 2026-09-30).
 
-**Open**: Jupiter's `feeAccount` must be a token account of the output
-mint's program (SPL Token or Token-2022); the existing ATA derivation
-already handles both programs for 0x. To confirm with a recorded fixture.
+**Verified 2026-09-30 (recorded fixtures in
+`src/services/solana/swap/__tests__/fixtures/`)**: `feeAccount` must be a
+token account of the output mint — the owner wallet itself is refused
+(`400 Invalid feeAccount`), so a SOL output pays the owner's wrapped-SOL
+account, unlike 0x. Jupiter accepts a fee account that does not exist yet
+at build time, so the build service only ever sends one that exists
+(otherwise `[SWAP_FEE_SKIPPED]`). The v2 response carries no request id
+and no `platformFee` field; route legs are `{ percent, swapInfo.label }`,
+normalised to `{ label, percent }` by every adapter. Jupiter's own
+`cleanupInstruction` closes the wrapped-SOL account, which the shared
+intermediate-account cleanup now skips instead of closing twice.
 
 ## R8 — Provider selection and the 0x adapter
 

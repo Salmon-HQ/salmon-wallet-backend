@@ -25,8 +25,8 @@ const build = () => ({
   priorityFeeMicroLamports: 1000,
   computeUnitLimit: 155822,
   routePlan: [
-    { dex_label: 'Raydium', ppb: 600000000 },
-    { dex_label: 'Orca', ppb: 1000000000 },
+    { label: 'Raydium', percent: 60 },
+    { label: 'Orca', percent: 100 },
   ],
   salmonFee: { amount: '4975000', mint: SOL, side: 'output', bps: 50 },
 });

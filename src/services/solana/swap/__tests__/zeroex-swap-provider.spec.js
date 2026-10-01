@@ -83,7 +83,9 @@ describe('zeroex-swap-provider', () => {
 
     expect(result.amountOut).toBe('623000000');
     expect(result.minAmountOut).toBe('620000000');
-    expect(result.zid).toBe('0xabc');
+    expect(result.providerRequestId).toBe('0xabc');
+    expect(result.routePlan).toEqual([{ label: 'Raydium', percent: 100 }]);
+    expect(result.routeFee).toBeNull();
     expect(result.lookupTableAddresses).toEqual(['AddressLookupTab1e1111111111111111111111111']);
     expect(result.instructions).toHaveLength(1);
     const [ix] = result.instructions;

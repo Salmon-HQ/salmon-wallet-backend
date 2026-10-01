@@ -13,8 +13,6 @@
 const tokenService = require('../../services/solana/solana-ft-service');
 const coingecko = require('../../services/shared/coingecko-service');
 
-const PPB_PER_PERCENT = 10000000;
-
 const mapToken = (token, mint, extra) => ({
   mint,
   decimals: token?.decimals,
@@ -71,10 +69,7 @@ module.exports = async (build, _include, _key, context) => {
       amount: build.amountOut,
       minAmount: build.minAmountOut,
     }),
-    route: build.routePlan.map((leg) => ({
-      label: leg.dex_label,
-      percent: leg.ppb / PPB_PER_PERCENT,
-    })),
+    route: build.routePlan,
     priceImpactPct: priceImpactPct(inUsdValue, outUsdValue),
     slippageBps: build.slippageBps,
     priorityFeeMicroLamports: build.priorityFeeMicroLamports,

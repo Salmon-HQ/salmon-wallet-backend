@@ -46,10 +46,10 @@
 
 ## Phase 6: User Story 4 — Jupiter adapter (P1)
 
-- [ ] T022 [US4] `src/services/solana/swap/jupiter-swap-provider.js` + spec with a recorded `/swap/v2/build` fixture: request (`platformFeeBps`, `feeAccount`, `x-api-key`), flatten instruction groups, lookup tables, `amountOut`/`minAmountOut` from `outAmount`/`otherAmountThreshold`, `routePlan`, `providerRequestId`; 400/404 → `no_route`; `PROVIDER = { id: 'jupiter', displayName: 'Jupiter', attribution: 'Powered by Jupiter' }`
-- [ ] T023 [US4] Build service: adapter registry `{ jupiter, '0x' }`; `feeAccount` for Jupiter = existing `resolveFee` result (output ATA under the mint's program); `routeFee` from the provider (`null` for Jupiter)
-- [ ] T024 [US4] Fixture tests: build on a Jupiter row → unsigned v0 with the fee account referenced and `provider: 'jupiter'`; table row switch 0x ↔ jupiter keeps the shape (SC-005)
-- [ ] T025 [US4] Nightly external tests in `src/services/solana/swap/__tests__/*.integration.spec.js` for both providers (fee instruction present, zero signatures), wired into `integration-external.yml`
+- [x] T022 [US4] `src/services/solana/swap/jupiter-swap-provider.js` + spec with a recorded `/swap/v2/build` fixture: request (`platformFeeBps`, `feeAccount`, `x-api-key`), flatten instruction groups, lookup tables, `amountOut`/`minAmountOut` from `outAmount`/`otherAmountThreshold`, `routePlan`, `providerRequestId`; 400/404 → `no_route`; `PROVIDER = { id: 'jupiter', displayName: 'Jupiter', attribution: 'Powered by Jupiter' }`
+- [x] T023 [US4] Build service: adapter registry `{ jupiter, '0x' }`; `feeAccount` for Jupiter = existing `resolveFee` result (output ATA under the mint's program); `routeFee` from the provider (`null` for Jupiter)
+- [x] T024 [US4] Fixture tests: build on a Jupiter row → unsigned v0 with the fee account referenced and `provider: 'jupiter'`; table row switch 0x ↔ jupiter keeps the shape (SC-005)
+- [x] T025 [US4] Nightly external tests in `src/services/solana/swap/__tests__/*.integration.spec.js` for both providers (fee instruction present, zero signatures), wired into `integration-external.yml`
 
 ## Phase 7: Polish
 

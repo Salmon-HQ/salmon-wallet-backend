@@ -19,6 +19,10 @@ const { SOL_ADDRESS } = require('../../../constants/solana-constants');
 const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
 
 const PROVIDER = { id: '0x', displayName: '0x', attribution: 'Powered by 0x' };
+/** Fee from either side; native SOL may pay the wallet itself (probed 2026-09-10). */
+const FEE = { sides: ['buy', 'sell'], nativeSolAsWallet: true };
+/** 0x route shares are parts per billion. */
+const PPB_PER_PERCENT = 10000000;
 const ZEROEX_API_URL = process.env.ZEROEX_API_URL || 'https://api.0x.org/solana';
 const REQUEST_TIMEOUT = 10000;
 /** 0x fees are parts per million; 1 bps = 100 ppm. */
@@ -122,7 +126,8 @@ const toSwapError = (status, data) => {
  *   already exist (token account, or wallet for native SOL).
  * @param {number} params.reserveBytes - bytes 0x must leave free for instructions we add.
  * @returns {Promise<{ instructions: TransactionInstruction[], lookupTableAddresses: string[],
- *   amountOut: string, minAmountOut: string, routePlan: Object[], zid: string }>}
+ *   amountOut: string, minAmountOut: string, routePlan: Array<{ label: string, percent: number }>,
+ *   providerRequestId: string|null, routeFee: null }>}
  * @throws {SolanaSwapError} on a 0x 4xx, mapped per `ZEROEX_ERROR_MAP`.
  */
 const requestSwapInstructions = async ({
@@ -189,8 +194,11 @@ const requestSwapInstructions = async ({
     lookupTableAddresses: data.address_lookup_tables || [],
     amountOut: String(data.amount_out),
     minAmountOut: String(data.min_amount_out),
-    routePlan: data.route_plan || [],
-    zid: data.zid,
+    routePlan: (data.route_plan || []).map((leg) => ({
+      label: leg.dex_label,
+      percent: leg.ppb / PPB_PER_PERCENT,
+    })),
+    providerRequestId: data.zid ?? null,
     // 0x's own fee is not reported on the instructions response; null until it is.
     routeFee: null,
   };
@@ -200,6 +208,7 @@ module.exports = {
   requestSwapInstructions,
   isConfigured,
   PROVIDER,
+  FEE,
   PPM_PER_BPS,
   ZEROEX_NATIVE_SOL,
   ZEROEX_ERROR_MAP,

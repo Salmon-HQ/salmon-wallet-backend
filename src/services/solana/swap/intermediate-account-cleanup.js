@@ -23,12 +23,33 @@
  */
 
 const { PublicKey } = require('@solana/web3.js');
-const { ASSOCIATED_TOKEN_PROGRAM_ID, createCloseAccountInstruction } = require('@solana/spl-token');
+const {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
+  createCloseAccountInstruction,
+} = require('@solana/spl-token');
 const { SOL_ADDRESS } = require('../../../constants/solana-constants');
 
 const COMMITMENT = 'confirmed';
 /** ATA `Create` / `CreateIdempotent` key order: payer, ata, owner, mint, system, token program. */
 const ATA_KEYS = { ata: 1, owner: 2, mint: 3, tokenProgram: 5 };
+
+/** SPL Token `CloseAccount` discriminator; the closed account is key 0. */
+const CLOSE_ACCOUNT = 9;
+
+/** Accounts the provider's own instructions already close (Jupiter closes the wrapped-SOL account itself). */
+const closedByProvider = (instructions) =>
+  new Set(
+    instructions
+      .filter(
+        (ix) =>
+          (ix.programId.equals(TOKEN_PROGRAM_ID) || ix.programId.equals(TOKEN_2022_PROGRAM_ID)) &&
+          ix.data[0] === CLOSE_ACCOUNT &&
+          ix.keys.length > 0
+      )
+      .map((ix) => ix.keys[0].pubkey.toBase58())
+  );
 
 const createdAccounts = (instructions) =>
   instructions
@@ -55,8 +76,10 @@ const intermediateAccountCleanup = async (
   { taker, inputMint, outputMint }
 ) => {
   const keep = new Set([inputMint, outputMint].filter((mint) => mint !== SOL_ADDRESS));
+  const closed = closedByProvider(instructions);
   const candidates = createdAccounts(instructions).filter(
-    (account) => account.owner === taker && !keep.has(account.mint)
+    (account) =>
+      account.owner === taker && !keep.has(account.mint) && !closed.has(account.ata.toBase58())
   );
   if (candidates.length === 0) {
     return [];

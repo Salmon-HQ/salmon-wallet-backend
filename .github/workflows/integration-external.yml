@@ -63,3 +63,7 @@ jobs:
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
           TRITON_RPC_URL: ${{ secrets.TRITON_RPC_URL }}
           TRITON_API_TOKEN: ${{ secrets.TRITON_API_TOKEN }}
+          ZEROEX_API_KEY: ${{ secrets.ZEROEX_API_KEY }}
+          JUPITER_API_KEY: ${{ secrets.JUPITER_API_KEY }}
+          SWAP_FEE_BPS: ${{ vars.SWAP_FEE_BPS }}
+          SWAP_FEE_ACCOUNT_OWNER: ${{ vars.SWAP_FEE_ACCOUNT_OWNER }}

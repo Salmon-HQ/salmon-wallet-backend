@@ -31,6 +31,7 @@ const { SOL_ADDRESS, SOL_DECIMALS } = require('../../../constants/solana-constan
 const { getByMints } = require('../solana-ft-service');
 const tokenMetadata = require('../token-metadata-service');
 const zeroex = require('./zeroex-swap-provider');
+const jupiter = require('./jupiter-swap-provider');
 const { intermediateAccountCleanup } = require('./intermediate-account-cleanup');
 const {
   BUILD_TTL_MS,
@@ -40,7 +41,7 @@ const {
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
 
 /** Adapters by the provider name the availability table uses. */
-const ADAPTERS = { [zeroex.PROVIDER.id]: zeroex };
+const ADAPTERS = { [zeroex.PROVIDER.id]: zeroex, [jupiter.PROVIDER.id]: jupiter };
 
 /**
  * The adapter for the provider the gate chose, or 503 `upstream_unavailable`
@@ -143,11 +144,12 @@ const resolveSlippage = (slippageBps) => {
 
 /**
  * Salmon's fee account for `mint`, or null when it does not exist on-chain.
- * Native SOL pays the owner wallet directly; any token pays the owner's ATA
- * under the mint's own token program (SPL or Token-2022).
+ * Any token pays the owner's ATA under the mint's own token program (SPL or
+ * Token-2022). Native SOL pays the owner wallet directly when the adapter
+ * accepts a wallet (0x), else the owner's wrapped-SOL account (Jupiter).
  */
-const existingFeeAccount = async (connection, owner, mint) => {
-  if (mint === SOL_ADDRESS) {
+const existingFeeAccount = async (connection, owner, mint, nativeSolAsWallet) => {
+  if (mint === SOL_ADDRESS && nativeSolAsWallet) {
     return owner;
   }
   const mintKey = new PublicKey(mint);
@@ -161,20 +163,27 @@ const existingFeeAccount = async (connection, owner, mint) => {
 };
 
 /**
- * Pick the fee side by which fee account exists: output (`buy`) first, then
- * input (`sell`). Returns null (no fee, logged) when neither exists.
+ * Pick the fee side by which fee account exists, among the sides the adapter
+ * supports: output (`buy`) first, then input (`sell`). Returns null (no fee,
+ * logged) when none exists.
  *
  * @returns {Promise<{ recipient: string, bps: number, side: 'buy'|'sell', mint: string }|null>}
  */
-const resolveFee = async (connection, fee, inputMint, outputMint) => {
+const resolveFee = async (connection, fee, inputMint, outputMint, adapterFee) => {
   if (!fee) {
     return null;
   }
-  for (const [side, mint] of [
+  const sides = [
     ['buy', outputMint],
     ['sell', inputMint],
-  ]) {
-    const recipient = await existingFeeAccount(connection, fee.owner, mint);
+  ].filter(([side]) => adapterFee.sides.includes(side));
+  for (const [side, mint] of sides) {
+    const recipient = await existingFeeAccount(
+      connection,
+      fee.owner,
+      mint,
+      adapterFee.nativeSolAsWallet
+    );
     if (recipient) {
       return { recipient, bps: fee.bps, side, mint };
     }
@@ -249,7 +258,7 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
   const adapter = resolveAdapter(locals);
   await assertRoutable([inputMint, outputMint], locals);
   const connection = new Connection(locals.network.config.nodeUrl, COMMITMENT);
-  const fee = await resolveFee(connection, feeConfig(), inputMint, outputMint);
+  const fee = await resolveFee(connection, feeConfig(), inputMint, outputMint, adapter.FEE);
 
   const quote = await adapter.requestSwapInstructions({
     inputMint,
@@ -280,7 +289,7 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
 
   return {
     provider: adapter.PROVIDER,
-    providerRequestId: quote.zid,
+    providerRequestId: quote.providerRequestId ?? null,
     routeFee: quote.routeFee ?? null,
     transaction: built.transaction,
     expiresAt: new Date(Date.now() + BUILD_TTL_MS).toISOString(),

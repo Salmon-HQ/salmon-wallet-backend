@@ -15,7 +15,14 @@ jest.mock('../zeroex-swap-provider', () => ({
   requestSwapInstructions: jest.fn(),
   isConfigured: jest.fn(() => true),
   PROVIDER: { id: '0x', displayName: '0x', attribution: 'Powered by 0x' },
+  FEE: { sides: ['buy', 'sell'], nativeSolAsWallet: true },
   PPM_PER_BPS: 100,
+}));
+jest.mock('../jupiter-swap-provider', () => ({
+  requestSwapInstructions: jest.fn(),
+  isConfigured: jest.fn(() => true),
+  PROVIDER: { id: 'jupiter', displayName: 'Jupiter', attribution: 'Powered by Jupiter' },
+  FEE: { sides: ['buy'], nativeSolAsWallet: false },
 }));
 jest.mock('../../solana-ft-service', () => ({ getByMints: jest.fn() }));
 jest.mock('../../token-metadata-service', () => ({ getByMints: jest.fn(async () => new Map()) }));
@@ -24,9 +31,11 @@ const { PublicKey, TransactionInstruction, VersionedTransaction } = require('@so
 const {
   TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
+  createCloseAccountInstruction,
   getAssociatedTokenAddressSync,
 } = require('@solana/spl-token');
 const zeroex = require('../zeroex-swap-provider');
+const jupiter = require('../jupiter-swap-provider');
 const { getByMints } = require('../../solana-ft-service');
 const tokenMetadata = require('../../token-metadata-service');
 const service = require('../solana-swap-build-service');
@@ -64,8 +73,8 @@ const quote = (instructions) => ({
   lookupTableAddresses: [],
   amountOut: '990000',
   minAmountOut: '980000',
-  routePlan: [{ dex_label: 'Raydium', ppb: 1000000000 }],
-  zid: 'zid-1',
+  routePlan: [{ label: 'Raydium', percent: 100 }],
+  providerRequestId: 'zid-1',
 });
 
 const params = (outputMint = USDC) => ({
@@ -316,6 +325,20 @@ describe('solana-swap-build-service', () => {
       expect(result.intermediateAccountsClosed).toBe(1);
     });
 
+    it('does not re-close an account the provider already closes (Jupiter closes wrapped SOL itself)', async () => {
+      const wsolAta = getAssociatedTokenAddressSync(new PublicKey(SOL), takerKey);
+      const providerClose = createCloseAccountInstruction(wsolAta, takerKey, takerKey);
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([createAta(SOL), swapInstruction(), providerClose])
+      );
+
+      const result = await service.build(params(USDC), locals);
+
+      expect(mockConnection.getMultipleAccountsInfo).not.toHaveBeenCalled();
+      expect(closeInstructions(result)).toHaveLength(1); // the provider's own close only
+      expect(result.intermediateAccountsClosed).toBe(0);
+    });
+
     it('leaves a pre-existing intermediate account alone', async () => {
       zeroex.requestSwapInstructions.mockResolvedValue(quote([createAta(USD1), swapInstruction()]));
       mockConnection.getMultipleAccountsInfo.mockResolvedValue([{ data: Buffer.alloc(165) }]);
@@ -457,12 +480,82 @@ describe('solana-swap-build-service', () => {
     });
 
     it('answers 503 upstream_unavailable when the row names an unknown provider, never falling back', async () => {
-      const other = { ...locals, availability: { provider: 'jupiter' } };
+      const other = { ...locals, availability: { provider: 'raydium' } };
       await expect(service.build(params(), other)).rejects.toMatchObject({
         statusCode: 503,
         errorCode: 'upstream_unavailable',
       });
       expect(zeroex.requestSwapInstructions).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Jupiter row', () => {
+    const jupiterLocals = { ...locals, availability: { provider: 'jupiter' } };
+    const wsolFeeAta = getAssociatedTokenAddressSync(
+      new PublicKey(SOL),
+      new PublicKey(FEE_OWNER),
+      false,
+      TOKEN_PROGRAM_ID
+    ).toBase58();
+
+    beforeEach(() => {
+      process.env.SWAP_FEE_BPS = '50';
+      process.env.SWAP_FEE_ACCOUNT_OWNER = FEE_OWNER;
+    });
+
+    it('builds through the Jupiter adapter with the same shape, fee from the output token account', async () => {
+      // mint account + the owner's USDC ATA exist
+      mockConnection.getAccountInfo.mockResolvedValue({ owner: TOKEN_PROGRAM_ID });
+      jupiter.requestSwapInstructions.mockResolvedValue({
+        ...quote([swapInstruction([feeAta])]),
+        providerRequestId: null,
+        routeFee: null,
+      });
+
+      const result = await service.build(params(USDC), jupiterLocals);
+
+      expect(zeroex.requestSwapInstructions).not.toHaveBeenCalled();
+      expect(jupiter.requestSwapInstructions).toHaveBeenCalledWith(
+        expect.objectContaining({ fee: { recipient: feeAta, bps: 50, side: 'buy' } })
+      );
+      expect(result).toMatchObject({
+        provider: jupiter.PROVIDER,
+        providerRequestId: null,
+        routeFee: null,
+        salmonFee: { mint: USDC, side: 'output', bps: 50 },
+      });
+      const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
+      expect(tx.signatures).toHaveLength(1);
+      expect(tx.message.staticAccountKeys[0].toBase58()).toBe(TAKER);
+    });
+
+    it('pays a SOL-output fee to the owner wrapped-SOL account, never the wallet, and never the input side', async () => {
+      // WSOL mint exists; the owner's WSOL ATA does not; the owner's USDC (input) ATA does
+      mockConnection.getAccountInfo.mockImplementation(async (key) => {
+        const address = key.toBase58();
+        if (address === SOL || address === USDC) return { owner: TOKEN_PROGRAM_ID };
+        if (address === wsolFeeAta) return null;
+        if (address === feeAta) return { owner: TOKEN_PROGRAM_ID };
+        return null;
+      });
+      jupiter.requestSwapInstructions.mockResolvedValue({
+        ...quote([swapInstruction()]),
+        providerRequestId: null,
+        routeFee: null,
+      });
+
+      const result = await service.build(
+        { ...params(SOL), inputMint: USDC, outputMint: SOL },
+        jupiterLocals
+      );
+
+      expect(jupiter.requestSwapInstructions).toHaveBeenCalledWith(
+        expect.objectContaining({ fee: null })
+      );
+      expect(result.salmonFee).toBeNull();
+      const queried = mockConnection.getAccountInfo.mock.calls.map(([k]) => k.toBase58());
+      expect(queried).toContain(wsolFeeAta);
+      expect(queried).not.toContain(FEE_OWNER);
     });
   });
 });
