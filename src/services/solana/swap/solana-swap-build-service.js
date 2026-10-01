@@ -40,6 +40,7 @@ const {
 } = require('../powerups/unsigned-transaction-builder');
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
 const { PowerupSimulationError } = require('../powerups/powerup-errors');
+const { classifySimulationError } = require('./simulation-errors');
 
 /** Adapters by the provider name the availability table uses. */
 const ADAPTERS = { [zeroex.PROVIDER.id]: zeroex, [jupiter.PROVIDER.id]: jupiter };
@@ -292,7 +293,7 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     simulationFallback: false,
   });
   if (built.simulation.err) {
-    throw new PowerupSimulationError(built.simulation);
+    throw classifySimulationError(built.simulation) || new PowerupSimulationError(built.simulation);
   }
 
   return {

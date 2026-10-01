@@ -49,22 +49,56 @@ const toInstruction = (raw) =>
     data: Buffer.from(raw.data, 'base64'),
   });
 
-const upstreamReason = (data) => (data && (data.error || data.message)) || 'No route available';
-
 /**
- * Translate a Jupiter 4xx into the public envelope. Jupiter answers 400 for
- * both a pair it cannot route (`No routes found`) and a fee account it will
- * not accept (`Invalid feeAccount`); the second is our configuration.
+ * Jupiter answers a refused build with `{ error: string }`, or with
+ * `{ error: { name: 'ZodError', issues } }` when the query shape itself is
+ * wrong. Texts observed live on 2026-10-01 against `/swap/v2/build`:
+ *   "No routes found"                      — pair, amount or an unknown mint
+ *   "inputMint cannot be same as outputMint"
+ *   "Invalid inputMint" / "Invalid outputMint" / "Invalid taker" / "Invalid amount"
+ *   "Invalid feeAccount" / "feeAccount is required when platformFeeBps is positive"
+ *   ZodError on `slippageBps` (> 10000), missing `taker` / `amount`
+ * Anything the controller already validates (mints, taker, amount, slippage
+ * bounds) can only reach Jupiter through our own bug, and so can a fee
+ * account it refuses: those are 500 `swap_misconfigured`, logged. A pair it
+ * cannot route is 404 `no_route`.
  */
+const JUPITER_ERROR_MAP = [
+  [/^No routes found/i, 404, 'no_route'],
+  [/cannot be same as/i, 400, 'invalid_parameter'],
+  [/^Invalid (inputMint|outputMint|taker|amount)\b/i, 500, 'swap_misconfigured'],
+  [/feeAccount/i, 500, 'swap_misconfigured'],
+];
+
+/** Human-readable reason from either envelope, the first Zod issue included. */
+const upstreamReason = (data) => {
+  const error = data?.error;
+  if (typeof error === 'string') return error;
+  const issue = Array.isArray(error?.issues) ? error.issues[0] : null;
+  if (issue) return `${(issue.path || []).join('.') || 'request'}: ${issue.message}`;
+  if (typeof data?.message === 'string') return data.message;
+  return 'No route available';
+};
+
+/** Translate a Jupiter 4xx into the public envelope; null when it is not ours to translate. */
 const toSwapError = (status, data) => {
   const reason = upstreamReason(data);
-  if (/fee/i.test(reason)) {
-    console.error('[SWAP_MISCONFIGURED] Jupiter rejected our own request parameters', data);
+  const misconfigured = (why) => {
+    console.error('[SWAP_MISCONFIGURED] Jupiter rejected our own request parameters', {
+      why,
+      data,
+    });
     return new SolanaSwapError(reason, 500, 'swap_misconfigured');
+  };
+  if (data?.error?.name === 'ZodError') return misconfigured('request shape');
+  for (const [pattern, mappedStatus, code] of JUPITER_ERROR_MAP) {
+    if (pattern.test(reason)) {
+      return mappedStatus === 500
+        ? misconfigured(code)
+        : new SolanaSwapError(reason, mappedStatus, code);
+    }
   }
-  if (status === 400 || status === 404 || status === 422) {
-    return new SolanaSwapNoRouteError(reason);
-  }
+  if (status === 400 || status === 404 || status === 422) return new SolanaSwapNoRouteError(reason);
   return null;
 };
 
@@ -151,4 +185,4 @@ const requestSwapInstructions = async ({
   };
 };
 
-module.exports = { requestSwapInstructions, isConfigured, PROVIDER, FEE };
+module.exports = { requestSwapInstructions, isConfigured, PROVIDER, FEE, JUPITER_ERROR_MAP };

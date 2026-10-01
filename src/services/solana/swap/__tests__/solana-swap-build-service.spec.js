@@ -381,6 +381,20 @@ describe('solana-swap-build-service', () => {
       errorCode: 'simulation_failed',
     });
 
+    mockConnection.simulateTransaction.mockResolvedValue({
+      value: {
+        err: { InstructionError: [4, { Custom: 6001 }] },
+        unitsConsumed: 0,
+        logs: [
+          'Program JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4 failed: custom program error: 0x1771',
+        ],
+      },
+    });
+    await expect(service.build(params(), locals)).rejects.toMatchObject({
+      statusCode: 422,
+      errorCode: 'slippage_exceeded',
+    });
+
     mockConnection.simulateTransaction.mockRejectedValue(new Error('ECONNRESET'));
     await expect(service.build(params(), locals)).rejects.toMatchObject({
       statusCode: 503,

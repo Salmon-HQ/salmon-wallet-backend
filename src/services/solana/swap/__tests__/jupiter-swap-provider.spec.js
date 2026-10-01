@@ -115,27 +115,56 @@ describe('jupiter-swap-provider', () => {
     expect(referenced).toBe(true);
   });
 
-  it("maps a 400 'No routes found' onto 404 no_route carrying Jupiter's reason", async () => {
-    http.get.mockRejectedValue({ response: { status: 400, data: { error: 'No routes found' } } });
-    await expect(request()).rejects.toMatchObject({
-      statusCode: 404,
-      errorCode: 'no_route',
-      message: 'No routes found',
-    });
-  });
+  it.each([
+    ['No routes found', 404, 'no_route'],
+    ['inputMint cannot be same as outputMint', 400, 'invalid_parameter'],
+    ['Invalid inputMint', 500, 'swap_misconfigured'],
+    ['Invalid outputMint', 500, 'swap_misconfigured'],
+    ['Invalid taker', 500, 'swap_misconfigured'],
+    ['Invalid amount', 500, 'swap_misconfigured'],
+    ['Invalid feeAccount', 500, 'swap_misconfigured'],
+    ['feeAccount is required when platformFeeBps is positive', 500, 'swap_misconfigured'],
+    ['Something new', 404, 'no_route'],
+  ])(
+    "maps a 400 '%s' onto %i %s, Jupiter's text in the message",
+    async (text, statusCode, errorCode) => {
+      http.get.mockRejectedValue({ response: { status: 400, data: { error: text } } });
+      await expect(request()).rejects.toMatchObject({ statusCode, errorCode, message: text });
+      if (statusCode === 500) {
+        expect(console.error).toHaveBeenCalledWith(
+          '[SWAP_MISCONFIGURED] Jupiter rejected our own request parameters',
+          expect.any(Object)
+        );
+      }
+    }
+  );
 
-  it('maps a rejected fee account onto 500 swap_misconfigured', async () => {
+  it('treats a Zod validation error (our request shape) as our own misconfiguration, naming the field', async () => {
     http.get.mockRejectedValue({
-      response: { status: 400, data: { error: 'Invalid feeAccount' } },
+      response: {
+        status: 400,
+        data: {
+          error: {
+            name: 'ZodError',
+            issues: [
+              { code: 'too_big', path: ['slippageBps'], message: 'Number must be <= 10000' },
+            ],
+          },
+        },
+      },
     });
     await expect(request()).rejects.toMatchObject({
       statusCode: 500,
       errorCode: 'swap_misconfigured',
+      message: 'slippageBps: Number must be <= 10000',
     });
-    expect(console.error).toHaveBeenCalledWith(
-      '[SWAP_MISCONFIGURED] Jupiter rejected our own request parameters',
-      expect.any(Object)
-    );
+  });
+
+  it('maps a 404 and a 422 onto no_route too', async () => {
+    for (const status of [404, 422]) {
+      http.get.mockRejectedValue({ response: { status, data: { message: 'gone' } } });
+      await expect(request()).rejects.toMatchObject({ errorCode: 'no_route', message: 'gone' });
+    }
   });
 
   it('answers 503 upstream_rate_limited on a 429 and lets 401/5xx propagate', async () => {

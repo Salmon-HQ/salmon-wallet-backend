@@ -619,7 +619,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '422':
-          description: '`token_not_supported` — unknown mint, Token-2022 with transfer fee/hook, or a token the provider will not trade; `simulation_failed` — the runtime rejected the quote (slippage already exceeded), so nothing is returned to sign'
+          description: '`token_not_supported` — unknown mint, Token-2022 with transfer fee/hook, or a token the provider will not trade; `slippage_exceeded` — the price moved past the tolerance before the swap could settle; `insufficient_funds` — not enough of the input token; `insufficient_sol` — not enough SOL for the network fee and the token accounts the swap opens; `simulation_failed` — the runtime rejected the quote for another reason. In every 422 case nothing is returned to sign'
           content:
             application/json:
               schema:
@@ -1185,6 +1185,7 @@ components:
         `burn_transaction`, `transfer_not_supported`,
         `transfer_transaction_too_large`, `transfer_transaction`,
         `region_restricted`, `wallet_restricted`, `no_route`, `token_not_supported`,
+        `slippage_exceeded`, `insufficient_funds`, `insufficient_sol`,
         `provider_fee_mismatch`, `swap_misconfigured`, `upstream_unavailable`,
         `upstream_rate_limited`, `server_error`.
       properties:
