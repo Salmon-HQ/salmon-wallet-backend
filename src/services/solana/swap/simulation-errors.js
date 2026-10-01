@@ -18,6 +18,7 @@ const JUPITER_PROGRAM = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
 const TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const TOKEN_2022_PROGRAM = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
 const SYSTEM_PROGRAM = '11111111111111111111111111111111';
+const ZEROEX_SETTLER_PROGRAM = 'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m';
 
 /** Jupiter v6 custom errors → [status, code, message]. Omitted codes are the generic 422. */
 const JUPITER_CODES = {
@@ -40,8 +41,19 @@ const TOKEN_CODES = {
   1: [422, 'insufficient_funds', 'The wallet does not hold enough of the token to swap.'],
 };
 
+/**
+ * 0x's Settler publishes no error table and no IDL. Probed 2026-10-01 by
+ * forcing failures: a taker that does not hold the input amount fails in
+ * the settler's own pre-check (~500 compute units, before any venue is
+ * invoked) with 7001, for a dust amount and for a large one alike.
+ */
+const ZEROEX_SETTLER_CODES = {
+  7001: [422, 'insufficient_funds', 'The wallet does not hold enough of the token to swap.'],
+};
+
 const PROGRAM_TABLES = {
   [JUPITER_PROGRAM]: JUPITER_CODES,
+  [ZEROEX_SETTLER_PROGRAM]: ZEROEX_SETTLER_CODES,
   [TOKEN_PROGRAM]: TOKEN_CODES,
   [TOKEN_2022_PROGRAM]: TOKEN_CODES,
 };
@@ -111,4 +123,10 @@ const classifySimulationError = (simulation) => {
   return null;
 };
 
-module.exports = { classifySimulationError, JUPITER_CODES, TOKEN_CODES, failedProgramOf };
+module.exports = {
+  classifySimulationError,
+  JUPITER_CODES,
+  TOKEN_CODES,
+  ZEROEX_SETTLER_CODES,
+  failedProgramOf,
+};

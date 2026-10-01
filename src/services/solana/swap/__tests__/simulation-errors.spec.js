@@ -81,6 +81,15 @@ describe('simulation-errors — what a rejected simulation means to the user', (
     }
   });
 
+  it("maps 0x Settler's 7001 (the taker does not hold the input) onto insufficient_funds", () => {
+    expect(
+      classifySimulationError(custom(5, 7001, 'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m'))
+    ).toMatchObject({ statusCode: 422, errorCode: 'insufficient_funds' });
+    expect(
+      classifySimulationError(custom(5, 7002, 'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m'))
+    ).toBeNull();
+  });
+
   it('answers null for a transport failure, no error, or an unknown program', () => {
     expect(classifySimulationError({ err: 'ECONNRESET', transport: true, logs: [] })).toBeNull();
     expect(classifySimulationError({ err: null, logs: [] })).toBeNull();
