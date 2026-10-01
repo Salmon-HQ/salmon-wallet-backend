@@ -56,7 +56,7 @@
 
 ## Swap build response (`SwapBuild`, unchanged from spec 012 except values)
 
-- `provider`: `'jupiter'` | `'0x'`; `providerDisplayName`: `'Jupiter'` | `'0x'`; `attribution`: `'Powered by Jupiter'` | `'Powered by 0x'`.
+- `provider`: `'jupiter'` | `'0x'`; `providerDisplayName`: `'Metis'` | `'0x'`; `attribution`: `'Powered by Metis (Jupiter)'` | `'Powered by 0x'` (Jupiter's licence §2.3 requires the Metis label; "Jupiter" alone is refused by the licence).
 - `salmonFee`: `{ amount, mint, bps: 50, decimals, symbol, side }` or `null` when no fee account exists for either side.
 - `routeFee`: `null` for Jupiter Router; for 0x, `{ bps: 15 }` while 0x charges it, `null` during the Solana beta waiver — read from the provider's response, never hard-coded.
 - Everything else as spec 012: unsigned base64 v0 `transaction`, `expiresAt`, `input`/`output` with `minAmount`, `route`, `priceImpactPct`, `slippageBps`, USD values, `providerRequestId`.

@@ -84,6 +84,9 @@ const trmVerdict = async (address, locals) => {
  * @throws {SanctionsUnavailableError} when no layer could answer.
  */
 const isListed = async (address, { locals } = {}) => {
+  // A hand-blocked address (a provider's written request) is refused before
+  // any list is consulted, and whether or not the SDN copy is in place.
+  if (await repository.isBlockedManually(address)) return true;
   const local = await localVerdict(address);
   if (local === true) return true;
   // The Treasury copy is the authoritative layer: without it there is no

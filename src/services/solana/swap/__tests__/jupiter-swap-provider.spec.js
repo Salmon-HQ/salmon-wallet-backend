@@ -52,8 +52,8 @@ describe('jupiter-swap-provider', () => {
     expect(isConfigured()).toBe(false);
     expect(PROVIDER).toEqual({
       id: 'jupiter',
-      displayName: 'Jupiter',
-      attribution: 'Powered by Jupiter',
+      displayName: 'Metis',
+      attribution: 'Powered by Metis (Jupiter)',
     });
     expect(FEE).toEqual({ sides: ['buy'], nativeSolAsWallet: false });
   });

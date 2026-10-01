@@ -28,7 +28,13 @@ const { PublicKey, TransactionInstruction } = require('@solana/web3.js');
 const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
 
-const PROVIDER = { id: 'jupiter', displayName: 'Jupiter', attribution: 'Powered by Jupiter' };
+/**
+ * `/swap/v2/build` routes through Metis, Jupiter's onchain router. Jupiter's
+ * API licence (§2.3) makes it mandatory to state "Metis" prominently to end
+ * users and calls labelling the output "Jupiter" alone misleading, so the
+ * attribution names the router first.
+ */
+const PROVIDER = { id: 'jupiter', displayName: 'Metis', attribution: 'Powered by Metis (Jupiter)' };
 /** Fee only from the output side, into a token account (wrapped SOL for SOL). */
 const FEE = { sides: ['buy'], nativeSolAsWallet: false };
 const JUPITER_API_URL = process.env.JUPITER_SWAP_API_URL || 'https://api.jup.ag/swap/v2';

@@ -8,6 +8,9 @@
  *                           verbatim. Replaced atomically: the job fills
  *                           `sanctions:addresses:next` and RENAMEs it over.
  *   `sanctions:fetched_at`  ISO timestamp of the last successful refresh.
+ *   `sanctions:blocked`     addresses blocked by hand (a provider's written
+ *                           request, Jupiter licence §7.5); never touched by
+ *                           the refresh, read even when the SDN copy is gone.
  *   `sanctions:trm:<addr>`  cached TRM verdict `{ isSanctioned, checkedAt }`,
  *                           24 h.
  *
@@ -41,6 +44,10 @@ const hasLocalList = async () => (await redis.exists([key('addresses')])) === 1;
 const isListedLocally = async (address) =>
   (await redis.sendCommand(['SISMEMBER', key('addresses'), address])) === 1;
 
+/** @returns {Promise<boolean>} whether ops blocked the address by hand. Throws on Redis error. */
+const isBlockedManually = async (address) =>
+  (await redis.sendCommand(['SISMEMBER', key('blocked'), address])) === 1;
+
 /** @returns {Promise<number>} how many addresses the live set holds (0 when absent). */
 const getLocalListSize = async () =>
   Number(await redis.sendCommand(['SCARD', key('addresses')])) || 0;
@@ -67,6 +74,7 @@ module.exports = {
   saveTrmVerdict,
   hasLocalList,
   isListedLocally,
+  isBlockedManually,
   getFetchedAt,
   getLocalListSize,
   replaceLocalList,

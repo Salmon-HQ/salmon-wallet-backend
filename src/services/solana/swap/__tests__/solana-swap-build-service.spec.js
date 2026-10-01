@@ -21,7 +21,7 @@ jest.mock('../zeroex-swap-provider', () => ({
 jest.mock('../jupiter-swap-provider', () => ({
   requestSwapInstructions: jest.fn(),
   isConfigured: jest.fn(() => true),
-  PROVIDER: { id: 'jupiter', displayName: 'Jupiter', attribution: 'Powered by Jupiter' },
+  PROVIDER: { id: 'jupiter', displayName: 'Metis', attribution: 'Powered by Metis (Jupiter)' },
   FEE: { sides: ['buy'], nativeSolAsWallet: false },
 }));
 jest.mock('../../solana-ft-service', () => ({ getByMints: jest.fn() }));

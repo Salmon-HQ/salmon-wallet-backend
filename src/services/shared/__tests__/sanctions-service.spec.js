@@ -6,6 +6,7 @@ jest.mock('../../../repositories/shared/sanctions-repository', () => ({
   saveTrmVerdict: jest.fn().mockResolvedValue(undefined),
   hasLocalList: jest.fn(),
   isListedLocally: jest.fn(),
+  isBlockedManually: jest.fn().mockResolvedValue(false),
   getFetchedAt: jest.fn(),
 }));
 jest.mock('../../../infrastructure/providers/provider-client', () => ({
@@ -34,6 +35,13 @@ describe('sanctions-service', () => {
   });
 
   afterEach(() => logs.forEach((l) => l.mockRestore()));
+
+  it('refuses a hand-blocked address before any list, even without the SDN copy', async () => {
+    repository.isBlockedManually.mockResolvedValueOnce(true);
+    repository.hasLocalList.mockResolvedValue(false);
+    await expect(isListed(ADDRESS)).resolves.toBe(true);
+    expect(http.post).not.toHaveBeenCalled();
+  });
 
   it('lists an address on the local SDN copy without asking TRM', async () => {
     repository.isListedLocally.mockResolvedValue(true);

@@ -10,6 +10,6 @@ New, in this order before any provider call:
 2. Screening on rows whose provider does not screen (Jupiter): listed `publicKey` → `403 wallet_restricted`; no sanctions copy at all → `503 upstream_unavailable`.
 3. Provider adapter chosen by the row: `jupiter` or `0x`. A row naming a provider without a configured credential → `503 upstream_unavailable`, no fallback.
 
-Values: `provider` ∈ `'jupiter' | '0x'`; `attribution` ∈ `'Powered by Jupiter' | 'Powered by 0x'`; `routeFee` carries 0x's fee when 0x charges it, `null` otherwise.
+Values: `provider` ∈ `'jupiter' | '0x'`; `attribution` ∈ `'Powered by Metis (Jupiter)' | 'Powered by 0x'`; `routeFee` carries 0x's fee when 0x charges it, `null` otherwise.
 
 Never added: any route that receives a signed transaction or broadcasts one.

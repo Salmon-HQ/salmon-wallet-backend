@@ -105,7 +105,7 @@ Jupiter's terms shape two requirements of this spec:
 
 A user in a country where swap is offered picks two tokens and an amount,
 sees the amount in, the estimated amount out, the minimum after slippage,
-the route provider ("Powered by Jupiter"), the price impact, the USD values
+the route provider ("Powered by Metis (Jupiter)"), the price impact, the USD values
 and **the Salmon fee as its own line**, signs on the device, and the app
 sends the transaction to the network itself.
 
@@ -122,7 +122,7 @@ broadcasts (mainnet only — neither provider has a devnet).
 
 1. **Given** a mainnet pair and amount from an allowed country, **When** a
    build is requested, **Then** the response carries an unsigned base64 v0
-   transaction, `provider: 'jupiter'`, `attribution: 'Powered by Jupiter'`,
+   transaction, `provider: 'jupiter'`, `attribution: 'Powered by Metis (Jupiter)'`,
    `input`/`output` legs with the minimum received, `route`, `slippageBps`,
    `expiresAt` and a `salmonFee` line of 50 bps.
 2. **Given** the returned transaction, **When** decoded, **Then** it has no
