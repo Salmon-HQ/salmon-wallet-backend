@@ -39,7 +39,11 @@ const {
   compileUnsigned,
 } = require('../powerups/unsigned-transaction-builder');
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
-const { PowerupSimulationError } = require('../powerups/powerup-errors');
+const {
+  PowerupProgramMismatchError,
+  PowerupSignerMismatchError,
+  PowerupSimulationError,
+} = require('../powerups/powerup-errors');
 const { classifySimulationError } = require('./simulation-errors');
 
 /** Adapters by the provider name the availability table uses. */
@@ -76,11 +80,34 @@ const MAX_SLIPPAGE_BPS = 10000;
  * (~8 each; every key it needs is already in the transaction).
  */
 const COMPUTE_BUDGET_RESERVE_BYTES = 68;
+const U64_MAX = 18446744073709551615n;
 
+/**
+ * Every program a swap from either provider invokes at top level (probed
+ * live, 2026-10-01). A provider response that invokes anything else — a
+ * poisoned URL, a compromised lookup table — is refused after compilation,
+ * before the bytes reach the user. The same list the wallet enforces.
+ */
+const SWAP_ALLOWED_PROGRAMS = new Set([
+  'ComputeBudget111111111111111111111111111111',
+  '11111111111111111111111111111111',
+  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+  'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
+  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+  'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4',
+  'Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m',
+]);
+
+let feeDisabledLogged = false;
 const feeConfig = () => {
   const bps = Number.parseInt(process.env.SWAP_FEE_BPS, 10);
   const owner = process.env.SWAP_FEE_ACCOUNT_OWNER;
-  return Number.isInteger(bps) && bps > 0 && owner ? { bps, owner } : null;
+  if (Number.isInteger(bps) && bps > 0 && owner) return { bps, owner };
+  if (!feeDisabledLogged) {
+    feeDisabledLogged = true;
+    console.error('[SWAP_FEE_DISABLED] SWAP_FEE_BPS / SWAP_FEE_ACCOUNT_OWNER missing or invalid');
+  }
+  return null;
 };
 
 /**
@@ -90,8 +117,9 @@ const feeConfig = () => {
  */
 const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   if (amount !== undefined) {
-    const numeric = Number(amount);
-    if (!Number.isInteger(numeric) || numeric <= 0) {
+    // Decimal digits only, inside u64: `1e3`, `0x10` and 2^64 are refused
+    // here, not by the provider, so a caller cannot farm our own error logs.
+    if (!/^[1-9]\d{0,19}$/.test(String(amount)) || BigInt(amount) > U64_MAX) {
       return {
         error: 'invalid_parameter',
         error_description: 'amount must be a positive integer in the token smallest unit',
@@ -108,7 +136,7 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   }
 
   const numeric = Number(uiAmount);
-  if (!Number.isFinite(numeric) || numeric <= 0) {
+  if (!/^\d+(\.\d+)?$/.test(String(uiAmount)) || !Number.isFinite(numeric) || numeric <= 0) {
     return { error: 'invalid_parameter', error_description: 'uiAmount must be a positive number' };
   }
 
@@ -292,6 +320,17 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     // and pay the fee to watch them fail.
     simulationFallback: false,
   });
+  const undeclared = built.programIds.find((programId) => !SWAP_ALLOWED_PROGRAMS.has(programId));
+  if (undeclared) {
+    console.error('[POWERUP_PROGRAM_MISMATCH] swap invokes an undeclared program', {
+      provider: adapter.PROVIDER.id,
+      programId: undeclared,
+    });
+    throw new PowerupProgramMismatchError('swap', undeclared);
+  }
+  if (built.requiredSignatures !== 1) {
+    throw new PowerupSignerMismatchError('swap', built.requiredSignatures);
+  }
   if (built.simulation.err) {
     throw classifySimulationError(built.simulation) || new PowerupSimulationError(built.simulation);
   }

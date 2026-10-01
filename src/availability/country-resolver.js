@@ -22,24 +22,58 @@ const { resolveSourceIp } = require('../../packages/network-utils');
 const DATABASE = require.resolve('@ip-location-db/dbip-country-mmdb/dbip-country.mmdb');
 const COUNTRY_CODE = /^[A-Z]{2}$/;
 
+/** The country database could not be opened: the gate cannot decide, so it refuses rather than opens. */
+class CountryDatabaseUnavailableError extends Error {
+  constructor(cause) {
+    super('The country database is unavailable.');
+    this.statusCode = 503;
+    this.errorCode = 'upstream_unavailable';
+    this.cause = cause;
+  }
+}
+
 let reader;
+let loadError;
+/**
+ * Opened once per container. A load failure (file missing from the bundle,
+ * corrupt, a package bump that changed the shape) is logged once and thrown
+ * on every lookup: an unreadable database must never read as "no country",
+ * which the table treats as unrestricted.
+ */
 const getReader = () => {
-  if (!reader) reader = new Reader(fs.readFileSync(DATABASE));
-  return reader;
+  if (reader) return reader;
+  if (loadError) throw new CountryDatabaseUnavailableError(loadError);
+  try {
+    reader = new Reader(fs.readFileSync(DATABASE));
+    return reader;
+  } catch (error) {
+    loadError = error;
+    console.error('[COUNTRY_DB_UNAVAILABLE]', { message: error.message });
+    throw new CountryDatabaseUnavailableError(error);
+  }
 };
 
 /**
  * @param {string|undefined|null} ip
- * @returns {string|null} ISO 3166-1 alpha-2, upper case, or null.
+ * @returns {string|null} ISO 3166-1 alpha-2, upper case, or null for a private, unknown or malformed address.
+ * @throws {CountryDatabaseUnavailableError} when the database cannot be opened.
  */
 const countryOf = (ip) => {
   if (typeof ip !== 'string' || ip.length === 0) return null;
+  const db = getReader();
   try {
-    const code = getReader().get(ip)?.country_code;
+    const code = db.get(ip)?.country_code;
     return typeof code === 'string' && COUNTRY_CODE.test(code) ? code : null;
   } catch {
+    // A malformed address is the caller's; the database answered nothing.
     return null;
   }
+};
+
+/** Test seam: forget the opened database and any load failure. */
+const resetCountryDatabase = () => {
+  reader = undefined;
+  loadError = undefined;
 };
 
 const localOverride = () => {
@@ -54,4 +88,9 @@ const localOverride = () => {
  */
 const countryOfRequest = (req) => localOverride() || countryOf(resolveSourceIp(req));
 
-module.exports = { countryOf, countryOfRequest };
+module.exports = {
+  countryOf,
+  countryOfRequest,
+  resetCountryDatabase,
+  CountryDatabaseUnavailableError,
+};

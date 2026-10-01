@@ -88,8 +88,10 @@ describe('solana-ft-controller', () => {
       powerupCatalog.isOffered.mockReturnValueOnce(false);
       const res = createRes();
 
-      await controller.build({ query }, res);
+      const next = jest.fn();
+      controller.validateSwapQuery({ query }, res, next);
 
+      expect(next).not.toHaveBeenCalled();
       expect(powerupCatalog.isOffered).toHaveBeenCalledWith('swap', 'solana-mainnet');
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({
@@ -101,7 +103,7 @@ describe('solana-ft-controller', () => {
 
     it('rejects missing required params before any service call', async () => {
       const res = createRes();
-      await controller.build({ query: { inputMint: USDC } }, res);
+      controller.validateSwapQuery({ query: { inputMint: USDC } }, res, jest.fn());
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         error: 'missing_parameter',
@@ -110,21 +112,25 @@ describe('solana-ft-controller', () => {
       expect(swapBuildService.build).not.toHaveBeenCalled();
     });
 
-    it('rejects an invalid address and identical mints', async () => {
+    it('validateSwapQuery rejects an invalid address and identical mints, and passes a sound query', async () => {
       let res = createRes();
-      await controller.build({ query: { ...query, publicKey: 'nope' } }, res);
+      controller.validateSwapQuery({ query: { ...query, publicKey: 'nope' } }, res, jest.fn());
       expect(res.json).toHaveBeenCalledWith({
         error: 'invalid_parameter',
         error_description: 'publicKey is not a valid Solana address',
       });
 
       res = createRes();
-      await controller.build({ query: { ...query, outputMint: USDC } }, res);
+      controller.validateSwapQuery({ query: { ...query, outputMint: USDC } }, res, jest.fn());
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({ error_description: 'inputMint and outputMint must differ' })
       );
 
       expect(swapBuildService.build).not.toHaveBeenCalled();
+
+      const next = jest.fn();
+      controller.validateSwapQuery({ query }, createRes(), next);
+      expect(next).toHaveBeenCalledWith();
     });
 
     it('swapNetworkOnly answers 400 off mainnet and passes on mainnet', () => {

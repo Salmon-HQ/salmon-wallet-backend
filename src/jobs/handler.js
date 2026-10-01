@@ -257,6 +257,8 @@ const SDN_CSV_URL =
   process.env.SANCTIONS_SOURCE_URL ||
   'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV';
 const DIGITAL_CURRENCY_ADDRESS = /Digital Currency Address - [A-Z0-9]+ ([A-Za-z0-9]+)/g;
+/** A new list below this share of the previous one is refused as truncated. */
+const SANCTIONS_MIN_RATIO = 0.5;
 
 /**
  * Every `Digital Currency Address - <SYMBOL> <address>` value in the SDN
@@ -289,12 +291,25 @@ module.exports.refreshSanctionsJob = async () => {
     const addresses = parseSdnAddresses(typeof data === 'string' ? data : '');
     if (addresses.length === 0)
       throw new Error('SDN list parsed to zero digital-currency addresses');
+    // A truncated download or a changed line format must not shrink the live
+    // set: a list far smaller than the last one is refused, not applied.
+    const previous = await sanctionsRepository.getLocalListSize();
+    if (previous > 0 && addresses.length < previous * SANCTIONS_MIN_RATIO) {
+      throw new Error(
+        `SDN list parsed to ${addresses.length} addresses, below ${SANCTIONS_MIN_RATIO * 100}% of the ${previous} held`
+      );
+    }
     await sanctionsRepository.replaceLocalList(addresses);
-    console.info('[SANCTIONS_REFRESH]', { outcome: 'replaced', addresses: addresses.length });
+    console.info('[SANCTIONS_REFRESH]', {
+      outcome: 'replaced',
+      addresses: addresses.length,
+      previous,
+    });
     return createResponse(`Sanctions refresh job completed: ${addresses.length} addresses`);
   } catch (error) {
     console.error('[SANCTIONS_REFRESH]', { outcome: 'failed', message: error.message });
-    return createResponse(`Sanctions refresh job failed: ${error.message}`);
+    // Rethrown so Lambda counts the invocation as failed and an alarm can see it.
+    throw error;
   } finally {
     if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
       await redis.quit().catch(() => {});

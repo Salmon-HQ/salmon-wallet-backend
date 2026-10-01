@@ -27,8 +27,14 @@ const router = express.Router();
 
 router.get('/verified', cacheControl('max-age=300'), safe(controller.verified));
 router.get('/search', safe(controller.search));
-// Mainnet check → availability gate (country/platform row, screening on
-// Jupiter rows) → build. No execute/relay route exists by design.
-router.get('/swap/build', controller.swapNetworkOnly, powerupGate('swap'), safe(controller.build));
+// Mainnet check → request shape → availability gate (country/platform row,
+// screening on Jupiter rows) → build. No execute/relay route exists by design.
+router.get(
+  '/swap/build',
+  controller.swapNetworkOnly,
+  controller.validateSwapQuery,
+  powerupGate('swap'),
+  safe(controller.build)
+);
 
 module.exports = router;

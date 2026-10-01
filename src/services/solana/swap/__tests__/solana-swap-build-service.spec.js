@@ -575,4 +575,57 @@ describe('solana-swap-build-service', () => {
       expect(queried).not.toContain(FEE_OWNER);
     });
   });
+
+  describe('what the provider may hand back', () => {
+    it('refuses a top-level program outside the swap allowlist with 502 provider_program_mismatch', async () => {
+      const rogue = new TransactionInstruction({
+        programId: new PublicKey('Stake11111111111111111111111111111111111111'),
+        keys: [{ pubkey: new PublicKey(TAKER), isSigner: true, isWritable: true }],
+        data: Buffer.from([1]),
+      });
+      zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction(), rogue]));
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      await expect(service.build(params(), locals)).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_program_mismatch',
+      });
+      expect(error).toHaveBeenCalledWith(
+        '[POWERUP_PROGRAM_MISMATCH] swap invokes an undeclared program',
+        expect.objectContaining({ programId: 'Stake11111111111111111111111111111111111111' })
+      );
+      error.mockRestore();
+    });
+
+    it("refuses a transaction that needs a signature besides the caller's", async () => {
+      const other = new TransactionInstruction({
+        programId: new PublicKey(SETTLER),
+        keys: [
+          { pubkey: new PublicKey(TAKER), isSigner: true, isWritable: true },
+          { pubkey: new PublicKey(FEE_OWNER), isSigner: true, isWritable: false },
+        ],
+        data: Buffer.from([9]),
+      });
+      zeroex.requestSwapInstructions.mockResolvedValue(quote([other]));
+      await expect(service.build(params(), locals)).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_signer_mismatch',
+      });
+    });
+  });
+
+  describe('resolveAmount bounds', () => {
+    it('accepts decimal digits inside u64 only', async () => {
+      for (const bad of ['1e3', '0x10', '-5', '1.5', '0', '18446744073709551616', '007']) {
+        await expect(
+          service.resolveAmount({ amount: bad, inputMint: SOL }, locals)
+        ).resolves.toMatchObject({ error: 'invalid_parameter' });
+      }
+      await expect(
+        service.resolveAmount({ amount: '18446744073709551615', inputMint: SOL }, locals)
+      ).resolves.toEqual({ amount: '18446744073709551615' });
+      await expect(
+        service.resolveAmount({ uiAmount: '1e30', inputMint: SOL }, locals)
+      ).resolves.toMatchObject({ error: 'invalid_parameter' });
+    });
+  });
 });

@@ -167,12 +167,47 @@ describe('jupiter-swap-provider', () => {
     }
   });
 
-  it('answers 503 upstream_rate_limited on a 429 and lets 401/5xx propagate', async () => {
+  it('answers 503 upstream_rate_limited on a 429 and lets a 5xx propagate', async () => {
     http.get.mockRejectedValue({ response: { status: 429, data: {} } });
     await expect(request()).rejects.toMatchObject({ errorCode: 'upstream_rate_limited' });
 
-    const unauthorized = { response: { status: 401, data: { message: 'bad key' } } };
-    http.get.mockRejectedValue(unauthorized);
-    await expect(request()).rejects.toBe(unauthorized);
+    const outage = { response: { status: 502, data: { message: 'bad gateway' } } };
+    http.get.mockRejectedValue(outage);
+    await expect(request()).rejects.toBe(outage);
+  });
+
+  it('refuses a 200 without a swap instruction or amounts as a provider defect, never signable bytes', async () => {
+    for (const data of [
+      { ...noFee, swapInstruction: undefined },
+      { ...noFee, outAmount: undefined },
+      { ...noFee, otherAmountThreshold: 'abc' },
+      {},
+    ]) {
+      http.get.mockResolvedValue({ data });
+      await expect(request()).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_bad_response',
+      });
+    }
+    expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_BAD_RESPONSE]', {
+      provider: 'jupiter',
+    });
+  });
+
+  it('maps a 401/403 onto 503 and never rethrows the error that carries our key', async () => {
+    for (const status of [401, 403]) {
+      http.get.mockRejectedValue({
+        response: { status, data: { message: 'Unauthorized' } },
+        config: { headers: { 'x-api-key': 'test-key' } },
+      });
+      await expect(request()).rejects.toMatchObject({
+        statusCode: 503,
+        errorCode: 'upstream_unavailable',
+      });
+    }
+    expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_AUTH]', {
+      provider: 'jupiter',
+      status: 401,
+    });
   });
 });

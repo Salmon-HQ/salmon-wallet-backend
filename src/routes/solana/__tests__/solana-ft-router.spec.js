@@ -19,6 +19,7 @@ jest.mock('../../../controllers/solana/solana-ft-controller', () => ({
   search: 'search',
   build: 'build',
   swapNetworkOnly: 'swapNetworkOnly',
+  validateSwapQuery: 'validateSwapQuery',
 }));
 jest.mock('../../../middlewares/powerup-gate', () => jest.fn((capability) => `gate:${capability}`));
 
@@ -45,10 +46,16 @@ describe('solana-ft-router', () => {
       '/search',
       '/swap/build',
     ]);
-    expect(mockRouter.get).toHaveBeenCalledWith('/swap/build', 'swapNetworkOnly', 'gate:swap', {
-      type: 'safe',
-      handler: 'build',
-    });
+    expect(mockRouter.get).toHaveBeenCalledWith(
+      '/swap/build',
+      'swapNetworkOnly',
+      'validateSwapQuery',
+      'gate:swap',
+      {
+        type: 'safe',
+        handler: 'build',
+      }
+    );
     expect(mockRouter.post).not.toHaveBeenCalled();
   });
 });

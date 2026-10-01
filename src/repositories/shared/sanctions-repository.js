@@ -41,6 +41,10 @@ const hasLocalList = async () => (await redis.exists([key('addresses')])) === 1;
 const isListedLocally = async (address) =>
   (await redis.sendCommand(['SISMEMBER', key('addresses'), address])) === 1;
 
+/** @returns {Promise<number>} how many addresses the live set holds (0 when absent). */
+const getLocalListSize = async () =>
+  Number(await redis.sendCommand(['SCARD', key('addresses')])) || 0;
+
 /** @returns {Promise<string|null>} ISO timestamp of the last refresh. */
 const getFetchedAt = () => redis.get(key('fetched_at'));
 
@@ -64,5 +68,6 @@ module.exports = {
   hasLocalList,
   isListedLocally,
   getFetchedAt,
+  getLocalListSize,
   replaceLocalList,
 };

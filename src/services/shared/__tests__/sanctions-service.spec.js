@@ -69,10 +69,17 @@ describe('sanctions-service', () => {
     await expect(isListed(ADDRESS)).resolves.toBe(false);
   });
 
-  it('answers from TRM alone when the local copy is missing, and logs it', async () => {
+  it('refuses to answer when the local copy is missing, whatever TRM says', async () => {
     repository.hasLocalList.mockResolvedValue(false);
-    await expect(isListed(ADDRESS)).resolves.toBe(false);
+    await expect(isListed(ADDRESS)).rejects.toBeInstanceOf(SanctionsUnavailableError);
     expect(console.error).toHaveBeenCalledWith('[SANCTIONS_LOCAL_MISSING]');
+    expect(http.post).not.toHaveBeenCalled();
+  });
+
+  it('refuses to answer from a copy older than seven days', async () => {
+    repository.getFetchedAt.mockResolvedValue(new Date(Date.now() - 8 * 86400000).toISOString());
+    await expect(isListed(ADDRESS)).rejects.toBeInstanceOf(SanctionsUnavailableError);
+    expect(console.error).toHaveBeenCalledWith('[SANCTIONS_LOCAL_EXPIRED]', expect.any(Object));
   });
 
   it('throws 503 upstream_unavailable when neither layer answers', async () => {

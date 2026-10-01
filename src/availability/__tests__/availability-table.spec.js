@@ -49,8 +49,23 @@ describe('availability-table', () => {
       const u = valid();
       u.capabilities.swap.platforms.android = { unavailable: [] };
       const problems = validateTable(u);
-      expect(problems).toHaveLength(5);
       expect(problems).toContainEqual('swap.platforms.android: Jupiter may not serve US');
+      expect(problems).toContainEqual(
+        'swap.platforms.android.unavailable: must include embargoed CU'
+      );
+    });
+
+    it('rejects a table that routes an embargoed country anywhere, and a shape the validator did not foresee', () => {
+      const t = valid();
+      t.capabilities.swap.unavailable = t.capabilities.swap.unavailable.filter((c) => c !== 'KP');
+      t.capabilities.swap.providers['0x'].push('KP');
+      expect(validateTable(t)).toContainEqual('swap.unavailable: must include embargoed KP');
+      const u = valid();
+      u.capabilities.swap.providers = null;
+      expect(() => validateTable(u)).not.toThrow();
+      expect(validateTable({ version: 1, capabilities: { swap: null } })).toContainEqual(
+        'swap: must be an object'
+      );
     });
 
     it('rejects an unknown platform key and a bad version', () => {
@@ -89,6 +104,33 @@ describe('availability-table', () => {
       process.env.AVAILABILITY_TABLE_JSON = JSON.stringify({ version: 1, capabilities: {} });
       const load = createTableLoader({ fetchParameter: jest.fn().mockResolvedValue(null) });
       expect(await load()).toEqual(DEFAULT_TABLE);
+    });
+
+    it('reverts to the default once the last good copy is older than the ceiling', async () => {
+      const t = valid();
+      t.capabilities.swap.unavailable.push('AR');
+      const fetchParameter = jest
+        .fn()
+        .mockResolvedValueOnce(JSON.stringify(t))
+        .mockRejectedValue(new Error('ssm down'));
+      let now = 0;
+      const load = createTableLoader({
+        fetchParameter,
+        now: () => now,
+        ttlMs: 1000,
+        maxStaleMs: 5000,
+      });
+      jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect((await load()).capabilities.swap.unavailable).toContain('AR');
+      now = 2000;
+      expect((await load()).capabilities.swap.unavailable).toContain('AR');
+      now = 7000;
+      expect((await load()).capabilities.swap.unavailable).not.toContain('AR');
+      expect(console.error).toHaveBeenCalledWith(
+        '[AVAILABILITY_TABLE]',
+        expect.objectContaining({ outcome: 'reverted_to_default' })
+      );
     });
 
     it('reads the SSM parameter, caches it, and keeps the last good copy on failure', async () => {

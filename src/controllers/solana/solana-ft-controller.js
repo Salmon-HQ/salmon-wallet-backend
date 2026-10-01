@@ -28,8 +28,8 @@ const swapNetworkOnly = (req, res, next) => {
 /**
  * Builds an UNSIGNED swap transaction for the client to sign and broadcast
  * (`solana-swap-build` contract; root AGENTS.md "Signing boundary"). Runs
- * behind `swapNetworkOnly` and `powerupGate('swap')`, which chose the
- * provider in `res.locals.availability`.
+ * behind `swapNetworkOnly`, `validateSwapQuery` and `powerupGate('swap')`,
+ * which chose the provider in `res.locals.availability`.
  *
  * @param {import('express').Request} req - Reads `query.inputMint`, `query.outputMint`,
  *   `query.publicKey` (all required), one of `query.amount`/`query.uiAmount`, and the
@@ -40,7 +40,11 @@ const swapNetworkOnly = (req, res, next) => {
  *   reach the error middleware from the service.
  * @returns {Promise<void>}
  */
-const build = async (req, res) => {
+/**
+ * The request's own shape, judged before the availability gate screens the
+ * wallet: a malformed request never spends a screening or a provider call.
+ */
+const validateSwapQuery = (req, res, next) => {
   const missing = BUILD_REQUIRED_PARAMS.filter((key) => !req.query[key]);
   if (missing.length > 0) {
     return res.status(400).json({
@@ -48,8 +52,7 @@ const build = async (req, res) => {
       error_description: `Missing required query params: ${missing.join(', ')}`,
     });
   }
-
-  const { inputMint, outputMint, publicKey, amount, uiAmount, slippageBps } = req.query;
+  const { inputMint, outputMint, publicKey } = req.query;
   const invalidAddress = findInvalidAddressParam({ inputMint, outputMint, publicKey });
   if (invalidAddress) {
     return res.status(400).json({
@@ -71,7 +74,11 @@ const build = async (req, res) => {
       error_description: `Powerup swap is not available on ${SWAP_NETWORK}`,
     });
   }
+  return next();
+};
 
+const build = async (req, res) => {
+  const { inputMint, outputMint, publicKey, amount, uiAmount, slippageBps } = req.query;
   const resolvedSlippage = swapBuildService.resolveSlippage(slippageBps);
   if (resolvedSlippage.error) {
     return res.status(400).json(resolvedSlippage);
@@ -145,4 +152,4 @@ const search = async (req, res) => {
   res.status(200).send(resource);
 };
 
-module.exports = { build, swapNetworkOnly, verified, search };
+module.exports = { build, swapNetworkOnly, validateSwapQuery, verified, search };

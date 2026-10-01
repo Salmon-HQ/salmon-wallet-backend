@@ -41,4 +41,23 @@ describe('availability/country-resolver', () => {
     const req = { requestContext: { identity: { sourceIp: '8.8.8.8' } }, headers: {} };
     expect(countryOfRequest(req)).toBe('US');
   });
+
+  it('refuses with 503 when the database cannot be opened, instead of answering "no country"', () => {
+    jest.isolateModules(() => {
+      jest.doMock('fs', () => ({
+        readFileSync: () => {
+          throw new Error('ENOENT');
+        },
+      }));
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const broken = require('../country-resolver');
+      expect(() => broken.countryOf('8.8.8.8')).toThrow(
+        expect.objectContaining({ statusCode: 503, errorCode: 'upstream_unavailable' })
+      );
+      expect(() => broken.countryOf('8.8.8.8')).toThrow(/unavailable/);
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalledWith('[COUNTRY_DB_UNAVAILABLE]', expect.any(Object));
+      error.mockRestore();
+    });
+  });
 });

@@ -16,6 +16,8 @@
 const PROVIDERS = ['jupiter', '0x'];
 const PLATFORMS = ['ios', 'android', 'extension'];
 const COUNTRY_CODE = /^[A-Z]{2}$/;
+/** How long a table that cannot be refreshed may keep serving before the default takes over. */
+const MAX_STALE_MS = 60 * 60 * 1000;
 const TTL_MS = 5 * 60 * 1000;
 
 /**
@@ -96,6 +98,12 @@ const validateRows = (name, platform, rows, problems) => {
       problems.push(`${where}: "${code}" is not an ISO 3166-1 alpha-2 code`);
   }
   // Jupiter may only serve outside its prohibited list, wherever it ends up serving.
+  // The embargoed countries are unavailable on every row, whoever the provider.
+  for (const country of EMBARGOED) {
+    if (!rows.unavailable.includes(country)) {
+      problems.push(`${where}.unavailable: must include embargoed ${country}`);
+    }
+  }
   const servedByJupiter = (country) => {
     if (rows.unavailable.includes(country)) return false;
     for (const [provider, countries] of Object.entries(rows.providers)) {
@@ -120,6 +128,10 @@ const validateTable = (table) => {
   if (!capabilities || typeof capabilities !== 'object')
     return [...problems, 'capabilities: missing'];
   for (const [name, capability] of Object.entries(capabilities)) {
+    if (!capability || typeof capability !== 'object') {
+      problems.push(`${name}: must be an object`);
+      continue;
+    }
     validateRows(name, null, rowsFor(capability, '__none__'), problems);
     for (const platform of Object.keys(capability.platforms || {})) {
       if (!PLATFORMS.includes(platform)) {
@@ -139,7 +151,12 @@ const parse = (text, source) => {
   } catch (error) {
     return { problems: [`${source}: ${error.message}`] };
   }
-  return { doc, problems: validateTable(doc) };
+  try {
+    return { doc, problems: validateTable(doc) };
+  } catch (error) {
+    // A shape the validator did not foresee is an invalid table, never a crash.
+    return { problems: [`${source}: ${error.message}`] };
+  }
 };
 
 /** Default SSM reader: the SDK the Lambda runtime ships, loaded lazily. */
@@ -160,9 +177,23 @@ const createTableLoader = ({
   fetchParameter = fetchFromSsm,
   now = Date.now,
   ttlMs = TTL_MS,
+  maxStaleMs = MAX_STALE_MS,
 } = {}) => {
   let current = DEFAULT_TABLE;
   let fetchedAt = -Infinity;
+  let goodAt = -Infinity;
+
+  // Keep-last-good has a ceiling: a table that could not be refreshed for
+  // `maxStaleMs` reverts to the built-in default, which is the restrictive
+  // one, so an SSM outage or a typo in an edit never keeps an old, looser
+  // table serving indefinitely.
+  const lastGood = (outcome) => {
+    if (current !== DEFAULT_TABLE && now() - goodAt > maxStaleMs) {
+      console.error('[AVAILABILITY_TABLE]', { outcome: 'reverted_to_default', after: outcome });
+      current = DEFAULT_TABLE;
+    }
+    return current;
+  };
 
   return async () => {
     if (process.env.NODE_ENV !== 'prod' && process.env.AVAILABILITY_TABLE_JSON) {
@@ -181,15 +212,21 @@ const createTableLoader = ({
       text = await fetchParameter();
     } catch (error) {
       console.error('[AVAILABILITY_TABLE]', { outcome: 'fetch_failed', message: error.message });
-      return current;
+      return lastGood('fetch_failed');
     }
-    if (text === null || text === undefined) return current;
+    if (text === null || text === undefined) {
+      if (process.env.NODE_ENV === 'prod') {
+        console.error('[AVAILABILITY_TABLE]', { outcome: 'no_parameter' });
+      }
+      return lastGood('no_parameter');
+    }
     const { doc, problems } = parse(text, 'ssm');
     if (problems.length > 0) {
       console.error('[AVAILABILITY_TABLE]', { outcome: 'invalid', source: 'ssm', problems });
-      return current;
+      return lastGood('invalid');
     }
     current = doc;
+    goodAt = now();
     return current;
   };
 };

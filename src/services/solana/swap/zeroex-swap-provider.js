@@ -107,7 +107,10 @@ const toSwapError = (status, data) => {
     return new SolanaSwapError(reason, mapped[0], mapped[1]);
   }
   if (status === 403) {
-    return new SolanaSwapError(reason, 403, 'wallet_restricted');
+    // Only 0x's own taker screening is the wallet's problem; any other 403 is
+    // our credential or our address being refused.
+    console.error('[SWAP_PROVIDER_AUTH]', { provider: '0x', status, code: code || null });
+    return new SolanaSwapError('0x refused our credentials', 503, 'upstream_unavailable');
   }
   return new SolanaSwapNoRouteError(reason);
 };
@@ -139,6 +142,9 @@ const requestSwapInstructions = async ({
   fee,
   reserveBytes,
 }) => {
+  if (!Number.isSafeInteger(Number(amount))) {
+    throw new SolanaSwapError('amount is too large for this provider', 400, 'invalid_parameter');
+  }
   const body = {
     token_in: toZeroexMint(inputMint),
     token_out: toZeroexMint(outputMint),
@@ -175,6 +181,10 @@ const requestSwapInstructions = async ({
     // sanctions screening refuses the taker. `ZEROEX_ERROR_MAP` turns the
     // code into our envelope; unknown codes mean "no route here". providerCall
     // only retries 429/5xx/network, so these arrive here on the first try.
+    if (status === 401) {
+      console.error('[SWAP_PROVIDER_AUTH]', { provider: '0x', status });
+      throw new SolanaSwapError('0x refused our credentials', 503, 'upstream_unavailable');
+    }
     if (status === 400 || status === 403 || status === 422) {
       console.warn('0x swap-instructions rejected the request:', error.response.data);
       throw toSwapError(status, error.response.data);

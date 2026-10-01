@@ -222,8 +222,8 @@ describe('zeroex-swap-provider', () => {
     ).rejects.toMatchObject({ statusCode: 503, errorCode: 'upstream_rate_limited' });
   });
 
-  it('lets a 0x 5xx/401 propagate untouched (our fault, not the caller)', async () => {
-    const upstream = { response: { status: 401, data: { message: 'Unauthorized' } } };
+  it('lets a 0x 5xx propagate untouched (our fault, not the caller)', async () => {
+    const upstream = { response: { status: 502, data: { message: 'Bad gateway' } } };
     http.post.mockRejectedValue(upstream);
 
     await expect(
@@ -237,5 +237,46 @@ describe('zeroex-swap-provider', () => {
         reserveBytes: 0,
       })
     ).rejects.toBe(upstream);
+  });
+
+  it('treats any other 403, and a 401, as our credential being refused: 503, never wallet_restricted', async () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    for (const response of [
+      { status: 403, data: { message: 'Forbidden' } },
+      { status: 401, data: { message: 'Unauthorized' } },
+    ]) {
+      http.post.mockRejectedValue({ response });
+      await expect(
+        requestSwapInstructions({
+          inputMint: USDC,
+          outputMint: SOL,
+          amount: '1',
+          taker: TAKER,
+          slippageBps: 50,
+          fee: null,
+          reserveBytes: 0,
+        })
+      ).rejects.toMatchObject({ statusCode: 503, errorCode: 'upstream_unavailable' });
+    }
+    expect(error).toHaveBeenCalledWith(
+      '[SWAP_PROVIDER_AUTH]',
+      expect.objectContaining({ provider: '0x' })
+    );
+    error.mockRestore();
+  });
+
+  it('refuses an amount this provider cannot carry as a number', async () => {
+    await expect(
+      requestSwapInstructions({
+        inputMint: USDC,
+        outputMint: SOL,
+        amount: '9007199254740993',
+        taker: TAKER,
+        slippageBps: 50,
+        fee: null,
+        reserveBytes: 0,
+      })
+    ).rejects.toMatchObject({ statusCode: 400, errorCode: 'invalid_parameter' });
+    expect(http.post).not.toHaveBeenCalled();
   });
 });

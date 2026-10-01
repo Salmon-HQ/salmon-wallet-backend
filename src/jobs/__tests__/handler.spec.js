@@ -13,6 +13,7 @@ jest.mock('../../repositories/shared/coingecko-repository', () => ({
 
 jest.mock('../../repositories/shared/sanctions-repository', () => ({
   replaceLocalList: jest.fn().mockResolvedValue(undefined),
+  getLocalListSize: jest.fn().mockResolvedValue(0),
 }));
 
 jest.mock('../../repositories/data-source', () => ({
@@ -177,21 +178,30 @@ describe('jobs/handler', () => {
     it('keeps the live set when the download parses to zero addresses', async () => {
       http.get.mockResolvedValue({ data: 'ent_num,name\n1,"nobody"\n' });
 
-      const result = await handler.refreshSanctionsJob();
+      await expect(handler.refreshSanctionsJob()).rejects.toThrow(/zero/);
 
       expect(sanctionsRepository.replaceLocalList).not.toHaveBeenCalled();
-      expect(JSON.parse(result.body).message).toMatch(/failed/);
       expect(error).toHaveBeenCalledWith(
         '[SANCTIONS_REFRESH]',
         expect.objectContaining({ outcome: 'failed' })
       );
     });
 
-    it('keeps the live set when the download fails', async () => {
+    it('keeps the live set and fails the invocation when the download fails', async () => {
       http.get.mockRejectedValue(new Error('ETIMEDOUT'));
-      const result = await handler.refreshSanctionsJob();
+      await expect(handler.refreshSanctionsJob()).rejects.toThrow('ETIMEDOUT');
       expect(sanctionsRepository.replaceLocalList).not.toHaveBeenCalled();
-      expect(JSON.parse(result.body).message).toMatch(/failed: ETIMEDOUT/);
+      expect(error).toHaveBeenCalledWith(
+        '[SANCTIONS_REFRESH]',
+        expect.objectContaining({ outcome: 'failed' })
+      );
+    });
+
+    it('refuses a list far smaller than the one held, as a truncated download', async () => {
+      http.get.mockResolvedValue({ data: SDN_FIXTURE });
+      sanctionsRepository.getLocalListSize.mockResolvedValue(500);
+      await expect(handler.refreshSanctionsJob()).rejects.toThrow(/below 50%/);
+      expect(sanctionsRepository.replaceLocalList).not.toHaveBeenCalled();
     });
   });
 });

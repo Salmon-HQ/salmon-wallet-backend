@@ -102,6 +102,37 @@ const toSwapError = (status, data) => {
   return null;
 };
 
+const isInstruction = (raw) =>
+  Boolean(raw) &&
+  typeof raw.programId === 'string' &&
+  Array.isArray(raw.accounts) &&
+  typeof raw.data === 'string';
+
+/**
+ * A 200 whose shape is not the one this adapter was written against is a
+ * provider defect, never signable bytes: a missing swap instruction would
+ * otherwise build a transaction that sets accounts up and swaps nothing.
+ * @throws {SolanaSwapError} 502 `provider_bad_response`
+ */
+const assertBuildShape = (data) => {
+  const ok =
+    Boolean(data) &&
+    isInstruction(data.swapInstruction) &&
+    /^\d+$/.test(String(data.outAmount)) &&
+    /^\d+$/.test(String(data.otherAmountThreshold)) &&
+    (data.setupInstructions === undefined || data.setupInstructions.every(isInstruction)) &&
+    (data.cleanupInstruction == null || isInstruction(data.cleanupInstruction)) &&
+    (data.otherInstructions === undefined || data.otherInstructions.every(isInstruction));
+  if (!ok) {
+    console.error('[SWAP_PROVIDER_BAD_RESPONSE]', { provider: 'jupiter' });
+    throw new SolanaSwapError(
+      'Jupiter answered with an unexpected shape',
+      502,
+      'provider_bad_response'
+    );
+  }
+};
+
 /**
  * Request swap instructions from Jupiter.
  *
@@ -152,6 +183,12 @@ const requestSwapInstructions = async ({
         'upstream_rate_limited'
       );
     }
+    if (status === 401 || status === 403) {
+      // Our credential, never the caller's wallet: the raw error carries the
+      // request headers, so it is replaced rather than rethrown.
+      console.error('[SWAP_PROVIDER_AUTH]', { provider: 'jupiter', status });
+      throw new SolanaSwapError('Jupiter refused our credentials', 503, 'upstream_unavailable');
+    }
     const mapped = status ? toSwapError(status, error.response.data) : null;
     if (mapped) {
       console.warn('Jupiter swap build rejected the request:', error.response.data);
@@ -159,6 +196,8 @@ const requestSwapInstructions = async ({
     }
     throw error;
   }
+
+  assertBuildShape(data);
 
   // Order per Jupiter's reference assembly; `computeBudgetInstructions` and
   // `tipInstruction` (Jito) are ours to decide and are left out.

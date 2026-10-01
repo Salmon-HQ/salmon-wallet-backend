@@ -11,9 +11,10 @@
  *   2. TRM Labs' free screening API, cached per address for a day — extra
  *      coverage when it answers, never a reason to skip layer 1.
  *
- * Neither layer reachable → `SanctionsUnavailableError` (503
- * `upstream_unavailable`): screening is never skipped silently. The address
- * is never logged.
+ * The local copy missing, unreadable or older than seven days →
+ * `SanctionsUnavailableError` (503 `upstream_unavailable`), whatever TRM
+ * would say: screening is never skipped silently and never rests on the
+ * weak layer alone. The address is never logged.
  */
 
 const http = require('axios');
@@ -22,6 +23,8 @@ const { providerCall } = require('../../infrastructure/providers/provider-client
 
 const TRM_ENDPOINT = 'https://api.trmlabs.com/public/v1/sanctions/screening';
 const STALE_MS = 48 * 60 * 60 * 1000;
+/** Past this, the local copy no longer counts as an answer: too old to be the authoritative layer. */
+const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 class SanctionsUnavailableError extends Error {
   constructor() {
@@ -39,8 +42,11 @@ const localVerdict = async (address) => {
       return null;
     }
     const fetchedAt = await repository.getFetchedAt();
-    if (!fetchedAt || Date.now() - Date.parse(fetchedAt) > STALE_MS) {
-      console.error('[SANCTIONS_STALE]', { fetchedAt });
+    const age = fetchedAt ? Date.now() - Date.parse(fetchedAt) : Infinity;
+    if (age > STALE_MS) console.error('[SANCTIONS_STALE]', { fetchedAt });
+    if (age > MAX_AGE_MS) {
+      console.error('[SANCTIONS_LOCAL_EXPIRED]', { fetchedAt });
+      return null;
     }
     return await repository.isListedLocally(address);
   } catch (error) {
@@ -80,9 +86,10 @@ const trmVerdict = async (address, locals) => {
 const isListed = async (address, { locals } = {}) => {
   const local = await localVerdict(address);
   if (local === true) return true;
-  const remote = await trmVerdict(address, locals);
-  if (local === null && remote === null) throw new SanctionsUnavailableError();
-  return remote === true;
+  // The Treasury copy is the authoritative layer: without it there is no
+  // answer, whatever TRM says — its free endpoint cleared listed addresses.
+  if (local === null) throw new SanctionsUnavailableError();
+  return (await trmVerdict(address, locals)) === true;
 };
 
 module.exports = { isListed, SanctionsUnavailableError, TRM_ENDPOINT };
