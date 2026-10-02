@@ -33,4 +33,21 @@ describe('production config defaults', () => {
     expect(defaultFor('RATE_LIMIT_TX_MAX')).toBe('30');
     expect(defaultFor('RATE_LIMIT_WINDOW_SECONDS')).toBe('60');
   });
+
+  // The privacy policy states how long request logs are kept. The number
+  // lives in one line of `serverless.yml`; changing it changes what the
+  // policy must say, so the change has to be deliberate.
+  it('keeps request logs for thirty days, as the privacy policy states', () => {
+    const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
+    expect(serverless.match(/^\s*logRetentionInDays:\s*(\d+)\s*$/m)?.[1]).toBe('30');
+  });
+
+  it('reads the Redis TLS switch from configuration on every stage', () => {
+    expect(defaultFor('REDIS_TLS')).toBe('false');
+    const local = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'config', 'env.local.yml'),
+      'utf8'
+    );
+    expect(local).toMatch(/^\s*REDIS_TLS:/m);
+  });
 });
