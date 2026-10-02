@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-14
 
-**Status**: Draft — owner decisions below taken 2026-09-14; the build hold on the Powerups stack still stands
+**Status**: Draft — owner decisions below taken 2026-09-14, amended 2026-09-30 by `specs/018-swap-jupiter-availability` (platform dimension, provider in the answer, screening moves to Salmon)
 
 > The referenced-but-never-written spec 011. `specs/010-signing-boundary`,
 > here for region gating; this document is what they point at.
@@ -123,8 +123,11 @@ and client state goes stale and can be forged.
 ## Requirements _(mandatory)_
 
 - **FR-001**: The backend MUST expose the caller's availability separately
-  from the network catalog, uncached, as `{ id, enabled, reason? }` per
-  capability, with `reason` from the existing vocabulary.
+  from the network catalog, uncached, as `{ id, enabled, reason?, provider? }`
+  per capability, with `reason` from the existing vocabulary and `provider`
+  the name of the routing provider that will serve the capability for this
+  caller (2026-09-30: the answer is looked up by capability, platform and
+  country, because the stores' rules differ per platform).
 - **FR-002**: The caller's country MUST be resolved at the edge and passed to
   the origin, and the origin MUST refuse a request that did not arrive through
   the edge. A country supplied by the caller MUST never be trusted.
@@ -142,9 +145,16 @@ and client state goes stale and can be forged.
 - **FR-008**: Availability MUST be decided per request. The backend MUST NOT
   persist a country, a capability's state per wallet, or anything else per
   user.
-- **FR-009**: Wallet screening stays the routing provider's. The backend
-  renders its refusal as `wallet_restricted` and MUST NOT maintain a sanctions
-  list of its own.
+- **FR-009**: Wallet screening is Salmon's when the routing provider does not
+  perform it (Jupiter's licence §7.3 puts it on the integrator; 0x screens
+  itself). The backend answers `wallet_restricted` from its own copy of the
+  public sanctions list, and renders a provider's refusal the same way.
+  Amended 2026-09-30; the mechanism is in spec 018.
+- **FR-010**: The apps MUST send their platform (`ios`, `android`,
+  `extension`) on every request; a request without it is evaluated as the
+  most restrictive platform. The platform is a caller-supplied signal, and
+  that is acceptable: the stores' rules bind the build they reviewed, and a
+  claimed platform cannot open a country that is blocked on every platform.
 
 ## What this gate is not
 
@@ -161,6 +171,5 @@ it does not pretend to make the network unreachable.
 ## Out of scope
 
 - The positive per-country allowlist and the legal opinion that would justify
-- Sanctions screening of addresses, which the routing provider performs.
 - Anything that would make a stale client refuse on its own: the answer comes
   from the backend on every call, which is what makes a withdrawal immediate.

@@ -57,6 +57,28 @@ const PROFILES = {
     retry: RETRY_NONE,
     breaker: null,
   },
+  // TRM Labs sanctions screening: 60/min without a key. No retry — the
+  // sanctions service falls back to the local SDN copy.
+  trm: {
+    tier: () => ({ rps: 1, burst: 5 }),
+    timeoutMs: 5000,
+    retry: RETRY_NONE,
+    breaker: BREAKER_DEFAULT,
+  },
+  // Jupiter Swap API, Developer plan (10 rps).
+  jupiter: {
+    tier: () => ({ rps: 10, burst: 10 }),
+    timeoutMs: 10000,
+    retry: { maxAttempts: 3, baseMs: 500, maxMs: 5000, honorRetryAfter: true },
+    breaker: BREAKER_DEFAULT,
+  },
+  // 0x Swap API, Standard plan (5 rps).
+  zeroex: {
+    tier: () => ({ rps: 5, burst: 5 }),
+    timeoutMs: 10000,
+    retry: { maxAttempts: 3, baseMs: 500, maxMs: 5000, honorRetryAfter: true },
+    breaker: BREAKER_DEFAULT,
+  },
 };
 
 /**

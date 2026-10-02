@@ -77,6 +77,7 @@ const txRateLimit = rateLimit({
 });
 app.use('/v1/solana-:env/nft', txRateLimit);
 app.use('/v1/solana-:env/powerups', txRateLimit);
+app.use('/v1/solana-:env/ft/swap', txRateLimit);
 
 app.use('/', require('./routes/shared/info-router'));
 app.use('/v1', require('./routes/multichain'));

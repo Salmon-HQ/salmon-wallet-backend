@@ -1,6 +1,6 @@
 {
   "name": "salmon-api",
-  "version": "0.19.1",
+  "version": "0.20.0",
   "description": "Salmon API",
   "main": "index.js",
   "engines": {
@@ -48,6 +48,7 @@
     "serverless-offline": "^13.10.1"
   },
   "dependencies": {
+    "@ip-location-db/dbip-country-mmdb": "^2.3.2026060120",
     "@metaplex-foundation/digital-asset-standard-api": "^2.1.1",
     "@metaplex-foundation/mpl-bubblegum": "^5.1.0",
     "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
@@ -66,6 +67,7 @@
     "express": "^5.2.1",
     "js-yaml": "^5.4.2",
     "lodash": "^4.17.21",
+    "mmdb-lib": "^3.0.3",
     "redis": "^6.2.1",
     "serverless-http": "^4.0.0"
   },

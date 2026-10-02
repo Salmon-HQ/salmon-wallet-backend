@@ -17,7 +17,11 @@ jest.mock('../../../../packages/middleware', () => ({
 jest.mock('../../../controllers/solana/solana-ft-controller', () => ({
   verified: 'verified',
   search: 'search',
+  build: 'build',
+  swapNetworkOnly: 'swapNetworkOnly',
+  validateSwapQuery: 'validateSwapQuery',
 }));
+jest.mock('../../../middlewares/powerup-gate', () => jest.fn((capability) => `gate:${capability}`));
 
 describe('solana-ft-router', () => {
   beforeEach(() => {
@@ -34,10 +38,24 @@ describe('solana-ft-router', () => {
     expect(paths).toEqual(expect.arrayContaining(['/verified', '/search']));
   });
 
-  it('registers no transaction-building route (signing boundary)', () => {
+  it('registers the swap build as a GET behind the mainnet check and the gate, and no execute route (signing boundary)', () => {
     require('../solana-ft-router');
 
-    expect(mockRouter.get.mock.calls.map(([path]) => path)).toEqual(['/verified', '/search']);
+    expect(mockRouter.get.mock.calls.map(([path]) => path)).toEqual([
+      '/verified',
+      '/search',
+      '/swap/build',
+    ]);
+    expect(mockRouter.get).toHaveBeenCalledWith(
+      '/swap/build',
+      'swapNetworkOnly',
+      'validateSwapQuery',
+      'gate:swap',
+      {
+        type: 'safe',
+        handler: 'build',
+      }
+    );
     expect(mockRouter.post).not.toHaveBeenCalled();
   });
 });

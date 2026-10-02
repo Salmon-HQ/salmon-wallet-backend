@@ -56,6 +56,15 @@ const POWERUPS = {
     contributor: null,
     endpoints: [],
   },
+  // Swap (spec 018): built on its own route (`GET /ft/swap/build`, provider
+  // chosen per request by the availability table), so no adapter here; the
+  // entry gives the stage switch and the catalog one id to agree on.
+  swap: {
+    tier: 'core',
+    networks: ['solana-mainnet'],
+    contributor: null,
+    endpoints: [],
+  },
   // Reference transaction-building Powerup: one Memo instruction. Listed
   // only where a stage enables it (today: `local`).
   memo: {
