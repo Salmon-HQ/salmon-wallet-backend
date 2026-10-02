@@ -15,6 +15,10 @@ const settings = {
   socket: {
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : undefined,
+    // Wallet addresses and caller IPs travel on this connection (sanctions
+    // verdicts, rate-limit counters): a hosted Redis is reached over TLS.
+    // Off only for the local docker instance, which has none.
+    tls: process.env.REDIS_TLS === 'true',
     connectTimeout: process.env.REDIS_CONNECT_TIMEOUT
       ? Number(process.env.REDIS_CONNECT_TIMEOUT)
       : undefined,
