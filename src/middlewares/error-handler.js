@@ -19,6 +19,8 @@
  * `{ error: '<snake_case_code>', error_description }` shape.
  */
 
+const { maskUrl } = require('../../packages/middleware/logger/mask-url');
+
 const UPSTREAM_CLIENT_ERRORS = {
   400: 'bad_request',
   404: 'not_found',
@@ -108,7 +110,9 @@ const toOrigin = (url) => {
 
 const toLogRecord = (err, req, status, error) => ({
   method: req?.method,
-  path: req?.path,
+  // Routes carry the wallet address in the path; the log keeps it trimmed,
+  // like the request line does.
+  path: req?.path ? maskUrl(req.path) : undefined,
   status,
   error,
   reason: describe(err),
@@ -138,7 +142,7 @@ const errorHandler = (err, req, res, next) => {
   if (status >= 500) {
     console.error('[error-handler]', toLogRecord(err, req, status, error));
   } else {
-    console.warn(`${req.method} ${req.path} -> ${status} ${error}: ${describe(err)}`);
+    console.warn(`${req.method} ${maskUrl(req.path)} -> ${status} ${error}: ${describe(err)}`);
   }
 
   if (res.headersSent) {
