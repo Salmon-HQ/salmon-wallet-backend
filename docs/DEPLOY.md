@@ -27,6 +27,8 @@ eval "$(aws configure export-credentials --format env)"   # Serverless v3 does n
 npm run serverless:deploy:staging
 ```
 
+The script then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
+
 Staging differs from prod on purpose in three places: the Powerups switched on for testing, analytics written to Lambda's `/tmp` instead of GA4 (so testers never reach the production property), and Redis on Upstash over TLS. It shares every provider key with prod, so a load test against staging spends prod's provider quotas.
 
 ## Provisioned but unused: Solana Actions / Blinks infrastructure

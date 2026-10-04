@@ -22,7 +22,7 @@
     "serverless:print": "serverless print --stage prod -v",
     "serverless:build": "serverless package --stage prod",
     "serverless:deploy": "serverless deploy --stage prod",
-    "serverless:deploy:staging": "serverless deploy --stage staging",
+    "serverless:deploy:staging": "serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
     "test:integration:local-validator": "jest --testPathPatterns=\"local-validator.integration.spec.js$\" --detectOpenHandles --runInBand"
   },
   "repository": {
