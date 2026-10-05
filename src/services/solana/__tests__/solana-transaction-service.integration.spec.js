@@ -2,9 +2,11 @@
 
 const http = require('node:http');
 const https = require('node:https');
+const axios = require('axios');
+const tritonClient = require('../../../infrastructure/triton-client');
 const transactionService = require('../solana-transaction-service');
 
-// Triton parser walks aggregator txs (large payloads) plus token-service
+// Triton parser walks aggregator swap txs (large payloads) plus token-service
 // cold cache + DAS enrichment per tx. Real-network sessions need a wide
 // budget; 180s lets the slowest run pass and the typical run finishes in
 // well under 30s.
@@ -17,113 +19,73 @@ afterAll(() => {
   https.globalAgent.destroy();
 });
 
-// Probe the Enhanced API with the configured key (raw axios, not through
-// the service under test). A DNS-only check is not enough: the host
-// resolves fine while the jest.setup dummy key 401s on every call — auth
-// failures must skip, not fail.
-const probeHelius = async () => {
-  const heliusClient = require('../../../infrastructure/helius-client');
-  const axios = require('axios');
+// Probe Triton with the configured URL (raw axios, not through the service
+// under test): no URL or an auth failure skips, it never fails the suite.
+const probeTriton = async () => {
+  if (!tritonClient.isConfigured('mainnet')) {
+    return { ok: false, reason: 'TRITON_RPC_URL not configured' };
+  }
   try {
-    const url = heliusClient.buildEnhancedApiUrl(
-      'mainnet',
-      '/v0/addresses/JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4/transactions?limit=1'
+    const { data } = await axios.post(
+      tritonClient.getRpcUrl('mainnet'),
+      { jsonrpc: '2.0', id: 1, method: 'getSlot' },
+      { timeout: 5000 }
     );
-    if (!url) return { ok: false, reason: 'enhanced API not configured' };
-    await axios.get(url, { timeout: 5000 });
-    return { ok: true };
+    return data.error ? { ok: false, reason: data.error.message } : { ok: true };
   } catch (error) {
     return {
       ok: false,
-      reason: error.response?.status ? `HTTP ${error.response.status}` : error.message,
+      reason: error.response?.status ? `HTTP ${error.response.status}` : error.code,
     };
   }
 };
 
-describe('Solana Transaction Service - Integration Tests with Helius', () => {
-  let heliusHostReachable = false;
-
-  const mockLocals = {
-    network: {
-      id: 'solana-mainnet',
-      environment: 'mainnet',
-      config: {
-        nodeUrl: process.env.HELIUS_API_KEY
-          ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
-          : 'https://api.mainnet-beta.solana.com',
-      },
-    },
-  };
+describe('Solana Transaction Service - Integration Tests with Triton', () => {
+  let tritonReachable = false;
+  let mockLocals;
 
   beforeAll(async () => {
-    const result = await probeHelius();
-    heliusHostReachable = result.ok;
-    if (!heliusHostReachable) {
+    const result = await probeTriton();
+    tritonReachable = result.ok;
+    if (!tritonReachable) {
       console.warn(`[solana-transaction-integration] Skipping: ${result.reason}`);
+      return;
     }
+    mockLocals = {
+      network: {
+        id: 'solana-mainnet',
+        environment: 'mainnet',
+        config: { nodeUrl: tritonClient.getRpcUrl('mainnet') },
+      },
+    };
   });
 
-  describe('getTransactions() - Transaction history with Helius Enhanced API', () => {
-    test('should fetch transaction history using Helius', async () => {
-      if (!heliusHostReachable) {
-        console.log(
-          'Skipping Helius integration assertions: api-mainnet.helius-rpc.com is not reachable'
-        );
-        return;
-      }
+  describe('getTransactions() - enriched history from Triton + the local parser', () => {
+    test('enriches the history without any second provider', async () => {
+      if (!tritonReachable) return;
 
-      // Use an aggregator address (known for heavy activity)
+      // An aggregator address (heavy swap activity)
       const address = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
-      const filters = { pageSize: 5 };
 
-      const result = await transactionService.getTransactions(address, filters, mockLocals);
+      const result = await transactionService.getTransactions(address, { pageSize: 5 }, mockLocals);
 
-      expect(result).not.toBeNull();
-      expect(result.data).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
-      expect(result.meta).toBeDefined();
       expect(result.meta.nextPageToken).toBeDefined();
-
-      // Verificar estructura de transacciones
-      if (result.data.length > 0) {
-        const firstTx = result.data[0];
-        expect(firstTx.address).toBe(address);
-        expect(firstTx.signature).toBeDefined();
-        expect(firstTx._source).toBeDefined();
-
-        // Count how many came from Helius vs RPC
-        const heliusCount = result.data.filter((tx) => tx._source === 'enriched').length;
-        const rpcCount = result.data.filter((tx) => tx._source === 'rpc-standard').length;
-
-        console.log('Transaction History Stats:', {
-          total: result.data.length,
-          fromHelius: heliusCount,
-          fromRPC: rpcCount,
-          nextPageToken: result.meta.nextPageToken?.substring(0, 20) + '...',
-        });
-
-        // Most should come from Helius when the provider is healthy
-        expect(heliusCount).toBeGreaterThan(0);
-      }
+      expect(result.data.length).toBeGreaterThan(0);
+      expect(result.data[0].signature).toBeDefined();
+      expect(result.data.every((tx) => tx._source === 'enriched')).toBe(true);
     });
 
     test('should support pagination', async () => {
-      if (!heliusHostReachable) {
-        console.log(
-          'Skipping Helius integration assertions: api-mainnet.helius-rpc.com is not reachable'
-        );
-        return;
-      }
+      if (!tritonReachable) return;
 
       const address = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
 
-      // First page
       const page1 = await transactionService.getTransactions(address, { pageSize: 3 }, mockLocals);
 
       expect(page1.data.length).toBeGreaterThan(0);
       expect(page1.meta.nextPageToken).toBeDefined();
 
-      // Second page
       const page2 = await transactionService.getTransactions(
         address,
         { pageSize: 3, pageToken: page1.meta.nextPageToken },
@@ -132,22 +94,14 @@ describe('Solana Transaction Service - Integration Tests with Helius', () => {
 
       expect(page2.data.length).toBeGreaterThan(0);
 
-      // Las signatures deben ser diferentes
       const page1Signatures = page1.data.map((tx) => tx.signature);
-      const page2Signatures = page2.data.map((tx) => tx.signature);
-      const overlap = page1Signatures.filter((sig) => page2Signatures.includes(sig));
-      expect(overlap.length).toBe(0);
+      const overlap = page2.data.filter((tx) => page1Signatures.includes(tx.signature));
+      expect(overlap).toHaveLength(0);
     });
 
     test('should handle address with no transactions', async () => {
-      if (!heliusHostReachable) {
-        console.log(
-          'Skipping Helius integration assertions: api-mainnet.helius-rpc.com is not reachable'
-        );
-        return;
-      }
+      if (!tritonReachable) return;
 
-      // Address nueva sin actividad (generada aleatoriamente)
       const emptyAddress = 'HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH';
 
       const result = await transactionService.getTransactions(
@@ -156,50 +110,31 @@ describe('Solana Transaction Service - Integration Tests with Helius', () => {
         mockLocals
       );
 
-      expect(result).not.toBeNull();
-      expect(result.data).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
-      // May be an empty array
-      expect(result.data.length).toBeGreaterThanOrEqual(0);
     });
   });
 
-  describe('Fallback Behavior', () => {
-    test('should use the configured RPC node when enhanced API is disabled for the network', async () => {
-      if (!heliusHostReachable) {
-        console.log(
-          'Skipping Helius fallback assertions: api-mainnet.helius-rpc.com is not reachable'
-        );
-        return;
-      }
+  describe('Bare-RPC tier', () => {
+    test('reads the configured RPC node when the environment has no enriched path', async () => {
+      if (!tritonReachable) return;
 
-      // 'testnet' is a real environment the Enhanced API does not support
-      // (mainnet/devnet only), so the service must fall back to the
-      // configured RPC node. A fabricated environment would break token
-      // enrichment instead: spl-token-registry only accepts real cluster
-      // slugs. The nodeUrl points at mainnet so the wallet has history.
+      // 'testnet' is never Triton-hosted, so the service reads the bare RPC.
+      // The nodeUrl points at mainnet so the wallet has history.
       const rpcOnlyLocals = {
         network: {
           id: 'solana-testnet',
           environment: 'testnet',
-          config: {
-            nodeUrl: 'https://api.mainnet-beta.solana.com', // Public RPC
-          },
+          config: { nodeUrl: tritonClient.getRpcUrl('mainnet') },
         },
       };
 
-      const address = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
-
       const result = await transactionService.getTransactions(
-        address,
+        '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3',
         { pageSize: 1 },
         rpcOnlyLocals
       );
 
-      expect(result).not.toBeNull();
       expect(result.data[0]._source).toBe('rpc-standard');
-
-      console.log('Configured RPC path confirmed:', result.data[0]._source);
     });
   });
 });

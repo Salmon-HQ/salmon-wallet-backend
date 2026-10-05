@@ -7,7 +7,6 @@
 #   all        - Ejecutar todos los tests (default)
 #   unit       - Ejecutar solo tests unitarios
 #   integration - Ejecutar solo tests de integración
-#   helius     - Ejecutar solo tests de Helius
 #   coverage   - Ejecutar tests con coverage
 
 set -e
@@ -46,10 +45,6 @@ case $TEST_TYPE in
         echo -e "${GREEN}▶ Ejecutando tests de integración...${NC}"
         docker compose exec -T backend npm run test:integration
         ;;
-    helius)
-        echo -e "${GREEN}▶ Ejecutando tests de Helius...${NC}"
-        docker compose exec -T backend npm run test:helius
-        ;;
     coverage)
         echo -e "${GREEN}▶ Ejecutando tests con coverage...${NC}"
         docker compose exec -T backend npm run test:coverage
@@ -57,7 +52,7 @@ case $TEST_TYPE in
     *)
         echo -e "${YELLOW}Tipo de test desconocido: $TEST_TYPE${NC}"
         echo ""
-        echo "Uso: ./scripts/test-docker.sh [all|unit|integration|helius|coverage]"
+        echo "Uso: ./scripts/test-docker.sh [all|unit|integration|coverage]"
         exit 1
         ;;
 esac

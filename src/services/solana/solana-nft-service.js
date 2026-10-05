@@ -4,8 +4,7 @@
  * Solana NFT service.
  *
  * Read paths (`list`, `find`) flow through the NFT repository, which in turn
- * dispatches DAS calls to the active provider resolver (Triton primary,
- * Helius fallback), and are then passed through `nft-metadata-hydrator` to
+ * dispatches DAS calls to the active provider resolver (Triton), and are then passed through `nft-metadata-hydrator` to
  * merge in the off-chain JSON that Triton's DAS index does not carry. The burn
  * and transfer paths deliberately skip hydration — they only need the on-chain
  * token standard, so there is no reason to pay for the fetches.

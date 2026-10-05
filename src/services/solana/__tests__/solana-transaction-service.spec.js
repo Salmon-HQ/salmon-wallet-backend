@@ -1,7 +1,4 @@
 'use strict';
-
-process.env.HELIUS_API_KEY = process.env.HELIUS_API_KEY || 'test-helius-key';
-
 jest.mock('@solana/web3.js', () => {
   const getParsedTransaction = jest.fn();
   const getSignaturesForAddress = jest.fn();

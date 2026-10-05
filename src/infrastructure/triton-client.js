@@ -78,8 +78,7 @@ const appendToken = (url) => {
  * - devnet  → TRITON_RPC_URL_DEVNET if set, else public Solana devnet
  * - testnet → public Solana testnet (Triton does not host testnet)
  *
- * The resolver catches TRITON_NOT_CONFIGURED and routes the call to the
- * fallback provider.
+ * There is no fallback provider: TRITON_NOT_CONFIGURED reaches the caller.
  *
  * @param {string} [environment='mainnet'] - mainnet | devnet | testnet
  * @returns {string} Full RPC URL, token-appended per `appendToken`.

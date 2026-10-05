@@ -10,7 +10,6 @@
     "test": "jest --detectOpenHandles",
     "test:unit": "jest --testPathPatterns='.spec.js$' --testPathIgnorePatterns='integration.spec.js' --detectOpenHandles",
     "test:integration": "jest --testPathPatterns='integration.spec.js$' --detectOpenHandles --runInBand",
-    "test:helius": "jest --testPathPatterns='helius.*\\.spec\\.js$' --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",
     "test:coverage": "jest --coverage --detectOpenHandles",
     "linter": "eslint ./ --fix",

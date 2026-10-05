@@ -7,7 +7,7 @@ const ttl = 3600;
 
 /**
  * NFT repository — delegates DAS calls to the configured Solana data provider
- * (Triton primary, Helius fallback). The provider transforms DAS responses
+ * (Triton). The provider transforms DAS responses
  * into the wallet-canonical NFT shape and combines DAS results with
  * Token-2022 enumeration.
  *

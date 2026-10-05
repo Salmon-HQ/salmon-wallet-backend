@@ -2,9 +2,7 @@
 
 /**
  * solana-nft-repository now delegates DAS calls to the provider resolver
- * (`services/solana/providers`). The resolver routes DAS to Triton primary
- * with a rate-limited Helius fallback, same as tx enrichment; goes straight
- * to Helius when Triton is not configured for the env.
+ * (`services/solana/providers`). The resolver routes DAS to Triton.
  *
  * The repository's responsibility shrinks to:
  *   - cache lookup + store on findByAddress

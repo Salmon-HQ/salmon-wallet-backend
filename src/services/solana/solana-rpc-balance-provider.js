@@ -4,15 +4,16 @@
  * Solana bare-RPC balance provider.
  *
  * `BalanceProvider` implementation backed by the network's JSON-RPC node
- * (`locals.network.config.nodeUrl` — Triton when configured, else Helius).
- * Used by `solana-balance-provider` as the fallback when Blockdaemon
- * Universal times out or fails upstream.
+ * (`locals.network.config.nodeUrl` — Triton when configured). The only
+ * source of Solana balances: `solana-balance-provider` decorates what this
+ * returns.
  *
- * Emits items in Blockdaemon's shape so the metadata enrichment, the
+ * Emits items in Blockdaemon Universal's shape (the one the Bitcoin slice
+ * still reads) so the metadata enrichment, the
  * zero-amount / spam filters and `account-balance-resource` need no
  * provider-specific branch. Token `symbol`/`name` are `null` here — the
  * metadata overlay fills them for known mints, and unlisted mints are
- * hidden by the default spam filter exactly as with Blockdaemon.
+ * hidden by the default spam filter.
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');

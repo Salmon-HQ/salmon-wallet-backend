@@ -3,7 +3,7 @@
 /**
  * Solana transaction-service orchestration layer.
  *
- * Sits above `providers/` (Triton primary, Helius fallback) and exposes a
+ * Sits above `providers/` (Triton) and exposes a
  * provider-agnostic API: `getTransactions`. Each returned tx carries a
  * `_source` discriminator — `'enriched'` when the resolver produced a
  * parsed/decorated tx, `'rpc-standard'` when we fell back to a plain
@@ -208,7 +208,7 @@ const getRpcUrlFromLocals = (locals) => {
 
 const RPC_MIN_PAGE_SIZE = 1;
 const RPC_MAX_PAGE_SIZE = 1000;
-// Helius Enhanced API rejects `limit` above 100.
+// Upper bound for the enriched path; the Triton provider caps a page at 25.
 const ENHANCED_MAX_PAGE_SIZE = 100;
 // ponytail: fixed fan-out ceiling per RPC batch; tune if the node rate-limits.
 const RPC_FETCH_BATCH_SIZE = 50;
@@ -240,7 +240,7 @@ const mapInBatches = async (items, size, fn) => {
  * `getSignaturesForAddress`, then fetches each transaction individually with
  * `getParsedTransaction`. Used when the enriched provider path is
  * unavailable or unsupported for the current environment; keeps the wallet
- * functional even when Triton and Helius are both down.
+ * functional when the enriched path is unavailable.
  * @returns {Promise<{data: Object[], meta: {nextPageToken?: string}}>}
  */
 const getRpcHistory = async (address, filters, locals) => {

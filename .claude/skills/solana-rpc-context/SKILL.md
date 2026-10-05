@@ -1,17 +1,16 @@
 ---
 name: solana-rpc-context
-description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton/Helius, Powerup builds, CoinGecko catalog + prices over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/Powerup/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
+description: RPC, provider, and caching architecture of this multichain (Solana-first) API — Triton, Powerup builds, CoinGecko catalog + prices over REST, Metaplex/umi, Redis and in-memory cache layers. ALWAYS use before touching Solana services, price/Powerup/NFT endpoints, RPC configuration, or when debugging rate limits, stale prices, or slow responses.
 ---
 
 # Solana / RPC Context — salmon-api
 
 ## RPC providers — order of preference
 
-- `src/constants/networks.js` → `solanaNodeUrl(env)`: prefers **Triton** when configured, falls back to **Helius**. Do not hardcode RPC URLs in services — always resolve through this function.
-- `src/infrastructure/triton-client.js`: token as a path segment (`.rpcpool.com/<token>`); env `TRITON_RPC_URL`, `TRITON_RPC_URL_DEVNET`, `TRITON_API_TOKEN`; throws `TRITON_NOT_CONFIGURED` to trigger the fallback.
-- `src/infrastructure/helius-client.js`: RPC + Enhanced Transactions API; `DEFAULT_COMMITMENT='confirmed'`; lazy key read from `HELIUS_API_KEY`.
-- `src/infrastructure/blockdaemon-client.js`: multichain balances (Universal API), not a Solana RPC.
-- Service-level providers: `src/services/solana/providers/{triton,helius}-provider.js` (create `@solana/web3.js` `Connection`s).
+- `src/constants/networks.js` → `solanaNodeUrl(env)`: **Triton** when configured, else the public cluster (bare RPC only). Do not hardcode RPC URLs in services — always resolve through this function.
+- `src/infrastructure/triton-client.js`: token as a path segment (`.rpcpool.com/<token>`); env `TRITON_RPC_URL`, `TRITON_RPC_URL_DEVNET`, `TRITON_API_TOKEN`; throws `TRITON_NOT_CONFIGURED` (there is no fallback provider).
+- `src/infrastructure/blockdaemon-client.js`: Bitcoin balances/history/UTXOs (Universal API); Solana balances come from the bare RPC.
+- Service-level providers: `src/services/solana/providers/triton-provider.js` (create `@solana/web3.js` `Connection`s).
 
 ## Token data — Triton DAS + CoinGecko
 
@@ -26,7 +25,6 @@ Every upstream call goes through `providerCall(name, fn, { locals, environment, 
 | Provider      | rps (burst)                                  | timeout | retries | breaker        |
 | ------------- | -------------------------------------------- | ------- | ------- | -------------- |
 | `coingecko`   | 25/60 (30) demo · 500/60 (100) pro-api + key | 15 s    | 6       | 5 fails / 30 s |
-| `helius`      | 10 (20) · 50 (100) with `HELIUS_TIER=paid`   | 30 s    | 4       | 5 fails / 30 s |
 | `triton`      | 50 (100)                                     | 30 s    | 2       | 5 fails / 30 s |
 | `blockdaemon` | 20 (40)                                      | 6 s     | 1       | 5 fails / 30 s |
 | `dapp`        | 10 (20)                                      | 5 s     | 1       | none           |

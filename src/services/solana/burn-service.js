@@ -441,8 +441,8 @@ const burnCompressedNftTransaction = async (assetId, owner, locals) => {
   const ownerSigner = createNoopOwnerSigner(owner);
   const umi = createBurnUmi(nodeUrl, ownerSigner);
   const assetPublicKey = fromWeb3JsPublicKey(new PublicKey(assetId));
-  // The proof lookup goes through the resolver so it gets the Triton → Helius
-  // fallback, rate budget and logging the rest of the DAS surface has. The
+  // The proof lookup goes through the resolver so it gets the Triton DAS
+  // URL and the logging the rest of the DAS surface has. The
   // builder keeps using `nodeUrl`, which only supplies the blockhash.
   const assetWithProof = await providers.dispatchDasRpc(
     'getAssetWithProof',

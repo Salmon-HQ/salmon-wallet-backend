@@ -20,20 +20,11 @@ const coingeckoTier = () =>
     ? { rps: 500 / 60, burst: 100 }
     : { rps: 25 / 60, burst: 30 };
 
-const heliusTier = () =>
-  process.env.HELIUS_TIER === 'paid' ? { rps: 50, burst: 100 } : { rps: 10, burst: 20 };
-
 const PROFILES = {
   coingecko: {
     tier: coingeckoTier,
     timeoutMs: 15000,
     retry: { maxAttempts: 6, baseMs: 2000, maxMs: 60000, honorRetryAfter: true },
-    breaker: BREAKER_DEFAULT,
-  },
-  helius: {
-    tier: heliusTier,
-    timeoutMs: 30000,
-    retry: { maxAttempts: 4, baseMs: 1000, maxMs: 15000, honorRetryAfter: true },
     breaker: BREAKER_DEFAULT,
   },
   triton: {

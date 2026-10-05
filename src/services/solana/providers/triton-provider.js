@@ -18,10 +18,9 @@
  *     returns, so the downstream resource decorator consumes it without
  *     branching.
  *
- * The provider never reaches into Helius — fallback is the resolver's job.
- *
- * Triton RPC retention is typically ~5 days. For deeper history we'd need
- * Old Faithful (out of scope this PR).
+ * Triton is the only Solana data provider: a failure here reaches the caller.
+ * Its RPC serves full history (probed 2026-10-05: a 793-day-old transaction
+ * through `getTransaction`).
  */
 
 const axios = require('axios');
@@ -220,8 +219,8 @@ const provider = {
     // dominant, cacheable hot path (only first pages are cached upstream).
     //
     // Deeper pages keep the signature-cursor path below, so `nextPageToken`
-    // stays a signature end-to-end — compatible with the Helius fallback and
-    // bare-RPC fallback, which both paginate by signature.
+    // stays a signature end-to-end — compatible with the bare-RPC history
+    // tier, which paginates by signature too.
     if (!before) {
       try {
         const { transactions } = await tritonRpc.getTransactionsForAddress(
@@ -344,7 +343,7 @@ const provider = {
    * Token-2022 enumeration deliberately uses the Triton RPC URL rather than
    * `locals.network.config.nodeUrl`, so this leg stays on the same provider as
    * the DAS call above. `nodeUrl` resolves to Triton whenever it is configured
-   * (`constants/networks.js` → `solanaNodeUrl`), but it falls back to Helius
+   * (`constants/networks.js` → `solanaNodeUrl`), but to the public cluster
    * when it is not, and that split would be invisible here.
    */
   async getNftsByOwner(publicKeyStr, options = {}, locals) {
@@ -353,9 +352,7 @@ const provider = {
     const { limit, offset } = getPagination(options);
 
     // DAS errors propagate on purpose. Swallowing them returned an empty
-    // list, which reaches the wallet as a successful "you own no NFTs" — and
-    // it also hid the failure from the provider resolver, so the Triton ->
-    // Helius fallback could never fire for this leg.
+    // list, which reaches the wallet as a successful "you own no NFTs".
     const assets = await dasGetAssetsByOwner(publicKeyStr, environment);
     const dasNfts = assets
       .filter(isHeldByOwner)
