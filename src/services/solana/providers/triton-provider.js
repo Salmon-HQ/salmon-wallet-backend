@@ -23,8 +23,8 @@
  * through `getTransaction`).
  */
 
+const { createBudgetedConnection } = require('../budgeted-connection');
 const axios = require('axios');
-const { Connection } = require('@solana/web3.js');
 
 const tritonClient = require('../../../infrastructure/triton-client');
 const { providerCall } = require('../../../infrastructure/providers/provider-client');
@@ -348,7 +348,7 @@ const provider = {
    */
   async getNftsByOwner(publicKeyStr, options = {}, locals) {
     const environment = locals.network?.environment || 'mainnet';
-    const connection = new Connection(getRpcUrl(environment));
+    const connection = createBudgetedConnection(getRpcUrl(environment), locals);
     const { limit, offset } = getPagination(options);
 
     // DAS errors propagate on purpose. Swallowing them returned an empty

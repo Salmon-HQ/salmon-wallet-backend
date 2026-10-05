@@ -14,7 +14,8 @@
  * costs at most one tokens fetch + one NFT-metadata batch.
  */
 
-const { Connection, PublicKey } = require('@solana/web3.js');
+const { createBudgetedConnection } = require('./budgeted-connection');
+const { PublicKey } = require('@solana/web3.js');
 const solanaProvider = require('./providers');
 
 // Gate the enhanced-tx path through the resolver so the service layer stays
@@ -246,7 +247,7 @@ const mapInBatches = async (items, size, fn) => {
 const getRpcHistory = async (address, filters, locals) => {
   const rpcUrl = getRpcUrlFromLocals(locals);
 
-  const connection = new Connection(rpcUrl, COMMITMENT);
+  const connection = createBudgetedConnection(rpcUrl, locals, COMMITMENT);
   const publicKey = new PublicKey(address);
   const options = {
     before: filters.pageToken,
