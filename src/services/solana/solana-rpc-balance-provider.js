@@ -11,7 +11,7 @@
  * Emits items in Blockdaemon Universal's shape (the one the Bitcoin slice
  * still reads) so the metadata enrichment, the
  * zero-amount / spam filters and `account-balance-resource` need no
- * provider-specific branch. Token `symbol`/`name` are `null` here — the
+ * provider-specific branch. Token items carry no `symbol`/`name` — the
  * metadata overlay fills them for known mints, and unlisted mints are
  * hidden by the default spam filter.
  */
@@ -41,9 +41,9 @@ const buildTokenItem = (owner, { mint, decimals, amount }) => ({
   owner,
   blockchain: BLOCKCHAIN,
   confirmed_balance: amount.toString(),
+  // No `symbol`/`name` keys, as Blockdaemon sent them: the metadata overlay
+  // fills known mints, and an unknown one must not gain `null` fields.
   currency: {
-    symbol: null,
-    name: null,
     decimals,
     type: 'token',
     asset_path: `solana/mint/${mint}`,

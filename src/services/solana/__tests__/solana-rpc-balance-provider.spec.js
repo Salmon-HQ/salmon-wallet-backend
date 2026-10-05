@@ -68,8 +68,6 @@ describe('solana-rpc-balance-provider', () => {
         blockchain: 'solana',
         confirmed_balance: '6000000',
         currency: {
-          symbol: null,
-          name: null,
           decimals: 6,
           type: 'token',
           asset_path: `solana/mint/${USDC}`,
@@ -81,8 +79,6 @@ describe('solana-rpc-balance-provider', () => {
         blockchain: 'solana',
         confirmed_balance: '7',
         currency: {
-          symbol: null,
-          name: null,
           decimals: 0,
           type: 'token',
           asset_path: `solana/mint/${T22}`,
