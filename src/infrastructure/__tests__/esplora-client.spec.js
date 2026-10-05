@@ -57,4 +57,28 @@ describe('esplora-client', () => {
 
     await expect(esplora.get('/address/a', mainnet)).rejects.toThrow('503');
   });
+
+  it('turns a plain-text error body into a message the error handler can quote', async () => {
+    http.get.mockRejectedValue(
+      Object.assign(new Error('Request failed with status code 400'), {
+        response: { status: 400, data: 'Invalid Bitcoin address\n' },
+      })
+    );
+
+    await expect(esplora.get('/address/bc1qx', mainnet)).rejects.toMatchObject({
+      response: { status: 400, data: { message: 'Invalid Bitcoin address' } },
+    });
+  });
+
+  it('never quotes an HTML or oversized body', async () => {
+    http.get.mockRejectedValue(
+      Object.assign(new Error('Request failed with status code 400'), {
+        response: { status: 400, data: '<html><body>nginx</body></html>' },
+      })
+    );
+
+    await expect(esplora.get('/address/bc1qx', mainnet)).rejects.toMatchObject({
+      response: { status: 400, data: {} },
+    });
+  });
 });

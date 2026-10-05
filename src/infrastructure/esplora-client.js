@@ -26,6 +26,23 @@ const HOSTS = {
   ],
 };
 
+const MAX_QUOTED_LENGTH = 200;
+
+/**
+ * Esplora answers errors as `text/plain` ("Invalid Bitcoin address"), which
+ * the error handler only quotes from an object. A short plain sentence becomes
+ * `{ message }`; anything else (HTML from a proxy, a long dump) becomes `{}`
+ * so it is never echoed to the caller.
+ */
+const normaliseErrorBody = (error) => {
+  const data = error?.response?.data;
+  if (typeof data !== 'string') return error;
+  const text = data.trim();
+  error.response.data =
+    text && text.length <= MAX_QUOTED_LENGTH && !text.includes('<') ? { message: text } : {};
+  return error;
+};
+
 const isCallerError = (error) => {
   const status = error?.response?.status;
   return status >= 400 && status < 500 && status !== 429;
@@ -51,6 +68,7 @@ const get = async (path, locals) => {
       );
       return data;
     } catch (error) {
+      normaliseErrorBody(error);
       if (isCallerError(error)) throw error;
       lastError = error;
     }

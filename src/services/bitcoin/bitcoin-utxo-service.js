@@ -19,12 +19,16 @@ const { toUtxo, findAddressScript } = require('./esplora-mappers');
 
 /**
  * Esplora hosts refuse to enumerate very large unspent sets with a 400
- * (mempool.space past 500 outputs, blockstream past its scan limit). That
- * is not the caller's input being wrong, so it is answered as the API
+ * (mempool.space past 500 outputs, blockstream past its scan limit), told
+ * apart from other 400s by their wording. That is not the caller's input
+ * being wrong, so it is answered as the API
  * always has for this case.
  */
+const TOO_LARGE = /too many unspent|too large/i;
+
 const asTooLarge = (error) => {
   if (error?.response?.status !== 400) return error;
+  if (!TOO_LARGE.test(error.response.data?.message ?? '')) return error;
   const tooLarge = new Error(
     'This address has too many unspent outputs to enumerate in one request.'
   );

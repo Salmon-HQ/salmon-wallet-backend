@@ -83,7 +83,12 @@ describe('bitcoin-utxo-service', () => {
 
   it('answers 422 utxo_set_too_large when the host refuses to enumerate the set', async () => {
     esplora.get.mockRejectedValue(
-      Object.assign(new Error('400'), { response: { status: 400, data: 'Too many unspent' } })
+      Object.assign(new Error('400'), {
+        response: {
+          status: 400,
+          data: { message: 'Too many unspent transaction outputs (>500). Contact support.' },
+        },
+      })
     );
 
     await expect(service.getUtxo(ADDRESS, {}, locals)).rejects.toMatchObject({
@@ -97,5 +102,26 @@ describe('bitcoin-utxo-service', () => {
     esplora.get.mockRejectedValue(down);
 
     await expect(service.getUtxo(ADDRESS, {}, locals)).rejects.toBe(down);
+  });
+
+  it("answers 422 for blockstream's wording of the same refusal", async () => {
+    esplora.get.mockRejectedValue(
+      Object.assign(new Error('400'), {
+        response: { status: 400, data: { message: 'Scripthash history too large to scan' } },
+      })
+    );
+
+    await expect(service.getUtxo(ADDRESS, {}, locals)).rejects.toMatchObject({
+      errorCode: 'utxo_set_too_large',
+    });
+  });
+
+  it('lets any other 400 through, so the caller sees what was wrong', async () => {
+    const bad = Object.assign(new Error('400'), {
+      response: { status: 400, data: { message: 'Invalid Bitcoin address' } },
+    });
+    esplora.get.mockRejectedValue(bad);
+
+    await expect(service.getUtxo(ADDRESS, {}, locals)).rejects.toBe(bad);
   });
 });
