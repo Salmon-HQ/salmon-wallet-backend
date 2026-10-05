@@ -38,7 +38,7 @@ describe('solana-rpc-balance-provider', () => {
     expect(Connection).toHaveBeenCalledWith('https://rpc.example', 'confirmed');
   });
 
-  it('returns native SOL in Blockdaemon shape', async () => {
+  it('returns native SOL in the balance item shape', async () => {
     const [native] = await provider.getBalance(OWNER, undefined, locals);
     expect(native).toEqual({
       owner: OWNER,

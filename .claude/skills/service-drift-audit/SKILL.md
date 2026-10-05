@@ -1,6 +1,6 @@
 ---
 name: service-drift-audit
-description: Checks salmon-api's external service dependencies (0x, CoinGecko, Triton, Blockdaemon, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did CoinGecko/Helius/Metaplex change anything", or similar drift-check requests.
+description: Checks salmon-api's external service dependencies (0x, CoinGecko, Triton, Esplora (mempool.space / blockstream), Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did CoinGecko/Helius/Metaplex change anything", or similar drift-check requests.
 ---
 
 # Service Drift Audit — salmon-api

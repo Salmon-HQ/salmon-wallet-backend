@@ -33,10 +33,19 @@ const PROFILES = {
     retry: { maxAttempts: 2, baseMs: 500, maxMs: 2000, honorRetryAfter: true },
     breaker: BREAKER_DEFAULT,
   },
-  // No retry: the balance service falls back to the bare RPC on failure.
-  blockdaemon: {
-    tier: () => ({ rps: 20, burst: 40 }),
-    timeoutMs: 6000,
+  // Bitcoin (Esplora). No retry: `esplora-client` moves to the other host
+  // instead. Neither public host publishes a rate; 10 rps stays well under
+  // what they serve anonymous clients. 10 s: a busy address's history page
+  // has been measured at ~6.5 s on mempool.space.
+  mempool: {
+    tier: () => ({ rps: 10, burst: 20 }),
+    timeoutMs: 10000,
+    retry: RETRY_NONE,
+    breaker: BREAKER_DEFAULT,
+  },
+  blockstream: {
+    tier: () => ({ rps: 10, burst: 20 }),
+    timeoutMs: 10000,
     retry: RETRY_NONE,
     breaker: BREAKER_DEFAULT,
   },

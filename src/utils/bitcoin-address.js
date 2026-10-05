@@ -2,7 +2,7 @@
 
 /**
  * Syntactic Bitcoin address validation for request parameters, so a typo
- * answers 400 instead of reaching Blockdaemon and surfacing as a 500.
+ * answers 400 instead of reaching Esplora and surfacing as a 500.
  * Shape only (no checksum): base58 P2PKH/P2SH on mainnet (`1`/`3`) and
  * testnet (`m`/`n`/`2`), or bech32/bech32m (`bc1`/`tb1`, lower-case).
  */

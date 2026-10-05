@@ -50,9 +50,9 @@ two diverge.
 - `BLOCKCHAINS` in `src/constants/blockchains.js`: list of chains with
   code present.
 - `src/services/multichain/balance-providers/`: registry for per-chain
-  balance overrides. The default uses Blockdaemon Universal and covers
-  any chain Blockdaemon supports. A chain with a richer provider
-  (Alchemy/Infura for Ethereum) registers in `PROVIDERS_BY_CHAIN`.
+  balance providers. There is no default: every chain registers its
+  provider in `PROVIDERS_BY_CHAIN` (Bitcoin on Esplora, Solana on its
+  RPC).
 - `src/network-capabilities/network-capabilities-${stage}.js`:
   per-environment gating. A chain can be in `BLOCKCHAINS` without
   appearing in any stage's `enable` list (current Ethereum: code is
@@ -161,13 +161,12 @@ Important subfolders:
   - groups transactions, NFTs, FT, Powerup builds, burn, and DAS/CoinGecko
     wrappers
 - `src/services/bitcoin/`
-  - Bitcoin vertical slice: transactions, UTXO (read-only); HTTP client
-    at `src/infrastructure/blockdaemon-client.js`
+  - Bitcoin vertical slice: transactions, UTXO (read-only), balance provider; HTTP client
+    at `src/infrastructure/esplora-client.js`
 - `src/services/multichain/`
   - endpoints that dispatch on `locals.network.blockchain`. Today
     holds `account-service.js` (balance) and `balance-providers/`
-    (registry for per-chain balance overrides; default: Blockdaemon
-    Universal)
+    (registry of per-chain balance providers)
 - `src/services/shared/`
   - chain-agnostic services: `coingecko-service`,
     `dapp-service`, `network-capabilities-service`,
@@ -370,7 +369,7 @@ degraded tier, unclassified bare-RPC reads.
   throws `TRITON_NOT_CONFIGURED` when `TRITON_RPC_URL` is not set on
   mainnet.
 - Solana balances are read from the same RPC
-  (`solana-rpc-balance-provider.js`); Blockdaemon serves Bitcoin only.
+  (`solana-rpc-balance-provider.js`).
 
 ### What belongs in Solana Resources
 
@@ -425,10 +424,12 @@ surface:
 - `src/resources/bitcoin/` — `bitcoin-transaction-resource`,
   `bitcoin-utxo-resource`
 
-The Blockdaemon HTTP client lives in
-`src/infrastructure/blockdaemon-client.js` so any slice (Bitcoin
-today, Ethereum tomorrow if it uses Blockdaemon Universal) reuses the
-same URL/header construction.
+Bitcoin chain data comes from the public Esplora API through
+`src/infrastructure/esplora-client.js`: mempool.space first,
+blockstream.info when it is down or failing. No credential.
+`src/services/bitcoin/esplora-mappers.js` turns Esplora payloads into
+the item shapes the resources read, so the public contract is the one
+the API served before.
 
 ## Multichain slice
 
@@ -443,10 +444,8 @@ Today: balance.
 - `src/services/multichain/account-service.js` — resolves a
   `BalanceProvider` per chain and delegates.
 - `src/services/multichain/balance-providers/` — registry.
-  `blockdaemon-balance-provider.js` is the default (covers any
-  Blockdaemon-supported chain).
-  `index.js#PROVIDERS_BY_CHAIN` maps chain -> provider for future
-  overrides.
+  `index.js#PROVIDERS_BY_CHAIN` maps chain -> provider; an
+  unregistered chain throws.
 - `src/services/multichain/price-enrichers/` — per-chain USD price
   decoration of balance items (Solana via CoinGecko token prices, Bitcoin
   via the CoinGecko repository). Same registry pattern as
@@ -497,9 +496,8 @@ model live in `docs/ANALYTICS.md`.
    `controllers/<chain>/`, `services/<chain>/`, `resources/<chain>/`.
 5. If the multichain balance endpoint should serve this chain, add
    the constant to `BALANCE_CHAINS` in
-   `src/routes/multichain/account-router.js`. If Blockdaemon
-   Universal does NOT cover this chain or you want a richer provider,
-   register a custom provider in
+   `src/routes/multichain/account-router.js`, and register its
+   balance provider in
    `src/services/multichain/balance-providers/index.js#PROVIDERS_BY_CHAIN`.
 6. When you want to expose the chain to the FE: add the network ids
    to the `enable` array of the stage files in

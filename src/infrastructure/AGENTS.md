@@ -9,7 +9,7 @@
 
 ## Current contents
 
-- `blockdaemon-client.js` — Blockdaemon Universal API + native RPC URL
+- `esplora-client.js` — Bitcoin chain data from the public Esplora API (mempool.space, then blockstream.info)
   builders + headers. Used by `services/bitcoin/*` and the default
   balance provider in `services/multichain/balance-providers/`.
 - `triton-client.js` — Triton One JSON-RPC HTTP construction, used by

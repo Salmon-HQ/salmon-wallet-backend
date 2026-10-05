@@ -9,7 +9,7 @@ description: RPC, provider, and caching architecture of this multichain (Solana-
 
 - `src/constants/networks.js` → `solanaNodeUrl(env)`: **Triton** when configured, else the public cluster (bare RPC only). Do not hardcode RPC URLs in services — always resolve through this function.
 - `src/infrastructure/triton-client.js`: token as a path segment (`.rpcpool.com/<token>`); env `TRITON_RPC_URL`, `TRITON_RPC_URL_DEVNET`, `TRITON_API_TOKEN`; throws `TRITON_NOT_CONFIGURED` (there is no fallback provider).
-- `src/infrastructure/blockdaemon-client.js`: Bitcoin balances/history/UTXOs (Universal API); Solana balances come from the bare RPC.
+- `src/infrastructure/esplora-client.js`: Bitcoin balances/history/UTXOs (mempool.space, then blockstream.info); Solana balances come from the bare RPC.
 - Service-level providers: `src/services/solana/providers/triton-provider.js` (create `@solana/web3.js` `Connection`s).
 
 ## Token data — Triton DAS + CoinGecko
@@ -26,7 +26,8 @@ Every upstream call goes through `providerCall(name, fn, { locals, environment, 
 | ------------- | -------------------------------------------- | ------- | ------- | -------------- |
 | `coingecko`   | 25/60 (30) demo · 500/60 (100) pro-api + key | 15 s    | 6       | 5 fails / 30 s |
 | `triton`      | 50 (100)                                     | 30 s    | 2       | 5 fails / 30 s |
-| `blockdaemon` | 20 (40)                                      | 6 s     | 1       | 5 fails / 30 s |
+| `mempool`     | 10 (20)                                      | 10 s    | 1       | 5 fails / 30 s |
+| `blockstream` | 10 (20)                                      | 10 s    | 1       | 5 fails / 30 s |
 | `dapp`        | 10 (20)                                      | 5 s     | 1       | none           |
 
 Every call is also bounded by the request budget (`res.locals.deadline`, `REQUEST_BUDGET_MS` default 25 s): a wait or retry that would land past it fails now (`503 upstream_rate_limited` / the last provider error). Open circuit → `503 upstream_unavailable`; the token catalog serves its stale Redis snapshot instead.

@@ -15,7 +15,8 @@ describe('profiles', () => {
     expect(PROVIDER_NAMES).toEqual([
       'coingecko',
       'triton',
-      'blockdaemon',
+      'mempool',
+      'blockstream',
       'dapp',
       'trm',
       'jupiter',

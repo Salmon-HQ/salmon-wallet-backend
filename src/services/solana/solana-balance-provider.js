@@ -22,7 +22,7 @@
  *      Scaled UI Amount / Interest Bearing multiplier and attaches `_uiAmount`.
  *      Runs last so the mint reads cost only what the wallet actually shows.
  *
- * Items keep the Blockdaemon Universal shape the Bitcoin slice also uses; downstream
+ * Items keep the balance item shape both chain providers emit; downstream
  * (`account-balance-resource`) reads internal markers `_logo`, `_name`,
  * `_symbol`, `_coingeckoId`, `_tags`, `_uiAmount` and forwards them to the
  * public payload.

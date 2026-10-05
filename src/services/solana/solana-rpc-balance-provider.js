@@ -8,8 +8,7 @@
  * source of Solana balances: `solana-balance-provider` decorates what this
  * returns.
  *
- * Emits items in Blockdaemon Universal's shape (the one the Bitcoin slice
- * still reads) so the metadata enrichment, the
+ * Emits items in the balance item shape `account-balance-resource` reads so the metadata enrichment, the
  * zero-amount / spam filters and `account-balance-resource` need no
  * provider-specific branch. Token items carry no `symbol`/`name` — the
  * metadata overlay fills them for known mints, and unlisted mints are
@@ -41,7 +40,7 @@ const buildTokenItem = (owner, { mint, decimals, amount }) => ({
   owner,
   blockchain: BLOCKCHAIN,
   confirmed_balance: amount.toString(),
-  // No `symbol`/`name` keys, as Blockdaemon sent them: the metadata overlay
+  // No `symbol`/`name` keys: the metadata overlay
   // fills known mints, and an unknown one must not gain `null` fields.
   currency: {
     decimals,
@@ -53,8 +52,8 @@ const buildTokenItem = (owner, { mint, decimals, amount }) => ({
 
 /**
  * Collapse parsed token accounts into one entry per mint (a wallet can hold
- * an ATA plus auxiliary accounts for the same mint; Blockdaemon presents one
- * row per asset).
+ * an ATA plus auxiliary accounts for the same mint; the balance is one row
+ * per asset).
  *
  * @param {Array<Object>} accounts - `value` entries from `getParsedTokenAccountsByOwner`.
  * @returns {Array<{mint: string, decimals: number, amount: bigint}>}
@@ -79,7 +78,7 @@ const aggregateByMint = (accounts) => {
  * @param {string} address - Owner base58 address.
  * @param {any} _tokens - unused; `BalanceProvider` signature parity.
  * @param {{network: {config: {nodeUrl: string}}}} locals
- * @returns {Promise<Array<Object>>} Blockdaemon-shaped balance items.
+ * @returns {Promise<Array<Object>>} balance items.
  */
 const getBalance = async (address, _tokens, locals) => {
   const connection = new Connection(locals.network.config.nodeUrl, COMMITMENT);
