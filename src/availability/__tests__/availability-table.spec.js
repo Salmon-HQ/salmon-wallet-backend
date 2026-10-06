@@ -17,11 +17,12 @@ describe('availability-table', () => {
   });
 
   describe('DEFAULT_TABLE', () => {
-    it('is the spec owner decision 3: embargoed + US unavailable, Jupiter list on 0x, Jupiter default', () => {
+    it('is the owner decision: embargoed unavailable, Jupiter list (US included) on 0x, Jupiter default', () => {
       const swap = DEFAULT_TABLE.capabilities.swap;
       expect(swap.default).toBe('jupiter');
-      expect(swap.unavailable).toEqual(expect.arrayContaining(['CU', 'IR', 'KP', 'SY', 'US']));
-      expect(swap.providers['0x']).toEqual(expect.arrayContaining(['CN', 'SG', 'NI', 'ZW']));
+      expect(swap.unavailable).toEqual(expect.arrayContaining(['CU', 'IR', 'KP', 'SY']));
+      expect(swap.unavailable).not.toContain('US');
+      expect(swap.providers['0x']).toEqual(expect.arrayContaining(['US', 'CN', 'SG', 'NI', 'ZW']));
       expect(validateTable(DEFAULT_TABLE)).toEqual([]);
     });
 
@@ -53,12 +54,14 @@ describe('availability-table', () => {
 
     it('rejects a Jupiter row for a prohibited country, including via platform override', () => {
       const t = valid();
-      t.capabilities.swap.unavailable = t.capabilities.swap.unavailable.filter((c) => c !== 'US');
+      t.capabilities.swap.providers['0x'] = t.capabilities.swap.providers['0x'].filter(
+        (c) => c !== 'US'
+      );
       t.capabilities.swap.providers.jupiter = ['US'];
       expect(validateTable(t)).toContainEqual(expect.stringContaining('US'));
 
       const u = valid();
-      u.capabilities.swap.platforms.android = { unavailable: [] };
+      u.capabilities.swap.platforms.android = { unavailable: [], providers: {} };
       const problems = validateTable(u);
       expect(problems).toContainEqual('swap.platforms.android: Jupiter may not serve US');
       expect(problems).toContainEqual(
