@@ -3,9 +3,12 @@
 ## Responsibility
 
 - own Bitcoin-specific business logic: transactions and UTXO walking
-- delegate Blockdaemon HTTP construction to
-  `src/infrastructure/blockdaemon-client.js` rather than wiring axios
-  directly
+- read chain data through `src/infrastructure/esplora-client.js`
+  (mempool.space, then blockstream.info) rather than wiring axios
+  directly; `esplora-mappers.js` turns Esplora payloads into the item
+  shapes the resources read
+- own `bitcoin-balance-provider.js` (registered in
+  `src/services/multichain/balance-providers`)
 - keep first-page transaction-history caching on the
   `bitcoin-transactions` namespace via
   `src/infrastructure/cache/transaction-history-cache.js`
@@ -13,7 +16,7 @@
 ## Rules
 
 - Keep Bitcoin services isolated from Solana / Ethereum modules.
-- Cross-chain logic (e.g. balance via Blockdaemon Universal) lives in
+- Cross-chain dispatch (e.g. the balance route) lives in
   `src/services/multichain`.
 - Cross-domain helpers with no chain affinity live in
   `src/services/shared`.
@@ -32,6 +35,6 @@
 
 ## Testing
 
-- Unit-test each service in `__tests__/`. Mock axios + Blockdaemon
-  client; never hit the real network.
+- Unit-test each service in `__tests__/`. Mock `esplora-client`;
+  never hit the real network.
 - Cross-cutting integration tests live under `src/__tests__/`.

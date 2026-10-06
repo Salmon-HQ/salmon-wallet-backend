@@ -451,8 +451,8 @@ paths:
       summary: Solana transaction history
       description: |
         Enriched transaction history (`solana-transaction-enrichment`
-        contract). Provider routing: Triton One primary, Helius Enhanced API
-        fallback, bare-RPC last resort. First-page queries are served through
+        contract). Provider routing: Triton One (RPC + local parser); bare-RPC
+        unclassified reads as the degraded tier. First-page queries are served through
         a short-lived cache; paged queries always hit the provider.
       parameters:
         - $ref: '#/components/parameters/SolanaEnv'
@@ -542,6 +542,106 @@ paths:
                 $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/ServerError'
+
+  /v1/solana-{env}/ft/swap/build:
+    get:
+      tags: [solana]
+      operationId: buildSolanaSwap
+      summary: Build an UNSIGNED swap transaction
+      description: |
+        `solana-swap-build` contract. Passes the availability gate first
+        (`capability-availability`: country + `X-Salmon-Platform` → the row's
+        provider, 403 `region_restricted` otherwise; on a Jupiter row the
+        `publicKey` is screened, 403 `wallet_restricted`), then asks that
+        provider (0x or Jupiter) for swap instructions with Salmon's fee
+        (server-configured, never from the request), assembles a v0
+        transaction with the caller as fee payer and returns it unsigned. The
+        wallet signs and broadcasts on the device; there is no execute/relay
+        endpoint (root AGENTS.md "Signing boundary"). `solana-mainnet` only.
+        Not cached; rebuild after `expiresAt`.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - $ref: '#/components/parameters/SalmonPlatform'
+        - name: inputMint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: outputMint
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: publicKey
+          in: query
+          required: true
+          description: Wallet public key that will sign the swap (taker + fee payer)
+          schema:
+            type: string
+        - name: amount
+          in: query
+          description: Input amount in base units (one of `amount` / `uiAmount` is required)
+          schema:
+            type: string
+        - name: uiAmount
+          in: query
+          description: Human-readable input amount; decimals resolved server-side
+          schema:
+            type: string
+        - name: slippageBps
+          in: query
+          description: 0–10000, default 50
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Unsigned swap transaction plus quote details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapBuild'
+        '400':
+          description: '`missing_parameter` / `invalid_parameter` / `unknown_mint`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "`region_restricted` — swap is not offered in the caller's country on this platform; `wallet_restricted` — the sanctions screening (Salmon's on a Jupiter row, 0x's on a 0x row) refused the taker"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "`no_route` — the provider cannot route this pair/amount; its own reason travels in `error_description` with the 0x code in parentheses"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`token_not_supported` — unknown mint, Token-2022 with transfer fee/hook, or a token the provider will not trade; `slippage_exceeded` — the price moved past the tolerance before the swap could settle; `insufficient_funds` — not enough of the input token; `insufficient_sol` — not enough SOL for the network fee and the token accounts the swap opens; `simulation_failed` — the runtime rejected the quote for another reason. In every 422 case nothing is returned to sign'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: '`provider_fee_mismatch` — the built transaction does not carry the configured fee'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: '`server_error`, or `swap_misconfigured` when 0x rejected Salmon-side parameters (fee, disabled sources)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: '`upstream_unavailable` — the row names a provider without a configured credential, or neither sanctions layer could answer; `upstream_rate_limited` — the provider keeps throttling'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /v1/solana-{env}/nft:
     get:
@@ -744,6 +844,121 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /v1/solana-{env}/powerups/availability:
+    get:
+      tags: [solana]
+      operationId: getSolanaPowerupAvailability
+      summary: What this caller may use on the network
+      description: |
+        `capability-availability` contract. One entry per registered Powerup
+        on the network plus the `swap` capability, decided per request from
+        the caller's country (the source address API Gateway attaches, never
+        a header) and the `X-Salmon-Platform` header. Informs only: the build
+        route is what refuses. Never cached (`Cache-Control: no-store`).
+        A country that cannot be resolved gets the default provider.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - $ref: '#/components/parameters/SalmonPlatform'
+      responses:
+        '200':
+          description: Availability per capability
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CapabilityAvailability'
+                required: [data]
+        '400':
+          $ref: '#/components/responses/InvalidNetwork'
+        '503':
+          description: '`network_catalog_unavailable` — the stage catalog failed to load'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/solana-{env}/powerups/{id}/build:
+    get:
+      tags: [solana]
+      operationId: buildSolanaPowerupTransaction
+      summary: Build an unsigned Powerup transaction
+      description: |
+        `community-powerups` contract. Returns an UNSIGNED v0 transaction
+        (caller = fee payer, zero signatures) for a registered
+        transaction-building Powerup; the backend never receives a signed
+        transaction and no execute/broadcast route exists. Passes the
+        availability gate first: a caller in a country where the capability
+        is not offered on their platform gets 403 `region_restricted` before
+        any provider is called.
+      parameters:
+        - $ref: '#/components/parameters/SolanaEnv'
+        - $ref: '#/components/parameters/SalmonPlatform'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Powerup id from the registry
+        - name: publicKey
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Caller's public key (fee payer and only signer)
+      responses:
+        '200':
+          description: Unsigned Powerup build envelope (`provider`, `transaction`, `expiresAt`, fee lines, contributor, display fields)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: '`missing_parameter` / `invalid_parameter`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: '`region_restricted` — not offered in the caller''s country on this platform'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: '`not_found` — unknown, disabled or undeclared-network Powerup'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: '`simulation_failed`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: '`provider_program_mismatch` / `provider_signer_mismatch`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: '`simulation_unavailable` or a resilience 503'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   # ──────────────────────── bitcoin ───────────────────────
   /v1/bitcoin-{env}/account/{address}/transactions:
     get:
@@ -924,6 +1139,16 @@ components:
       description: |
         Bitcoin network environment (`bitcoin-mainnet`, `bitcoin-testnet`).
         An unknown combination responds 400 `bad_request`.
+    SalmonPlatform:
+      name: X-Salmon-Platform
+      in: header
+      required: false
+      schema:
+        type: string
+        enum: [ios, android, extension]
+      description: |
+        The platform the app runs on. Missing or unknown values are
+        evaluated as `ios`, the most restrictive platform.
     MintAddress:
       name: mintAddress
       in: path
@@ -959,7 +1184,10 @@ components:
         `burn_not_supported`, `burn_transaction_too_large`,
         `burn_transaction`, `transfer_not_supported`,
         `transfer_transaction_too_large`, `transfer_transaction`,
-        `server_error`.
+        `region_restricted`, `wallet_restricted`, `no_route`, `token_not_supported`,
+        `slippage_exceeded`, `insufficient_funds`, `insufficient_sol`,
+        `provider_fee_mismatch`, `swap_misconfigured`, `upstream_unavailable`,
+        `upstream_rate_limited`, `server_error`.
       properties:
         error:
           type: string
@@ -969,6 +1197,26 @@ components:
           type: string
           description: Human-readable message
       required: [error, error_description]
+
+    CapabilityAvailability:
+      type: object
+      description: |
+        One capability as seen by this caller. `reason` only when
+        `enabled: false`; `provider` only when `enabled: true` and the
+        capability routes through one.
+      properties:
+        id:
+          type: string
+          example: swap
+        enabled:
+          type: boolean
+        reason:
+          type: string
+          enum: [region, maintenance, deprecated]
+        provider:
+          type: string
+          enum: [jupiter, '0x']
+      required: [id, enabled]
 
     HealthInfo:
       type: object
@@ -1203,7 +1451,7 @@ components:
       description: |
         Enriched Solana transaction (`solana-transaction-enrichment`
         contract). Two producers share this shape: the provider-enriched
-        path (Triton-parsed or Helius Enhanced, see
+        path (Triton-parsed, see
         `src/resources/solana/helius-transaction-resource.js`) and the
         bare-RPC fallback (`src/resources/solana/solana-transaction-resource.js`).
         The fields listed here are the stable core; the enriched path adds
@@ -1291,6 +1539,117 @@ components:
           type: string
           description: Present on output legs
       additionalProperties: true
+
+    SwapBuild:
+      type: object
+      description: |
+        `src/resources/solana/solana-swap-build-resource.js`. Amounts are
+        base-unit strings. Provider attribution is data: render
+        `providerDisplayName` / `attribution`, no provider-specific branches.
+      properties:
+        provider:
+          type: string
+          enum: ['0x', jupiter]
+          description: The routing provider the availability row chose for this caller
+        providerDisplayName:
+          type: string
+        attribution:
+          type: string
+        providerRequestId:
+          type: string
+          description: Provider-side request id (0x `zid`, Jupiter `requestId`) for support
+        transaction:
+          type: string
+          description: Base64-encoded v0 VersionedTransaction, no signatures, fee payer = `publicKey`
+        expiresAt:
+          type: string
+          format: date-time
+          description: Request a fresh build after this instant (blockhash lifetime)
+        input:
+          $ref: '#/components/schemas/SwapBuildLeg'
+        output:
+          allOf:
+            - $ref: '#/components/schemas/SwapBuildLeg'
+            - type: object
+              properties:
+                minAmount:
+                  type: string
+                  description: Minimum output after slippage and fees
+        route:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              percent:
+                type: number
+                description: Share of the remaining amount routed through this leg
+        priceImpactPct:
+          type: number
+          nullable: true
+          description: USD value lost input→output, from CoinGecko prices; null when a price is unknown
+        slippageBps:
+          type: integer
+        priorityFeeMicroLamports:
+          type: integer
+          description: Compute-unit price prepended to the transaction (network-derived p75, clamped 1000–20000; 0 when pinned off)
+        computeUnitLimit:
+          type: integer
+          nullable: true
+          description: Compute-unit limit prepended to the transaction (simulated usage +15%, 400000 when simulation is unavailable); null when the priority fee is pinned off
+        inUsdValue:
+          type: number
+          nullable: true
+        outUsdValue:
+          type: number
+          nullable: true
+        salmonFee:
+          type: object
+          nullable: true
+          description: |
+            Salmon's fee. Taken from the output token (`side: output`, `output.amount`
+            is already net of it) when Salmon's account for that token exists, else
+            from the input token (`side: input`, deducted before routing). Null when
+            no fee applies. `amount` is estimated from the configured bps.
+          properties:
+            amount:
+              type: string
+            mint:
+              type: string
+            side:
+              type: string
+              enum: [input, output]
+            bps:
+              type: integer
+            decimals:
+              type: integer
+            symbol:
+              type: string
+        routeFee:
+          type: object
+          nullable: true
+          description: The provider's own fee when it reports one; null for Jupiter's Router path and while 0x does not report it
+          properties:
+            bps:
+              type: integer
+      required: [provider, providerDisplayName, attribution, transaction, expiresAt, input, output, route, slippageBps]
+
+    SwapBuildLeg:
+      type: object
+      properties:
+        mint:
+          type: string
+        amount:
+          type: string
+        decimals:
+          type: integer
+        symbol:
+          type: string
+        name:
+          type: string
+        logo:
+          type: string
 
     UnsignedTransactionResponse:
       description: |

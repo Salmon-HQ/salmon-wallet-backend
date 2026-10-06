@@ -38,7 +38,7 @@ process.
 ## Special rules
 
 - For Solana transaction, burn, Powerup build, or NFT changes, verify response shape and routing expectations.
-- For provider integrations like Helius, CoinGecko or Triton, preserve normalized app-facing outputs.
+- For provider integrations like Triton, CoinGecko or Esplora, preserve normalized app-facing outputs.
 - If a dependency looks unused but supports a feature the team intentionally keeps for future work, leave it — and if intent is unclear, ask the human.
 
 ## What this skill should produce

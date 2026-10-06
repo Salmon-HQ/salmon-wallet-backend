@@ -1,6 +1,6 @@
 {
   "name": "salmon-api",
-  "version": "0.19.1",
+  "version": "0.20.0",
   "description": "Salmon API",
   "main": "index.js",
   "engines": {
@@ -10,7 +10,6 @@
     "test": "jest --detectOpenHandles",
     "test:unit": "jest --testPathPatterns='.spec.js$' --testPathIgnorePatterns='integration.spec.js' --detectOpenHandles",
     "test:integration": "jest --testPathPatterns='integration.spec.js$' --detectOpenHandles --runInBand",
-    "test:helius": "jest --testPathPatterns='helius.*\\.spec\\.js$' --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",
     "test:coverage": "jest --coverage --detectOpenHandles",
     "linter": "eslint ./ --fix",
@@ -22,6 +21,7 @@
     "serverless:print": "serverless print --stage prod -v",
     "serverless:build": "serverless package --stage prod",
     "serverless:deploy": "serverless deploy --stage prod",
+    "serverless:deploy:staging": "serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
     "test:integration:local-validator": "jest --testPathPatterns=\"local-validator.integration.spec.js$\" --detectOpenHandles --runInBand"
   },
   "repository": {
@@ -48,6 +48,7 @@
     "serverless-offline": "^13.10.1"
   },
   "dependencies": {
+    "@ip-location-db/dbip-country-mmdb": "^2.3.2026060120",
     "@metaplex-foundation/digital-asset-standard-api": "^2.1.1",
     "@metaplex-foundation/mpl-bubblegum": "^5.1.0",
     "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
@@ -66,6 +67,7 @@
     "express": "^5.2.1",
     "js-yaml": "^5.4.2",
     "lodash": "^4.17.21",
+    "mmdb-lib": "^3.0.3",
     "redis": "^6.2.1",
     "serverless-http": "^4.0.0"
   },

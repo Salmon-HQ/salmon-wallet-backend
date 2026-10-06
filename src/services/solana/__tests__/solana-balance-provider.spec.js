@@ -1,9 +1,5 @@
 'use strict';
 
-jest.mock('../../multichain/balance-providers/blockdaemon-balance-provider', () => ({
-  getBalance: jest.fn(),
-}));
-
 jest.mock('../solana-rpc-balance-provider', () => ({
   getBalance: jest.fn(),
 }));
@@ -16,7 +12,6 @@ jest.mock('../token-ui-amount-service', () => ({
   getUiAmounts: jest.fn(),
 }));
 
-const blockdaemon = require('../../multichain/balance-providers/blockdaemon-balance-provider');
 const rpc = require('../solana-rpc-balance-provider');
 const tokenService = require('../solana-ft-service');
 const uiAmountService = require('../token-ui-amount-service');
@@ -58,10 +53,7 @@ describe('solana-balance-provider', () => {
 
   it('attaches catalog metadata markers to SPL tokens by mint', async () => {
     const usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-    blockdaemon.getBalance.mockResolvedValue([
-      buildSolNative('1'),
-      buildSplToken(usdcMint, '5000000'),
-    ]);
+    rpc.getBalance.mockResolvedValue([buildSolNative('1'), buildSplToken(usdcMint, '5000000')]);
     tokenService.getByMints.mockResolvedValue([
       {
         id: usdcMint,
@@ -87,7 +79,7 @@ describe('solana-balance-provider', () => {
   });
 
   it('passes native SOL through unchanged (no marker injection)', async () => {
-    blockdaemon.getBalance.mockResolvedValue([buildSolNative('100')]);
+    rpc.getBalance.mockResolvedValue([buildSolNative('100')]);
 
     const out = await provider.getBalance('sol-address', undefined, { includeSpam: true });
 
@@ -97,7 +89,7 @@ describe('solana-balance-provider', () => {
 
   it('matches mints from the legacy `solana/token/` asset_path prefix too', async () => {
     const usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-    blockdaemon.getBalance.mockResolvedValue([
+    rpc.getBalance.mockResolvedValue([
       {
         owner: 'sol-address',
         blockchain: 'solana',
@@ -122,7 +114,7 @@ describe('solana-balance-provider', () => {
   });
 
   it('drops SPL tokens with confirmed_balance === "0"', async () => {
-    blockdaemon.getBalance.mockResolvedValue([
+    rpc.getBalance.mockResolvedValue([
       buildSolNative('1'),
       buildSplToken('zero-mint', '0'),
       buildSplToken('nonzero-mint', '42'),
@@ -140,7 +132,7 @@ describe('solana-balance-provider', () => {
   });
 
   it('keeps native items even at zero balance', async () => {
-    blockdaemon.getBalance.mockResolvedValue([buildSolNative('0')]);
+    rpc.getBalance.mockResolvedValue([buildSolNative('0')]);
 
     const out = await provider.getBalance('sol-address', undefined, { includeSpam: true });
 
@@ -150,7 +142,7 @@ describe('solana-balance-provider', () => {
 
   it('drops community-tagged (listed, long-tail) tokens by default like untagged ones', async () => {
     const items = [buildSplToken('verified-mint', '10'), buildSplToken('community-mint', '10')];
-    blockdaemon.getBalance.mockResolvedValue(items);
+    rpc.getBalance.mockResolvedValue(items);
     tokenService.getByMints.mockResolvedValue([
       { id: 'verified-mint', symbol: 'V', name: 'V', tags: ['verified'] },
       { id: 'community-mint', symbol: 'C', name: 'C', tags: ['community'] },
@@ -165,7 +157,7 @@ describe('solana-balance-provider', () => {
   });
 
   it('drops tokens with only "unknown" tags by default (spam filter)', async () => {
-    blockdaemon.getBalance.mockResolvedValue([
+    rpc.getBalance.mockResolvedValue([
       buildSolNative('1'),
       buildSplToken('verified-mint', '10'),
       buildSplToken('spam-mint', '20'),
@@ -184,7 +176,7 @@ describe('solana-balance-provider', () => {
   });
 
   it('drops tokens with no tags at all (spam filter)', async () => {
-    blockdaemon.getBalance.mockResolvedValue([buildSplToken('no-tag-mint', '10')]);
+    rpc.getBalance.mockResolvedValue([buildSplToken('no-tag-mint', '10')]);
     tokenService.getByMints.mockResolvedValue([]);
 
     const out = await provider.getBalance('sol-address', undefined, {});
@@ -193,7 +185,7 @@ describe('solana-balance-provider', () => {
   });
 
   it('preserves spam tokens when locals.includeSpam is true', async () => {
-    blockdaemon.getBalance.mockResolvedValue([buildSplToken('spam-mint', '20')]);
+    rpc.getBalance.mockResolvedValue([buildSplToken('spam-mint', '20')]);
     tokenService.getByMints.mockResolvedValue([
       { id: 'spam-mint', symbol: 'S', name: 'S', tags: ['unknown'] },
     ]);
@@ -209,10 +201,7 @@ describe('solana-balance-provider', () => {
     // merged. When the metadata source is down every token looks untagged, so filtering
     // would empty the wallet: the user sees only SOL and reads it as "my
     // tokens are gone". Showing possible spam beats hiding real funds.
-    blockdaemon.getBalance.mockResolvedValue([
-      buildSolNative('1'),
-      buildSplToken('verified-mint', '10'),
-    ]);
+    rpc.getBalance.mockResolvedValue([buildSolNative('1'), buildSplToken('verified-mint', '10')]);
     tokenService.getByMints.mockRejectedValue(new Error('metadata down'));
 
     const out = await provider.getBalance('sol-address', undefined, {});
@@ -221,10 +210,7 @@ describe('solana-balance-provider', () => {
   });
 
   it('still surfaces tokens when the metadata fetch throws', async () => {
-    blockdaemon.getBalance.mockResolvedValue([
-      buildSolNative('1'),
-      buildSplToken('verified-mint', '10'),
-    ]);
+    rpc.getBalance.mockResolvedValue([buildSolNative('1'), buildSplToken('verified-mint', '10')]);
     tokenService.getByMints.mockRejectedValue(new Error('metadata down'));
 
     // With metadata fetch failing, no tags → spam filter would drop the token.
@@ -236,66 +222,19 @@ describe('solana-balance-provider', () => {
     expect(token).not.toHaveProperty('_tags');
   });
 
-  describe('Blockdaemon fallback to RPC', () => {
-    const rpcItems = [buildSolNative('42'), buildSplToken('rpc-mint', '10')];
-    let warn;
+  it('reads the balance from the RPC only', async () => {
+    rpc.getBalance.mockResolvedValue([buildSolNative('42')]);
 
-    beforeEach(() => {
-      rpc.getBalance.mockResolvedValue(rpcItems);
-      warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    });
+    const out = await provider.getBalance('sol-address', undefined, { includeSpam: true });
 
-    afterEach(() => warn.mockRestore());
+    expect(rpc.getBalance).toHaveBeenCalledWith('sol-address', undefined, { includeSpam: true });
+    expect(out.map((it) => it.confirmed_balance)).toEqual(['42']);
+  });
 
-    it('falls back to the RPC when Blockdaemon times out (no response)', async () => {
-      const timeout = Object.assign(new Error('timeout of 6000ms exceeded'), {
-        code: 'ECONNABORTED',
-        request: {},
-      });
-      blockdaemon.getBalance.mockRejectedValue(timeout);
+  it('propagates an RPC failure instead of returning an empty balance', async () => {
+    rpc.getBalance.mockRejectedValue(new Error('rpc down'));
 
-      const out = await provider.getBalance('sol-address', undefined, { includeSpam: true });
-
-      expect(rpc.getBalance).toHaveBeenCalledWith('sol-address', undefined, { includeSpam: true });
-      expect(out.map((it) => it.confirmed_balance)).toEqual(['42', '10']);
-      expect(warn).toHaveBeenCalledWith(expect.stringContaining('ECONNABORTED'));
-    });
-
-    it('falls back to the RPC when Blockdaemon answers 5xx', async () => {
-      blockdaemon.getBalance.mockRejectedValue(
-        Object.assign(new Error('502'), { request: {}, response: { status: 502 } })
-      );
-
-      const out = await provider.getBalance('sol-address', undefined, { includeSpam: true });
-
-      expect(rpc.getBalance).toHaveBeenCalledTimes(1);
-      expect(out).toHaveLength(2);
-    });
-
-    it('propagates a Blockdaemon 4xx without calling the RPC', async () => {
-      const notFound = Object.assign(new Error('404'), { request: {}, response: { status: 404 } });
-      blockdaemon.getBalance.mockRejectedValue(notFound);
-
-      await expect(provider.getBalance('bad-address', undefined, {})).rejects.toBe(notFound);
-      expect(rpc.getBalance).not.toHaveBeenCalled();
-    });
-
-    it('propagates an RPC failure instead of returning an empty balance', async () => {
-      blockdaemon.getBalance.mockRejectedValue(
-        Object.assign(new Error('timeout'), { request: {} })
-      );
-      rpc.getBalance.mockRejectedValue(new Error('rpc down'));
-
-      await expect(provider.getBalance('sol-address', undefined, {})).rejects.toThrow('rpc down');
-    });
-
-    it('does not touch the RPC when Blockdaemon succeeds', async () => {
-      blockdaemon.getBalance.mockResolvedValue([buildSolNative('1')]);
-
-      await provider.getBalance('sol-address', undefined, {});
-
-      expect(rpc.getBalance).not.toHaveBeenCalled();
-    });
+    await expect(provider.getBalance('sol-address', undefined, {})).rejects.toThrow('rpc down');
   });
 
   describe('scaled UI amounts', () => {
@@ -311,7 +250,7 @@ describe('solana-balance-provider', () => {
     });
 
     it('marks a rebasing token with the amount the holder should see', async () => {
-      blockdaemon.getBalance.mockResolvedValue([
+      rpc.getBalance.mockResolvedValue([
         buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
       ]);
       tokenService.getByMints.mockResolvedValue([catalogEntry(SCALED_MINT, 'token-2022')]);
@@ -330,7 +269,7 @@ describe('solana-balance-provider', () => {
     });
 
     it('never asks about a classic SPL mint — neither extension can exist there', async () => {
-      blockdaemon.getBalance.mockResolvedValue([buildSplToken(CLASSIC_MINT, '5000000')]);
+      rpc.getBalance.mockResolvedValue([buildSplToken(CLASSIC_MINT, '5000000')]);
       tokenService.getByMints.mockResolvedValue([catalogEntry(CLASSIC_MINT, 'spl-token')]);
 
       await provider.getBalance('sol-address', undefined, {});
@@ -340,7 +279,7 @@ describe('solana-balance-provider', () => {
 
     it('only asks about the tokens that survived the filters', async () => {
       const spamMint = 'SpamMint1111111111111111111111111111111111';
-      blockdaemon.getBalance.mockResolvedValue([
+      rpc.getBalance.mockResolvedValue([
         buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
         buildSplToken(spamMint, '1'),
       ]);
@@ -358,7 +297,7 @@ describe('solana-balance-provider', () => {
     });
 
     it('leaves the raw amount in place when the mint lookup fails', async () => {
-      blockdaemon.getBalance.mockResolvedValue([
+      rpc.getBalance.mockResolvedValue([
         buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
       ]);
       tokenService.getByMints.mockResolvedValue([catalogEntry(SCALED_MINT, 'token-2022')]);
@@ -371,7 +310,7 @@ describe('solana-balance-provider', () => {
     });
 
     it('leaves a mint alone when its multiplier is neutral', async () => {
-      blockdaemon.getBalance.mockResolvedValue([
+      rpc.getBalance.mockResolvedValue([
         buildSplToken(SCALED_MINT, '677400755573', { decimals: 8 }),
       ]);
       tokenService.getByMints.mockResolvedValue([catalogEntry(SCALED_MINT, 'token-2022')]);

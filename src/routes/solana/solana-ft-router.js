@@ -21,10 +21,20 @@ const express = require('express');
 const { safe } = require('../../../packages/api-utils');
 const { cacheControl } = require('../../../packages/middleware');
 const controller = require('../../controllers/solana/solana-ft-controller');
+const powerupGate = require('../../middlewares/powerup-gate');
 
 const router = express.Router();
 
 router.get('/verified', cacheControl('max-age=300'), safe(controller.verified));
 router.get('/search', safe(controller.search));
+// Mainnet check → request shape → availability gate (country/platform row,
+// screening on Jupiter rows) → build. No execute/relay route exists by design.
+router.get(
+  '/swap/build',
+  controller.swapNetworkOnly,
+  controller.validateSwapQuery,
+  powerupGate('swap'),
+  safe(controller.build)
+);
 
 module.exports = router;

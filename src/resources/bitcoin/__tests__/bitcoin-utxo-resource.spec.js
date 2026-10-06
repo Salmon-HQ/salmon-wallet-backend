@@ -17,7 +17,7 @@ const MINED_UTXO = {
 };
 
 describe('bitcoin-utxo-resource', () => {
-  it('decorates Blockdaemon UTXO payloads to the public Bitcoin shape', async () => {
+  it('decorates UTXO items to the public Bitcoin shape', async () => {
     await expect(decorate(MINED_UTXO)).resolves.toEqual({
       address: 'btc-address',
       txId: 'tx-1',

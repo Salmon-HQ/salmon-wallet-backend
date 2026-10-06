@@ -31,4 +31,19 @@ describe('request-deadline', () => {
       expect.objectContaining({ statusCode: 503, errorCode: 'request_budget_exhausted' })
     );
   });
+
+  it("bounds calls made without locals inside a request by that request's deadline", async () => {
+    process.env.REQUEST_BUDGET_MS = '1000';
+    const res = { locals: {} };
+    let seen;
+    requestDeadline({}, res, () => {
+      setTimeout(() => {
+        seen = remainingMs(undefined);
+      }, 20);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    expect(seen).toBeLessThanOrEqual(1000 - 20);
+    expect(seen).toBeGreaterThan(0);
+  });
 });

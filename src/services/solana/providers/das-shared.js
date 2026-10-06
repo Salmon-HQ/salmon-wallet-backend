@@ -1,10 +1,9 @@
 'use strict';
 
 /**
- * Shared DAS-asset normalization and NFT pagination helpers used by both
- * the Triton and Helius providers. The DAS spec is identical across both
- * (Helius authored the spec, Triton implements the same JSON-RPC methods),
- * so these helpers are provider-agnostic.
+ * Shared DAS-asset normalization and NFT pagination helpers used by the
+ * Triton provider. The DAS spec is provider-agnostic (Helius authored it,
+ * Triton implements the same JSON-RPC methods).
  */
 
 const { PublicKey } = require('@solana/web3.js');
@@ -31,8 +30,7 @@ const isHeldByOwner = (asset) => {
 
 /**
  * Canonical normalization for a DAS asset response into the FE NFT shape.
- * Used by both Triton and Helius DAS providers so the resolver returns a
- * single shape regardless of which provider served the call.
+ * Gives the resolver one wallet-canonical NFT shape.
  *
  * `collection.verified` reads the grouping's `verified` flag. Both providers
  * (probed 2026-08-25 against Triton and Helius) omit unverified collections

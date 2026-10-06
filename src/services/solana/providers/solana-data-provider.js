@@ -2,10 +2,9 @@
 
 /**
  * SolanaDataProvider — interface contract that all Solana data providers
- * (Helius, Triton, etc.) must satisfy.
+ * (Triton today) must satisfy.
  *
- * The resolver (`./index.js`) wires Triton as primary and Helius as fallback
- * for tx enrichment, and routes DAS calls the same way. Each provider must
+ * The resolver (`./index.js`) routes tx enrichment and DAS calls to Triton. Each provider must
  * implement every method below; methods that are not yet supported by a
  * provider must throw `ProviderNotImplementedError` so the resolver can route
  * the call to the fallback chain.
@@ -77,7 +76,7 @@
  *
  * @property {string} name
  *   Provider identifier — used for logging, metrics, and resolver routing.
- *   Must be unique across providers ('helius', 'triton').
+ *   Must be unique across providers (e.g. 'triton').
  *
  * @property {(environment: 'mainnet'|'devnet'|'testnet') => string} getRpcUrl
  *   Returns the JSON-RPC URL for the given Solana environment. Used by

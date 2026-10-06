@@ -1,7 +1,6 @@
 # Testing guide — Salmon API
 
-This guide describes how to run the project's tests, especially the
-ones related to the Helius Enhanced Transactions API integration.
+This guide describes how to run the project's tests.
 
 ## Table of contents
 
@@ -19,9 +18,6 @@ ones related to the Helius Enhanced Transactions API integration.
 ```bash
 # All tests
 npm test
-
-# Helius-only tests
-npm run test:helius
 ```
 
 ### Quick run (Docker):
@@ -58,9 +54,6 @@ npm run test:unit
 # Integration tests (real API calls)
 npm run test:integration
 
-# Helius-specific tests
-npm run test:helius
-
 # Watch mode (for local development)
 npm run test:watch
 
@@ -72,10 +65,10 @@ npm run test:coverage
 
 ```bash
 # By full path
-npm test src/services/solana/__tests__/helius-transaction-service.integration.spec.js
+npm test src/services/solana/__tests__/solana-transaction-service.integration.spec.js
 
 # By pattern
-npm test helius-transaction-service
+npm test solana-transaction-service
 ```
 
 ## Running tests in Docker
@@ -101,9 +94,6 @@ chmod +x scripts/test-docker.sh
 # Run integration tests
 ./scripts/test-docker.sh integration
 
-# Run Helius tests
-./scripts/test-docker.sh helius
-
 # Run with coverage
 ./scripts/test-docker.sh coverage
 ```
@@ -115,7 +105,7 @@ chmod +x scripts/test-docker.sh
 docker-compose exec api npm test
 
 # Specific tests
-docker-compose exec api npm run test:helius
+docker-compose exec api npm run test:unit
 
 # With coverage
 docker-compose exec api npm run test:coverage
@@ -140,8 +130,7 @@ Resource specs (`src/resources/solana/__tests__/`):
 
 Service specs (`src/services/solana/__tests__/`):
 
-- `providers.spec.js` — provider resolver (Triton primary, Helius
-  fallback)
+- `providers.spec.js` — provider resolver (Triton only)
 - `solana-burn-routing.spec.js`
 - other unit specs such as `burn-service.spec.js`,
   `token-catalog-service.spec.js`, `token-metadata-service.spec.js`, `solana-ft-service.spec.js`,
@@ -179,12 +168,11 @@ npm run test:unit
 
 ### 2. Integration tests
 
-**What they cover:** real integration with external APIs (Helius,
-CoinGecko, Triton, Solana RPC).
+**What they cover:** real integration with external APIs (CoinGecko,
+Triton, Solana RPC).
 
 **Files:**
 
-- `src/services/solana/__tests__/helius-transaction-service.integration.spec.js`
 - `src/services/solana/__tests__/solana-transaction-service.integration.spec.js`
 
 **Characteristics:**
@@ -220,23 +208,6 @@ npm run test:integration
 npm test solana-account-controller
 ```
 
-### 4. Helius-specific tests
-
-**What they cover:** everything related to the Helius Enhanced
-Transactions API.
-
-**Includes:**
-
-- helius-transaction-resource unit tests
-- helius-transaction-service integration tests
-- solana-transaction-service integration tests with Helius
-
-**Run:**
-
-```bash
-npm run test:helius
-```
-
 ## Configuration
 
 ### Required environment variables
@@ -245,15 +216,9 @@ Create a `.env` file in the project root:
 
 ```bash
 # Solana data providers
-# Triton One — primary provider (RPC + DAS). Embed the token as a path segment.
+# Triton One — the Solana provider (RPC + DAS). Embed the token as a path segment.
 TRITON_RPC_URL=https://<tenant>.solana-mainnet.rpcpool.com/<token>
 TRITON_RPC_URL_DEVNET=
-
-# Helius — fallback only (free tier)
-HELIUS_API_KEY=your-helius-api-key
-
-# Caps Helius fallback usage when Triton fails (req/s, default 8)
-SOLANA_FALLBACK_MAX_RPS=8
 
 # Required for the CoinGecko token-catalog / price tests
 COINGECKO_API_KEY=your-api-key-here
@@ -268,14 +233,11 @@ The integration tests target the post-migration stack:
 
 - `TRITON_RPC_URL` — primary provider for mainnet. Without this
   value, `src/infrastructure/triton-client.js` throws
-  `TRITON_NOT_CONFIGURED` and the resolver routes to Helius. Paste
+  `TRITON_NOT_CONFIGURED` and the Triton suites skip. Paste
   the full URL with the token as a path segment
   (`https://<tenant>.solana-mainnet.rpcpool.com/<token>`).
 - `TRITON_RPC_URL_DEVNET` — optional. When missing, devnet uses the
-  Solana public endpoint (and DAS falls back to Helius).
-- `SOLANA_FALLBACK_MAX_RPS` — token-bucket cap for Helius traffic
-  when Triton fails. Default 8 req/s; for long local suites you can
-  lower it if the free tier is saturated.
+  Solana public endpoint (bare RPC only, no DAS).
 
 For local development copy `.env.example` into `.env` and fill in
 `TRITON_RPC_URL` with your Triton credentials.
@@ -290,14 +252,6 @@ For local development copy `.env.example` into `.env` and fill in
 
 ## Troubleshooting
 
-### Error: "HELIUS_API_KEY is not defined"
-
-**Fix:** Make sure your `.env` file has the API key:
-
-```bash
-echo "HELIUS_API_KEY=your-helius-api-key" >> .env
-```
-
 ### Error: "Cannot find module '...'"
 
 **Fix:** Install dependencies:
@@ -310,13 +264,12 @@ npm install
 
 **Possible causes:**
 
-- Helius API is unresponsive
+- Triton is unresponsive
 - Rate limiting kicked in
 - Slow internet connection
 
 **Fix:**
 
-- Check connectivity: `curl https://api-mainnet.helius-rpc.com`
 - Bump the timeout in the specific test: `jest.setTimeout(60000)`
 - Use mocks instead of real calls
 
@@ -337,7 +290,7 @@ npm install
 
 ```bash
 # Inspect env vars inside the container
-docker-compose exec api printenv | grep HELIUS
+docker-compose exec api printenv | grep TRITON
 
 # Rebuild the image
 docker-compose build api
@@ -449,6 +402,5 @@ Trivial mappers with no branching, config/constant plumbing, framework behavior 
 ## Resources
 
 - [Jest documentation](https://jestjs.io/docs/getting-started)
-- [Helius API docs](https://www.helius.dev/docs)
 - [Project architecture](./ARCHITECTURE.md) — Solana provider model
-  (Triton primary, Helius fallback) and stack migration notes.
+  (Triton only) and stack migration notes.

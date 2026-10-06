@@ -11,16 +11,14 @@
  * and `blockchain`. The exact item shape is defined by the
  * `multichain-account-balance` API contract.
  *
- * Default implementation is `blockdaemon-balance-provider.js`, which
- * works for any chain Blockdaemon's Universal API supports. Chain
- * slices can register a richer provider (e.g. Alchemy/Infura for
- * Ethereum) by exporting it and registering the module path in
- * `./index.js#PROVIDERS_BY_CHAIN`.
+ * Implementations: `services/bitcoin/bitcoin-balance-provider.js` (Esplora)
+ * and `services/solana/solana-balance-provider.js` (Solana RPC). A chain
+ * registers its provider in `./index.js#PROVIDERS_BY_CHAIN`.
  *
  * @typedef {Object} BalanceProvider
  * @property {(address: string, tokens: any, locals: any) => Promise<Array<Object>>} getBalance
  *   Fetches balance items for `address`. `tokens` is provider-specific
- *   (e.g. a token-filter list; unused by the Blockdaemon default).
+ *   (e.g. a token-filter list; unused by both current providers).
  *   `locals` carries the resolved `network` (blockchain + environment)
  *   used to build upstream URLs. Must resolve to an array — throw (do
  *   not return an error object) on upstream failure so the caller's

@@ -25,7 +25,7 @@ const { isValidBitcoinAddress } = require('../../utils/bitcoin-address');
 const router = express.Router();
 
 // Every route below takes `:address`; reject a malformed one here so it never
-// reaches Blockdaemon (which would answer with an upstream error, not a 400).
+// reaches Esplora (which would answer with an upstream error, not a 400).
 router.param('address', (req, res, next, address) => {
   if (isValidBitcoinAddress(address)) return next();
   return res.status(400).json({

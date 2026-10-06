@@ -250,4 +250,15 @@ describe('error-handler middleware', () => {
     expect(next).toHaveBeenCalledWith(err);
     expect(res.status).not.toHaveBeenCalled();
   });
+
+  it('keeps the wallet address out of the log on both the 4xx and the 5xx line', () => {
+    const address = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
+    const request = { method: 'GET', path: `/v1/solana-mainnet/account/${address}/balance` };
+    const refused = Object.assign(new Error('nope'), { statusCode: 404, errorCode: 'not_found' });
+    errorHandler(refused, request, buildRes(), jest.fn());
+    errorHandler(new Error('boom'), request, buildRes(), jest.fn());
+    const logged = JSON.stringify([console.warn.mock.calls, console.error.mock.calls]);
+    expect(logged).not.toContain(address);
+    expect(logged).toContain('9mpJ…SAd3');
+  });
 });

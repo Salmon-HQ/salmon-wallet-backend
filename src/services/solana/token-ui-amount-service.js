@@ -17,11 +17,8 @@
  * integration guide says to keep raw amounts for calculations and convert
  * "at the edge", which for us is `account-balance-resource`.
  *
- * Neither balance provider reports the multiplier: Blockdaemon Universal
- * returns `confirmed_balance` + `decimals` and nothing else, and the bare-RPC
- * provider's `uiAmount` would only cover the fallback path. So the multiplier
- * is resolved here from the mint account itself and applied the same way
- * whichever provider answered.
+ * The balance reader keeps the raw base-unit amount and does not carry the
+ * multiplier, so it is resolved here from the mint account itself.
  *
  * Only Token-2022 mints can carry either extension, so callers narrow the list
  * by the catalog's `tokenProgram` first — a wallet holding only classic SPL

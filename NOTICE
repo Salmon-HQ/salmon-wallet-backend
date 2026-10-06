@@ -2,3 +2,8 @@ Salmon API
 Copyright 2022-2026 GeekOcean Labs Ltd
 
 Licensed under the Apache License, Version 2.0.
+
+IP Geolocation by DB-IP (https://db-ip.com), "IP to Country Lite" database,
+licensed under CC BY 4.0, packaged as @ip-location-db/dbip-country-mmdb; and its
+"IP to City Lite" database (CC BY 4.0), from which src/availability/region-ranges.json
+is extracted.

@@ -3,7 +3,8 @@
 /**
  * Account balance resource — public response shape for
  * `GET /v1/:networkId/account/:address/balance`. Maps each
- * Blockdaemon Universal balance item into the canonical
+ * balance item (Blockdaemon Universal's historical item shape, which both
+ * chain providers emit) into the canonical
  * `{ owner, blockchain, amount, decimals, symbol, name, type, ... }`
  * shape, branching on `currency.type` for native vs token addresses
  * and side-loading `logo` via `includeLogo` when `?include=logo`.
@@ -21,7 +22,7 @@
  * extensions make the displayed figure differ from `amount / 10^decimals`
  * (Scaled UI Amount, Interest Bearing) and is what a client renders.
  *
- * Markers override Blockdaemon defaults when present; absent markers
+ * Markers override the item's own fields when present; absent markers
  * leave the response key-clean so existing consumers see the same
  * shape.
  *

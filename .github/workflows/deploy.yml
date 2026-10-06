@@ -105,6 +105,18 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_ID: ${{ github.run_id }}
 
+      # Swap screening reads the sanctions list from Redis, and only the daily
+      # refreshSanctionsJob fills it. A fresh or emptied Redis would block every
+      # swap until that schedule fires, so each deploy refreshes it once. A
+      # failure warns and does not fail the deploy: the code is already live.
+      - name: Refresh the sanctions list
+        run: |
+          if ! err="$(aws lambda invoke --function-name gol-salmon-api-prod-refreshSanctionsJob \
+            --cli-read-timeout 130 --query FunctionError --output text sanctions.json)" \
+            || [ "$err" != "None" ]; then
+            echo "::warning::refreshSanctionsJob did not complete; swaps stay blocked until its daily run."
+          fi
+
       # Smoke the stack we just deployed on its execute-api URL, not through
       # CloudFront (the CDN can answer a cached 200 and hide a broken deploy).
       # This ALERTS only: a red step here does not roll back. Rollback stays a

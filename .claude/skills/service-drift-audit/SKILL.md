@@ -1,6 +1,6 @@
 ---
 name: service-drift-audit
-description: Checks salmon-api's external service dependencies (0x, CoinGecko, Triton, Helius, Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did CoinGecko/Helius/Metaplex change anything", or similar drift-check requests.
+description: Checks salmon-api's external service dependencies (0x, CoinGecko, Triton, Esplora (mempool.space / blockstream), Metaplex, spl-token, Node/Lambda runtime) for documentation or API drift against a recorded baseline, classifies findings, and stops for human review on breaking changes. ALWAYS use for requests like "check for service updates", "audit our API dependencies", "did CoinGecko/Helius/Metaplex change anything", or similar drift-check requests.
 ---
 
 # Service Drift Audit — salmon-api
@@ -29,15 +29,9 @@ prior evidence; the two do not overlap and neither replaces the other.
   `content.metadata`, `token_info`, `mint_extensions`. Watch docs.triton.one
   digital-assets-api for shape changes.
 
-### Helius
-
-- DAS provider in a fallback role (Triton is primary — see below).
-- `helius-sdk` v3 is kit-native.
-- Sources: helius.dev/docs, github.com/helius-labs.
-
 ### Triton
 
-- Primary RPC + DAS provider. Implements Helius's DAS spec.
+- The only Solana RPC + DAS provider (no fallback). Implements Helius's DAS spec.
 - Gaps: no Enhanced Transactions API; `getLargestAccounts` is throttled on
   the current plan.
 - Source: docs.triton.one.

@@ -7,7 +7,7 @@
  * with a non-zero `supply.edition_nonce` (checked against the live indexer).
  *
  * `decimals` exists only if the DAS response carries `token_info`, so both
- * single-asset calls must ask for that block. Both indexers include it by
+ * single-asset calls must ask for that block. The indexer includes it by
  * default today, which means a regression here would be silent: the guard
  * would keep passing every test while quietly losing its only working arm.
  */
@@ -20,7 +20,6 @@ jest.mock('../../../../infrastructure/providers/provider-client', () => ({
 
 const axios = require('axios');
 const tritonProvider = require('../triton-provider');
-const heliusProvider = require('../helius-provider');
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -33,17 +32,6 @@ const bodyOf = () => axios.post.mock.calls[0][1];
 describe('single-asset DAS getAsset requests the token_info block', () => {
   it('triton getNftByMint sends displayOptions.showFungible', async () => {
     await tritonProvider.getNftByMint('mint-1', { network: { environment: 'mainnet' } });
-
-    expect(bodyOf()).toMatchObject({
-      method: 'getAsset',
-      params: { id: 'mint-1', displayOptions: { showFungible: true } },
-    });
-  });
-
-  it('helius getNftByMint sends displayOptions.showFungible', async () => {
-    await heliusProvider.getNftByMint('mint-1', {
-      network: { environment: 'mainnet', config: { nodeUrl: 'https://helius.example' } },
-    });
 
     expect(bodyOf()).toMatchObject({
       method: 'getAsset',

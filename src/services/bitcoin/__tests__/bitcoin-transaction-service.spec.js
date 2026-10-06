@@ -1,101 +1,130 @@
 'use strict';
 
-jest.mock('axios', () => ({
-  get: jest.fn(),
-}));
+jest.mock('../../../infrastructure/esplora-client', () => ({ get: jest.fn() }));
 
-const http = require('axios');
+const esplora = require('../../../infrastructure/esplora-client');
 const service = require('../bitcoin-transaction-service');
 const {
   clearTransactionHistoryCache,
 } = require('../../../infrastructure/cache/transaction-history-cache');
 
+const ADDRESS = 'bc1q-viewed';
+const locals = {
+  network: { id: 'bitcoin-mainnet', blockchain: 'bitcoin', environment: 'mainnet' },
+};
+
+const tx = (txid, confirmed = true) => ({
+  txid,
+  fee: 141,
+  status: confirmed ? { confirmed: true, block_time: 1700000000 } : { confirmed: false },
+  vin: [{ prevout: { scriptpubkey_address: 'bc1q-sender', value: 5000 } }],
+  vout: [{ scriptpubkey_address: ADDRESS, value: 4859, scriptpubkey: '0014ab' }],
+});
+const confirmedRun = (prefix, n) => Array.from({ length: n }, (_, i) => tx(`${prefix}${i}`));
+
 describe('bitcoin-transaction-service', () => {
-  const locals = {
-    network: {
-      id: 'bitcoin-mainnet',
-      blockchain: 'bitcoin',
-      environment: 'mainnet',
-    },
-  };
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     clearTransactionHistoryCache();
   });
 
-  it('caches first-page transaction history by address, query, and network', async () => {
-    http.get.mockResolvedValue({
-      data: {
-        data: [{ id: 'tx-1' }],
-        meta: { paging: { next_page_token: 'next-1' } },
-      },
-    });
+  it('maps an Esplora transaction into the fee / input / output events the resource reads', async () => {
+    esplora.get.mockResolvedValue([tx('a')]);
 
-    const first = await service.getTransactions('btc-address', { pageSize: 10 }, locals);
-    const second = await service.getTransactions('btc-address', { pageSize: 10 }, locals);
+    const page = await service.getTransactions(ADDRESS, { pageSize: 10 }, locals);
 
-    expect(http.get).toHaveBeenCalledTimes(1);
-    expect(first).toEqual(second);
-    expect(first).toEqual({
-      data: [{ id: 'tx-1', blockchain: 'bitcoin', address: 'btc-address' }],
-      meta: { nextPageToken: 'next-1' },
+    expect(esplora.get).toHaveBeenCalledWith(`/address/${ADDRESS}/txs`, locals);
+    expect(page).toEqual({
+      data: [
+        {
+          id: 'a',
+          date: 1700000000,
+          status: 'completed',
+          blockchain: 'bitcoin',
+          address: ADDRESS,
+          events: [
+            { type: 'fee', denomination: 'BTC', decimals: 8, amount: 141 },
+            {
+              type: 'utxo_input',
+              denomination: 'BTC',
+              decimals: 8,
+              source: 'bc1q-sender',
+              amount: 5000,
+            },
+            {
+              type: 'utxo_output',
+              denomination: 'BTC',
+              decimals: 8,
+              destination: ADDRESS,
+              amount: 4859,
+            },
+          ],
+        },
+      ],
+      meta: { nextPageToken: undefined },
     });
   });
 
-  it('does not cache paginated transaction history requests', async () => {
-    http.get
-      .mockResolvedValueOnce({
-        data: {
-          data: [{ id: 'tx-1' }],
-          meta: { paging: { next_page_token: 'next-1' } },
-        },
-      })
-      .mockResolvedValueOnce({
-        data: {
-          data: [{ id: 'tx-2' }],
-          meta: { paging: { next_page_token: 'next-2' } },
-        },
-      });
+  it('lists mined transactions only, and skips coinbase inputs', async () => {
+    const coinbase = { ...tx('cb'), vin: [{ is_coinbase: true, prevout: null }] };
+    esplora.get.mockResolvedValue([tx('m', false), coinbase]);
 
-    const first = await service.getTransactions('btc-address', { pageToken: 'page-1' }, locals);
-    const second = await service.getTransactions('btc-address', { pageToken: 'page-1' }, locals);
+    const { data } = await service.getTransactions(ADDRESS, { pageSize: 10 }, locals);
 
-    expect(http.get).toHaveBeenCalledTimes(2);
-    expect(first.data[0].id).toBe('tx-1');
-    expect(second.data[0].id).toBe('tx-2');
+    expect(data.map((t) => [t.id, t.status, t.date])).toEqual([['cb', 'completed', 1700000000]]);
+    expect(data[0].events.some((e) => e.type === 'utxo_input')).toBe(false);
   });
 
-  it('deduplicates concurrent first-page transaction history requests', async () => {
-    let resolveRequest;
-    http.get.mockReturnValue(
-      new Promise((resolve) => {
-        resolveRequest = resolve;
-      })
-    );
+  it('fills the page across Esplora chunks and continues from the last txid', async () => {
+    esplora.get
+      .mockResolvedValueOnce(confirmedRun('p', 25))
+      .mockResolvedValueOnce(confirmedRun('q', 25));
 
-    const first = service.getTransactions('btc-address', {}, locals);
-    const second = service.getTransactions('btc-address', {}, locals);
+    const page = await service.getTransactions(ADDRESS, { pageSize: 30 }, locals);
 
-    await Promise.resolve();
+    expect(esplora.get).toHaveBeenNthCalledWith(2, `/address/${ADDRESS}/txs/chain/p24`, locals);
+    expect(page.data).toHaveLength(30);
+    expect(page.meta.nextPageToken).toBe('q4');
+  });
 
-    expect(http.get).toHaveBeenCalledTimes(1);
+  it('keeps paging when the first chunk is longer than a chain page (mempool.space sends 50)', async () => {
+    esplora.get
+      .mockResolvedValueOnce(confirmedRun('p', 50))
+      .mockResolvedValueOnce(confirmedRun('q', 25))
+      .mockResolvedValueOnce(confirmedRun('r', 25));
 
-    resolveRequest({
-      data: {
-        data: [{ id: 'tx-1' }],
-        meta: { paging: {} },
-      },
-    });
+    const page = await service.getTransactions(ADDRESS, { pageSize: 100 }, locals);
 
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      {
-        data: [{ id: 'tx-1', blockchain: 'bitcoin', address: 'btc-address' }],
-        meta: { nextPageToken: undefined },
-      },
-      {
-        data: [{ id: 'tx-1', blockchain: 'bitcoin', address: 'btc-address' }],
-        meta: { nextPageToken: undefined },
-      },
-    ]);
+    expect(page.data).toHaveLength(100);
+    expect(page.meta.nextPageToken).toBe('r24');
+  });
+
+  it('ends the history when Esplora returns a short chunk', async () => {
+    esplora.get.mockResolvedValueOnce(confirmedRun('p', 25)).mockResolvedValueOnce([tx('last')]);
+
+    const page = await service.getTransactions(ADDRESS, { pageSize: 100 }, locals);
+
+    expect(page.data).toHaveLength(26);
+    expect(page.meta.nextPageToken).toBeUndefined();
+  });
+
+  it('reads a later page from the chain endpoint after the token', async () => {
+    esplora.get.mockResolvedValue([tx('z')]);
+
+    await service.getTransactions(ADDRESS, { pageToken: 'p9', pageSize: 10 }, locals);
+
+    expect(esplora.get).toHaveBeenCalledWith(`/address/${ADDRESS}/txs/chain/p9`, locals);
+  });
+
+  it('caches the first page but never a later one', async () => {
+    esplora.get.mockResolvedValue([tx('a')]);
+
+    await service.getTransactions(ADDRESS, { pageSize: 10 }, locals);
+    await service.getTransactions(ADDRESS, { pageSize: 10 }, locals);
+    expect(esplora.get).toHaveBeenCalledTimes(1);
+
+    await service.getTransactions(ADDRESS, { pageToken: 'a', pageSize: 10 }, locals);
+    await service.getTransactions(ADDRESS, { pageToken: 'a', pageSize: 10 }, locals);
+    expect(esplora.get).toHaveBeenCalledTimes(3);
   });
 });

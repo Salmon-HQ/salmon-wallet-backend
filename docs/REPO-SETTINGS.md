@@ -104,8 +104,11 @@ aggregate; Maintained is 0 until the repo is 90 days old.
 ## 5. Actions secrets for the nightly integration workflow
 
 The external-provider integration suite (nightly workflow, separate from PR
-checks) needs real provider keys as repository secrets: `HELIUS_API_KEY`,
-`COINGECKO_API_KEY`, `TRITON_RPC_URL`, `TRITON_API_TOKEN`. Fork PRs
+checks) needs real provider keys as repository secrets:
+`COINGECKO_API_KEY`, `TRITON_RPC_URL`, `TRITON_API_TOKEN`, `ZEROEX_API_KEY`,
+`JUPITER_API_KEY`, plus the repository variables `SWAP_FEE_BPS` and
+`SWAP_FEE_ACCOUNT_OWNER` (public values) so the swap suites assert the fee
+leg. Fork PRs
 never see these — the PR workflow uses plain `pull_request` and no secrets.
 
 ## 6. Who can push

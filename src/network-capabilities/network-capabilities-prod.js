@@ -55,5 +55,8 @@ module.exports = {
   powerups: {
     // Payments: read-only entry, the device asks and pays (frontend spec 033).
     payments: { enabled: true },
+    // Swap (spec 018): the launch switch. `enabled: true` once the legal
+    // opinion on the US is in and the availability table is loaded in SSM.
+    swap: { enabled: false, reason: 'maintenance' },
   },
 };

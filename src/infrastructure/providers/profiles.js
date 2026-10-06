@@ -20,20 +20,11 @@ const coingeckoTier = () =>
     ? { rps: 500 / 60, burst: 100 }
     : { rps: 25 / 60, burst: 30 };
 
-const heliusTier = () =>
-  process.env.HELIUS_TIER === 'paid' ? { rps: 50, burst: 100 } : { rps: 10, burst: 20 };
-
 const PROFILES = {
   coingecko: {
     tier: coingeckoTier,
     timeoutMs: 15000,
     retry: { maxAttempts: 6, baseMs: 2000, maxMs: 60000, honorRetryAfter: true },
-    breaker: BREAKER_DEFAULT,
-  },
-  helius: {
-    tier: heliusTier,
-    timeoutMs: 30000,
-    retry: { maxAttempts: 4, baseMs: 1000, maxMs: 15000, honorRetryAfter: true },
     breaker: BREAKER_DEFAULT,
   },
   triton: {
@@ -42,10 +33,19 @@ const PROFILES = {
     retry: { maxAttempts: 2, baseMs: 500, maxMs: 2000, honorRetryAfter: true },
     breaker: BREAKER_DEFAULT,
   },
-  // No retry: the balance service falls back to the bare RPC on failure.
-  blockdaemon: {
-    tier: () => ({ rps: 20, burst: 40 }),
-    timeoutMs: 6000,
+  // Bitcoin (Esplora). No retry: `esplora-client` moves to the other host
+  // instead. Neither public host publishes a rate; 10 rps stays well under
+  // what they serve anonymous clients. 10 s: a busy address's history page
+  // has been measured at ~6.5 s on mempool.space.
+  mempool: {
+    tier: () => ({ rps: 10, burst: 20 }),
+    timeoutMs: 10000,
+    retry: RETRY_NONE,
+    breaker: BREAKER_DEFAULT,
+  },
+  blockstream: {
+    tier: () => ({ rps: 10, burst: 20 }),
+    timeoutMs: 10000,
     retry: RETRY_NONE,
     breaker: BREAKER_DEFAULT,
   },
@@ -56,6 +56,28 @@ const PROFILES = {
     timeoutMs: 5000,
     retry: RETRY_NONE,
     breaker: null,
+  },
+  // TRM Labs sanctions screening: 60/min without a key. No retry — the
+  // sanctions service falls back to the local SDN copy.
+  trm: {
+    tier: () => ({ rps: 1, burst: 5 }),
+    timeoutMs: 5000,
+    retry: RETRY_NONE,
+    breaker: BREAKER_DEFAULT,
+  },
+  // Jupiter Swap API, Developer plan (10 rps).
+  jupiter: {
+    tier: () => ({ rps: 10, burst: 10 }),
+    timeoutMs: 10000,
+    retry: { maxAttempts: 3, baseMs: 500, maxMs: 5000, honorRetryAfter: true },
+    breaker: BREAKER_DEFAULT,
+  },
+  // 0x Swap API, Standard plan (5 rps).
+  zeroex: {
+    tier: () => ({ rps: 5, burst: 5 }),
+    timeoutMs: 10000,
+    retry: { maxAttempts: 3, baseMs: 500, maxMs: 5000, honorRetryAfter: true },
+    breaker: BREAKER_DEFAULT,
   },
 };
 

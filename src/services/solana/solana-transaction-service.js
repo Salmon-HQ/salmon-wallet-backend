@@ -3,7 +3,7 @@
 /**
  * Solana transaction-service orchestration layer.
  *
- * Sits above `providers/` (Triton primary, Helius fallback) and exposes a
+ * Sits above `providers/` (Triton) and exposes a
  * provider-agnostic API: `getTransactions`. Each returned tx carries a
  * `_source` discriminator — `'enriched'` when the resolver produced a
  * parsed/decorated tx, `'rpc-standard'` when we fell back to a plain
@@ -14,7 +14,8 @@
  * costs at most one tokens fetch + one NFT-metadata batch.
  */
 
-const { Connection, PublicKey } = require('@solana/web3.js');
+const { createBudgetedConnection } = require('./budgeted-connection');
+const { PublicKey } = require('@solana/web3.js');
 const solanaProvider = require('./providers');
 
 // Gate the enhanced-tx path through the resolver so the service layer stays
@@ -208,7 +209,7 @@ const getRpcUrlFromLocals = (locals) => {
 
 const RPC_MIN_PAGE_SIZE = 1;
 const RPC_MAX_PAGE_SIZE = 1000;
-// Helius Enhanced API rejects `limit` above 100.
+// Upper bound for the enriched path; the Triton provider caps a page at 25.
 const ENHANCED_MAX_PAGE_SIZE = 100;
 // ponytail: fixed fan-out ceiling per RPC batch; tune if the node rate-limits.
 const RPC_FETCH_BATCH_SIZE = 50;
@@ -240,13 +241,13 @@ const mapInBatches = async (items, size, fn) => {
  * `getSignaturesForAddress`, then fetches each transaction individually with
  * `getParsedTransaction`. Used when the enriched provider path is
  * unavailable or unsupported for the current environment; keeps the wallet
- * functional even when Triton and Helius are both down.
+ * functional when the enriched path is unavailable.
  * @returns {Promise<{data: Object[], meta: {nextPageToken?: string}}>}
  */
 const getRpcHistory = async (address, filters, locals) => {
   const rpcUrl = getRpcUrlFromLocals(locals);
 
-  const connection = new Connection(rpcUrl, COMMITMENT);
+  const connection = createBudgetedConnection(rpcUrl, locals, COMMITMENT);
   const publicKey = new PublicKey(address);
   const options = {
     before: filters.pageToken,
