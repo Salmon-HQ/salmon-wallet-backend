@@ -5,7 +5,6 @@
 - own services that have no blockchain affinity:
   - `coingecko-service` (market data, prices, history)
   - `dapp-service` (OpenGraph dApp metadata)
-  - `geo-service` (caller IP geolocation via ip-api.com, backs `GET /ip`)
   - `network-capabilities-service` (per-stage feature gating)
   - `network-catalog-service` (public network list)
   - `scam-service` (Phantom Labs blocklist per chain)

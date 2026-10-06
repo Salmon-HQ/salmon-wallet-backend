@@ -3,8 +3,6 @@
 const { healthCheck } = require('../../../packages/health-check');
 const { name, version } = require('../../../package.json');
 const { redis } = require('../../repositories/data-source');
-const geoService = require('../../services/shared/geo-service');
-const { resolveClientIp } = require('../../../packages/network-utils');
 
 /**
  * Returns basic service/build identification.
@@ -40,22 +38,7 @@ const health = async (req, res) => {
   res.status(statusCode).send(info);
 };
 
-/**
- * Looks up geolocation info for the caller's IP via the geo service.
- *
- * @param {import('express').Request} req - Source of the caller's address.
- * @param {import('express').Response} res - Responds 200 with the ip-api.com payload
- *   on success. Upstream errors propagate to the final error middleware (500 with
- *   the standard `{ error, error_description }` envelope).
- * @returns {Promise<void>}
- */
-const ip = async (req, res) => {
-  const data = await geoService.getCallerGeo(resolveClientIp(req));
-  res.status(200).send(data);
-};
-
 module.exports = {
   status,
   health,
-  ip,
 };

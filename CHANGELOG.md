@@ -4,6 +4,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## 0.20.0 — unreleased
 
+- Removed `GET /ip`: it sent the caller's IP to ip-api.com over plain HTTP, a third party the privacy policy does not name, and no client called it (no requests in 30 days of prod logs). Swap availability resolves the country from the bundled DB-IP data and sends the IP nowhere.
+
 - Swap availability: the United States is served by 0x on every platform, as the Power-ups 1.4 Terms and Privacy Policy state; it was unavailable. Jupiter still never serves it.
 
 - Swap availability: Taiwan routes to 0x (Jupiter's terms exclude "the Republic of China"). Crimea, Sevastopol, Donetsk and Luhansk are unavailable everywhere, and Kherson and Zaporizhzhia by default — detected by IP region even where DB-IP files the address under Russia; the table may name ISO 3166-2 codes (`UA-43`…).

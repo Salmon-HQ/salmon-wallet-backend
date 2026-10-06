@@ -8,11 +8,6 @@ jest.mock('../../../repositories/data-source', () => ({
   redis: {},
 }));
 
-jest.mock('../../../services/shared/geo-service', () => ({
-  getCallerGeo: jest.fn(),
-}));
-
-const geoService = require('../../../services/shared/geo-service');
 const { healthCheck } = require('../../../../packages/health-check');
 const { name, version } = require('../../../../package.json');
 const controller = require('../info-controller');
@@ -86,30 +81,6 @@ describe('info-controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(503);
       expect(res.send).toHaveBeenCalledWith({ REDIS: 'down' });
-    });
-  });
-
-  describe('ip', () => {
-    it('forwards the service payload on success', async () => {
-      geoService.getCallerGeo.mockResolvedValue({ country: 'AR', query: '1.2.3.4' });
-      const res = buildRes();
-
-      await controller.ip({}, res);
-
-      expect(geoService.getCallerGeo).toHaveBeenCalledTimes(1);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.send).toHaveBeenCalledWith({ country: 'AR', query: '1.2.3.4' });
-    });
-
-    it('propagates upstream failures to the error middleware', async () => {
-      const err = new Error('boom');
-      geoService.getCallerGeo.mockRejectedValue(err);
-      const res = buildRes();
-
-      await expect(controller.ip({}, res)).rejects.toThrow(err);
-
-      expect(res.status).not.toHaveBeenCalled();
-      expect(res.send).not.toHaveBeenCalled();
     });
   });
 });
