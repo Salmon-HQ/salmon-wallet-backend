@@ -80,8 +80,17 @@ describe('powerup-gate', () => {
     expect(res.locals.availability).toMatchObject({ country: null, provider: 'jupiter' });
   });
 
-  it('blocks the US on every platform, header or not', async () => {
+  it('sends the US to 0x on every platform, header or not', async () => {
     countryOfRequest.mockReturnValue('US');
+    for (const platform of ['ios', 'android', 'extension', undefined, 'web']) {
+      const { res, next } = await run(DEFAULT_TABLE, req(platform));
+      expect(next).toHaveBeenCalledWith();
+      expect(res.locals.availability).toMatchObject({ country: 'US', provider: '0x' });
+    }
+  });
+
+  it('blocks an embargoed country on every platform, header or not', async () => {
+    countryOfRequest.mockReturnValue('CU');
     for (const platform of ['ios', 'android', 'extension', undefined, 'web']) {
       const { res } = await run(DEFAULT_TABLE, req(platform));
       expect(res.status).toHaveBeenCalledWith(403);

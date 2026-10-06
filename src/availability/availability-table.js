@@ -71,11 +71,12 @@ const DEFAULT_TABLE = Object.freeze({
   capabilities: {
     swap: {
       default: 'jupiter',
-      // Owner decision 2026-09-30: the United States is off until confirmed.
-      unavailable: [...EMBARGOED, ...PRECAUTIONARY, 'US'],
+      unavailable: [...EMBARGOED, ...PRECAUTIONARY],
+      // Owner decision 2026-10-06: the United States is served by 0x, as the
+      // Power-ups 1.4 Terms (7.2) and Privacy Policy (5.6) state.
       providers: {
         '0x': JUPITER_PROHIBITED.filter(
-          (c) => !EMBARGOED.includes(c) && !PRECAUTIONARY.includes(c) && c !== 'US'
+          (c) => !EMBARGOED.includes(c) && !PRECAUTIONARY.includes(c)
         ),
       },
       platforms: { ios: {} },
