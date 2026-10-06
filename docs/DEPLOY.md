@@ -18,7 +18,18 @@ npx serverless rollback --stage prod --timestamp <t>
 
 `concurrency: deploy-prod` (`cancel-in-progress: false`) prevents two tags pushed close together from deploying in parallel.
 
-Only two stages exist: `local` (dev, no AWS) and `prod` (tag-triggered deploy).
+Three stages exist: `local` (dev, no AWS), `prod` (tag-triggered deploy), and `staging`.
+
+`staging` is a mirror of `prod` for testing a branch before it ships: stack `gol-salmon-api-staging`, params under `/salmon-api/staging/*`, capabilities in `network-capabilities-staging.js` (the Powerups under test are on there and off in prod). It is deployed by hand from the branch under test, never by CI:
+
+```bash
+eval "$(aws configure export-credentials --format env)"   # Serverless v3 does not read an `aws login` session
+npm run serverless:deploy:staging
+```
+
+The script then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
+
+Staging differs from prod on purpose in three places: the Powerups switched on for testing, analytics written to Lambda's `/tmp` instead of GA4 (so testers never reach the production property), and Redis on Upstash over TLS. It shares every provider key with prod, so a load test against staging spends prod's provider quotas.
 
 ## Provisioned but unused: Solana Actions / Blinks infrastructure
 
@@ -60,6 +71,7 @@ at a time.
 Prod env values live in **AWS SSM Parameter Store** under `/salmon-api/prod/*`, type `SecureString`, region `us-east-1`.
 
 - `config/env.prod.yml` — the map of `${ssm:/salmon-api/prod/X}` refs consumed by `serverless.yml` via `custom.envFile`. Vars that previously had an `${env:X, <default>}` fallback keep a matching `${ssm:X, <default>}` fallback, so an optional/missing param doesn't break a deploy. Vars that were previously required (no default) stay strict and fail the deploy loudly if the param is missing.
+- `config/env.staging.yml` — the same map pointed at `/salmon-api/staging/*`. To refresh staging after a prod param changes, copy that param to the staging path.
 - `config/env.local.yml` — the local/dev mirror: every var comes from `${env:X, ''}`, loaded from `.env` via `serverless-dotenv-plugin`. The `local` stage never touches AWS.
 
 ## Adding or rotating a secret
@@ -99,4 +111,4 @@ No deploy workflow reads GitHub repo secrets; any entries remaining under Settin
 
 ## CI IAM permissions
 
-The GitHub Actions OIDC role's live policy is `GithubActionsPolicy` in AWS, and it is the policy this repository checks in as `aws-deploy-policy.json`: the attached version matches the file statement for statement, and the role additionally carries an inline `ReadSalmonApiProdParams` that lets it read `/salmon-api/prod/*` from SSM. Confirmed against the account on 2026-09-14. The deploy resolves every `${ssm:...}` ref with it: the `v0.14.0` tag deploy resolved every `${ssm:...}` ref and completed successfully. Keep any future tightening scoped to `ssm:GetParameter*` on that prefix.
+The GitHub Actions OIDC role's live policy is `GithubActionsPolicy` in AWS, and it is the policy this repository checks in as `aws-deploy-policy.json`: the attached version matches the file statement for statement (including `LambdaInvokeSanctionsRefresh`, which lets the deploy run `refreshSanctionsJob` once and nothing else), and the role additionally carries an inline `ReadSalmonApiProdParams` that lets it read `/salmon-api/prod/*` from SSM. Confirmed against the account on 2026-09-14. The deploy resolves every `${ssm:...}` ref with it: the `v0.14.0` tag deploy resolved every `${ssm:...}` ref and completed successfully. Keep any future tightening scoped to `ssm:GetParameter*` on that prefix.

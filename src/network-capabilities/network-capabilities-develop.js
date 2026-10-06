@@ -55,5 +55,6 @@ module.exports = {
   powerups: {
     // Payments: read-only entry, the device asks and pays (frontend spec 033).
     payments: { enabled: true },
+    swap: { enabled: true },
   },
 };

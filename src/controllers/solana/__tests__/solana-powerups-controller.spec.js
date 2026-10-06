@@ -4,9 +4,15 @@ jest.mock('../../../../packages/api-utils', () => ({
   decorator: jest.fn(async (resource, data) => resource(data)),
 }));
 jest.mock('../../../services/solana/powerups/powerup-build-service', () => ({ build: jest.fn() }));
+jest.mock('../../../availability/country-resolver', () => ({ countryOfRequest: jest.fn() }));
+jest.mock('../../../availability/availability-table', () => ({ loadTable: jest.fn() }));
+jest.mock('../../../availability/availability-service', () => ({ listFor: jest.fn() }));
 
 const controller = require('../solana-powerups-controller');
 const buildService = require('../../../services/solana/powerups/powerup-build-service');
+const { countryOfRequest } = require('../../../availability/country-resolver');
+const { loadTable } = require('../../../availability/availability-table');
+const availabilityService = require('../../../availability/availability-service');
 
 const PAYER = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
 
@@ -15,6 +21,7 @@ const createRes = () => ({
   status: jest.fn().mockReturnThis(),
   send: jest.fn(),
   json: jest.fn(),
+  set: jest.fn(),
 });
 const request = (query) => ({ params: { id: 'fixture' }, query });
 
@@ -95,6 +102,41 @@ describe('solana-powerups-controller', () => {
       id: 'fixture',
       network: 'solana-mainnet',
       outcome: 'not_found',
+    });
+  });
+
+  it('availability answers the caller-specific list with no-store', async () => {
+    const table = { version: 1 };
+    loadTable.mockResolvedValue(table);
+    countryOfRequest.mockReturnValue('AR');
+    availabilityService.listFor.mockReturnValue([
+      { id: 'payments', enabled: true },
+      { id: 'swap', enabled: true, provider: 'jupiter' },
+      { id: 'old', enabled: false, reason: 'deprecated', provider: 'x' },
+    ]);
+    const res = createRes();
+
+    await controller.availability({ headers: { 'x-salmon-platform': 'android' } }, res);
+
+    expect(availabilityService.listFor).toHaveBeenCalledWith(
+      table,
+      'solana-mainnet',
+      'android',
+      'AR'
+    );
+    expect(res.set).toHaveBeenCalledWith('Cache-Control', 'no-store');
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith({
+      data: [
+        { id: 'payments', enabled: true },
+        { id: 'swap', enabled: true, provider: 'jupiter' },
+        { id: 'old', enabled: false, reason: 'deprecated' },
+      ],
+    });
+    expect(info).toHaveBeenCalledWith('[POWERUP_AVAILABILITY]', {
+      network: 'solana-mainnet',
+      platform: 'android',
+      country: 'AR',
     });
   });
 });

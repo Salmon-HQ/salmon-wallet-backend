@@ -2,6 +2,16 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.20.0 — unreleased
+
+- `GET /v1/solana-{env}/powerups/availability` (never cached): what this caller may use on the network, one entry per Powerup plus `swap`, decided per request from the caller's country (API Gateway source address + DB-IP) and the `X-Salmon-Platform` header (`ios` | `android` | `extension`; missing → `ios`). `enabled`, `reason`, and `provider` (`jupiter` | `0x`) when a capability routes through one. The availability table lives in SSM and is read at runtime, so a country change is a configuration edit, never a release. `/v1/networks.powerups` is unchanged for 1.2.0 clients.
+
+- `GET /v1/solana-{env}/powerups/{id}/build` and the new `GET /v1/solana-mainnet/ft/swap/build` pass the availability gate first: `403 region_restricted` where the capability is not offered, before any provider call.
+
+- Swap build: an UNSIGNED v0 transaction from Jupiter (default) or 0x (where Jupiter may not serve), the provider chosen by the availability row and named in the response (`provider`, `providerDisplayName`, `attribution`), Salmon's fee as a separate line (`salmonFee`), `routeFee` when the provider reports one. On a Jupiter row the wallet is screened against a daily copy of the US Treasury SDN list and TRM Labs: `403 wallet_restricted` when listed, `503 upstream_unavailable` when neither layer can answer. A row naming a provider without a credential answers `503 upstream_unavailable`, never the other provider. The Jupiter build is attributed as `Powered by Metis (Jupiter)` (`providerDisplayName: 'Metis'`), the label Jupiter's API licence requires for its onchain router. Every 0x answer is checked against 0x's published response-signing key before it is used; one that is unsigned, altered or for a different order is `502 provider_bad_response`. Swap stays off on prod until the stage switch is flipped.
+
+- New scheduled job `refreshSanctionsJob` (daily): the SDN digital-currency addresses, replaced atomically in Redis.
+
 ## 0.19.1 — 2026-09-29
 
 - The scheduled token-list and price-refresh jobs send the CoinGecko API key and honour `COINGECKO_API_URL`, like every other CoinGecko call. They called the public endpoint with no key, which CoinGecko answers with 403, so the hourly Bitcoin price refresh failed.

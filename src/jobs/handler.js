@@ -2,6 +2,7 @@
 const { applyConnectTuning } = require('../infrastructure/connect-tuning');
 const http = require('axios');
 const repository = require('../repositories/shared/coingecko-repository');
+const sanctionsRepository = require('../repositories/shared/sanctions-repository');
 const { redis } = require('../repositories/data-source');
 const { BASE_ENDPOINT, apiHeaders } = require('../services/shared/coingecko-service');
 
@@ -250,6 +251,71 @@ const getPrices = async (tokensToUpdate) => {
     ...token,
     price: prices[token.id],
   }));
+};
+
+const SDN_CSV_URL =
+  process.env.SANCTIONS_SOURCE_URL ||
+  'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV';
+const DIGITAL_CURRENCY_ADDRESS = /Digital Currency Address - [A-Z0-9]+ ([A-Za-z0-9]+)/g;
+/** A new list below this share of the previous one is refused as truncated. */
+const SANCTIONS_MIN_RATIO = 0.5;
+
+/**
+ * Every `Digital Currency Address - <SYMBOL> <address>` value in the SDN
+ * CSV, any chain, deduplicated. A listed person may use any chain, so no
+ * symbol filter.
+ * @param {string} csv
+ * @returns {string[]}
+ */
+const parseSdnAddresses = (csv) =>
+  Array.from(new Set(Array.from(csv.matchAll(DIGITAL_CURRENCY_ADDRESS), (m) => m[1])));
+
+/**
+ * Scheduled job: download the US Treasury SDN list (one redirect to a
+ * signed URL), extract every digital-currency address and replace the local
+ * sanctions set atomically. Zero addresses parsed is a failure and the live
+ * set stays untouched (spec 018, US3).
+ *
+ * Schedule (`serverless.yml`): `rate(1 day)`.
+ *
+ * @returns {Promise<{statusCode: number, body: string}>}
+ */
+module.exports.refreshSanctionsJob = async () => {
+  console.log('Running job refreshSanctionsJob');
+  try {
+    const { data } = await http.get(SDN_CSV_URL, {
+      responseType: 'text',
+      maxRedirects: 5,
+      timeout: 60000,
+    });
+    const addresses = parseSdnAddresses(typeof data === 'string' ? data : '');
+    if (addresses.length === 0)
+      throw new Error('SDN list parsed to zero digital-currency addresses');
+    // A truncated download or a changed line format must not shrink the live
+    // set: a list far smaller than the last one is refused, not applied.
+    const previous = await sanctionsRepository.getLocalListSize();
+    if (previous > 0 && addresses.length < previous * SANCTIONS_MIN_RATIO) {
+      throw new Error(
+        `SDN list parsed to ${addresses.length} addresses, below ${SANCTIONS_MIN_RATIO * 100}% of the ${previous} held`
+      );
+    }
+    await sanctionsRepository.replaceLocalList(addresses);
+    console.info('[SANCTIONS_REFRESH]', {
+      outcome: 'replaced',
+      addresses: addresses.length,
+      previous,
+    });
+    return createResponse(`Sanctions refresh job completed: ${addresses.length} addresses`);
+  } catch (error) {
+    console.error('[SANCTIONS_REFRESH]', { outcome: 'failed', message: error.message });
+    // Rethrown so Lambda counts the invocation as failed and an alarm can see it.
+    throw error;
+  } finally {
+    if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      await redis.quit().catch(() => {});
+      setImmediate(() => process.exit(0));
+    }
+  }
 };
 
 const createResponse = (message) => ({

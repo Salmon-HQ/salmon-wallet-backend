@@ -13,7 +13,7 @@ const mapValues = require('lodash/mapValues');
 const omit = require('lodash/omit');
 const NETWORKS = require('../../constants/networks');
 
-const SUPPORTED_STAGES = ['develop', 'local', 'main', 'prod'];
+const SUPPORTED_STAGES = ['develop', 'local', 'main', 'prod', 'staging'];
 /** Stage-level reasons a Powerup can be switched off with (`community-powerups` contract). */
 const POWERUP_DISABLED_REASONS = ['region', 'maintenance', 'deprecated'];
 /** Stage-file key that is a per-Powerup block, not a network rule tree. */

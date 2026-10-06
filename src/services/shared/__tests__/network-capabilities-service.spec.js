@@ -26,7 +26,7 @@ describe('network-capabilities-service', () => {
 
   test('exposes the supported stage list', () => {
     const service = loadService();
-    expect(service.SUPPORTED_STAGES).toEqual(['develop', 'local', 'main', 'prod']);
+    expect(service.SUPPORTED_STAGES).toEqual(['develop', 'local', 'main', 'prod', 'staging']);
   });
 
   test('returns undefined and logs a loud error when NODE_ENV is unset', () => {
@@ -43,13 +43,13 @@ describe('network-capabilities-service', () => {
   });
 
   test('returns undefined and logs a loud error when NODE_ENV is an unknown stage', () => {
-    process.env.NODE_ENV = 'staging';
+    process.env.NODE_ENV = 'qa';
 
     const service = loadService();
     const result = service.get();
 
     expect(result).toBeUndefined();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('NODE_ENV is "staging"'));
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('NODE_ENV is "qa"'));
   });
 
   test('loads the capabilities file for a supported stage', () => {
@@ -142,7 +142,7 @@ describe('network-capabilities-service powerups', () => {
   });
 
   test('returns undefined when the stage itself is misconfigured', () => {
-    process.env.NODE_ENV = 'staging';
+    process.env.NODE_ENV = 'qa';
 
     expect(loadService().getPowerups()).toBeUndefined();
   });
