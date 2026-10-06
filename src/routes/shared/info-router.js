@@ -7,7 +7,6 @@
  * Endpoints:
  *   - GET /health — liveness check.
  *   - GET /status — service status detail.
- *   - GET /ip     — caller IP echo.
  *
  * No auth, caching, or network-resolution middleware applied.
  */
@@ -20,6 +19,5 @@ const router = express.Router();
 
 router.get('/health', safe(infoController.health));
 router.get('/status', safe(infoController.status));
-router.get('/ip', safe(infoController.ip));
 
 module.exports = router;

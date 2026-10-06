@@ -56,8 +56,8 @@ app.use(logger);
 app.use(requestDeadline);
 
 // Per-IP rate limiting (fixed window in Redis, fail-open). One global
-// limiter over every route (the unversioned /health, /status and /ip info
-// endpoints included — /ip calls a third party per request), plus a stricter one over the
+// limiter over every route (the unversioned /health and /status info
+// endpoints included), plus a stricter one over the
 // transaction-building routes (Solana NFT burn/transfer, Powerups) —
 // those are the expensive/abusable endpoints. Mode/limits come from env.
 // RATE_LIMIT_MODE falls back to 'log' here (count and log, don't block);

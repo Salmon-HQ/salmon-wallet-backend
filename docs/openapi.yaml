@@ -108,29 +108,6 @@ paths:
                     type: string
                     format: date-time
 
-  /ip:
-    get:
-      tags: [info]
-      operationId: getIp
-      summary: Caller IP geolocation echo
-      description: |
-        Proxies `ip-api.com/json` and returns its payload (server-side
-        egress IP info). On upstream failure responds 500 with the raw error.
-      responses:
-        '200':
-          description: ip-api.com payload
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-        '500':
-          description: Upstream lookup failed (raw error payload)
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
 
   # ─────────────────────── networks ───────────────────────
   /v1/networks:
