@@ -211,6 +211,8 @@ describe('solana-swap-build-service', () => {
       expect.stringContaining('[SWAP_FEE_SKIPPED]'),
       expect.objectContaining({ inputMint: USDT, outputMint: USDC })
     );
+    // Configuration read from the environment never reaches the logs.
+    expect(error.mock.calls[0][1]).not.toHaveProperty('owner');
     error.mockRestore();
   });
 

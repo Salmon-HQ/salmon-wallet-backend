@@ -218,11 +218,12 @@ const resolveFee = async (connection, fee, inputMint, outputMint, adapterFee) =>
       return { recipient, bps: fee.bps, side, mint };
     }
   }
+  // The owner is not logged: it comes from the environment (SWAP_FEE_ACCOUNT_OWNER),
+  // and ops already know it from SSM.
   console.error('[SWAP_FEE_SKIPPED] no fee token account for either side; swap built without fee', {
-    owner: fee.owner,
     inputMint,
     outputMint,
-    fix: 'create the owner ATA for one of these mints',
+    fix: 'create the fee owner ATA (SWAP_FEE_ACCOUNT_OWNER) for one of these mints',
   });
   return null;
 };
