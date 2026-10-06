@@ -20,11 +20,10 @@ Skeleton. No Ethereum services yet.
 - Keep Ethereum services isolated from Bitcoin and Solana modules.
 - If a helper is genuinely cross-chain (no `blockchain` branching),
   consider `src/services/shared` instead.
-- The default Blockdaemon Universal balance provider already works for
-  Ethereum if you ever want to enable balance reads quickly without a
-  dedicated provider — register the chain in
-  `src/services/multichain/balance-providers/index.js#PROVIDERS_BY_CHAIN`
-  only when you have a richer override.
+- Balance reads need an Ethereum balance provider in this slice,
+  registered in
+  `src/services/multichain/balance-providers/index.js#PROVIDERS_BY_CHAIN`;
+  there is no default provider.
 
 ## Testing
 

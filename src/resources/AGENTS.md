@@ -12,8 +12,8 @@ Mirrors the `src/services/` layout:
 
 - `bitcoin/` — Bitcoin transaction + UTXO shapes.
 - `solana/` — Solana account, FT, NFT, Powerup build, transaction shapes
-  (heaviest slice; consumes both `helius-transaction-resource.js` and
-  the Triton-parsed canonical shape).
+  (heaviest slice; `helius-transaction-resource.js` maps the
+  Triton-parsed canonical shape).
 - `shared/` — chain-agnostic resources backing `services/shared/`:
   `account-balance-resource`, `network-resource`,
   `resource-includes` (cross-cutting `includeLogo` /

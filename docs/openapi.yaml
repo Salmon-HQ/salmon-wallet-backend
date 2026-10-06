@@ -451,8 +451,8 @@ paths:
       summary: Solana transaction history
       description: |
         Enriched transaction history (`solana-transaction-enrichment`
-        contract). Provider routing: Triton One primary, Helius Enhanced API
-        fallback, bare-RPC last resort. First-page queries are served through
+        contract). Provider routing: Triton One (RPC + local parser); bare-RPC
+        unclassified reads as the degraded tier. First-page queries are served through
         a short-lived cache; paged queries always hit the provider.
       parameters:
         - $ref: '#/components/parameters/SolanaEnv'
@@ -1451,7 +1451,7 @@ components:
       description: |
         Enriched Solana transaction (`solana-transaction-enrichment`
         contract). Two producers share this shape: the provider-enriched
-        path (Triton-parsed or Helius Enhanced, see
+        path (Triton-parsed, see
         `src/resources/solana/helius-transaction-resource.js`) and the
         bare-RPC fallback (`src/resources/solana/solana-transaction-resource.js`).
         The fields listed here are the stable core; the enriched path adds

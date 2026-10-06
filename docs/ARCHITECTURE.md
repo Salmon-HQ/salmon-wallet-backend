@@ -50,9 +50,9 @@ two diverge.
 - `BLOCKCHAINS` in `src/constants/blockchains.js`: list of chains with
   code present.
 - `src/services/multichain/balance-providers/`: registry for per-chain
-  balance overrides. The default uses Blockdaemon Universal and covers
-  any chain Blockdaemon supports. A chain with a richer provider
-  (Alchemy/Infura for Ethereum) registers in `PROVIDERS_BY_CHAIN`.
+  balance providers. There is no default: every chain registers its
+  provider in `PROVIDERS_BY_CHAIN` (Bitcoin on Esplora, Solana on its
+  RPC).
 - `src/network-capabilities/network-capabilities-${stage}.js`:
   per-environment gating. A chain can be in `BLOCKCHAINS` without
   appearing in any stage's `enable` list (current Ethereum: code is
@@ -158,16 +158,15 @@ Important subfolders:
 
 - `src/services/solana/`
   - the densest domain in the project
-  - groups transactions, NFTs, FT, Powerup builds, burn, and Helius/DAS/CoinGecko
+  - groups transactions, NFTs, FT, Powerup builds, burn, and DAS/CoinGecko
     wrappers
 - `src/services/bitcoin/`
-  - Bitcoin vertical slice: transactions, UTXO (read-only); HTTP client
-    at `src/infrastructure/blockdaemon-client.js`
+  - Bitcoin vertical slice: transactions, UTXO (read-only), balance provider; HTTP client
+    at `src/infrastructure/esplora-client.js`
 - `src/services/multichain/`
   - endpoints that dispatch on `locals.network.blockchain`. Today
     holds `account-service.js` (balance) and `balance-providers/`
-    (registry for per-chain balance overrides; default: Blockdaemon
-    Universal)
+    (registry of per-chain balance providers)
 - `src/services/shared/`
   - chain-agnostic services: `coingecko-service`,
     `dapp-service`, `network-capabilities-service`,
@@ -333,8 +332,8 @@ backend.
 
 ### What belongs in Solana Services
 
-- integration with Solana data providers (Triton primary, Helius
-  fallback, bare RPC as last resort)
+- integration with the Solana data provider (Triton only; history
+  degrades to unclassified bare-RPC reads)
 - Powerup builds (`powerups/`): adapter instructions → unsigned v0 transaction
 - token catalog + metadata (CoinGecko list + Triton DAS) and USD pricing (CoinGecko)
 - transaction orchestration
@@ -346,37 +345,31 @@ backend.
 - FT/NFT fetching
 - account-specific logic
 
-### Solana data providers
+### Solana data provider
 
-Triton One is the primary provider for RPC and DAS (NFT metadata,
-NFTs by owner, batches). Helius is the rate-limited fallback (cap
-configurable via `SOLANA_FALLBACK_MAX_RPS`, default 8 req/s) and
-public RPC is the last resort.
+Triton One is the only provider for RPC, DAS (NFT metadata, NFTs by
+owner, batches) and enriched history. There is no second provider: a
+Triton failure reaches the caller. Transaction history alone keeps a
+degraded tier, unclassified bare-RPC reads.
 
-- `src/services/solana/providers/index.js` is the resolver: routes
-  every call to Triton first and, if Triton fails or is not
-  configured, allows up to `SOLANA_FALLBACK_MAX_RPS` requests per
-  second to Helius. Both surfaces — transaction enrichment
-  (`dispatchTx`) and DAS (`dispatchDas`) — share the same
-  `dispatchWithFallback` routine, so DAS also falls back to Helius on
-  Triton _errors_, not only when Triton is unconfigured for the
-  environment (e.g. devnet without `TRITON_RPC_URL_DEVNET`).
-- `src/services/solana/providers/` holds the adapters
-  `triton-provider.js`, `helius-provider.js`, the
-  `solana-data-provider.js` contract (including
-  `ProviderNotImplementedError`), and `das-shared.js`.
+- `src/services/solana/providers/index.js` is the resolver: dispatches
+  every transaction-enrichment and DAS call to Triton and emits one
+  structured log line per call (token redacted).
+- `src/services/solana/providers/` holds `triton-provider.js`, the
+  `solana-data-provider.js` contract, and `das-shared.js`.
 - `src/services/solana/parser/` is the local parsing pipeline that
   compensates for the fact that Triton has no equivalent of Helius
   Enhanced Transactions. It classifies transactions from each
-  instruction's program IDs.
+  instruction's program IDs and emits the Helius Enhanced shape.
 - `src/services/solana/parser/parsers/` contains the per-program
   parsers: `system`, `spl-token`, `metaplex`, `bubblegum`, `aggregator`,
   `stake`, `staking`, `lending`, `dex`, plus the `_hint-parser.js`
   helper.
-- The HTTP/RPC clients live in `src/infrastructure/triton-client.js`
-  and `src/infrastructure/helius-client.js`. `triton-client.js` throws
-  `TRITON_NOT_CONFIGURED` when `TRITON_RPC_URL` is not set on mainnet;
-  the resolver catches that error to route to Helius.
+- The RPC client lives in `src/infrastructure/triton-client.js`, which
+  throws `TRITON_NOT_CONFIGURED` when `TRITON_RPC_URL` is not set on
+  mainnet.
+- Solana balances are read from the same RPC
+  (`solana-rpc-balance-provider.js`).
 
 ### What belongs in Solana Resources
 
@@ -394,7 +387,7 @@ public RPC is the last resort.
 Transaction history/detail responses are shaped in two stages, split by
 the internal `_source` discriminator:
 
-1. Enriched transactions (Triton parser or Helius Enhanced API) are
+1. Enriched transactions (Triton parser) are
    shaped **inside `solana-transaction-service`** by
    `helius-transaction-resource` (the canonical enriched mapper) and
    tagged `_source: 'enriched'`. The service owns this stage because
@@ -431,10 +424,12 @@ surface:
 - `src/resources/bitcoin/` — `bitcoin-transaction-resource`,
   `bitcoin-utxo-resource`
 
-The Blockdaemon HTTP client lives in
-`src/infrastructure/blockdaemon-client.js` so any slice (Bitcoin
-today, Ethereum tomorrow if it uses Blockdaemon Universal) reuses the
-same URL/header construction.
+Bitcoin chain data comes from the public Esplora API through
+`src/infrastructure/esplora-client.js`: mempool.space first,
+blockstream.info when it is down or failing. No credential.
+`src/services/bitcoin/esplora-mappers.js` turns Esplora payloads into
+the item shapes the resources read, so the public contract is the one
+the API served before.
 
 ## Multichain slice
 
@@ -449,10 +444,8 @@ Today: balance.
 - `src/services/multichain/account-service.js` — resolves a
   `BalanceProvider` per chain and delegates.
 - `src/services/multichain/balance-providers/` — registry.
-  `blockdaemon-balance-provider.js` is the default (covers any
-  Blockdaemon-supported chain).
-  `index.js#PROVIDERS_BY_CHAIN` maps chain -> provider for future
-  overrides.
+  `index.js#PROVIDERS_BY_CHAIN` maps chain -> provider; an
+  unregistered chain throws.
 - `src/services/multichain/price-enrichers/` — per-chain USD price
   decoration of balance items (Solana via CoinGecko token prices, Bitcoin
   via the CoinGecko repository). Same registry pattern as
@@ -503,9 +496,8 @@ model live in `docs/ANALYTICS.md`.
    `controllers/<chain>/`, `services/<chain>/`, `resources/<chain>/`.
 5. If the multichain balance endpoint should serve this chain, add
    the constant to `BALANCE_CHAINS` in
-   `src/routes/multichain/account-router.js`. If Blockdaemon
-   Universal does NOT cover this chain or you want a richer provider,
-   register a custom provider in
+   `src/routes/multichain/account-router.js`, and register its
+   balance provider in
    `src/services/multichain/balance-providers/index.js#PROVIDERS_BY_CHAIN`.
 6. When you want to expose the chain to the FE: add the network ids
    to the `enable` array of the stage files in

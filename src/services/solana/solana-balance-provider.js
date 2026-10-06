@@ -3,13 +3,13 @@
 /**
  * Solana balance provider.
  *
- * Wraps the default Blockdaemon Universal provider with Solana-specific
- * post-processing:
+ * Reads the balance from the bare RPC (`solana-rpc-balance-provider`:
+ * native lamports + Token and Token-2022 accounts aggregated per mint, on
+ * Triton) and applies Solana-specific post-processing:
  *
- *   1. **catalog + on-chain metadata** for SPL tokens — overrides Blockdaemon's
- *      thin `currency.symbol/name` and side-loaded TrustWallet logo with
- *      richer catalog/DAS data (icon, name, symbol, coingeckoId, tags). Native
- *      SOL passes through untouched (Blockdaemon already nails it).
+ *   1. **catalog + on-chain metadata** for SPL tokens — fills the
+ *      RPC's empty `currency.symbol/name` with catalog/DAS data (icon, name, symbol, coingeckoId, tags). Native
+ *      SOL passes through untouched.
  *   2. **Zero-amount filter** — drops SPL token entries with
  *      `confirmed_balance === '0'` (junk dust accounts). Native items
  *      pass through even at zero balance so the wallet always shows the
@@ -22,7 +22,7 @@
  *      Scaled UI Amount / Interest Bearing multiplier and attaches `_uiAmount`.
  *      Runs last so the mint reads cost only what the wallet actually shows.
  *
- * The merged shape is still Blockdaemon-flavoured raw items; downstream
+ * Items keep the balance item shape both chain providers emit; downstream
  * (`account-balance-resource`) reads internal markers `_logo`, `_name`,
  * `_symbol`, `_coingeckoId`, `_tags`, `_uiAmount` and forwards them to the
  * public payload.
@@ -31,48 +31,18 @@
  * for `solana`.
  */
 
-const blockdaemonBalanceProvider = require('../multichain/balance-providers/blockdaemon-balance-provider');
 const rpcBalanceProvider = require('./solana-rpc-balance-provider');
 const tokenService = require('./solana-ft-service');
 const uiAmountService = require('./token-ui-amount-service');
 
-/**
- * True for failures the caller cannot act on: a transport error (timeout,
- * no response — axios sets `request` without `response`) or an upstream
- * 5xx. Upstream 4xx are the caller's input and must propagate unchanged.
- * Same heuristic as `middlewares/error-handler.js#describe`.
- */
-const isUpstreamUnavailable = (error) =>
-  Boolean(error?.request && !error?.response) || error?.response?.status >= 500;
-
-/**
- * Blockdaemon first; on timeout/5xx fall back to the bare RPC. Blockdaemon
- * answers large wallets in 9–21 s against a 6 s budget, which made every
- * mainnet balance a 500. The RPC answers the same question in ~1 s. A 4xx
- * or an RPC failure propagates — never an empty balance.
- */
-const fetchBalanceItems = async (address, tokens, locals) => {
-  try {
-    return await blockdaemonBalanceProvider.getBalance(address, tokens, locals);
-  } catch (error) {
-    if (!isUpstreamUnavailable(error)) throw error;
-    console.warn(
-      `[solana-balance-provider] Blockdaemon unavailable (${error.code || error.response?.status || error.message}), falling back to RPC`
-    );
-    return rpcBalanceProvider.getBalance(address, tokens, locals);
-  }
-};
-
-// Blockdaemon Universal returns Solana SPL items with
-// `asset_path: "solana/mint/<mint>"`. Some upstream/fixture variants use
-// `solana/token/<mint>` — accept both so the metadata enrichment matches
-// real responses (the mismatch was the root cause of the empty-balance
-// bug where every SPL token got dropped by `filterSpamTokens` because
-// `_tags` was never attached).
+// Balance items carry `asset_path: "solana/mint/<mint>"`; older fixture
+// variants use `solana/token/<mint>` — accept both so the metadata enrichment
+// always matches (a mismatch drops every SPL token in `filterSpamTokens`
+// because `_tags` is never attached).
 const SOLANA_TOKEN_ASSET_PREFIXES = ['solana/mint/', 'solana/token/'];
 
 /**
- * Extract the SPL mint address from a Blockdaemon balance item, checking
+ * Extract the SPL mint address from a balance item, checking
  * `currency.detail.contract` first, then parsing the `asset_path` (accepts
  * both `solana/mint/<mint>` and `solana/token/<mint>` prefixes).
  * @returns {string|null} Mint address, or null for native SOL / unparseable items.
@@ -195,24 +165,22 @@ const enrichWithUiAmounts = async (items, metadataByMint, locals) => {
 };
 
 /**
- * Fetch Solana balances for `address` via the Blockdaemon Universal
- * provider, then enrich with catalog + on-chain metadata and apply the zero-amount
+ * Fetch Solana balances for `address` from the bare RPC, then enrich with catalog + on-chain metadata and apply the zero-amount
  * and spam filters described in the file header.
  *
- * Metadata enrichment failure is non-fatal: on error the raw Blockdaemon
+ * Metadata enrichment failure is non-fatal: on error the raw RPC
  * items are used as-is (metadata fields simply stay unpopulated) rather
  * than failing the whole balance response.
  *
  * @param {string} address - Wallet base58 address.
- * @param {string[]} [tokens] - Optional token filter passed through to the
- *   underlying Blockdaemon provider.
+ * @param {string[]} [tokens] - unused; `BalanceProvider` signature parity.
  * @param {Object} locals - Request locals; `locals.includeSpam === true`
  *   bypasses the spam filter.
- * @returns {Promise<Object[]>} Blockdaemon-shaped balance items, decorated
+ * @returns {Promise<Object[]>} Balance items, decorated
  *   with `_logo`/`_name`/`_symbol`/`_coingeckoId`/`_tags` where available.
  */
 const getBalance = async (address, tokens, locals) => {
-  const items = await fetchBalanceItems(address, tokens, locals);
+  const items = await rpcBalanceProvider.getBalance(address, tokens, locals);
 
   const tokenMints = [...new Set(items.map(extractTokenMint).filter(Boolean))];
 

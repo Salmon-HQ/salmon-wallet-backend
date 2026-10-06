@@ -8,10 +8,8 @@ jest.mock('../../../infrastructure/providers/provider-client', () => ({
  * Provider abstraction tests.
  *
  * Routing model under test:
- *   - Tx surface  → Triton primary, Helius fallback (rate-limited)
- *   - DAS surface → Triton primary, Helius fallback (same budget as tx).
- *                   `triton-provider` swallows its own DAS errors, so most DAS
- *                   failures never reach the fallback.
+ *   - Tx and DAS surfaces → Triton only. There is no second provider: a
+ *     Triton failure reaches the caller.
  *
  * Module reload protocol:
  *   `triton-client` captures env vars at module load. Tests that toggle
@@ -20,8 +18,6 @@ jest.mock('../../../infrastructure/providers/provider-client', () => ({
  *   point to a different factory invocation and would not see test-scope
  *   `mockResolvedValue` calls.
  */
-
-process.env.HELIUS_API_KEY = process.env.HELIUS_API_KEY || 'test-helius-key';
 
 jest.mock('axios');
 
@@ -34,14 +30,6 @@ jest.mock('@solana/web3.js', () => ({
 
 jest.mock('@solana/spl-token', () => ({
   TOKEN_2022_PROGRAM_ID: 'token-2022-program-id',
-}));
-
-jest.mock('../helius-transaction-service', () => ({
-  getEnhancedTransactions: jest.fn(),
-  getEnhancedTransactionHistory: jest.fn(),
-  isTransactionParsed: jest.fn(),
-  getNftMetadata: jest.fn(),
-  getNftMetadataBatch: jest.fn(),
 }));
 
 jest.mock('../parser/triton-rpc', () => ({
@@ -59,11 +47,9 @@ const loadFresh = () => {
   jest.resetModules();
   return {
     axios: require('axios'),
-    heliusService: require('../helius-transaction-service'),
     tritonRpc: require('../parser/triton-rpc'),
     parser: require('../parser'),
     tritonProvider: require('../providers/triton-provider'),
-    heliusProvider: require('../providers/helius-provider'),
     resolver: require('../providers'),
   };
 };
@@ -71,7 +57,6 @@ const loadFresh = () => {
 const ORIGINAL_URL = process.env.TRITON_RPC_URL;
 const ORIGINAL_TOKEN = process.env.TRITON_API_TOKEN;
 const ORIGINAL_DEVNET = process.env.TRITON_RPC_URL_DEVNET;
-const ORIGINAL_RPS = process.env.SOLANA_FALLBACK_MAX_RPS;
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -83,51 +68,6 @@ afterEach(() => {
 
   if (ORIGINAL_DEVNET === undefined) delete process.env.TRITON_RPC_URL_DEVNET;
   else process.env.TRITON_RPC_URL_DEVNET = ORIGINAL_DEVNET;
-
-  if (ORIGINAL_RPS === undefined) delete process.env.SOLANA_FALLBACK_MAX_RPS;
-  else process.env.SOLANA_FALLBACK_MAX_RPS = ORIGINAL_RPS;
-});
-
-describe('HeliusProvider', () => {
-  it('exposes name "helius"', () => {
-    const { heliusProvider } = loadFresh();
-    expect(heliusProvider.name).toBe('helius');
-  });
-
-  it('delegates getEnhancedTransactions to helius-transaction-service', async () => {
-    const { heliusProvider, heliusService } = loadFresh();
-    heliusService.getEnhancedTransactions.mockResolvedValue([{ signature: 'sig1' }]);
-    const result = await heliusProvider.getEnhancedTransactions(['sig1'], 'mainnet');
-    expect(heliusService.getEnhancedTransactions).toHaveBeenCalledWith(['sig1'], 'mainnet');
-    expect(result).toEqual([{ signature: 'sig1' }]);
-  });
-
-  it('delegates getEnhancedTransactionHistory to helius-transaction-service', async () => {
-    const { heliusProvider, heliusService } = loadFresh();
-    heliusService.getEnhancedTransactionHistory.mockResolvedValue({
-      data: [],
-      meta: { nextPageToken: undefined },
-    });
-    const result = await heliusProvider.getEnhancedTransactionHistory(
-      'addr',
-      { limit: 10 },
-      'mainnet'
-    );
-    expect(heliusService.getEnhancedTransactionHistory).toHaveBeenCalledWith(
-      'addr',
-      { limit: 10 },
-      'mainnet'
-    );
-    expect(result.data).toEqual([]);
-  });
-
-  it('delegates getNftMetadata to helius-transaction-service', async () => {
-    const { heliusProvider, heliusService } = loadFresh();
-    heliusService.getNftMetadata.mockResolvedValue({ name: 'NFT', symbol: 'SYM', image: 'url' });
-    const result = await heliusProvider.getNftMetadata('mint-addr', 'mainnet');
-    expect(heliusService.getNftMetadata).toHaveBeenCalledWith('mint-addr', 'mainnet');
-    expect(result.name).toBe('NFT');
-  });
 });
 
 describe('TritonProvider', () => {
@@ -335,6 +275,12 @@ describe('TritonProvider', () => {
 });
 
 describe('ProviderResolver', () => {
+  it('names Triton as its only provider', () => {
+    const { resolver } = loadFresh();
+    expect(resolver.primaryName).toBe('triton');
+    expect(resolver).not.toHaveProperty('fallbackName');
+  });
+
   describe('when Triton is not configured', () => {
     beforeEach(() => {
       delete process.env.TRITON_RPC_URL;
@@ -342,26 +288,17 @@ describe('ProviderResolver', () => {
       delete process.env.TRITON_RPC_URL_DEVNET;
     });
 
-    it('routes tx surface directly to Helius (no Triton attempt)', async () => {
-      const { resolver, heliusService } = loadFresh();
-      heliusService.getEnhancedTransactions.mockResolvedValue([{ signature: 's' }]);
-      const result = await resolver.getEnhancedTransactions(['s'], 'mainnet');
-      expect(heliusService.getEnhancedTransactions).toHaveBeenCalled();
-      expect(result).toEqual([{ signature: 's' }]);
-    });
-
-    it('routes DAS surface directly to Helius (no Triton attempt)', async () => {
-      const { resolver, heliusService } = loadFresh();
-      heliusService.getNftMetadata.mockResolvedValue({ name: 'X', symbol: null, image: null });
-      const result = await resolver.getNftMetadata('m', 'mainnet');
-      expect(heliusService.getNftMetadata).toHaveBeenCalledWith('m', 'mainnet');
-      expect(result.name).toBe('X');
-    });
-
-    it('exposes Triton as primaryName and Helius as fallbackName regardless', () => {
+    it('refuses to hand out an RPC URL instead of routing elsewhere', () => {
       const { resolver } = loadFresh();
-      expect(resolver.primaryName).toBe('triton');
-      expect(resolver.fallbackName).toBe('helius');
+      expect(() => resolver.getRpcUrl('mainnet')).toThrow(
+        expect.objectContaining({ code: 'TRITON_NOT_CONFIGURED' })
+      );
+    });
+
+    it('reports no enriched path, so history reads the bare RPC', () => {
+      const { resolver } = loadFresh();
+      expect(resolver.isEnhancedApiSupported('mainnet')).toBe(false);
+      expect(resolver.isEnhancedApiSupported('devnet')).toBe(false);
     });
   });
 
@@ -369,11 +306,10 @@ describe('ProviderResolver', () => {
     beforeEach(() => {
       process.env.TRITON_RPC_URL = 'https://test.solana-mainnet.rpcpool.com';
       process.env.TRITON_API_TOKEN = 'test-token';
-      process.env.SOLANA_FALLBACK_MAX_RPS = '5';
     });
 
-    it('uses Triton DAS for getNftMetadata when configured', async () => {
-      const { resolver, axios, heliusService } = loadFresh();
+    it('uses Triton DAS for getNftMetadata', async () => {
+      const { resolver, axios } = loadFresh();
       axios.post.mockResolvedValue({
         data: {
           result: { content: { metadata: { name: 'T' }, links: { image: 't.png' } } },
@@ -381,46 +317,32 @@ describe('ProviderResolver', () => {
       });
       const result = await resolver.getNftMetadata('m', 'mainnet');
       expect(result.name).toBe('T');
-      expect(heliusService.getNftMetadata).not.toHaveBeenCalled();
     });
 
-    it('does not reach the Helius fallback because triton-provider swallows DAS errors', async () => {
-      const { resolver, axios, heliusService } = loadFresh();
+    it('returns null when Triton DAS fails (triton-provider swallows DAS errors)', async () => {
+      const { resolver, axios } = loadFresh();
       axios.post.mockRejectedValue(new Error('boom'));
-      const result = await resolver.getNftMetadata('m', 'mainnet');
-      // triton-provider swallows DAS errors and returns null
-      expect(result).toBeNull();
-      expect(heliusService.getNftMetadata).not.toHaveBeenCalled();
+      expect(await resolver.getNftMetadata('m', 'mainnet')).toBeNull();
     });
 
-    it('falls back to Helius for tx surface when Triton tx call throws network error', async () => {
-      const { resolver, tritonRpc, heliusService } = loadFresh();
-      tritonRpc.getParsedTransaction.mockRejectedValue(
-        Object.assign(new Error('boom'), { code: 'ECONNREFUSED' })
-      );
-      heliusService.getEnhancedTransactions.mockResolvedValue([{ signature: 'fb' }]);
-      const result = await resolver.getEnhancedTransactions('fb', 'mainnet');
-      expect(heliusService.getEnhancedTransactions).toHaveBeenCalledWith('fb', 'mainnet');
-      expect(result).toEqual([{ signature: 'fb' }]);
-    });
+    it('surfaces a Triton tx failure and logs it once', async () => {
+      const { resolver, tritonRpc } = loadFresh();
+      const boom = Object.assign(new Error('boom'), { code: 'ECONNREFUSED' });
+      tritonRpc.getParsedTransaction.mockRejectedValue(boom);
+      const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    it('respects fallback rate limit and rethrows when budget exhausted', async () => {
-      const { resolver, tritonRpc, heliusService } = loadFresh();
-      tritonRpc.getParsedTransaction.mockRejectedValue(
-        Object.assign(new Error('boom'), { code: 'ECONNREFUSED' })
-      );
-      heliusService.getEnhancedTransactions.mockResolvedValue([{ signature: 'fb' }]);
-      resolver.__testing.resetBudget();
+      await expect(resolver.getEnhancedTransactions('s', 'mainnet')).rejects.toBe(boom);
 
-      const calls = [];
-      for (let i = 0; i < 5; i += 1) {
-        calls.push(resolver.getEnhancedTransactions('s', 'mainnet'));
-      }
-      await Promise.all(calls);
-      expect(heliusService.getEnhancedTransactions).toHaveBeenCalledTimes(5);
-
-      await expect(resolver.getEnhancedTransactions('s', 'mainnet')).rejects.toThrow();
-      expect(heliusService.getEnhancedTransactions).toHaveBeenCalledTimes(5);
+      const logs = errSpy.mock.calls.map((c) => JSON.parse(c[0]));
+      expect(logs).toEqual([
+        expect.objectContaining({
+          component: 'solana-provider-resolver',
+          provider: 'triton',
+          method: 'getEnhancedTransactions',
+          error_code: 'ECONNREFUSED',
+        }),
+      ]);
+      errSpy.mockRestore();
     });
 
     it('extracts environment from locals for NFT methods', () => {
@@ -442,72 +364,12 @@ describe('ProviderResolver', () => {
       expect(env).toBe('devnet');
     });
 
-    it('isEnhancedApiSupported returns true when Triton is configured', () => {
-      const { resolver } = loadFresh();
-      expect(resolver.isEnhancedApiSupported('mainnet')).toBe(true);
-    });
-
-    it('isEnhancedApiSupported returns true for devnet via Helius even when Triton devnet not configured', () => {
+    it('isEnhancedApiSupported follows Triton configuration per environment', () => {
       delete process.env.TRITON_RPC_URL_DEVNET;
       const { resolver } = loadFresh();
-      // Helius supports devnet, so the gate must hold even without Triton devnet.
-      expect(resolver.isEnhancedApiSupported('devnet')).toBe(true);
-    });
-
-    it('isEnhancedApiSupported returns false for testnet (neither provider supports)', () => {
-      const { resolver } = loadFresh();
+      expect(resolver.isEnhancedApiSupported('mainnet')).toBe(true);
+      expect(resolver.isEnhancedApiSupported('devnet')).toBe(false);
       expect(resolver.isEnhancedApiSupported('testnet')).toBe(false);
-    });
-
-    it('rethrows fallback error and logs fallback_failed when Helius also fails', async () => {
-      const { resolver, tritonRpc, heliusService } = loadFresh();
-      tritonRpc.getParsedTransaction.mockRejectedValue(
-        Object.assign(new Error('triton boom'), { code: 'ECONNREFUSED' })
-      );
-      heliusService.getEnhancedTransactions.mockRejectedValue(
-        Object.assign(new Error('helius boom'), { code: 'ETIMEDOUT' })
-      );
-      resolver.__testing.resetBudget();
-
-      const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-      await expect(resolver.getEnhancedTransactions('s', 'mainnet')).rejects.toThrow('helius boom');
-
-      const failedLog = errSpy.mock.calls
-        .map((c) => JSON.parse(c[0]))
-        .find((p) => p.fallback_failed === true);
-      expect(failedLog).toMatchObject({
-        provider: 'helius',
-        fallback_used: true,
-        fallback_failed: true,
-        error_code: 'ETIMEDOUT',
-      });
-
-      errSpy.mockRestore();
-    });
-
-    it('tags auth_error:true on the fallback log when Triton returns 401/403', async () => {
-      const { resolver, tritonRpc, heliusService } = loadFresh();
-      tritonRpc.getParsedTransaction.mockRejectedValue(
-        Object.assign(new Error('forbidden'), { response: { status: 403 } })
-      );
-      heliusService.getEnhancedTransactions.mockResolvedValue([{ signature: 'ok' }]);
-      resolver.__testing.resetBudget();
-
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-
-      await resolver.getEnhancedTransactions('s', 'mainnet');
-
-      const authLog = warnSpy.mock.calls
-        .map((c) => JSON.parse(c[0]))
-        .find((p) => p.auth_error === true);
-      expect(authLog).toMatchObject({
-        provider: 'triton',
-        fallback_used: true,
-        auth_error: true,
-      });
-
-      warnSpy.mockRestore();
     });
 
     it('returns empty data without enriching when Triton history has no signatures', async () => {
@@ -527,24 +389,12 @@ describe('ProviderResolver', () => {
   });
 
   describe('dispatchDasRpc — Umi DAS reads routed by URL', () => {
-    const transientError = () => Object.assign(new Error('boom'), { code: 'ECONNREFUSED' });
-
-    it('runs the operation against the Helius URL when Triton is not configured', async () => {
-      delete process.env.TRITON_RPC_URL;
-      delete process.env.TRITON_API_TOKEN;
-      const { resolver, heliusProvider } = loadFresh();
-      const run = jest.fn().mockResolvedValue('asset');
-
-      const result = await resolver.dispatchDasRpc('getAssetWithProof', 'mainnet', run);
-
-      expect(run).toHaveBeenCalledTimes(1);
-      expect(run).toHaveBeenCalledWith(heliusProvider.getRpcUrl('mainnet'));
-      expect(result).toBe('asset');
-    });
-
-    it('runs the operation against the Triton URL and does not retry on success', async () => {
+    beforeEach(() => {
       process.env.TRITON_RPC_URL = 'https://test.solana-mainnet.rpcpool.com';
       process.env.TRITON_API_TOKEN = 'test-token';
+    });
+
+    it('runs the operation once against the Triton URL', async () => {
       const { resolver, tritonProvider } = loadFresh();
       const run = jest.fn().mockResolvedValue('asset');
 
@@ -555,55 +405,15 @@ describe('ProviderResolver', () => {
       expect(result).toBe('asset');
     });
 
-    it('retries against the Helius URL when the Triton attempt fails with a network error', async () => {
-      process.env.TRITON_RPC_URL = 'https://test.solana-mainnet.rpcpool.com';
-      process.env.TRITON_API_TOKEN = 'test-token';
-      process.env.SOLANA_FALLBACK_MAX_RPS = '5';
-      const { resolver, tritonProvider, heliusProvider } = loadFresh();
-      resolver.__testing.resetBudget();
-      const run = jest.fn().mockRejectedValueOnce(transientError()).mockResolvedValueOnce('asset');
-
-      const result = await resolver.dispatchDasRpc('getAssetWithProof', 'mainnet', run);
-
-      expect(run).toHaveBeenNthCalledWith(1, tritonProvider.getRpcUrl('mainnet'));
-      expect(run).toHaveBeenNthCalledWith(2, heliusProvider.getRpcUrl('mainnet'));
-      expect(result).toBe('asset');
-    });
-
-    it('rethrows without retrying when the Triton attempt fails with a caller-side error', async () => {
-      process.env.TRITON_RPC_URL = 'https://test.solana-mainnet.rpcpool.com';
-      process.env.TRITON_API_TOKEN = 'test-token';
+    it('rethrows a Triton failure without retrying anywhere else', async () => {
       const { resolver } = loadFresh();
-      resolver.__testing.resetBudget();
-      const badRequest = Object.assign(new Error('bad request'), {
-        response: { status: 400 },
-      });
-      const run = jest.fn().mockRejectedValue(badRequest);
+      const boom = Object.assign(new Error('boom'), { code: 'ECONNREFUSED' });
+      const run = jest.fn().mockRejectedValue(boom);
+      const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-      await expect(resolver.dispatchDasRpc('getAssetWithProof', 'mainnet', run)).rejects.toBe(
-        badRequest
-      );
+      await expect(resolver.dispatchDasRpc('getAssetWithProof', 'mainnet', run)).rejects.toBe(boom);
       expect(run).toHaveBeenCalledTimes(1);
-    });
-
-    it('rethrows the Triton error once the fallback budget is exhausted', async () => {
-      process.env.TRITON_RPC_URL = 'https://test.solana-mainnet.rpcpool.com';
-      process.env.TRITON_API_TOKEN = 'test-token';
-      process.env.SOLANA_FALLBACK_MAX_RPS = '1';
-      const { resolver } = loadFresh();
-      resolver.__testing.resetBudget();
-
-      const firstRun = jest
-        .fn()
-        .mockRejectedValueOnce(transientError())
-        .mockResolvedValueOnce('asset');
-      await resolver.dispatchDasRpc('getAssetWithProof', 'mainnet', firstRun);
-
-      const secondRun = jest.fn().mockRejectedValue(transientError());
-      await expect(
-        resolver.dispatchDasRpc('getAssetWithProof', 'mainnet', secondRun)
-      ).rejects.toThrow('boom');
-      expect(secondRun).toHaveBeenCalledTimes(1);
+      errSpy.mockRestore();
     });
   });
 

@@ -9,18 +9,15 @@ These rules apply to Solana service code only.
 - `solana-transaction-service.js`
   - orchestrates transaction lookup/history
   - delegates the enriched-tx path to the provider resolver (`./providers`)
-  - falls back to bare RPC when neither provider is available or the resolver throws
+  - falls back to bare RPC when Triton is not configured for the env or the resolver throws
 - `solana-rpc-enrichment.js`
   - preloads the lookups the bare-RPC transaction resource reads (token list, per-tx NFT metadata) onto `locals`, so `src/resources/solana/solana-transaction-resource.js` stays a pure mapper with no network I/O
 - `providers/`
-  - resolver wires Triton One as primary + Helius as rate-limited fallback for tx enrichment
-  - DAS surface (NFT metadata) is Triton primary with a rate-limited Helius fallback, same as tx enrichment; goes straight to Helius when Triton is not configured for the env
+  - resolver dispatches every tx-enrichment and DAS call to Triton One and logs it; there is no fallback provider
   - canonical provider abstraction lives in `solana-data-provider.js`
 - `parser/`
   - local Triton parser pipeline that produces the same enriched-tx shape as Helius Enhanced API, so the resource decorator stays provider-agnostic
   - per-program parsers under `parser/parsers/`: `system`, `spl-token`, `metaplex`, `bubblegum`, `aggregator`, `stake`, `staking`, `lending`, `dex`
-- `helius-transaction-service.js`
-  - Helius API wrapper used by the Helius provider
 - `transaction-serialization.js`
   - common serialization helpers used by transaction flows
 - `solana-ft-service.js`

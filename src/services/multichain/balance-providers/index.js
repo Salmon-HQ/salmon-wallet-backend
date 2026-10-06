@@ -3,46 +3,33 @@
 /**
  * Balance provider resolver.
  *
- * Maps `locals.network.blockchain` to the provider that should serve
- * `getBalance` requests. Chains that do not register a specific
- * provider fall back to the Blockdaemon Universal default (which works
- * for any chain Blockdaemon supports).
+ * Maps `locals.network.blockchain` to the provider that serves
+ * `getBalance`. Every chain the balance route allows
+ * (`BALANCE_CHAINS` in `src/routes/multichain/account-router.js`) must be
+ * registered here; an unregistered chain is a wiring bug and throws.
  *
- * To add a chain-specific provider:
- *
- *   1. Build the provider in the matching chain slice
- *      (e.g. `src/services/ethereum/ethereum-balance-provider.js`)
- *      that exports `getBalance(address, tokens, locals)`.
- *   2. Register the module path in `PROVIDERS_BY_CHAIN` below.
- *
- * The default chain (`*`) is always a safe fallback — keep it pointing
- * at Blockdaemon Universal until every supported chain registers its
- * own provider.
+ * To add a chain: build its provider in the chain slice (exporting
+ * `getBalance(address, tokens, locals)`) and register it below.
  */
 
-const blockdaemonBalanceProvider = require('./blockdaemon-balance-provider');
+const bitcoinBalanceProvider = require('../../bitcoin/bitcoin-balance-provider');
 const solanaBalanceProvider = require('../../solana/solana-balance-provider');
 
-/**
- * Dispatch map from `BLOCKCHAINS` constant values to the `BalanceProvider`
- * that should serve `getBalance` for that chain. Chains absent from this
- * map use the Blockdaemon Universal default via `resolveProvider`.
- */
 const PROVIDERS_BY_CHAIN = {
-  // bitcoin: blockdaemonBalanceProvider, // implicit via default
+  bitcoin: bitcoinBalanceProvider,
   solana: solanaBalanceProvider,
   // ethereum: require('../../ethereum/ethereum-balance-provider'),
 };
 
 /**
- * Resolves the `BalanceProvider` registered for `blockchain`, falling
- * back to the Blockdaemon Universal provider when no chain-specific
- * override is registered.
- *
  * @param {string} blockchain - value of `locals.network.blockchain`.
  * @returns {BalanceProvider} a `BalanceProvider`-shaped module.
+ * @throws {Error} when no provider is registered for `blockchain`.
  */
-const resolveProvider = (blockchain) =>
-  PROVIDERS_BY_CHAIN[blockchain] || blockdaemonBalanceProvider;
+const resolveProvider = (blockchain) => {
+  const provider = PROVIDERS_BY_CHAIN[blockchain];
+  if (!provider) throw new Error(`No balance provider registered for ${blockchain}`);
+  return provider;
+};
 
 module.exports = { resolveProvider };

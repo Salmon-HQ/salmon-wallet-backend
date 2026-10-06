@@ -170,7 +170,7 @@ const transferCompressedNftTransaction = async (assetId, owner, destination, loc
   const assetPublicKey = fromWeb3JsPublicKey(new PublicKey(assetId));
 
   // See burn-service: the proof lookup is routed through the resolver so it
-  // gets the Triton → Helius fallback; the builder keeps using `nodeUrl`.
+  // gets Triton's DAS URL and logging; the builder keeps using `nodeUrl`.
   const assetWithProof = await providers.dispatchDasRpc(
     'getAssetWithProof',
     environment,

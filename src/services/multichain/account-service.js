@@ -24,7 +24,7 @@ const priceEnrichers = require('./price-enrichers');
  *
  * @param {string} address - account address to query.
  * @param {any} tokens - forwarded to the resolved `BalanceProvider`
- *   (provider-specific; unused by the Blockdaemon default).
+ *   (provider-specific; unused by both current providers).
  * @param {{network: {blockchain: string, environment: string}}} locals
  *   - per-request locals used to resolve both plug-points.
  * @returns {Promise<Array<Object>>} balance items, priced when a quote

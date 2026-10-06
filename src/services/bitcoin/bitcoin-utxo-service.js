@@ -3,87 +3,65 @@
 /**
  * Bitcoin UTXO service.
  *
- * Walks Blockdaemon continuation pages and returns the full unspent set in one
- * response, preserving the existing `meta.nextPageToken: null` API contract.
+ * Esplora returns an address's whole unspent set in one answer
+ * (`GET /address/:a/utxo`), mempool outputs included; only mined ones are
+ * returned, as the API always has. The set
+ * carries no scriptPubKey, so it is read once off the address's history —
+ * every output of one address shares it.
+ *
+ * Deliberately uncached: the wallet re-reads the UTXO set right after a
+ * broadcast to build the next spend, and a stale set would hand it
+ * already-spent outputs.
  */
 
-const http = require('axios');
-const blockdaemonClient = require('../../infrastructure/blockdaemon-client');
-const { clampPageSize, READ_TIMEOUT } = require('./page-size');
-const { mapAddressItems } = require('./map-address-items');
-
-// 100 pages x 100 outputs is far past any realistic wallet address.
-const MAX_UTXO_PAGES = 100;
+const esplora = require('../../infrastructure/esplora-client');
+const { toUtxo, findAddressScript } = require('./esplora-mappers');
 
 /**
- * Walks every continuation page of Blockdaemon's universal
- * `/account/:address/utxo` endpoint and returns the full unspent set in
- * one response, preserving the `meta.nextPageToken: null` API contract
- * (the caller never sees Blockdaemon's own pagination cursor).
- *
- * @param {string} address - account address to query.
- * @param {{pageSize?: number}} filters - `pageSize` sets the per-page
- *   `limit` used while walking (defaults to 100); it does not cap the
- *   returned set.
- * @param {{network: {blockchain: string, environment: string}}} locals
- *   - per-request locals used to build the upstream URL.
- * @returns {Promise<{data: Array<Object>, meta: {nextPageToken: null}}>}
- *   the full unspent-output set for `address`.
+ * Esplora hosts refuse to enumerate very large unspent sets with a 400
+ * (mempool.space past 500 outputs, blockstream past its scan limit), told
+ * apart from other 400s by their wording. That is not the caller's input
+ * being wrong, so it is answered as the API
+ * always has for this case.
  */
-const walkUtxo = async (address, filters, locals) => {
-  const url = blockdaemonClient.getUniversalUrl(locals, `/account/${address}/utxo`);
-  const params = {
-    spent: false,
-    order: 'desc',
-    limit: clampPageSize(filters.pageSize),
-  };
+const TOO_LARGE = /too many unspent|too large/i;
 
-  let allData = [];
-  let nextPageToken = null;
-  let pagesFetched = 0;
-
-  do {
-    const requestParams = nextPageToken
-      ? { ...params, continuation: nextPageToken }
-      : { ...params };
-
-    const { data } = await http.get(
-      url,
-      blockdaemonClient.getRequestConfig({ params: requestParams, timeout: READ_TIMEOUT })
-    );
-    allData = allData.concat(mapAddressItems(data.data, address));
-    pagesFetched += 1;
-
-    nextPageToken = data.meta?.paging?.next_page_token;
-
-    // The walk is unbounded by design (spending needs the whole set), but an
-    // address with an extreme number of outputs would otherwise keep looping
-    // until the Lambda is killed, which answers with a gateway error and no
-    // envelope. Fail explicitly instead so the caller knows what happened.
-    if (nextPageToken && pagesFetched >= MAX_UTXO_PAGES) {
-      const error = new Error(
-        'This address has too many unspent outputs to enumerate in one request.'
-      );
-      error.statusCode = 422;
-      error.errorCode = 'utxo_set_too_large';
-      throw error;
-    }
-  } while (nextPageToken);
-
-  return {
-    data: allData,
-    meta: {
-      nextPageToken: null,
-    },
-  };
+const asTooLarge = (error) => {
+  if (error?.response?.status !== 400) return error;
+  if (!TOO_LARGE.test(error.response.data?.message ?? '')) return error;
+  const tooLarge = new Error(
+    'This address has too many unspent outputs to enumerate in one request.'
+  );
+  tooLarge.statusCode = 422;
+  tooLarge.errorCode = 'utxo_set_too_large';
+  return tooLarge;
 };
 
 /**
- * Deliberately uncached: the wallet re-reads the UTXO set right after a
- * broadcast to build the next spend, and a 15s-stale set would hand it
- * already-spent outputs.
+ * @param {string} address
+ * @param {Object} _filters - unused; the whole set is always returned.
+ * @param {{network: {environment: string}}} locals
+ * @returns {Promise<{data: Array<Object>, meta: {nextPageToken: null}}>}
  */
-const getUtxo = walkUtxo;
+const getUtxo = async (address, _filters, locals) => {
+  let utxos;
+  try {
+    utxos = await esplora.get(`/address/${address}/utxo`, locals);
+  } catch (error) {
+    throw asTooLarge(error);
+  }
+
+  utxos = utxos.filter((utxo) => utxo.status?.confirmed);
+
+  const script = utxos.length
+    ? findAddressScript(await esplora.get(`/address/${address}/txs`, locals), address)
+    : undefined;
+
+  return {
+    data: utxos.map((utxo) => toUtxo(utxo, address, script)),
+    meta: { nextPageToken: null },
+  };
+};
 
 module.exports = {
   getUtxo,

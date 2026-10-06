@@ -1,10 +1,5 @@
 'use strict';
 
-jest.mock('../../../services/solana/helius-transaction-service', () => ({
-  getNftMetadataBatch: jest.fn(),
-}));
-
-const { getNftMetadataBatch } = require('../../../services/solana/helius-transaction-service');
 const transformTransaction = require('../helius-transaction-resource');
 const {
   SEND,
@@ -273,7 +268,6 @@ describe('Helius Transaction Resource - Unit Tests', () => {
 
       const result = await transformTransaction(heliusTx, mockAddress, [], { nftMetadataByMint });
 
-      expect(getNftMetadataBatch).not.toHaveBeenCalled();
       expect(result.inputs[0]).toMatchObject({
         contract: 'nft-mint',
         isNft: true,

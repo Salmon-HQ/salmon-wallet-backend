@@ -1,7 +1,4 @@
 'use strict';
-
-process.env.HELIUS_API_KEY = process.env.HELIUS_API_KEY || 'test-helius-key';
-
 jest.mock('@solana/web3.js', () => {
   const getParsedTransaction = jest.fn();
   const getSignaturesForAddress = jest.fn();
@@ -289,7 +286,7 @@ describe('Solana Transaction Service - unit tests', () => {
     expect(result.meta.hidden).toBe(0);
   });
 
-  test('should fallback to RPC history when Helius transaction history fails', async () => {
+  test('falls back to RPC history, bounded by the request budget, when the enriched history fails', async () => {
     const address = 'fallback-history-address';
     const getParsedTransaction = jest.fn().mockResolvedValue({ slot: 321, meta: { err: null } });
     const getSignaturesForAddress = jest.fn().mockResolvedValue([{ signature: 'sig-1' }]);
@@ -302,7 +299,10 @@ describe('Solana Transaction Service - unit tests', () => {
 
     const result = await service.getTransactions(address, { pageSize: 1 }, locals);
 
-    expect(Connection).toHaveBeenCalledWith(locals.network.config.nodeUrl, 'confirmed');
+    expect(Connection).toHaveBeenCalledWith(
+      locals.network.config.nodeUrl,
+      expect.objectContaining({ commitment: 'confirmed', disableRetryOnRateLimit: true })
+    );
     expect(getSignaturesForAddress).toHaveBeenCalled();
     expect(getParsedTransaction).toHaveBeenCalledWith('sig-1', {
       commitment: 'confirmed',
