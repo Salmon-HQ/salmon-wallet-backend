@@ -2,3 +2,4 @@
 # files that must not be reformatted.
 package-lock.json
 docs/openapi.yaml
+src/availability/region-ranges.json

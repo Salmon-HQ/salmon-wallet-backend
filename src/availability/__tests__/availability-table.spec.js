@@ -25,6 +25,17 @@ describe('availability-table', () => {
       expect(validateTable(DEFAULT_TABLE)).toEqual([]);
     });
 
+    it('sends Taiwan to 0x: Jupiter excludes "the Republic of China"', () => {
+      expect(JUPITER_PROHIBITED).toContain('TW');
+      expect(DEFAULT_TABLE.capabilities.swap.providers['0x']).toContain('TW');
+    });
+
+    it('blocks the occupied Ukrainian regions, and Kherson and Zaporizhzhia by default', () => {
+      expect(DEFAULT_TABLE.capabilities.swap.unavailable).toEqual(
+        expect.arrayContaining(['UA-43', 'UA-40', 'UA-14', 'UA-09', 'UA-65', 'UA-23'])
+      );
+    });
+
     it('never names Jupiter for a country Jupiter prohibits', () => {
       const swap = DEFAULT_TABLE.capabilities.swap;
       const jupiterServed = (country) =>
@@ -75,6 +86,22 @@ describe('availability-table', () => {
       const v = valid();
       v.version = 2;
       expect(validateTable(v)).toEqual([expect.stringContaining('version')]);
+    });
+
+    it('requires Crimea, Sevastopol, Donetsk and Luhansk unavailable on every row', () => {
+      const t = valid();
+      t.capabilities.swap.unavailable = t.capabilities.swap.unavailable.filter(
+        (c) => c !== 'UA-43'
+      );
+      expect(validateTable(t)).toContainEqual(expect.stringContaining('UA-43'));
+    });
+
+    it('accepts an ISO 3166-2 region code, and lets Kherson open again', () => {
+      const t = valid();
+      t.capabilities.swap.unavailable = t.capabilities.swap.unavailable.filter(
+        (c) => c !== 'UA-65'
+      );
+      expect(validateTable(t)).toEqual([]);
     });
 
     it('rejects a country code that is not two upper-case letters', () => {

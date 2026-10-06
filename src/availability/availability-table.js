@@ -15,7 +15,9 @@
 
 const PROVIDERS = ['jupiter', '0x'];
 const PLATFORMS = ['ios', 'android', 'extension'];
-const COUNTRY_CODE = /^[A-Z]{2}$/;
+// ISO 3166-1 alpha-2, or an ISO 3166-2 region the country resolver answers
+// on its own (`UA-43` Crimea…).
+const COUNTRY_CODE = /^[A-Z]{2}(-[A-Z0-9]{1,3})?$/;
 /** How long a table that cannot be refreshed may keep serving before the default takes over. */
 const MAX_STALE_MS = 60 * 60 * 1000;
 const TTL_MS = 5 * 60 * 1000;
@@ -26,6 +28,8 @@ const TTL_MS = 5 * 60 * 1000;
  */
 const JUPITER_PROHIBITED = Object.freeze([
   'US',
+  // "the Republic of China" is Taiwan; the PRC is not named, kept on 0x too.
+  'TW',
   'CN',
   'SG',
   'MM',
@@ -43,10 +47,24 @@ const JUPITER_PROHIBITED = Object.freeze([
   'SY',
   'YE',
   'ZW',
+  // "Crimea and Sevastopol".
+  'UA-43',
+  'UA-40',
 ]);
 
-/** Comprehensively embargoed territories: unavailable everywhere. */
-const EMBARGOED = Object.freeze(['CU', 'IR', 'KP', 'SY']);
+/**
+ * Comprehensively embargoed territories: unavailable everywhere. The four
+ * Ukrainian regions are OFAC's comprehensive programs for Crimea (E.O. 13685)
+ * and the so-called DNR/LNR (E.O. 14065, OFAC FAQ 1008).
+ */
+const EMBARGOED = Object.freeze(['CU', 'IR', 'KP', 'SY', 'UA-43', 'UA-40', 'UA-14', 'UA-09']);
+
+/**
+ * Occupied in part, not under a comprehensive OFAC program (the EU's
+ * "specified territories" include them). Off by default; an IP cannot tell the
+ * occupied part from the rest, so the table may open them.
+ */
+const PRECAUTIONARY = Object.freeze(['UA-65', 'UA-23']);
 
 const DEFAULT_TABLE = Object.freeze({
   version: 1,
@@ -54,9 +72,11 @@ const DEFAULT_TABLE = Object.freeze({
     swap: {
       default: 'jupiter',
       // Owner decision 2026-09-30: the United States is off until confirmed.
-      unavailable: [...EMBARGOED, 'US'],
+      unavailable: [...EMBARGOED, ...PRECAUTIONARY, 'US'],
       providers: {
-        '0x': JUPITER_PROHIBITED.filter((c) => !EMBARGOED.includes(c) && c !== 'US'),
+        '0x': JUPITER_PROHIBITED.filter(
+          (c) => !EMBARGOED.includes(c) && !PRECAUTIONARY.includes(c) && c !== 'US'
+        ),
       },
       platforms: { ios: {} },
     },
@@ -95,7 +115,7 @@ const validateRows = (name, platform, rows, problems) => {
   const all = [...rows.unavailable, ...Object.values(rows.providers).flat()];
   for (const code of all) {
     if (!COUNTRY_CODE.test(code))
-      problems.push(`${where}: "${code}" is not an ISO 3166-1 alpha-2 code`);
+      problems.push(`${where}: "${code}" is not an ISO 3166-1 alpha-2 or 3166-2 code`);
   }
   // Jupiter may only serve outside its prohibited list, wherever it ends up serving.
   // The embargoed countries are unavailable on every row, whoever the provider.
