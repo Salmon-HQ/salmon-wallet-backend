@@ -23,6 +23,26 @@ describe('availability/country-resolver', () => {
     }
   );
 
+  describe('Ukrainian regions the gate treats on their own (ISO 3166-2)', () => {
+    it('answers UA-43 for a Crimean address DB-IP files under RU', () => {
+      expect(countryOf('5.3.41.7')).toBe('UA-43');
+      expect(countryOf('46.172.192.10')).toBe('UA-43');
+    });
+
+    it('answers the region for a Donetsk address filed under UA', () => {
+      expect(countryOf('5.105.214.20')).toBe('UA-14');
+    });
+
+    it('matches IPv6 ranges too', () => {
+      expect(countryOf('2001:678:128::1')).toBe('UA-43');
+      expect(countryOf('2001:678:2d0::5')).toBe('UA-65');
+    });
+
+    it('keeps the rest of Ukraine as UA', () => {
+      expect(countryOf('2.21.89.10')).toBe('UA');
+    });
+  });
+
   it('reads the source address API Gateway attached to the request', () => {
     const req = { requestContext: { identity: { sourceIp: '8.8.8.8' } }, headers: {} };
     expect(countryOfRequest(req)).toBe('US');
