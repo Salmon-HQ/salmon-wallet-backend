@@ -29,12 +29,9 @@ describe('availability-service', () => {
       });
     });
 
-    it('refuses the United States on every platform', () => {
+    it('routes the United States to 0x on every platform', () => {
       for (const platform of ['ios', 'android', 'extension']) {
-        expect(decide(table(), 'swap', platform, 'US')).toEqual({
-          enabled: false,
-          reason: 'region',
-        });
+        expect(decide(table(), 'swap', platform, 'US')).toEqual({ enabled: true, provider: '0x' });
       }
     });
 
@@ -80,10 +77,18 @@ describe('availability-service', () => {
     });
 
     it('marks swap unavailable by region for a blocked country', () => {
-      expect(listFor(table(), 'solana-mainnet', 'ios', 'US')).toContainEqual({
+      expect(listFor(table(), 'solana-mainnet', 'ios', 'IR')).toContainEqual({
         id: 'swap',
         enabled: false,
         reason: 'region',
+      });
+    });
+
+    it('offers swap through 0x in the United States', () => {
+      expect(listFor(table(), 'solana-mainnet', 'ios', 'US')).toContainEqual({
+        id: 'swap',
+        enabled: true,
+        provider: '0x',
       });
     });
 

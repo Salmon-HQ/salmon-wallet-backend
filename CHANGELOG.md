@@ -6,6 +6,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 - Removed `GET /ip`: it sent the caller's IP to ip-api.com over plain HTTP, a third party the privacy policy does not name, and no client called it (no requests in 30 days of prod logs). Swap availability resolves the country from the bundled DB-IP data and sends the IP nowhere.
 
+- Swap availability: the United States is served by 0x on every platform, as the Power-ups 1.4 Terms and Privacy Policy state; it was unavailable. Jupiter still never serves it.
+
 - Swap availability: Taiwan routes to 0x (Jupiter's terms exclude "the Republic of China"). Crimea, Sevastopol, Donetsk and Luhansk are unavailable everywhere, and Kherson and Zaporizhzhia by default — detected by IP region even where DB-IP files the address under Russia; the table may name ISO 3166-2 codes (`UA-43`…).
 
 - Solana chain data comes from Triton One alone: Helius is no longer called, so there is no fallback provider. A Triton failure now reaches the client as it is (through the resilience 503s) instead of being retried on Helius; transaction history still degrades to unclassified bare-RPC reads. Response shapes are unchanged — `heliusType` keeps its name and is filled by the local parser. Env removed: `HELIUS_API_KEY`, `HELIUS_TIER`, `HELIUS_MAX_RPS`, `SOLANA_FALLBACK_MAX_RPS`.
