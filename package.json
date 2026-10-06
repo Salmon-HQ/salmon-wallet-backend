@@ -50,7 +50,7 @@
   "dependencies": {
     "@ip-location-db/dbip-country-mmdb": "^2.3.2026060120",
     "@metaplex-foundation/digital-asset-standard-api": "^2.1.1",
-    "@metaplex-foundation/mpl-bubblegum": "^5.1.0",
+    "@metaplex-foundation/mpl-bubblegum": "^6.0.0",
     "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
     "@metaplex-foundation/umi": "^1.6.0",
     "@metaplex-foundation/umi-bundle-defaults": "^1.6.0",
