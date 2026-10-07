@@ -53,6 +53,25 @@ describe('availability-service', () => {
       expect(decide(t, 'swap', 'android', 'AR')).toEqual({ enabled: true, provider: 'jupiter' });
     });
 
+    it('switches a capability off on one platform, with the row reason', () => {
+      const t = table();
+      t.capabilities.swap.platforms.ios = { enabled: false, reason: 'maintenance' };
+      expect(decide(t, 'swap', 'ios', 'AR')).toEqual({ enabled: false, reason: 'maintenance' });
+      expect(decide(t, 'swap', 'ios', null)).toEqual({ enabled: false, reason: 'maintenance' });
+      expect(decide(t, 'swap', 'android', 'AR')).toEqual({ enabled: true, provider: 'jupiter' });
+    });
+
+    it('switches a capability off everywhere, and lets one platform back on', () => {
+      const t = table();
+      t.capabilities.payments = {
+        enabled: false,
+        reason: 'deprecated',
+        platforms: { extension: { enabled: true } },
+      };
+      expect(decide(t, 'payments', 'ios', 'AR')).toEqual({ enabled: false, reason: 'deprecated' });
+      expect(decide(t, 'payments', 'extension', 'AR')).toEqual({ enabled: true });
+    });
+
     it('leaves a capability the table does not mention enabled, with no provider', () => {
       expect(decide(table(), 'payments', 'ios', 'US')).toEqual({ enabled: true });
     });

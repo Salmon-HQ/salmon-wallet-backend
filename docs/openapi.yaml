@@ -590,7 +590,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
-          description: "`no_route` — the provider cannot route this pair/amount; its own reason travels in `error_description` with the 0x code in parentheses"
+          description: "`not_found` — Swap is switched off, by the stage or by its availability row for this platform; `no_route` — the provider cannot route this pair/amount; its own reason travels in `error_description` with the 0x code in parentheses"
           content:
             application/json:
               schema:
