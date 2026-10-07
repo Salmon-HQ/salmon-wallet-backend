@@ -55,8 +55,8 @@ module.exports = {
   powerups: {
     // Payments: read-only entry, the device asks and pays (frontend spec 033).
     payments: { enabled: true },
-    // Swap (spec 018): the launch switch, flipped by the owner when Swap
-    // ships to prod. The availability table is already loaded in SSM.
-    swap: { enabled: false, reason: 'maintenance' },
+    // Swap (spec 018): on. Who may use it, and through which provider, is the
+    // availability table in SSM, read per request.
+    swap: { enabled: true },
   },
 };

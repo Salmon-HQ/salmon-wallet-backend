@@ -2,6 +2,10 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.20.1 — 2026-10-06
+
+- Swap is on in prod: `GET /v1/solana-mainnet/powerups/availability` answers `swap` as enabled, with its provider, wherever the availability table offers it. It answered `enabled: false, reason: maintenance` everywhere.
+
 ## 0.20.0 — 2026-10-06
 
 - Removed `GET /ip`: it sent the caller's IP to ip-api.com over plain HTTP, a third party the privacy policy does not name, and no client called it (no requests in 30 days of prod logs). Swap availability resolves the country from the bundled DB-IP data and sends the IP nowhere.
