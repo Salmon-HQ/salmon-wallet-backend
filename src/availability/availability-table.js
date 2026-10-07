@@ -11,12 +11,19 @@
  * built-in `DEFAULT_TABLE` is the spec's initial rows and is what serves
  * when nothing is configured or a read fails: a failure never opens a
  * country.
+ *
+ * A row may also switch a capability off outright, `enabled: false` with a
+ * `reason` the wallet shows in its place: per capability, or per platform
+ * through `platforms.<platform>`. Taking a Powerup down, everywhere or on one
+ * store, is a parameter edit too, never a build.
  */
 
 const PROVIDERS = ['jupiter', '0x'];
 const PLATFORMS = ['ios', 'android', 'extension'];
 // ISO 3166-1 alpha-2, or an ISO 3166-2 region the country resolver answers
 // on its own (`UA-43` Crimea…).
+/** Reasons a row may switch a capability off with; `region` is a country's, never a row's. */
+const OFF_REASONS = ['maintenance', 'deprecated'];
 const COUNTRY_CODE = /^[A-Z]{2}(-[A-Z0-9]{1,3})?$/;
 /** How long a table that cannot be refreshed may keep serving before the default takes over. */
 const MAX_STALE_MS = 60 * 60 * 1000;
@@ -88,11 +95,14 @@ const isStringList = (value) => Array.isArray(value) && value.every((v) => typeo
 
 /**
  * The effective rows of a capability on a platform: the platform override
- * replaces each of `default`, `unavailable`, `providers` it names.
+ * replaces each of `enabled`, `reason`, `default`, `unavailable`, `providers`
+ * it names.
  */
 const rowsFor = (capability, platform) => {
   const override = capability.platforms?.[platform] || {};
   return {
+    enabled: override.enabled ?? capability.enabled ?? true,
+    reason: override.reason ?? capability.reason ?? null,
     default: override.default ?? capability.default ?? null,
     unavailable: override.unavailable ?? capability.unavailable ?? [],
     providers: override.providers ?? capability.providers ?? {},
@@ -101,6 +111,16 @@ const rowsFor = (capability, platform) => {
 
 const validateRows = (name, platform, rows, problems) => {
   const where = platform ? `${name}.platforms.${platform}` : name;
+  if (typeof rows.enabled !== 'boolean') {
+    problems.push(`${where}.enabled: must be true or false`);
+    return;
+  }
+  if (!rows.enabled) {
+    if (!OFF_REASONS.includes(rows.reason))
+      problems.push(`${where}.reason: must be one of ${OFF_REASONS.join(', ')}`);
+    // A row that is off serves no country, so its country rows cannot open one.
+    return;
+  }
   if (rows.default !== null && !PROVIDERS.includes(rows.default)) {
     problems.push(`${where}.default: unknown provider "${rows.default}"`);
   }
