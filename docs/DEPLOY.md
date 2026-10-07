@@ -31,6 +31,16 @@ The script then runs `refreshSanctionsJob` once. Swap screening reads the sancti
 
 Staging differs from prod on purpose in three places: the Powerups switched on for testing, analytics written to Lambda's `/tmp` instead of GA4 (so testers never reach the production property), and Redis on Upstash over TLS. It shares every provider key with prod, so a load test against staging spends prod's provider quotas.
 
+## Release, step by step
+
+The owner's order is staging first, then prod, so a change runs on the staging stack before it reaches users:
+
+1. Open the PR from the feature branch to `main`, and a second PR from the same branch to `staging`. The repository allows squash merges only.
+2. Squash-merge the `staging` PR, then deploy staging by hand from `origin/staging` (the commands above; `aws login` first, since the session expires). Smoke it against the staging execute-api URL the deploy prints, for example `GET /v1/solana-mainnet/powerups/availability` with each `X-Salmon-Platform`.
+3. Squash-merge the `main` PR. `main` requires an approving review; while the owner is the only developer, the merge uses `gh pr merge --squash --admin`.
+4. Tag the merge commit `prod/vX.Y.Z`, matching `package.json#version` and the CHANGELOG entry, and push the tag. The `deploy.yml` run verifies, deploys and smokes `/health`; its log prints the prod execute-api URL.
+5. A red `verify` caused by a timing test is rerun with `gh run rerun <id> --failed`; any other red stops the release.
+
 ## Provisioned but unused: Solana Actions / Blinks infrastructure
 
 The Blinks design (`docs/plans/2026-05-05-solana-actions-blinks.md`, a local

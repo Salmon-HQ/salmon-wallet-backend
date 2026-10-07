@@ -43,7 +43,10 @@ describe('request-deadline', () => {
     });
     await new Promise((resolve) => setTimeout(resolve, 60));
 
-    expect(seen).toBeLessThanOrEqual(1000 - 20);
+    // Bound by the request's 1000 ms, not the 25 s default, and partly spent.
+    // A 20 ms timer can fire a millisecond early against Date.now(), so the
+    // bound leaves slack instead of asserting exactly 980.
+    expect(seen).toBeLessThanOrEqual(1000 - 10);
     expect(seen).toBeGreaterThan(0);
   });
 });
