@@ -82,6 +82,37 @@ describe('availability-table', () => {
       );
     });
 
+    it('accepts a row switched off with a reason, with no country rows', () => {
+      const t = valid();
+      t.capabilities.swap.platforms.ios = { enabled: false, reason: 'maintenance' };
+      t.capabilities.payments = { enabled: false, reason: 'deprecated' };
+      expect(validateTable(t)).toEqual([]);
+    });
+
+    it('rejects an off row without a known reason, and a non-boolean enabled', () => {
+      const t = valid();
+      t.capabilities.swap.platforms.ios = { enabled: false };
+      t.capabilities.swap.platforms.android = { enabled: false, reason: 'region' };
+      t.capabilities.swap.platforms.extension = { enabled: 'no' };
+      expect(validateTable(t)).toEqual([
+        expect.stringContaining('swap.platforms.ios.reason'),
+        expect.stringContaining('swap.platforms.android.reason'),
+        expect.stringContaining('swap.platforms.extension.enabled'),
+      ]);
+    });
+
+    it('still checks the country rows of a platform switched back on', () => {
+      const t = valid();
+      t.capabilities.payments = {
+        enabled: false,
+        reason: 'maintenance',
+        platforms: { android: { enabled: true } },
+      };
+      expect(validateTable(t)).toContainEqual(
+        expect.stringContaining('payments.platforms.android.unavailable')
+      );
+    });
+
     it('rejects an unknown platform key and a bad version', () => {
       const t = valid();
       t.capabilities.swap.platforms.web = {};

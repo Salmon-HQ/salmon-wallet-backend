@@ -109,6 +109,19 @@ describe('powerup-gate', () => {
     expect(android.next).toHaveBeenCalledWith();
   });
 
+  it('answers 404 not_found for a row switched off, before any screening', async () => {
+    const table = JSON.parse(JSON.stringify(DEFAULT_TABLE));
+    table.capabilities.swap.platforms.ios = { enabled: false, reason: 'maintenance' };
+    countryOfRequest.mockReturnValue('AR');
+    const ios = await run(table, req('ios'));
+    expect(ios.res.status).toHaveBeenCalledWith(404);
+    expect(ios.res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'not_found' }));
+    expect(ios.next).not.toHaveBeenCalled();
+    expect(isListed).not.toHaveBeenCalled();
+    const android = await run(table, req('android'));
+    expect(android.next).toHaveBeenCalledWith();
+  });
+
   it('reads the capability from :id when mounted with "param" and passes unknown capabilities', async () => {
     countryOfRequest.mockReturnValue('US');
     const { res, next } = await run(DEFAULT_TABLE, req('ios', 'memo'), 'param');

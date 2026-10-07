@@ -5,8 +5,9 @@
  * before its adapter runs (spec 018, amending spec 011).
  *
  * Resolves the caller's platform (`X-Salmon-Platform`) and country (source
- * address → DB-IP), asks the availability table, and either refuses with
- * `403 region_restricted` before any provider call or records the decision
+ * address → DB-IP), asks the availability table, and either refuses before
+ * any provider call — `404 not_found` when the row is switched off,
+ * `403 region_restricted` when the country is unavailable — or records the decision
  * in `res.locals.availability = { capability, platform, country, provider }`
  * for the build service to pick its adapter. Logs `[POWERUP_GATE]` with the
  * decision and never the address or the wallet.
@@ -42,6 +43,13 @@ const powerupGate = (capability) => async (req, res, next) => {
     enabled: decision.enabled,
     provider,
   });
+  // A row switched off answers what the stage switch answers: not offered.
+  if (!decision.enabled && decision.reason !== 'region') {
+    return res.status(404).json({
+      error: 'not_found',
+      error_description: `Powerup ${id} is not available`,
+    });
+  }
   if (!decision.enabled) {
     return res.status(403).json({
       error: 'region_restricted',

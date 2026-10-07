@@ -18,12 +18,13 @@ const SCREENED_BY_SALMON = ['jupiter'];
  * @param {string} capability
  * @param {'ios'|'android'|'extension'} platform
  * @param {string|null} country - ISO alpha-2, or null when unresolved.
- * @returns {{ enabled: boolean, reason?: 'region', provider?: string }}
+ * @returns {{ enabled: boolean, reason?: 'region'|'maintenance'|'deprecated', provider?: string }}
  */
 const decide = (table, capability, platform, country) => {
   const entry = table.capabilities?.[capability];
   if (!entry) return { enabled: true };
   const rows = rowsFor(entry, platform);
+  if (!rows.enabled) return { enabled: false, reason: rows.reason };
   if (country && rows.unavailable.includes(country)) return { enabled: false, reason: 'region' };
   let provider = rows.default;
   if (country) {
