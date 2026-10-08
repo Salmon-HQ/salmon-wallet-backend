@@ -167,3 +167,44 @@ describe('solana-nft-resource decorator', () => {
     );
   });
 });
+
+describe('Token-2022 NFT read from its group (Seeker Genesis Token)', () => {
+  // The listing item after the Token-2022 read and the off-chain hydration,
+  // with the document Solana Mobile publishes at the group's URI.
+  const sgt = {
+    mint: { address: '5vPkA3YXK6ByvioKaEyQofqT4QXVWMCXqpvYshswXkCb' },
+    owner: 'CzNRNm6vbDiJ2MG96Lw4gSZW1gSjeV6DgSEAjCULxXcJ',
+    name: 'Seeker Genesis Token',
+    symbol: 'SeekerGT',
+    uri: 'https://r2.solanamobiledappstore.com/skr/sgt-metadata.json',
+    extensions: [{ extension: 'immutableOwner' }],
+    tokenAmount: { decimals: 0, amount: '1', uiAmount: 1 },
+    frozen: true,
+    json: {
+      description:
+        'A non-transferable NFT for Seeker owners, unlocking exclusive onchain experiences throughout the Solana ecosystem.',
+      image: 'https://r2.solanamobiledappstore.com/skr/seeker-genesis-token.png',
+      animation_url: 'https://r2.solanamobiledappstore.com/skr/seeker-genesis-token.mp4',
+      properties: { category: 'video' },
+    },
+    metadataResolved: true,
+  };
+
+  test('is shown with its image and animation, not scored as spam', async () => {
+    const result = await decorate(sgt, {}, 'k', {});
+
+    expect(result).toMatchObject({
+      name: 'Seeker Genesis Token',
+      media: 'https://r2.solanamobiledappstore.com/skr/seeker-genesis-token.png',
+      animation: 'https://r2.solanamobiledappstore.com/skr/seeker-genesis-token.mp4',
+      frozen: true,
+    });
+    expect(result.spamScore).toBeLessThan(2);
+  });
+
+  test('an NFT without animation or freeze says so', async () => {
+    const result = await decorate(baseNft, {}, 'k', {});
+
+    expect(result).toMatchObject({ animation: null, frozen: false });
+  });
+});
