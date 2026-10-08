@@ -2,6 +2,12 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.23.0 — 2026-10-09
+
+- `GET /v1/solana-{env}/account/:address/stakes`: the SOL stake accounts an address manages (as staker or withdrawer), each with its amount, state, the validator's published name and icon, and the rewards of the last five completed epochs, plus SOL's USD price. Read-only.
+- `GET /v1/solana-mainnet/skr/stake?owner=`: the owner's SKR staking position in Solana Mobile's staking program — staked, earned, guardian, any unstake and when it is withdrawable, liquid SKR, SKR's USD price — and a reward history built from a daily record of the share price, kept from this release on. Read-only; mainnet only.
+- Powerups: `skr` is listed (read-only) and enabled on local and staging only.
+
 ## 0.22.0 — 2026-10-08
 
 - NFT listing and lookup by mint: a Token-2022 NFT that the indexer lists without a name is named from the mint's own on-chain `tokenMetadata`, or from the account its `metadataPointer` names when the mint is a member of that token group. The Seeker Genesis Token, which keeps its metadata on its group, now appears with its name and image instead of as a blank item, and its empty duplicate from the indexer is dropped. A metadata pointer to an account the mint is not a member of is not followed.
