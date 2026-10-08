@@ -20,7 +20,10 @@ jest.mock('../../../infrastructure/cache/cache-helper', () => {
   };
 });
 
+jest.mock('../../shared/coingecko-service', () => ({ getTokenPrices: jest.fn() }));
+
 const axios = require('axios');
+const coingecko = require('../../shared/coingecko-service');
 const cache = require('../../../infrastructure/cache/cache-helper');
 const { listStakeAccounts, stakeState, MAX_U64 } = require('../stake-account-service');
 
@@ -111,6 +114,9 @@ const defaults = (overrides = {}) => ({
 beforeEach(() => {
   jest.clearAllMocks();
   cache.__store.clear();
+  coingecko.getTokenPrices.mockResolvedValue(
+    new Map([['So11111111111111111111111111111111111111112', { usdPrice: 108.2 }]])
+  );
   process.env.TRITON_RPC_URL = 'https://triton.example/token';
 });
 
@@ -135,9 +141,10 @@ describe('listStakeAccounts', () => {
   test('lists the account once though the wallet is both staker and withdrawer', async () => {
     rpcWith(defaults());
 
-    const { epoch, accounts } = await listStakeAccounts(WALLET, locals);
+    const { epoch, accounts, usdPrice } = await listStakeAccounts(WALLET, locals);
 
     expect(epoch).toBe(1052);
+    expect(usdPrice).toBe(108.2);
     expect(accounts).toHaveLength(1);
     expect(accounts[0]).toMatchObject({
       address: STAKE,

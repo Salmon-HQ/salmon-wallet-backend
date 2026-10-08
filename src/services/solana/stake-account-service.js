@@ -15,12 +15,15 @@
 const axios = require('axios');
 const { getRpcUrl } = require('../../infrastructure/triton-client');
 const { providerCall } = require('../../infrastructure/providers/provider-client');
+const coingecko = require('../shared/coingecko-service');
 const {
   getCacheKeyFor,
   getFromCache,
   storeInCache,
 } = require('../../infrastructure/cache/cache-helper');
 
+// Prices of native SOL are quoted under the wrapped-SOL mint.
+const WRAPPED_SOL_MINT = 'So11111111111111111111111111111111111111112';
 const STAKE_PROGRAM = 'Stake11111111111111111111111111111111111111';
 const CONFIG_PROGRAM = 'Config1111111111111111111111111111111111111';
 const STAKER_OFFSET = 12;
@@ -41,6 +44,16 @@ const VALIDATOR_TTL_SECONDS = 24 * 60 * 60;
 // Validator names and icons are whatever the operator published.
 const MAX_NAME_LENGTH = 64;
 const REQUEST_TIMEOUT = 10000;
+
+/** USD price of `mint`, or null: a missing price never fails the read. */
+const usdPriceOf = async (mint, locals) => {
+  try {
+    return (await coingecko.getTokenPrices([mint], locals)).get(mint)?.usdPrice ?? null;
+  } catch (error) {
+    console.warn(`[STAKING_PRICE] no price for ${mint}: ${error.message}`);
+    return null;
+  }
+};
 
 const rpc = async (method, params, locals) => {
   const environment = locals?.network?.environment || 'mainnet';
@@ -212,17 +225,19 @@ const listStakeAccounts = async (address, locals) => {
   const { epoch } = epochInfo;
   const unique = new Map([...(asStaker ?? []), ...(asWithdrawer ?? [])].map((a) => [a.pubkey, a]));
   const accounts = [...unique.values()].map(toAccount);
-  if (accounts.length === 0) return { epoch, accounts };
+  if (accounts.length === 0) return { epoch, accounts, usdPrice: null };
 
   const voters = [...new Set(accounts.map((a) => a.voter).filter(Boolean))];
-  const [validators, rewards] = await Promise.all([
+  const [validators, rewards, usdPrice] = await Promise.all([
     Promise.all(voters.map((voter) => validatorFor(voter, locals))),
     rewardsFor(accounts, epoch, locals),
+    usdPriceOf(WRAPPED_SOL_MINT, locals),
   ]);
   const validatorByVoter = new Map(voters.map((voter, i) => [voter, validators[i]]));
 
   return {
     epoch,
+    usdPrice,
     accounts: accounts.map((account) => ({
       ...account,
       state: stakeState(account.activationEpoch === null ? null : account, epoch),

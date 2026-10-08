@@ -13,6 +13,7 @@ module.exports = (result) => ({
   sharePrice: String(result.sharePrice),
   cooldownSeconds: result.cooldownSeconds,
   apy: result.apy,
+  usdPrice: result.usdPrice ?? null,
   positions: result.positions.map((position) => ({
     address: position.address,
     staked: String(position.staked),

@@ -21,6 +21,7 @@ describe('listStakes', () => {
   test('answers the stake accounts in the public shape, amounts as strings', async () => {
     stakeService.listStakeAccounts.mockResolvedValue({
       epoch: 1052,
+      usdPrice: 108.2,
       accounts: [
         {
           address: 'E5zHk2dnsnk6bL94BPe3svRczbT6WfZnmcQm3wVVEQRs',
@@ -42,6 +43,7 @@ describe('listStakes', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith({
       epoch: 1052,
+      usdPrice: 108.2,
       data: [
         {
           address: 'E5zHk2dnsnk6bL94BPe3svRczbT6WfZnmcQm3wVVEQRs',

@@ -23,6 +23,7 @@ const axios = require('axios');
 const { PublicKey } = require('@solana/web3.js');
 const { getRpcUrl } = require('../../infrastructure/triton-client');
 const { providerCall } = require('../../infrastructure/providers/provider-client');
+const coingecko = require('../shared/coingecko-service');
 const {
   getCacheKeyFor,
   getFromCache,
@@ -170,6 +171,16 @@ const stakedSince = async (address, locals) => {
   return at;
 };
 
+/** USD price of `mint`, or null: a missing price never fails the read. */
+const usdPriceOf = async (mint, locals) => {
+  try {
+    return (await coingecko.getTokenPrices([mint], locals)).get(mint)?.usdPrice ?? null;
+  } catch (error) {
+    console.warn(`[STAKING_PRICE] no price for ${mint}: ${error.message}`);
+    return null;
+  }
+};
+
 const accountData = (account) => Buffer.from(account.data[0], 'base64');
 
 /**
@@ -206,13 +217,17 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
       return [address, account ? decodeGuardianPool(accountData(account)) : null];
     })
   );
-  const records = await sharePriceRecords(config.sharePrice, now, locals);
+  const [records, usdPrice] = await Promise.all([
+    sharePriceRecords(config.sharePrice, now, locals),
+    usdPriceOf(SKR_MINT, locals),
+  ]);
 
   return {
     mint: SKR_MINT,
     sharePrice: config.sharePrice,
     cooldownSeconds: config.cooldownSeconds,
     apy: apyFrom(records),
+    usdPrice,
     positions: await Promise.all(
       positions.map(async (position) => {
         const since = await stakedSince(position.address, locals);
