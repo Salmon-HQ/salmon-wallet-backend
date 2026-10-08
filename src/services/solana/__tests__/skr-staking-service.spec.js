@@ -54,6 +54,12 @@ const rpcWith = ({ stakeData = USER_STAKE, positions = 1, signatures = [] } = {}
         value: [{ data: [STAKE_CONFIG, 'base64'] }, { data: [GUARDIAN_POOL, 'base64'] }],
       },
       getSignaturesForAddress: signatures,
+      getTokenAccountsByOwner: {
+        value: [
+          { account: { data: { parsed: { info: { tokenAmount: { amount: '2500000' } } } } } },
+          { account: { data: { parsed: { info: { tokenAmount: { amount: '500000' } } } } } },
+        ],
+      },
     }[body.method];
     return { data: { result } };
   });
@@ -82,7 +88,11 @@ test("reads the owner's position with its guardian", async () => {
     cooldownSeconds: 172800,
     apy: null,
     usdPrice: 0.01622,
+    liquid: 3000000n,
   });
+  const [owner, filter] = calls('getTokenAccountsByOwner')[0][1].params;
+  expect(owner).toBe(OWNER);
+  expect(filter).toEqual({ mint: 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3' });
   expect(result.positions).toEqual([
     {
       address: POSITION,

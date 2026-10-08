@@ -26,6 +26,7 @@ test('answers the position with amounts as strings', async () => {
     cooldownSeconds: 172800,
     apy: 0.151,
     usdPrice: 0.01622,
+    liquid: 3000000n,
     positions: [
       {
         address: '7yFnVkeEk4Qd6jgGsjrU4rhYDd7UQ985ah1VgWNg8m58',
@@ -50,6 +51,7 @@ test('answers the position with amounts as strings', async () => {
     cooldownSeconds: 172800,
     apy: 0.151,
     usdPrice: 0.01622,
+    liquid: '3000000',
     positions: [
       {
         address: '7yFnVkeEk4Qd6jgGsjrU4rhYDd7UQ985ah1VgWNg8m58',

@@ -147,6 +147,19 @@ const sharePriceRecords = async (sharePrice, now, locals) => {
   return keys.map((key) => found.get(key)).filter(Boolean);
 };
 
+/** The owner's SKR outside staking, in base units: the sum of its SKR token accounts. */
+const liquidSkr = async (owner, locals) => {
+  const accounts = await rpc(
+    'getTokenAccountsByOwner',
+    [owner, { mint: SKR_MINT }, { encoding: 'jsonParsed' }],
+    locals
+  );
+  return (accounts?.value ?? []).reduce(
+    (sum, { account }) => sum + BigInt(account.data.parsed.info.tokenAmount.amount),
+    0n
+  );
+};
+
 /** When the position's oldest indexed transaction ran, or null. */
 const stakedSince = async (address, locals) => {
   const key = getCacheKeyFor('skr_staked_since', 'position', address, locals);
@@ -217,9 +230,10 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
       return [address, account ? decodeGuardianPool(accountData(account)) : null];
     })
   );
-  const [records, usdPrice] = await Promise.all([
+  const [records, usdPrice, liquid] = await Promise.all([
     sharePriceRecords(config.sharePrice, now, locals),
     usdPriceOf(SKR_MINT, locals),
+    liquidSkr(owner, locals),
   ]);
 
   return {
@@ -228,6 +242,7 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
     cooldownSeconds: config.cooldownSeconds,
     apy: apyFrom(records),
     usdPrice,
+    liquid,
     positions: await Promise.all(
       positions.map(async (position) => {
         const since = await stakedSince(position.address, locals);
