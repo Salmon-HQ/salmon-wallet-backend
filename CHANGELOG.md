@@ -2,6 +2,11 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.22.0 — 2026-10-08
+
+- NFT listing and lookup by mint: a Token-2022 NFT that the indexer lists without a name is named from the mint's own on-chain `tokenMetadata`, or from the account its `metadataPointer` names when the mint is a member of that token group. The Seeker Genesis Token, which keeps its metadata on its group, now appears with its name and image instead of as a blank item, and its empty duplicate from the indexer is dropped. A metadata pointer to an account the mint is not a member of is not followed.
+- Every NFT in `/nft` and `/nft/:mint` carries two new fields: `animation` (the metadata document's `animation_url`, or null) and `frozen` (true when the holder's token account is frozen, so it can be neither sent nor burned). No existing field changes.
+
 ## 0.21.0 — 2026-10-07
 
 - The availability table can switch a Powerup off outright: a capability entry, or its `platforms.<platform>` override, takes `enabled: false` with `reason: maintenance | deprecated`. `GET /v1/solana-mainnet/powerups/availability` then answers that Powerup `enabled: false` with the reason, on every country, and its build route answers `404 not_found` before any provider call. Taking a Powerup down everywhere or on one platform is an SSM edit, live within 5 minutes, without a release or a store update.

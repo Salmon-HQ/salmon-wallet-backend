@@ -30,6 +30,8 @@ const tritonClient = require('../../../infrastructure/triton-client');
 const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const { ProviderNotImplementedError } = require('./solana-data-provider');
 const tritonRpc = require('../parser/triton-rpc');
+const { TOKEN_2022_PROGRAM_ID } = require('@solana/spl-token');
+const { resolveToken2022Metadata } = require('./token2022-metadata');
 const { parseTransaction } = require('../parser');
 const {
   isHeldByOwner,
@@ -354,12 +356,25 @@ const provider = {
     // DAS errors propagate on purpose. Swallowing them returned an empty
     // list, which reaches the wallet as a successful "you own no NFTs".
     const assets = await dasGetAssetsByOwner(publicKeyStr, environment);
+    const token2022Nfts = await fetchToken2022NftsByOwner(connection, publicKeyStr);
+    const metadata = await resolveToken2022Metadata(
+      connection,
+      token2022Nfts.map((nft) => nft.mint.address)
+    );
+    const token2022Mints = new Set(token2022Nfts.map((nft) => nft.mint.address));
+
     const dasNfts = assets
       .filter(isHeldByOwner)
-      .map((asset) => transformDasAsset(asset, publicKeyStr));
+      .map((asset) => transformDasAsset(asset, publicKeyStr))
+      // The indexer lists some Token-2022 NFTs with empty content; the
+      // Token-2022 read below is the same token with its metadata.
+      .filter((nft) => nft.name || !token2022Mints.has(nft.mint.address));
 
-    const token2022Nfts = await fetchToken2022NftsByOwner(connection, publicKeyStr);
-    return paginateNfts([...dasNfts, ...token2022Nfts], limit, offset);
+    return paginateNfts(
+      [...dasNfts, ...token2022Nfts.map((nft) => ({ ...nft, ...metadata.get(nft.mint.address) }))],
+      limit,
+      offset
+    );
   },
 
   /**
@@ -379,7 +394,13 @@ const provider = {
     // telling them the lookup failed.
     const asset = await dasGetAsset(mintAddress, environment);
     if (!asset) return null;
-    return transformDasAsset(asset, asset.ownership?.owner || null);
+    const nft = transformDasAsset(asset, asset.ownership?.owner || null);
+    if (nft.name || asset.token_info?.token_program !== TOKEN_2022_PROGRAM_ID.toBase58()) {
+      return nft;
+    }
+    const connection = createBudgetedConnection(getRpcUrl(environment), locals);
+    const metadata = await resolveToken2022Metadata(connection, [mintAddress]);
+    return { ...nft, ...metadata.get(mintAddress) };
   },
 };
 

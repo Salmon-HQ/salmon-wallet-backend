@@ -120,9 +120,12 @@ const fetchToken2022NftsByOwner = async (connection, publicKeyStr) => {
   return (tokenAccounts.value || [])
     .map((account) => account.account.data.parsed.info)
     .filter(({ tokenAmount }) => tokenAmount.decimals === 0 && tokenAmount.uiAmount === 1)
-    .map(({ mint, extensions, tokenAmount }) => ({
+    .map(({ mint, extensions, tokenAmount, state }) => ({
       mint: { address: mint },
       extensions,
+      // The issuer froze it (the Seeker Genesis Token is): the holder can
+      // neither send nor burn it.
+      frozen: state === 'frozen',
       tokenAmount: {
         decimals: tokenAmount.decimals,
         amount: tokenAmount.amount,

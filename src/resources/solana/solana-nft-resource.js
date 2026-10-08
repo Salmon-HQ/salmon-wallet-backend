@@ -93,6 +93,8 @@ const isNonFungible = (tokenStandard, nft) => {
  * @returns {string} [resource.description]
  * @returns {Object} [resource.collection]
  * @returns {string|null} resource.media - normalized display image URL
+ * @returns {string|null} resource.animation - normalized `animation_url`
+ * @returns {boolean} resource.frozen - the holder's token account is frozen
  * @returns {Object} resource.extras - `{ creators, attributes, properties }`;
  *   `creators` is `[{ address, share, verified }]`, preferring the on-chain
  *   list DAS reports (`nft.creators`) over the off-chain `json.creators`, which
@@ -145,6 +147,10 @@ module.exports = async (nft, include, key, context) => {
     description: json?.description,
     collection: json?.collection,
     media,
+    // The document's `animation_url` (the Seeker Genesis Token's is an MP4).
+    animation: normalizeIpfsUrl(json?.animation_url) || null,
+    // The issuer froze the holder's token: it can be neither sent nor burned.
+    frozen: nft.frozen === true,
     extras: {
       creators: nft.creators?.length ? nft.creators : json?.creators,
       attributes: json?.attributes,
