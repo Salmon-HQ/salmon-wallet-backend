@@ -8,6 +8,8 @@
  * Endpoints:
  *   - GET /:address/transactions — tx history (no-cache), per
  *     `solana-transaction-enrichment`.
+ *   - GET /:address/stakes — SOL stake accounts the address manages, per
+ *     `solana-stake-accounts`.
  *
  * No auth middleware; network resolution happens upstream in the chain
  * mount, not per-route here.
@@ -21,5 +23,6 @@ const controller = require('../../controllers/solana/solana-account-controller')
 const router = express.Router();
 
 router.get('/:address/transactions', cacheControl('no-cache'), safe(controller.listTransactions));
+router.get('/:address/stakes', cacheControl('max-age=60'), safe(controller.listStakes));
 
 module.exports = router;

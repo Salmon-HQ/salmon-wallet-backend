@@ -3,6 +3,8 @@
 const { decorator } = require('../../../packages/api-utils');
 const decorateTransaction = require('../../resources/solana/solana-transaction-resource');
 const transactionService = require('../../services/solana/solana-transaction-service');
+const stakeService = require('../../services/solana/stake-account-service');
+const stakeAccountResource = require('../../resources/solana/solana-stake-account-resource');
 const { isValidSolanaAddress } = require('../../utils/solana-address');
 const {
   buildCacheKey,
@@ -46,4 +48,23 @@ const listTransactions = async (req, res) => {
   return res.status(200).send(resource);
 };
 
-module.exports = { listTransactions };
+/**
+ * Lists the SOL stake accounts `params.address` manages (spec 020).
+ *
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
+const listStakes = async (req, res) => {
+  const { address } = req.params;
+  if (!isValidSolanaAddress(address)) {
+    return res.status(400).json({
+      error: 'bad_request',
+      error_description: 'address is not a valid Solana address.',
+    });
+  }
+  const result = await stakeService.listStakeAccounts(address, res.locals);
+  return res.status(200).send(stakeAccountResource(result));
+};
+
+module.exports = { listTransactions, listStakes };
