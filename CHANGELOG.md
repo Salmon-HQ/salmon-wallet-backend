@@ -4,8 +4,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## 0.22.0 — 2026-10-08
 
-- NFT listing and lookup by mint: a Token-2022 NFT that the indexer lists without a name is named from the mint's own on-chain `tokenMetadata`, or from the account its `metadataPointer` names when the mint is a member of that token group. The Seeker Genesis Token, which keeps its metadata on its group, now appears with its name and image instead of as a blank item, and its empty duplicate from the indexer is dropped. A metadata pointer to an account the mint is not a member of is not followed.
-- Every NFT in `/nft` and `/nft/:mint` carries two new fields: `animation` (the metadata document's `animation_url`, or null) and `frozen` (true when the holder's token account is frozen, so it can be neither sent nor burned). No existing field changes.
+- NFT listing (`GET /nft`) and the by-mint lookup the burn and transfer builds use: a Token-2022 NFT that the indexer lists without a name is named from the mint's own on-chain `tokenMetadata`, or from the account its `metadataPointer` names when the mint is a member of that token group. The Seeker Genesis Token, which keeps its metadata on its group, now appears with its name and image instead of as a blank item, and its empty duplicate from the indexer is dropped. A metadata pointer to an account the mint is not a member of is not followed.
+- Every NFT in `GET /nft` carries two new fields: `animation` (the metadata document's `animation_url`, or null) and `frozen` (true when the holder's token account is frozen, so it can be neither sent nor burned). No existing field changes.
 
 ## 0.21.0 — 2026-10-07
 
