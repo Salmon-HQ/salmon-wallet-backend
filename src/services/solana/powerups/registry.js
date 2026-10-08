@@ -65,6 +65,14 @@ const POWERUPS = {
     contributor: null,
     endpoints: [],
   },
+  // SKR (spec 021): read-only, what the wallet holds in Solana Mobile's SKR
+  // staking program, read from `GET /skr/stake`. Nothing to build.
+  skr: {
+    tier: 'core',
+    networks: ['solana-mainnet'],
+    contributor: null,
+    endpoints: [],
+  },
   // Reference transaction-building Powerup: one Memo instruction. Listed
   // only where a stage enables it (today: `local`).
   memo: {
