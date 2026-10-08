@@ -7,8 +7,9 @@
  * @param {{epoch: number, accounts: Array<Object>}} result - from `stake-account-service`.
  * @returns {{epoch: number, data: Array<Object>}}
  */
-module.exports = ({ epoch, accounts }) => ({
+module.exports = ({ epoch, accounts, usdPrice }) => ({
   epoch,
+  usdPrice: usdPrice ?? null,
   data: accounts.map((account) => ({
     address: account.address,
     lamports: String(account.lamports),

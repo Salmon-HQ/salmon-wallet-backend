@@ -15,7 +15,10 @@ jest.mock('../../../infrastructure/cache/cache-helper', () => {
   };
 });
 
+jest.mock('../../shared/coingecko-service', () => ({ getTokenPrices: jest.fn() }));
+
 const axios = require('axios');
+const coingecko = require('../../shared/coingecko-service');
 const cache = require('../../../infrastructure/cache/cache-helper');
 const { getSkrStake } = require('../skr-staking-service');
 
@@ -60,6 +63,11 @@ const calls = (method) => axios.post.mock.calls.filter(([, body]) => body.method
 beforeEach(() => {
   jest.clearAllMocks();
   cache.__store.clear();
+  coingecko.getTokenPrices.mockResolvedValue(
+    new Map([
+      ['SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3', { usdPrice: 0.01622, priceChange24h: 1.2 }],
+    ])
+  );
   process.env.TRITON_RPC_URL = 'https://triton.example/token';
 });
 
@@ -73,6 +81,7 @@ test("reads the owner's position with its guardian", async () => {
     sharePrice: 1151142678n,
     cooldownSeconds: 172800,
     apy: null,
+    usdPrice: 0.01622,
   });
   expect(result.positions).toEqual([
     {
@@ -149,4 +158,16 @@ test('a wallet without positions answers the global figures and no positions', a
 
   expect(result.positions).toEqual([]);
   expect(result.sharePrice).toBe(1151142678n);
+});
+
+test('answers without a price when the price lookup fails', async () => {
+  coingecko.getTokenPrices.mockRejectedValue(new Error('429'));
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  rpcWith();
+
+  const result = await getSkrStake(OWNER, locals, NOW);
+
+  expect(result.usdPrice).toBeNull();
+  expect(result.positions).toHaveLength(1);
+  warn.mockRestore();
 });
