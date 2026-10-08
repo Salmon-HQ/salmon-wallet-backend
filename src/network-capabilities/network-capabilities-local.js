@@ -56,6 +56,8 @@ module.exports = {
     // Payments: read-only entry, the device asks and pays (frontend spec 033).
     payments: { enabled: true },
     swap: { enabled: true },
+    // SKR (spec 021): read-only staking view; off on prod until it ships.
+    skr: { enabled: true },
     // Reference Powerup for exercising the generic build path end to end.
     memo: { enabled: true },
     // Fixture that the backend always refuses (502), to exercise that state.
