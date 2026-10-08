@@ -58,5 +58,7 @@ module.exports = {
     payments: { enabled: true },
     // Swap (spec 018): on here so partners can test it before the prod launch.
     swap: { enabled: true },
+    // SKR (spec 021): read-only staking view; off on prod until it ships.
+    skr: { enabled: true },
   },
 };
