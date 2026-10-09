@@ -70,6 +70,7 @@ const decodeUserStake = (buf) => ({
 const decodeStakeConfig = (buf) => ({
   mint: pubkeyAt(buf, 41),
   cooldownSeconds: Number(buf.readBigUInt64LE(113)),
+  totalShares: u128At(buf, 121),
   sharePrice: u128At(buf, 137),
 });
 
@@ -240,6 +241,8 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
     mint: SKR_MINT,
     sharePrice: config.sharePrice,
     cooldownSeconds: config.cooldownSeconds,
+    // Everything staked in the program, every holder's shares at today's price.
+    totalStaked: (config.totalShares * config.sharePrice) / SHARE_PRICE_SCALE,
     apy: apyFrom(records),
     usdPrice,
     liquid,
