@@ -196,20 +196,6 @@ const usdPriceOf = async (mint, locals) => {
   }
 };
 
-/**
- * SKR's logo from the token catalog: the wallet's own token list has none
- * when everything is staked, so the stake carries it. A missing logo never
- * fails the read.
- */
-const skrLogo = async () => {
-  try {
-    return (await catalog.byMint(SKR_MINT))?.logo ?? null;
-  } catch (error) {
-    console.warn(`[SKR_LOGO] no logo: ${error.message}`);
-    return null;
-  }
-};
-
 const accountData = (account) => Buffer.from(account.data[0], 'base64');
 
 /**
@@ -250,7 +236,8 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
     sharePriceRecords(config.sharePrice, now, locals),
     usdPriceOf(SKR_MINT, locals),
     liquidSkr(owner, locals),
-    skrLogo(),
+    // The wallet's own list has no SKR when all of it is staked.
+    catalog.logoOf(SKR_MINT),
   ]);
 
   return {

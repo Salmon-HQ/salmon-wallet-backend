@@ -22,6 +22,7 @@ describe('listStakes', () => {
     stakeService.listStakeAccounts.mockResolvedValue({
       epoch: 1052,
       usdPrice: 108.2,
+      logo: 'https://assets.coingecko.com/solana.jpg',
       accounts: [
         {
           address: 'E5zHk2dnsnk6bL94BPe3svRczbT6WfZnmcQm3wVVEQRs',
@@ -44,6 +45,7 @@ describe('listStakes', () => {
     expect(res.send).toHaveBeenCalledWith({
       epoch: 1052,
       usdPrice: 108.2,
+      logo: 'https://assets.coingecko.com/solana.jpg',
       data: [
         {
           address: 'E5zHk2dnsnk6bL94BPe3svRczbT6WfZnmcQm3wVVEQRs',

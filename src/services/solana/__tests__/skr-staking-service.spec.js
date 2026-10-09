@@ -16,7 +16,7 @@ jest.mock('../../../infrastructure/cache/cache-helper', () => {
 });
 
 jest.mock('../../shared/coingecko-service', () => ({ getTokenPrices: jest.fn() }));
-jest.mock('../token-catalog-service', () => ({ byMint: jest.fn() }));
+jest.mock('../token-catalog-service', () => ({ logoOf: jest.fn() }));
 
 const axios = require('axios');
 const coingecko = require('../../shared/coingecko-service');
@@ -187,23 +187,11 @@ test('answers without a price when the price lookup fails', async () => {
 });
 
 test("carries SKR's logo from the token catalog, whatever the wallet holds", async () => {
-  catalog.byMint.mockResolvedValue({ logo: 'https://assets.coingecko.com/seeker-logo.jpg' });
+  catalog.logoOf.mockResolvedValue('https://assets.coingecko.com/seeker-logo.jpg');
   rpcWith({ positions: 0 });
 
   const result = await getSkrStake(OWNER, locals, NOW);
 
-  expect(catalog.byMint).toHaveBeenCalledWith('SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3');
+  expect(catalog.logoOf).toHaveBeenCalledWith('SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3');
   expect(result.logo).toBe('https://assets.coingecko.com/seeker-logo.jpg');
-});
-
-test('answers without a logo when the catalog cannot give one', async () => {
-  catalog.byMint.mockRejectedValue(new Error('catalog down'));
-  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-  rpcWith();
-
-  const result = await getSkrStake(OWNER, locals, NOW);
-
-  expect(result.logo).toBeNull();
-  expect(result.positions).toHaveLength(1);
-  warn.mockRestore();
 });
