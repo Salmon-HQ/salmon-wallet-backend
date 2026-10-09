@@ -50,6 +50,7 @@ For each stake account, the user sees the reward of the last epochs (amount and 
 - **FR-003**: The response MUST carry the current `epoch`.
 - **FR-004**: Rewards of completed epochs MUST be cached (they never change); validator names cached for a day.
 - **FR-005**: The endpoint is read-only and builds no transaction.
+- **FR-006**: The response MUST carry `logo`, SOL's image from the token catalog, or null when the catalog cannot give one; a missing logo never fails the read.
 
 ## Success Criteria _(mandatory)_
 

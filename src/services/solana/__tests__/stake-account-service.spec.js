@@ -21,9 +21,11 @@ jest.mock('../../../infrastructure/cache/cache-helper', () => {
 });
 
 jest.mock('../../shared/coingecko-service', () => ({ getTokenPrices: jest.fn() }));
+jest.mock('../token-catalog-service', () => ({ logoOf: jest.fn() }));
 
 const axios = require('axios');
 const coingecko = require('../../shared/coingecko-service');
+const catalog = require('../token-catalog-service');
 const cache = require('../../../infrastructure/cache/cache-helper');
 const { listStakeAccounts, stakeState, MAX_U64 } = require('../stake-account-service');
 
@@ -141,10 +143,15 @@ describe('listStakeAccounts', () => {
   test('lists the account once though the wallet is both staker and withdrawer', async () => {
     rpcWith(defaults());
 
-    const { epoch, accounts, usdPrice } = await listStakeAccounts(WALLET, locals);
+    catalog.logoOf.mockResolvedValue('https://assets.coingecko.com/solana.jpg');
+
+    const { epoch, accounts, usdPrice, logo } = await listStakeAccounts(WALLET, locals);
 
     expect(epoch).toBe(1052);
     expect(usdPrice).toBe(108.2);
+    // SOL's logo, so the Staked SOL row has one whatever the wallet lists.
+    expect(catalog.logoOf).toHaveBeenCalledWith('So11111111111111111111111111111111111111112');
+    expect(logo).toBe('https://assets.coingecko.com/solana.jpg');
     expect(accounts).toHaveLength(1);
     expect(accounts[0]).toMatchObject({
       address: STAKE,
