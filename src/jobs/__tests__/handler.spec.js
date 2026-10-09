@@ -16,6 +16,10 @@ jest.mock('../../repositories/shared/sanctions-repository', () => ({
   getLocalListSize: jest.fn().mockResolvedValue(0),
 }));
 
+jest.mock('../../services/solana/skr-staking-service', () => ({
+  recordSharePrice: jest.fn().mockResolvedValue(1151142678n),
+}));
+
 jest.mock('../../repositories/data-source', () => ({
   redis: {
     quit: jest.fn().mockResolvedValue(undefined),
@@ -27,6 +31,7 @@ const fs = require('fs');
 const path = require('path');
 const repository = require('../../repositories/shared/coingecko-repository');
 const sanctionsRepository = require('../../repositories/shared/sanctions-repository');
+const skrStaking = require('../../services/solana/skr-staking-service');
 const handler = require('../handler');
 
 const SDN_FIXTURE = fs.readFileSync(path.join(__dirname, 'fixtures/sdn-sample.csv'), 'utf8');
@@ -147,6 +152,16 @@ describe('jobs/handler', () => {
     expect(response).toEqual({
       statusCode: 200,
       body: JSON.stringify({ message: 'Prices refresh job completed!' }),
+    });
+  });
+
+  describe('recordSkrSharePriceJob', () => {
+    it("records SKR's share price for Solana mainnet, where the SKR tab reads it", async () => {
+      const result = await handler.recordSkrSharePriceJob();
+
+      const [locals] = skrStaking.recordSharePrice.mock.calls[0];
+      expect(locals.network.id).toBe('solana-mainnet');
+      expect(JSON.parse(result.body).message).toMatch(/1151142678/);
     });
   });
 

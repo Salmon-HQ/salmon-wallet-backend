@@ -22,7 +22,7 @@ const axios = require('axios');
 const coingecko = require('../../shared/coingecko-service');
 const catalog = require('../token-catalog-service');
 const cache = require('../../../infrastructure/cache/cache-helper');
-const { getSkrStake } = require('../skr-staking-service');
+const { getSkrStake, ownerEvents, recordSharePrice } = require('../skr-staking-service');
 
 const OWNER = 'CzNRNm6vbDiJ2MG96Lw4gSZW1gSjeV6DgSEAjCULxXcJ';
 const POSITION = '7yFnVkeEk4Qd6jgGsjrU4rhYDd7UQ985ah1VgWNg8m58';
@@ -37,6 +37,9 @@ const STAKE_CONFIG =
 const GUARDIAN_POOL =
   'he7/1tcLvRcwx3Q4Vi1F71t5KS9hzw81FDWdjOCzNuWXZq0IibG83gZ8WJTOnorbS50M0/6yYuuZboUVKKTmfwK8/8Gr9hNs99/RmBWIoUKnBCJppz3tD3Kiqm19wGlNrfxqo58KnyMMSG9jtYMPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABYLnUQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AQAAAAAAAAAAAAAAAAAAAAA=';
 
+const INFLATION_STATE =
+  'XdCdJsY+qC34AADBb/KGIwBAQg8AQA0DAIc9AAAAowIAAAAAAA7WcmkAAAAABnxaPgX+QUcSp6Lq/kK+dhC82Qy/VxYndYNzy4rQ2KRyu7dx8SlU4vf0IZe+LPhOHZcnRNe9vEQbSkmef38tk/ff0ZgViKFCpwQiaac97Q9yoqptfcBpTa38aqOfCp8jAAAAAAAAAAAAAAAAAAAAAACBAAAAAAAAAAB2XVQcSwIA';
+
 /** The recorded position with an unstake of 5 SKR requested at `ts`. */
 const unstakingPosition = (ts) => {
   const buf = Buffer.from(USER_STAKE, 'base64');
@@ -45,16 +48,35 @@ const unstakingPosition = (ts) => {
   return buf.toString('base64');
 };
 
-const rpcWith = ({ stakeData = USER_STAKE, positions = 1, signatures = [] } = {}) => {
+const rpcWith = ({
+  stakeData = USER_STAKE,
+  positions = 1,
+  signatures = [],
+  ownerSignatures = [],
+  transactions = {},
+} = {}) => {
   axios.post.mockImplementation(async (_url, body) => {
+    if (body.method === 'getSignaturesForAddress' && body.params[0] === OWNER) {
+      const before = body.params[1]?.before;
+      const start = before ? ownerSignatures.findIndex((x) => x.signature === before) + 1 : 0;
+      return { data: { result: ownerSignatures.slice(start, start + body.params[1].limit) } };
+    }
+    if (body.method === 'getTransaction') {
+      return { data: { result: transactions[body.params[0]] ?? null } };
+    }
     const result = {
       getProgramAccounts: Array.from({ length: positions }, () => ({
         pubkey: POSITION,
         account: { data: [stakeData, 'base64'] },
       })),
       getMultipleAccounts: {
-        value: [{ data: [STAKE_CONFIG, 'base64'] }, { data: [GUARDIAN_POOL, 'base64'] }],
+        value: [
+          { data: [STAKE_CONFIG, 'base64'] },
+          { data: [INFLATION_STATE, 'base64'] },
+          { data: [GUARDIAN_POOL, 'base64'] },
+        ],
       },
+      getAccountInfo: { value: { data: [STAKE_CONFIG, 'base64'] } },
       getSignaturesForAddress: signatures,
       getTokenAccountsByOwner: {
         value: [
@@ -91,6 +113,11 @@ test("reads the owner's position with its guardian", async () => {
     apy: null,
     usdPrice: 0.01622,
     liquid: 3000000n,
+    payouts: {
+      intervalSeconds: 172800,
+      lastAt: Date.parse('2026-10-08T01:59:42Z'),
+      nextAt: Date.parse('2026-10-10T01:59:42Z'),
+    },
   });
   const [owner, filter] = calls('getTokenAccountsByOwner')[0][1].params;
   expect(owner).toBe(OWNER);
@@ -115,11 +142,22 @@ test("reads the owner's position with its guardian", async () => {
   expect(filters.filters).toEqual([{ dataSize: 169 }, { memcmp: { offset: 41, bytes: OWNER } }]);
 });
 
-test('records the share price once a day, and lists what the shares earned since the last record', async () => {
-  cache.__store.set('skr_share_price:day:2026-10-07', {
-    at: Date.parse('2026-10-07T09:00:00Z'),
-    sharePrice: '1150500000',
-  });
+// CzNRNm6v…'s stake event (see skr-staking-pure.spec.js): 40,000 shares at 1.0.
+const STAKED =
+  'q7FXAAedM1BCdFtfQV7d4NvcKWJq4qRETZazp8e2QL5ezK2PG3PmbjPLQzayLJdBArdHFK2imKRbMNKyBLjAkCjfSW24HiSR79JG1dSyLLwVVSCdFqE8ztW32h7GKJSFcc1qN81A99mz5ySVSsm5fQnrSLJenhUMrnE1PRihxR5JK56AvfhYKkmf1WaLYf6d5PbSexaB9XhHXBTY3zTN5FizqSGKJjYAUPTnzTM7EBXVjZGJCszJbKpJAwZ9uHFa7R4yMFU6iSq8gukZh29ejyyEQ9A2oNTaHMgECEB';
+const stakeTx = (blockTime) => ({
+  blockTime,
+  meta: {
+    err: null,
+    loadedAddresses: { writable: [], readonly: [] },
+    innerInstructions: [{ index: 0, instructions: [{ programIdIndex: 1, data: STAKED }] }],
+  },
+  transaction: { message: { accountKeys: [OWNER, 'SKRskrmtL83pcL4YqLWt6iPefDqwXQWHSw9S9vz94BZ'] } },
+});
+
+test('records the share price once a day on read, and dates the history from the first record', async () => {
+  const yesterday = Date.parse('2026-10-07T09:00:00Z');
+  cache.__store.set('skr_share_price:day:2026-10-07', { at: yesterday, sharePrice: '1150500000' });
   rpcWith();
 
   const first = await getSkrStake(OWNER, locals, NOW);
@@ -132,7 +170,63 @@ test('records the share price once a day, and lists what the shares earned since
   expect(
     cache.storeInCache.mock.calls.filter(([key]) => key.startsWith('skr_share_price'))
   ).toHaveLength(1);
+  expect(first.historySince).toBe(yesterday);
+  // 40,000 shares × (1.151142678 − 1.1505)
   expect(first.positions[0].history).toEqual([{ at: NOW, earned: 25707120n }]);
+});
+
+test("counts a stake's shares in the history only from the moment it was made", async () => {
+  cache.__store.set('skr_share_price:day:2026-10-07', {
+    at: Date.parse('2026-10-07T09:00:00Z'),
+    sharePrice: '1150500000',
+  });
+  const at = Date.parse('2026-10-08T12:00:00Z') / 1000;
+  rpcWith({
+    ownerSignatures: [{ signature: 'stake', blockTime: at, err: null }],
+    transactions: { stake: stakeTx(at) },
+  });
+
+  const { positions } = await getSkrStake(OWNER, locals, NOW);
+
+  // No shares before the stake; 40,000 shares × (1.151142678 − 1.0) after it.
+  expect(positions[0].history).toEqual([{ at: NOW, earned: 6045707120n }]);
+});
+
+test("leaves the history out, not inexact, when the owner's transactions cannot be read", async () => {
+  cache.__store.set('skr_share_price:day:2026-10-07', {
+    at: Date.parse('2026-10-07T09:00:00Z'),
+    sharePrice: '1150500000',
+  });
+  rpcWith();
+  const post = axios.post.getMockImplementation();
+  axios.post.mockImplementation(async (url, body) => {
+    if (body.method === 'getSignaturesForAddress' && body.params[0] === OWNER) {
+      throw new Error('429');
+    }
+    return post(url, body);
+  });
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+  const result = await getSkrStake(OWNER, locals, NOW);
+
+  expect(result.positions[0].history).toEqual([]);
+  expect(result.positions[0].staked).toBe(46045707120n);
+  warn.mockRestore();
+});
+
+test('the daily job records the share price, replacing a record read before the payout', async () => {
+  cache.__store.set('skr_share_price:day:2026-10-08', {
+    at: Date.parse('2026-10-08T00:30:00Z'),
+    sharePrice: '1150000000',
+  });
+  rpcWith();
+
+  await recordSharePrice(locals, NOW);
+
+  expect(cache.__store.get('skr_share_price:day:2026-10-08')).toEqual({
+    at: NOW,
+    sharePrice: '1151142678',
+  });
 });
 
 test('says how much is unstaking and when it can be withdrawn', async () => {
@@ -194,4 +288,60 @@ test("carries SKR's logo from the token catalog, whatever the wallet holds", asy
 
   expect(catalog.logoOf).toHaveBeenCalledWith('SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3');
   expect(result.logo).toBe('https://assets.coingecko.com/seeker-logo.jpg');
+});
+
+describe('ownerEvents', () => {
+  const PROGRAM = 'SKRskrmtL83pcL4YqLWt6iPefDqwXQWHSw9S9vz94BZ';
+  // CzNRNm6v…'s stake event (see skr-staking-pure.spec.js).
+  const STAKED =
+    'q7FXAAedM1BCdFtfQV7d4NvcKWJq4qRETZazp8e2QL5ezK2PG3PmbjPLQzayLJdBArdHFK2imKRbMNKyBLjAkCjfSW24HiSR79JG1dSyLLwVVSCdFqE8ztW32h7GKJSFcc1qN81A99mz5ySVSsm5fQnrSLJenhUMrnE1PRihxR5JK56AvfhYKkmf1WaLYf6d5PbSexaB9XhHXBTY3zTN5FizqSGKJjYAUPTnzTM7EBXVjZGJCszJbKpJAwZ9uHFa7R4yMFU6iSq8gukZh29ejyyEQ9A2oNTaHMgECEB';
+  const SINCE = Date.parse('2026-10-01T00:00:00Z');
+  const sec = (iso) => Date.parse(iso) / 1000;
+  const tx = (blockTime, { err = null, program = PROGRAM } = {}) => ({
+    blockTime,
+    meta: {
+      err,
+      loadedAddresses: { writable: [], readonly: [] },
+      innerInstructions: [{ index: 0, instructions: [{ programIdIndex: 1, data: STAKED }] }],
+    },
+    transaction: { message: { accountKeys: [OWNER, program] } },
+  });
+
+  test("reads the share changes in the owner's own transactions since a date, once each", async () => {
+    rpcWith({
+      ownerSignatures: [
+        { signature: 'stake', blockTime: sec('2026-10-05T12:00:00Z'), err: null },
+        {
+          signature: 'failed',
+          blockTime: sec('2026-10-04T12:00:00Z'),
+          err: { InstructionError: [] },
+        },
+        { signature: 'transfer', blockTime: sec('2026-10-03T12:00:00Z'), err: null },
+        { signature: 'old', blockTime: sec('2026-09-20T12:00:00Z'), err: null },
+      ],
+      transactions: {
+        stake: tx(sec('2026-10-05T12:00:00Z')),
+        transfer: tx(sec('2026-10-03T12:00:00Z'), { program: '11111111111111111111111111111111' }),
+      },
+    });
+
+    const events = await ownerEvents(OWNER, SINCE, locals);
+
+    expect(events).toEqual([
+      {
+        at: Date.parse('2026-10-05T12:00:00Z'),
+        position: POSITION,
+        sharesDelta: 40000000000n,
+        sharePrice: 1000000000n,
+      },
+    ]);
+    // The failed one and the one before `since` are never fetched.
+    expect(calls('getTransaction').map(([, body]) => body.params[0])).toEqual([
+      'stake',
+      'transfer',
+    ]);
+
+    await ownerEvents(OWNER, SINCE, locals);
+    expect(calls('getTransaction')).toHaveLength(2);
+  });
 });

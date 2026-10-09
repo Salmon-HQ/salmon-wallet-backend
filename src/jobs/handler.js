@@ -5,6 +5,8 @@ const repository = require('../repositories/shared/coingecko-repository');
 const sanctionsRepository = require('../repositories/shared/sanctions-repository');
 const { redis } = require('../repositories/data-source');
 const { BASE_ENDPOINT, apiHeaders } = require('../services/shared/coingecko-service');
+const skrStaking = require('../services/solana/skr-staking-service');
+const NETWORKS = require('../constants/networks');
 
 // Raise Node's 250ms per-address connect budget before any provider is
 // dialed; see `infrastructure/connect-tuning` for why the default turns a
@@ -310,6 +312,24 @@ module.exports.refreshSanctionsJob = async () => {
     console.error('[SANCTIONS_REFRESH]', { outcome: 'failed', message: error.message });
     // Rethrown so Lambda counts the invocation as failed and an alarm can see it.
     throw error;
+  } finally {
+    if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      await redis.quit().catch(() => {});
+      setImmediate(() => process.exit(0));
+    }
+  }
+};
+
+/**
+ * Scheduled job: records SKR's staking share price once a day, just after the
+ * 02:00 UTC payout (`serverless.yml`), so each record closes on a payout and
+ * the SKR tab's reward history is exact from the first record (spec 022).
+ */
+module.exports.recordSkrSharePriceJob = async () => {
+  const locals = { network: NETWORKS.find(({ id }) => id === 'solana-mainnet') };
+  try {
+    const sharePrice = await skrStaking.recordSharePrice(locals);
+    return createResponse(`SKR share price recorded: ${sharePrice}`);
   } finally {
     if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
       await redis.quit().catch(() => {});
