@@ -4,7 +4,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## Unreleased
 
-- `GET /v1/solana-mainnet/skr/stake`: new field `totalStaked`, everything staked in the SKR staking program (all holders' shares at today's share price), as a base-unit string. No existing field changes.
+- `GET /v1/solana-mainnet/skr/stake`: new field `totalStaked`, everything staked in the SKR staking program (all holders' shares at today's share price), as a base-unit string, and `logo`, SKR's image from the token catalog (null when unavailable), so a wallet holding no liquid SKR still shows it. No existing field changes.
+- `GET /v1/solana-{env}/account/:address/stakes`: new field `logo`, SOL's image from the token catalog (null when unavailable). No existing field changes.
 
 ## 0.23.0 — 2026-10-09
 

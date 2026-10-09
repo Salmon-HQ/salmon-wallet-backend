@@ -24,6 +24,7 @@ const { PublicKey } = require('@solana/web3.js');
 const { getRpcUrl } = require('../../infrastructure/triton-client');
 const { providerCall } = require('../../infrastructure/providers/provider-client');
 const coingecko = require('../shared/coingecko-service');
+const catalog = require('./token-catalog-service');
 const {
   getCacheKeyFor,
   getFromCache,
@@ -231,10 +232,12 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
       return [address, account ? decodeGuardianPool(accountData(account)) : null];
     })
   );
-  const [records, usdPrice, liquid] = await Promise.all([
+  const [records, usdPrice, liquid, logo] = await Promise.all([
     sharePriceRecords(config.sharePrice, now, locals),
     usdPriceOf(SKR_MINT, locals),
     liquidSkr(owner, locals),
+    // The wallet's own list has no SKR when all of it is staked.
+    catalog.logoOf(SKR_MINT),
   ]);
 
   return {
@@ -246,6 +249,7 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
     apy: apyFrom(records),
     usdPrice,
     liquid,
+    logo,
     positions: await Promise.all(
       positions.map(async (position) => {
         const since = await stakedSince(position.address, locals);

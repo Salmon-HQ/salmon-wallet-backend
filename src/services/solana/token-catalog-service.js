@@ -118,6 +118,19 @@ const getVerified = async () => (await getSnapshot()).tokens;
 const byMint = async (mint) => (await getSnapshot()).byMint.get(mint) || null;
 
 /** @returns {Promise<Map<string, Object>>} listed tokens for the given mints. */
+/**
+ * A listed token's logo, or null: for a row that shows a token the wallet's
+ * own list may not carry (everything staked). Never fails the caller.
+ */
+const logoOf = async (mint) => {
+  try {
+    return (await byMint(mint))?.icon ?? null;
+  } catch (error) {
+    console.warn(`[CATALOG_LOGO] no logo for ${mint}: ${error.message}`);
+    return null;
+  }
+};
+
 const byMints = async (mints) => {
   const { byMint: index } = await getSnapshot();
   return new Map(mints.filter((m) => index.has(m)).map((m) => [m, index.get(m)]));
@@ -164,4 +177,12 @@ const clearSnapshot = () => {
   snapshot = null;
 };
 
-module.exports = { getVerified, byMint, byMints, search, clearSnapshot, MAX_SEARCH_RESULTS };
+module.exports = {
+  getVerified,
+  byMint,
+  byMints,
+  logoOf,
+  search,
+  clearSnapshot,
+  MAX_SEARCH_RESULTS,
+};

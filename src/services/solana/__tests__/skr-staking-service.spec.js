@@ -16,9 +16,11 @@ jest.mock('../../../infrastructure/cache/cache-helper', () => {
 });
 
 jest.mock('../../shared/coingecko-service', () => ({ getTokenPrices: jest.fn() }));
+jest.mock('../token-catalog-service', () => ({ logoOf: jest.fn() }));
 
 const axios = require('axios');
 const coingecko = require('../../shared/coingecko-service');
+const catalog = require('../token-catalog-service');
 const cache = require('../../../infrastructure/cache/cache-helper');
 const { getSkrStake } = require('../skr-staking-service');
 
@@ -182,4 +184,14 @@ test('answers without a price when the price lookup fails', async () => {
   expect(result.usdPrice).toBeNull();
   expect(result.positions).toHaveLength(1);
   warn.mockRestore();
+});
+
+test("carries SKR's logo from the token catalog, whatever the wallet holds", async () => {
+  catalog.logoOf.mockResolvedValue('https://assets.coingecko.com/seeker-logo.jpg');
+  rpcWith({ positions: 0 });
+
+  const result = await getSkrStake(OWNER, locals, NOW);
+
+  expect(catalog.logoOf).toHaveBeenCalledWith('SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3');
+  expect(result.logo).toBe('https://assets.coingecko.com/seeker-logo.jpg');
 });
