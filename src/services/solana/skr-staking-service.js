@@ -24,6 +24,7 @@ const { PublicKey } = require('@solana/web3.js');
 const { getRpcUrl } = require('../../infrastructure/triton-client');
 const { providerCall } = require('../../infrastructure/providers/provider-client');
 const coingecko = require('../shared/coingecko-service');
+const catalog = require('./token-catalog-service');
 const {
   getCacheKeyFor,
   getFromCache,
@@ -195,6 +196,20 @@ const usdPriceOf = async (mint, locals) => {
   }
 };
 
+/**
+ * SKR's logo from the token catalog: the wallet's own token list has none
+ * when everything is staked, so the stake carries it. A missing logo never
+ * fails the read.
+ */
+const skrLogo = async () => {
+  try {
+    return (await catalog.byMint(SKR_MINT))?.logo ?? null;
+  } catch (error) {
+    console.warn(`[SKR_LOGO] no logo: ${error.message}`);
+    return null;
+  }
+};
+
 const accountData = (account) => Buffer.from(account.data[0], 'base64');
 
 /**
@@ -231,10 +246,11 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
       return [address, account ? decodeGuardianPool(accountData(account)) : null];
     })
   );
-  const [records, usdPrice, liquid] = await Promise.all([
+  const [records, usdPrice, liquid, logo] = await Promise.all([
     sharePriceRecords(config.sharePrice, now, locals),
     usdPriceOf(SKR_MINT, locals),
     liquidSkr(owner, locals),
+    skrLogo(),
   ]);
 
   return {
@@ -246,6 +262,7 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
     apy: apyFrom(records),
     usdPrice,
     liquid,
+    logo,
     positions: await Promise.all(
       positions.map(async (position) => {
         const since = await stakedSince(position.address, locals);
