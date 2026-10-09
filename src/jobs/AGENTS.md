@@ -11,7 +11,9 @@
 - `handler.js` — the multi-job dispatcher. Hosts CoinGecko token-list
   refresh (hourly, bitcoin) and CoinGecko price refresh (rate-limited
   at 200 tokens per run). Handlers are platform-generic; the scheduled
-  platforms live in `serverless.yml`.
+  platforms live in `serverless.yml`. Also the daily OFAC SDN refresh and
+  `recordSkrSharePriceJob`, which records SKR's staking share price for
+  Solana mainnet at 02:05 UTC, just after the 02:00 payout (spec 022).
 
 ## Rules
 
