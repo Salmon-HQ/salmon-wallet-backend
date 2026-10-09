@@ -59,6 +59,7 @@ The user sees what the stake earned per recorded period and since when it is sta
 - **FR-004**: The response MUST carry `history`, `stakedSince`, `apy`, `sharePrice`, `cooldownSeconds`, and the SKR mint.
 - **FR-006**: The response MUST carry `totalStaked`, everything staked in the program: `StakeConfig.total_shares × share_price / 10^9`, a base-unit string.
 - **FR-005**: The endpoint is read-only: no stake, unstake or withdraw transaction is built.
+- **FR-007**: The response MUST carry `logo`, SKR's image from the token catalog, or null when the catalog cannot give one; a missing logo never fails the read.
 
 ## Success Criteria _(mandatory)_
 
