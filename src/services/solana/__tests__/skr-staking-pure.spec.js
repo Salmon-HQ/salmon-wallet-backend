@@ -45,6 +45,7 @@ describe('decoders', () => {
     expect(decodeStakeConfig(STAKE_CONFIG)).toMatchObject({
       mint: 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3',
       cooldownSeconds: 172800,
+      totalShares: 4366939731216396n,
       sharePrice: 1151142678n,
     });
   });

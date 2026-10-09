@@ -2,6 +2,10 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## Unreleased
+
+- `GET /v1/solana-mainnet/skr/stake`: new field `totalStaked`, everything staked in the SKR staking program (all holders' shares at today's share price), as a base-unit string. No existing field changes.
+
 ## 0.23.0 — 2026-10-09
 
 - `GET /v1/solana-{env}/account/:address/stakes`: the SOL stake accounts an address manages (as staker or withdrawer), each with its amount, state, the validator's published name and icon, and the rewards of the last five completed epochs, plus SOL's USD price. Read-only.
