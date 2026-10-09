@@ -57,6 +57,7 @@ The user sees what the stake earned per recorded period and since when it is sta
 - **FR-002**: Amounts MUST be base-unit integer strings (SKR has 6 decimals), computed in integer arithmetic.
 - **FR-003**: Each request MUST record the current share price for the current UTC day if that day has no record (kept 400 days).
 - **FR-004**: The response MUST carry `history`, `stakedSince`, `apy`, `sharePrice`, `cooldownSeconds`, and the SKR mint.
+- **FR-006**: The response MUST carry `totalStaked`, everything staked in the program: `StakeConfig.total_shares × share_price / 10^9`, a base-unit string.
 - **FR-005**: The endpoint is read-only: no stake, unstake or withdraw transaction is built.
 
 ## Success Criteria _(mandatory)_

@@ -168,6 +168,8 @@ test('a wallet without positions answers the global figures and no positions', a
 
   expect(result.positions).toEqual([]);
   expect(result.sharePrice).toBe(1151142678n);
+  // Every share in the program at today's share price: 5.03B SKR.
+  expect(result.totalStaked).toBe(5026970696857042n);
 });
 
 test('answers without a price when the price lookup fails', async () => {
