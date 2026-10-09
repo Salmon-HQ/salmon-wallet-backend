@@ -197,7 +197,8 @@
         "arn:aws:events:us-east-1:<AWS_ACCOUNT_ID>:rule/gol-salmon-api-*",
         "arn:aws:events:us-east-1:<AWS_ACCOUNT_ID>:rule/listTokensJobBtc-*",
         "arn:aws:events:us-east-1:<AWS_ACCOUNT_ID>:rule/refreshPricesJobBtc-*",
-        "arn:aws:events:us-east-1:<AWS_ACCOUNT_ID>:rule/refreshSanctionsJob-*"
+        "arn:aws:events:us-east-1:<AWS_ACCOUNT_ID>:rule/refreshSanctionsJob-*",
+        "arn:aws:events:us-east-1:<AWS_ACCOUNT_ID>:rule/recordSkrSharePriceJob-*"
       ]
     },
     {

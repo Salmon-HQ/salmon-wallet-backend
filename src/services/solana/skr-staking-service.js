@@ -21,6 +21,7 @@
 
 const axios = require('axios');
 const { PublicKey } = require('@solana/web3.js');
+const bs58 = require('bs58').default || require('bs58');
 const { getRpcUrl } = require('../../infrastructure/triton-client');
 const { providerCall } = require('../../infrastructure/providers/provider-client');
 const coingecko = require('../shared/coingecko-service');
@@ -81,6 +82,50 @@ const decodeGuardianPool = (buf) => ({
   active: buf[171] === 1,
 });
 
+// Anchor `emit_cpi`: the program calls itself with this tag, then the event's
+// discriminator and fields (layouts from the on-chain IDL).
+const EVENT_TAG = 'e445a52e51cb9a1d';
+const SHARE_EVENTS = {
+  '0b922dcde63ad5f0': { kind: 'staked', sign: 1n, shares: 184 }, // Staked.shares_minted
+  '1bb39cd72f47c307': { kind: 'unstaked', sign: -1n, shares: 176 }, // Unstaked.shares_unstaked
+  '66dfbd65c9dfb426': { kind: 'cancelled', sign: 1n, shares: 176 }, // UnstakeCancelled.shares_restored
+};
+// Offsets count from the start of the instruction data (tag + discriminator).
+const EVENT_POSITION_OFFSET = 16;
+const EVENT_USER_OFFSET = 16 + 96;
+
+/**
+ * A share-changing event from the program's event instruction: who, how many
+ * shares (signed) and the share price at that instant. Null for anything else.
+ *
+ * @param {Buffer} data - the inner instruction's data.
+ */
+const decodeStakeEvent = (data) => {
+  if (data.length < 16 || data.subarray(0, 8).toString('hex') !== EVENT_TAG) return null;
+  const event = SHARE_EVENTS[data.subarray(8, 16).toString('hex')];
+  if (!event || data.length < event.shares + 32) return null;
+  return {
+    kind: event.kind,
+    position: pubkeyAt(data, EVENT_POSITION_OFFSET),
+    user: pubkeyAt(data, EVENT_USER_OFFSET),
+    sharesDelta: event.sign * u128At(data, event.shares),
+    sharePrice: u128At(data, event.shares + 16),
+  };
+};
+
+// The SKR inflation program's state: it mints each payout into the staking
+// vault once per interval, counted from its start (fields matched against the
+// payouts on chain: 02:00 UTC every 48 h since 2026-01-23).
+const INFLATION_STATE = 'FMNn5sorEBbEoGQGrh7y3xSbYGt116F12FpL2VTsohiw';
+
+/** When the last payout fell due and when the next one does, epoch ms. */
+const payoutSchedule = (buf) => {
+  const intervalSeconds = Number(buf.readBigInt64LE(29));
+  const start = Number(buf.readBigInt64LE(37));
+  const lastAt = (start + Number(buf.readBigUInt64LE(158)) * intervalSeconds) * 1000;
+  return { intervalSeconds, lastAt, nextAt: lastAt + intervalSeconds * 1000 };
+};
+
 /** Staked and earned, in SKR base units. */
 const positionValues = ({ shares, costBasis }, sharePrice) => ({
   staked: (shares * sharePrice) / SHARE_PRICE_SCALE,
@@ -88,17 +133,46 @@ const positionValues = ({ shares, costBasis }, sharePrice) => ({
 });
 
 /**
- * What `shares` earned between consecutive records, newest first. Records
- * before `since` (when the stake began) are ignored.
+ * What a position's shares earned between daily records (each closing on a
+ * payout), exact across stakes and unstakes (spec 022). Price points are the daily records and the owner's
+ * staking events, which carry the share price of their instant. Walked from
+ * the newest point back with the current shares, undoing each event's delta,
+ * so every segment between two points is paid on the shares held during it,
+ * and counted in the row of the record that closes it. Days without growth
+ * are left out; nothing before the first record counts.
+ *
+ * @param {Array<{at: number, sharePrice: string}>} records
+ * @param {Array<{at: number, sharesDelta: bigint, sharePrice: bigint}>} events
+ * @param {bigint} currentShares
+ * @returns {Array<{at: number, earned: bigint}>} newest first.
  */
-const historyFrom = (records, shares, since) => {
-  const sorted = records.filter((r) => since === null || r.at >= since).sort((a, b) => a.at - b.at);
-  const history = [];
-  for (let i = 1; i < sorted.length; i += 1) {
-    const growth = BigInt(sorted[i].sharePrice) - BigInt(sorted[i - 1].sharePrice);
-    history.push({ at: sorted[i].at, earned: (shares * growth) / SHARE_PRICE_SCALE });
+const exactHistory = (records, events, currentShares) => {
+  if (records.length === 0) return [];
+  const since = Math.min(...records.map((r) => r.at));
+  const points = [
+    ...records.map((r) => ({ at: r.at, price: BigInt(r.sharePrice), delta: 0n, record: true })),
+    ...events
+      .filter((e) => e.at >= since)
+      .map((e) => ({ at: e.at, price: e.sharePrice, delta: e.sharesDelta })),
+  ].sort((a, b) => a.at - b.at);
+  // Each segment belongs to the record that closes it: a row is one recorded
+  // day. Points after the newest record (events since) belong to no day yet.
+  const rows = new Map();
+  let shares = currentShares;
+  let closing = null;
+  for (let i = points.length - 1; i > 0; i -= 1) {
+    const end = points[i];
+    if (end.record) closing = end.at;
+    // Shares held up to an event are those before it.
+    shares -= end.delta;
+    if (closing === null) continue;
+    const earned = (shares * (end.price - points[i - 1].price)) / SHARE_PRICE_SCALE;
+    rows.set(closing, (rows.get(closing) ?? 0n) + earned);
   }
-  return history.reverse();
+  return [...rows.entries()]
+    .filter(([, earned]) => earned !== 0n)
+    .map(([at, earned]) => ({ at, earned }))
+    .sort((a, b) => b.at - a.at);
 };
 
 /** Annualized share-price growth over the widest span of records, if ≥ 7 days. */
@@ -138,12 +212,16 @@ const rpc = async (method, params, locals) => {
 const dayKey = (at, locals) =>
   getCacheKeyFor('skr_share_price', 'day', new Date(at).toISOString().slice(0, 10), locals);
 
+const storeSharePrice = (sharePrice, now, locals) =>
+  storeInCache(
+    dayKey(now, locals),
+    { at: now, sharePrice: String(sharePrice) },
+    RECORD_TTL_SECONDS
+  );
+
 /** Records today's share price unless today already has one; returns the last 30 days. */
 const sharePriceRecords = async (sharePrice, now, locals) => {
-  const today = dayKey(now, locals);
-  if (!(await getFromCache(today))) {
-    await storeInCache(today, { at: now, sharePrice: String(sharePrice) }, RECORD_TTL_SECONDS);
-  }
+  if (!(await getFromCache(dayKey(now, locals)))) await storeSharePrice(sharePrice, now, locals);
   const keys = Array.from({ length: HISTORY_DAYS }, (_, i) => dayKey(now - i * DAY_MS, locals));
   const found = await getManyFromCache(keys);
   return keys.map((key) => found.get(key)).filter(Boolean);
@@ -186,6 +264,77 @@ const stakedSince = async (address, locals) => {
   return at;
 };
 
+const TX_EVENTS_TTL_SECONDS = 400 * 24 * 60 * 60;
+const SIGNATURE_PAGE = 1000;
+
+/** The share-changing events of one confirmed transaction, cached for good. */
+const transactionEvents = async (signature, owner, locals) => {
+  const key = getCacheKeyFor('skr_tx_events', 'signature', signature, locals);
+  const hit = await getFromCache(key);
+  if (hit) return hit.events;
+  const tx = await rpc(
+    'getTransaction',
+    [signature, { encoding: 'json', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }],
+    locals
+  );
+  const keys = [
+    ...(tx?.transaction?.message?.accountKeys ?? []),
+    ...(tx?.meta?.loadedAddresses?.writable ?? []),
+    ...(tx?.meta?.loadedAddresses?.readonly ?? []),
+  ];
+  const events = [];
+  for (const group of tx?.meta?.innerInstructions ?? []) {
+    for (const ix of group.instructions) {
+      if (keys[ix.programIdIndex] !== STAKING_PROGRAM) continue;
+      const event = decodeStakeEvent(Buffer.from(bs58.decode(ix.data)));
+      if (event && event.user === owner) {
+        events.push({
+          at: tx.blockTime * 1000,
+          position: event.position,
+          sharesDelta: String(event.sharesDelta),
+          sharePrice: String(event.sharePrice),
+        });
+      }
+    }
+  }
+  if (tx) await storeInCache(key, { events }, TX_EVENTS_TTL_SECONDS);
+  return events;
+};
+
+/**
+ * The owner's share changes since `since` (epoch ms), oldest first, read from
+ * its own transactions: its address is an account of every stake, unstake and
+ * cancel. Failed transactions are skipped; each one is read once.
+ */
+const ownerEvents = async (owner, since, locals) => {
+  const signatures = [];
+  let before;
+  for (;;) {
+    const page = await rpc(
+      'getSignaturesForAddress',
+      [owner, { limit: SIGNATURE_PAGE, ...(before && { before }) }],
+      locals
+    );
+    if (!page?.length) break;
+    const recent = page.filter((x) => (x.blockTime ?? 0) * 1000 >= since);
+    signatures.push(...recent.filter((x) => !x.err).map((x) => x.signature));
+    if (recent.length < page.length || page.length < SIGNATURE_PAGE) break;
+    before = page[page.length - 1].signature;
+  }
+  const events = [];
+  for (const signature of signatures) {
+    events.push(...(await transactionEvents(signature, owner, locals)));
+  }
+  return events
+    .map((e) => ({
+      at: e.at,
+      position: e.position,
+      sharesDelta: BigInt(e.sharesDelta),
+      sharePrice: BigInt(e.sharePrice),
+    }))
+    .sort((a, b) => a.at - b.at);
+};
+
 /** USD price of `mint`, or null: a missing price never fails the read. */
 const usdPriceOf = async (mint, locals) => {
   try {
@@ -197,6 +346,18 @@ const usdPriceOf = async (mint, locals) => {
 };
 
 const accountData = (account) => Buffer.from(account.data[0], 'base64');
+
+/**
+ * Records today's share price, replacing a record a read made earlier in the
+ * day: the daily job runs just after the 02:00 UTC payout, so each record
+ * closes on a payout.
+ */
+const recordSharePrice = async (locals, now = Date.now()) => {
+  const account = await rpc('getAccountInfo', [STAKE_CONFIG, { encoding: 'base64' }], locals);
+  const { sharePrice } = decodeStakeConfig(accountData(account.value));
+  await storeSharePrice(sharePrice, now, locals);
+  return sharePrice;
+};
 
 /**
  * @param {string} owner - wallet.
@@ -222,13 +383,13 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
   const pools = [...new Set(positions.map((p) => p.guardianPool))];
   const accounts = await rpc(
     'getMultipleAccounts',
-    [[STAKE_CONFIG, ...pools], { encoding: 'base64' }],
+    [[STAKE_CONFIG, INFLATION_STATE, ...pools], { encoding: 'base64' }],
     locals
   );
   const config = decodeStakeConfig(accountData(accounts.value[0]));
   const poolByAddress = new Map(
     pools.map((address, i) => {
-      const account = accounts.value[i + 1];
+      const account = accounts.value[i + 2];
       return [address, account ? decodeGuardianPool(accountData(account)) : null];
     })
   );
@@ -239,6 +400,16 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
     // The wallet's own list has no SKR when all of it is staked.
     catalog.logoOf(SKR_MINT),
   ]);
+  const historySince = records.length > 0 ? Math.min(...records.map((r) => r.at)) : null;
+  // One record has no growth to report: skip reading the owner's transactions.
+  // Without them the history is left out (empty) rather than inexact.
+  let events = [];
+  if (records.length > 1 && positions.length > 0) {
+    events = await ownerEvents(owner, historySince, locals).catch((error) => {
+      console.warn(`[SKR_HISTORY] owner events unreadable: ${error.message}`);
+      return null;
+    });
+  }
 
   return {
     mint: SKR_MINT,
@@ -250,6 +421,9 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
     usdPrice,
     liquid,
     logo,
+    payouts: accounts.value[1] ? payoutSchedule(accountData(accounts.value[1])) : null,
+    // Rewards are listed from the first day the share price was recorded.
+    historySince,
     positions: await Promise.all(
       positions.map(async (position) => {
         const since = await stakedSince(position.address, locals);
@@ -271,7 +445,14 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
                 }
               : null,
           stakedSince: since,
-          history: historyFrom(records, position.shares, since),
+          history:
+            events === null
+              ? []
+              : exactHistory(
+                  records,
+                  events.filter((e) => e.position === position.address),
+                  position.shares
+                ),
         };
       })
     ),
@@ -280,11 +461,15 @@ const getSkrStake = async (owner, locals, now = Date.now()) => {
 
 module.exports = {
   getSkrStake,
+  recordSharePrice,
+  payoutSchedule,
   decodeUserStake,
   decodeStakeConfig,
   decodeGuardianPool,
   positionValues,
-  historyFrom,
+  exactHistory,
+  decodeStakeEvent,
+  ownerEvents,
   apyFrom,
   SKR_MINT,
 };
