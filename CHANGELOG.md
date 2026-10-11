@@ -2,7 +2,7 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
-## Unreleased
+## 0.24.0 — 2026-10-11
 
 - Powerups: `skr` is enabled on prod.
 - `GET /v1/solana-mainnet/skr/stake`: new field `totalStaked`, everything staked in the SKR staking program (all holders' shares at today's share price), as a base-unit string, and `logo`, SKR's image from the token catalog (null when unavailable), so a wallet holding no liquid SKR still shows it. No existing field changes.
