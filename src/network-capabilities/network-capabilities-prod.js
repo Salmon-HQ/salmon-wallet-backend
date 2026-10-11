@@ -58,5 +58,7 @@ module.exports = {
     // Swap (spec 018): on. Who may use it, and through which provider, is the
     // availability table in SSM, read per request.
     swap: { enabled: true },
+    // SKR (spec 021): read-only, what the wallet holds in SKR staking.
+    skr: { enabled: true },
   },
 };
