@@ -122,6 +122,18 @@ describe('token-catalog-service', () => {
     expect(await catalog.search('zzz')).toEqual([]);
   });
 
+  it("gives a listed token's logo by mint, and null for anything else, never failing", async () => {
+    expect(await catalog.logoOf(USDC)).toBe((await catalog.byMint(USDC)).icon);
+    expect(await catalog.logoOf(USDC)).toBeTruthy();
+    expect(await catalog.logoOf('nope')).toBeNull();
+
+    catalog.clearSnapshot();
+    coingecko.getSolanaTokenList.mockRejectedValue(new Error('429'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await catalog.logoOf(USDC)).toBeNull();
+    warn.mockRestore();
+  });
+
   it('looks up listed tokens by mint', async () => {
     expect((await catalog.byMint(USDC)).symbol).toBe('USDC');
     expect(await catalog.byMint('nope')).toBeNull();

@@ -65,6 +65,17 @@ functions:
           enabled: true
           name: refreshSanctionsJob-${self:provider.stage}
 
+  # SKR's staking share price, recorded daily just after the 02:00 UTC payout
+  # so the SKR reward history is exact from the first record (spec 022).
+  recordSkrSharePriceJob:
+    handler: src/jobs/handler.recordSkrSharePriceJob
+    timeout: 30
+    events:
+      - schedule:
+          rate: cron(5 2 * * ? *)
+          enabled: true
+          name: recordSkrSharePriceJob-${self:provider.stage}
+
   api:
     handler: src/index.handler
     timeout: 60

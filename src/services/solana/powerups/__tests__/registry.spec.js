@@ -29,12 +29,12 @@ describe('the SKR Powerup (spec 021)', () => {
     });
   });
 
-  it.each(['local', 'staging'])('is offered on %s for testing', (stage) => {
+  it.each(['local', 'staging', 'prod'])('is offered on %s', (stage) => {
     const config = require(`../../../../network-capabilities/network-capabilities-${stage}`);
     expect(config.powerups.skr).toEqual({ enabled: true });
   });
 
-  it.each(['develop', 'main', 'prod'])('is not offered on %s until it ships', (stage) => {
+  it.each(['develop', 'main'])('is not offered on %s', (stage) => {
     const config = require(`../../../../network-capabilities/network-capabilities-${stage}`);
     expect(config.powerups.skr).toBeUndefined();
   });

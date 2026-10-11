@@ -27,6 +27,10 @@ test('answers the position with amounts as strings', async () => {
     apy: 0.151,
     usdPrice: 0.01622,
     liquid: 3000000n,
+    totalStaked: 5026970696857042n,
+    logo: 'https://assets.coingecko.com/seeker-logo.jpg',
+    payouts: { intervalSeconds: 172800, lastAt: 1791424782000, nextAt: 1791597582000 },
+    historySince: 1790900000000,
     positions: [
       {
         address: '7yFnVkeEk4Qd6jgGsjrU4rhYDd7UQ985ah1VgWNg8m58',
@@ -52,6 +56,10 @@ test('answers the position with amounts as strings', async () => {
     apy: 0.151,
     usdPrice: 0.01622,
     liquid: '3000000',
+    totalStaked: '5026970696857042',
+    logo: 'https://assets.coingecko.com/seeker-logo.jpg',
+    payouts: { intervalSeconds: 172800, lastAt: 1791424782000, nextAt: 1791597582000 },
+    historySince: 1790900000000,
     positions: [
       {
         address: '7yFnVkeEk4Qd6jgGsjrU4rhYDd7UQ985ah1VgWNg8m58',

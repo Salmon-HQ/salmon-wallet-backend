@@ -16,6 +16,7 @@ const axios = require('axios');
 const { getRpcUrl } = require('../../infrastructure/triton-client');
 const { providerCall } = require('../../infrastructure/providers/provider-client');
 const coingecko = require('../shared/coingecko-service');
+const catalog = require('./token-catalog-service');
 const {
   getCacheKeyFor,
   getFromCache,
@@ -228,16 +229,19 @@ const listStakeAccounts = async (address, locals) => {
   if (accounts.length === 0) return { epoch, accounts, usdPrice: null };
 
   const voters = [...new Set(accounts.map((a) => a.voter).filter(Boolean))];
-  const [validators, rewards, usdPrice] = await Promise.all([
+  const [validators, rewards, usdPrice, logo] = await Promise.all([
     Promise.all(voters.map((voter) => validatorFor(voter, locals))),
     rewardsFor(accounts, epoch, locals),
     usdPriceOf(WRAPPED_SOL_MINT, locals),
+    // SOL's logo, so the Staked SOL row has one whatever the wallet lists.
+    catalog.logoOf(WRAPPED_SOL_MINT),
   ]);
   const validatorByVoter = new Map(voters.map((voter, i) => [voter, validators[i]]));
 
   return {
     epoch,
     usdPrice,
+    logo,
     accounts: accounts.map((account) => ({
       ...account,
       state: stakeState(account.activationEpoch === null ? null : account, epoch),
