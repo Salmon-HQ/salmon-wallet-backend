@@ -1,0 +1,8 @@
+{
+  "name": "bigint-buffer",
+  "version": "1.2.0-salmon.0",
+  "description": "bigint-buffer 1.1.5's pure-JS path only, without the native addon (GHSA-3gc7-fjrx-p6mg)",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "Apache-2.0"
+}

@@ -102,7 +102,7 @@ const httpAgent = new nodeHttp.Agent({ lookup: guardedLookup });
 
 const cacheKeyFor = (url, locals) =>
   getCacheKey(
-    `nft_offchain_metadata:${crypto.createHash('sha1').update(url).digest('hex')}`,
+    `nft_offchain_metadata:${crypto.createHash('sha256').update(url).digest('hex')}`,
     locals
   );
 

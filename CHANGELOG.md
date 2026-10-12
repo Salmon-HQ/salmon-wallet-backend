@@ -2,6 +2,14 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.24.1 — 2026-10-12
+
+- No endpoint, response or behavior change. Security fixes from Solana Mobile's audit of the dependencies:
+  - `bigint-buffer` (GHSA-3gc7-fjrx-p6mg, no fixed release) is replaced by its own pure-JS path, so the native addon with the overflow is no longer built or shipped. Token amounts decode exactly as before.
+  - `stream-json` 3.7 under `jayson` (GHSA-528h-pc64-c93x), `proxy-addr` 2.0.8, and `adm-zip` 0.6.1 in the deploy tooling. `npm audit --omit=dev` reports no vulnerabilities.
+  - The Docker image's development and production stages run as the unprivileged `node` user.
+  - The off-chain NFT metadata cache keys hash the URL with SHA-256; each cached document is fetched once more after the deploy.
+
 ## 0.24.0 — 2026-10-11
 
 - Powerups: `skr` is enabled on prod.
