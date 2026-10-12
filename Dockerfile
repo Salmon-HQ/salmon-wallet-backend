@@ -13,6 +13,8 @@ FROM base AS dependencies
 RUN apk add --no-cache python3 make g++ gcc
 
 COPY package.json package-lock.json ./
+# bigint-buffer installs from here (package.json overrides).
+COPY vendor ./vendor
 # npm ci: install exactly what package-lock.json pins (no resolution at build time).
 RUN npm ci --omit=dev && \
     cp -R node_modules /prod_node_modules && \
@@ -29,12 +31,17 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++ gcc
 
 COPY package.json package-lock.json ./
+# bigint-buffer installs from here (package.json overrides).
+COPY vendor ./vendor
 RUN npm ci
 
 # Rebuild native modules to ensure they use compiled bindings
 RUN npm rebuild
 
-COPY . .
+COPY --chown=node:node . .
+RUN chown node:node /app
+# The image's own unprivileged user: an escape from the app is not root.
+USER node
 EXPOSE 3000
 CMD ["npm", "run", "serverless:start:local"]
 
@@ -42,6 +49,8 @@ CMD ["npm", "run", "serverless:start:local"]
 FROM base AS production
 WORKDIR /app
 COPY --from=dependencies /prod_node_modules ./node_modules
-COPY . .
+COPY --chown=node:node . .
+RUN chown node:node /app
+USER node
 EXPOSE 3000
 CMD ["npm", "run", "serverless:start:local"]

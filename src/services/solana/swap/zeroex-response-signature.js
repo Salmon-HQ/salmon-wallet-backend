@@ -18,7 +18,8 @@ const { createHash, createPublicKey, verify } = require('node:crypto');
  * release, and here on the next one.
  */
 const PINNED_KEYS = {
-  '0x-signing-key-prod-24092026': '19P3C981JsyQsqwVho8Tlabx51rslvdruSH59mGuWn0',
+  // 0x's published Ed25519 public key, not a secret.
+  '0x-signing-key-prod-24092026': '19P3C981JsyQsqwVho8Tlabx51rslvdruSH59mGuWn0', // gitleaks:allow
 };
 
 const MAX_AGE_SECONDS = 60;
