@@ -37,8 +37,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@solana/kit": "8.4.0",
-    "dotenv": "^18.0.4",
-    "eslint": "^10.11.0",
+    "dotenv": "^18.0.5",
+    "eslint": "^10.12.0",
     "fast-check": "^4.10.2",
     "jest": "^30.5.2",
     "prettier": "^3.9.9",
@@ -66,10 +66,10 @@
     "compression": "^1.8.2",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "js-yaml": "^5.4.2",
+    "js-yaml": "^5.4.3",
     "lodash": "^4.17.21",
     "mmdb-lib": "^3.0.3",
-    "redis": "^6.2.1",
+    "redis": "^6.3.0",
     "serverless-http": "^4.0.0"
   },
   "overrides": {
