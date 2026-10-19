@@ -54,6 +54,34 @@ describe('availability/country-resolver', () => {
     });
   });
 
+  // An IPv4 address written as IPv6 must still meet the region ranges.
+  it('reads an IPv4-mapped IPv6 address as the IPv4 it carries', () => {
+    expect(countryOf('::ffff:5.3.41.10')).toBe(countryOf('5.3.41.10'));
+    expect(countryOf('::ffff:8.8.8.8')).toBe('US');
+  });
+
+  describe('behind a CloudFront distribution of ours', () => {
+    const request = (via) => ({
+      requestContext: { identity: { sourceIp: '8.8.8.8' } },
+      headers: via === undefined ? {} : { via },
+    });
+
+    it("places a request through API Gateway's own edge only", () => {
+      expect(countryOfRequest(request('2.0 abc.cloudfront.net (CloudFront)'))).toBe('US');
+      expect(countryOfRequest(request())).toBe('US');
+    });
+
+    // The source address is then the CloudFront server, which can sit in
+    // another country than the caller: a way around the country gate.
+    it('places nobody once a second CloudFront hop shows the source is a proxy', () => {
+      expect(
+        countryOfRequest(
+          request('1.1 a.cloudfront.net (CloudFront), 1.1 b.cloudfront.net (CloudFront)')
+        )
+      ).toBeNull();
+    });
+  });
+
   it('reads the source address API Gateway attached to the request', () => {
     const req = { requestContext: { identity: { sourceIp: '8.8.8.8' } }, headers: {} };
     expect(countryOfRequest(req)).toBe('US');

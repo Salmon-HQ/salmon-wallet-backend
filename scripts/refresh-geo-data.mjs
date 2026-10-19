@@ -31,13 +31,15 @@ const DATA_DIR = path.join(ROOT, 'src/availability/data');
 const DATABASE = path.join(DATA_DIR, 'dbip-country-lite.mmdb');
 const RANGES = path.join(ROOT, 'src/availability/region-ranges.json');
 const MAX_AGE_DAYS = 40;
-const EMBARGOED_REGIONS = ['UA-43', 'UA-40', 'UA-14', 'UA-09'];
+// Every region the gate treats on its own; a renamed one would fall back to UA, where Swap is open.
+const REGIONS = ['UA-43', 'UA-40', 'UA-14', 'UA-09', 'UA-65', 'UA-23'];
+const FETCH_TIMEOUT_MS = 120_000;
 
 const monthOf = (date) => date.toISOString().slice(0, 7);
 const lastMonth = (date) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - 1, 1));
 
 const download = async (url) => {
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) return null;
   return Buffer.from(await res.arrayBuffer());
 };
@@ -51,11 +53,14 @@ const verifyCountryDatabase = (buffer, now = new Date()) => {
   if (ageDays > MAX_AGE_DAYS) throw new Error(`database built ${buildEpoch.toISOString()}`);
   const code = (ip) => reader.get(ip)?.country?.iso_code;
   // DB-IP publishes no checksum for the free files: long-stable addresses in
-  // the US and in a blocked country are the check that the data was not altered.
+  // the US and in blocked countries are the check that the data was not altered.
   for (const [ip, country] of [
     ['8.8.8.8', 'US'],
     ['81.2.69.142', 'GB'],
     ['212.58.244.20', 'GB'],
+    ['2.144.0.1', 'IR'],
+    ['152.206.0.1', 'CU'],
+    ['114.114.114.114', 'CN'],
   ]) {
     if (code(ip) !== country) throw new Error(`${ip} is not placed in ${country}`);
   }
@@ -93,7 +98,7 @@ const main = async () => {
   const found = new Set(
     JSON.parse(fs.readFileSync(RANGES, 'utf8')).ranges.map(([, , code]) => code)
   );
-  const missing = EMBARGOED_REGIONS.filter((code) => !found.has(code));
+  const missing = REGIONS.filter((code) => !found.has(code));
   if (missing.length) throw new Error(`region ranges lack ${missing.join(', ')}`);
 
   fs.mkdirSync(DATA_DIR, { recursive: true });

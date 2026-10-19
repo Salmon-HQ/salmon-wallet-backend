@@ -47,7 +47,7 @@ function createFileSink() {
 
 /**
  * Maps one validated record to a Measurement Protocol event. The record's
- * allow-listed props (`chain`, `success`, `amount_bucket`, …) become event
+ * allow-listed props (`chain`, `success`, …) become event
  * params alongside the context. `platform` is what lets a single GA4 property
  * tell iOS, Android, Seeker and the extension apart — register it (and each prop) as a
  * custom dimension in the GA4 console or it will not surface in reports.

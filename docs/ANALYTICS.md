@@ -21,8 +21,9 @@ wallet (ios / android / seeker / extension)
   re-validates every event against the allow-list — a tampered client cannot
   slip an address, mint, raw number, or oversized string through.
 - **`event-schema.js`** mirrors the wallet's allow-list (defense in depth): 20
-  event names, 6 prop keys (`chain`, `from_chain`, `to_chain`, `success`,
-  `amount_bucket`, `powerup`), enum-checked values; `success` is accepted only as
+  event names, 5 prop keys (`chain`, `from_chain`, `to_chain`, `success`,
+  `powerup`), enum-checked values; no amount of any kind is accepted, because
+  the consent copy promises none; `success` is accepted only as
   a boolean. A change here MUST match the client.
 - **Platforms**: `handler.js` keeps `extension`, `ios`, `android`, `seeker`, and
   `mobile` (wallet builds before analytics v2); anything else is stored as
@@ -97,7 +98,7 @@ prefer to script it, but the console is the supported path.
 4. **Register custom dimensions** (required, easy to forget): Admin → Custom
    definitions → Create custom dimension, scope **Event**, one per param you want
    in reports — `platform`, `app_version`, `chain`, `from_chain`, `to_chain`,
-   `success`, `powerup` (`amount_bucket` is allowed but no event sends it). Until a param is registered it is delivered but
+   `success`, `powerup`. Until a param is registered it is delivered but
    **does not surface in reports**. `app_version` was shipped by the sink long
    before it was registered here, so events collected before that registration
    carry the value but cannot be reported on.

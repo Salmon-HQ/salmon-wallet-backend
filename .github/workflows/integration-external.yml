@@ -69,8 +69,9 @@ jobs:
 
   # The country gate, checked where it runs: OFAC's guidance asks that IP
   # blocking be tested, not assumed. Prod switches Swap off once its DB-IP
-  # database is 45 days old; this goes red at 35, while a re-run of the last
-  # Deploy workflow (which downloads the month's database) still keeps Swap up.
+  # database is 45 days old, and deploy.yml redeploys the newest tag on the 2nd
+  # of every month to keep it fresh; this goes red at 35 days, when that
+  # monthly run has failed or not run.
   production-country-gate:
     name: production country gate
     runs-on: ubuntu-latest
@@ -91,7 +92,7 @@ jobs:
           fi
           age=$(( ( $(date -u +%s) - $(date -u -d "$built" +%s) ) / 86400 ))
           if [ "$age" -gt 35 ]; then
-            echo "::error::The country database is ${age} days old. Re-run the last Deploy workflow before day 45, when prod switches Swap off."
+            echo "::error::The country database is ${age} days old: the monthly Deploy run failed or did not run. Deploy before day 45, when prod switches Swap off."
             exit 1
           fi
           if [ "$country" = "null" ]; then

@@ -47,6 +47,15 @@ describe('availability-table', () => {
   });
 
   describe('validateTable', () => {
+    // Declared to App Review as blocked: an SSM edit must not reopen them.
+    it.each(['GB', 'CN', 'UA-65'])('rejects a swap row that reopens %s', (country) => {
+      const t = valid();
+      t.capabilities.swap.unavailable = t.capabilities.swap.unavailable.filter(
+        (c) => c !== country
+      );
+      expect(validateTable(t)).toContain(`swap.unavailable: must include ${country}`);
+    });
+
     // A table that forgot the swap row would otherwise offer swap everywhere.
     it('rejects a table without the regulated swap row', () => {
       const t = valid();
@@ -138,11 +147,9 @@ describe('availability-table', () => {
       expect(validateTable(t)).toContainEqual(expect.stringContaining('UA-43'));
     });
 
-    it('accepts an ISO 3166-2 region code, and lets Kherson open again', () => {
+    it('accepts an ISO 3166-2 region code', () => {
       const t = valid();
-      t.capabilities.swap.unavailable = t.capabilities.swap.unavailable.filter(
-        (c) => c !== 'UA-65'
-      );
+      t.capabilities.swap.unavailable.push('UA-12');
       expect(validateTable(t)).toEqual([]);
     });
 

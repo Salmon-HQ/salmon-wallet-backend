@@ -4,7 +4,7 @@ const { createSink, createGa4Sink, toGa4Event } = require('../sink');
 
 const RECORD = {
   event: 'send_completed',
-  props: { chain: 'solana', success: true, amount_bucket: '10-100' },
+  props: { chain: 'solana', success: true, powerup: 'swap' },
   ts: 1783979939147,
   received_at: 1783979979715,
   dt: '2026-07-13',
@@ -25,7 +25,7 @@ describe('toGa4Event', () => {
         app_version: '3.0.0',
         chain: 'solana',
         success: true,
-        amount_bucket: '10-100',
+        powerup: 'swap',
       },
     });
   });

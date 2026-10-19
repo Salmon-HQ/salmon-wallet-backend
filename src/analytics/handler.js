@@ -119,6 +119,9 @@ exports.handler = async (event) => {
   }
   const origin = originOf(event);
   if (origin !== undefined && !EXTENSION_ORIGIN.test(origin)) {
+    // The scheme only: a refused real client would otherwise show only as a
+    // drop in GA volume.
+    console.warn('[analytics] origin_refused', { scheme: String(origin).split(':')[0] });
     return respond(403, {
       error: 'origin_not_allowed',
       error_description: 'Usage events are accepted only from the Salmon wallet.',

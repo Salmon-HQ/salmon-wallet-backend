@@ -142,6 +142,9 @@ const isStale = () => {
  */
 const countryOf = (ip) => {
   if (typeof ip !== 'string' || ip.length === 0) return null;
+  // `::ffff:5.3.41.10` is an IPv4 address; read as IPv6 it would skip the
+  // region ranges and a Crimean address would come back as RU.
+  if (ip.toLowerCase().startsWith('::ffff:') && net.isIPv4(ip.slice(7))) ip = ip.slice(7);
   const db = getReader();
   if (isStale()) return null;
   const region = regionOf(ip);
@@ -171,10 +174,23 @@ const localOverride = () => {
 };
 
 /**
+ * True when the request reached API Gateway through a CloudFront distribution
+ * of ours: API Gateway's edge adds one CloudFront hop to `Via`, every
+ * CloudFront in front of it adds another. The source address is then that
+ * CloudFront server, not the caller, and can sit in another country. A client
+ * can only add hops, which closes Swap for itself.
+ */
+const behindCloudFront = (req) => {
+  const via = String(req.headers?.via || req.headers?.Via || '');
+  return via.split(',').filter((hop) => /cloudfront/i.test(hop)).length > 1;
+};
+
+/**
  * @param {import('express').Request} req
  * @returns {string|null}
  */
-const countryOfRequest = (req) => localOverride() || countryOf(resolveSourceIp(req));
+const countryOfRequest = (req) =>
+  localOverride() || (behindCloudFront(req) ? null : countryOf(resolveSourceIp(req)));
 
 module.exports = {
   countryOf,

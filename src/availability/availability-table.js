@@ -76,8 +76,8 @@ const EMBARGOED = Object.freeze(['CU', 'IR', 'KP', 'SY', 'UA-43', 'UA-40', 'UA-1
 
 /**
  * Occupied in part, not under a comprehensive OFAC program (the EU's
- * "specified territories" include them). Off by default; an IP cannot tell the
- * occupied part from the rest, so the table may open them.
+ * "specified territories" include them). Blocked whole, because an IP cannot
+ * tell the occupied part from the rest.
  */
 const PRECAUTIONARY = Object.freeze(['UA-65', 'UA-23']);
 
@@ -173,6 +173,14 @@ const validateRows = (name, platform, rows, problems) => {
   for (const country of EMBARGOED) {
     if (!rows.unavailable.includes(country)) {
       problems.push(`${where}.unavailable: must include embargoed ${country}`);
+    }
+  }
+  // Declared to App Review as blocked: a table edit must not reopen them.
+  if (REGULATED.includes(name)) {
+    for (const country of [...PRECAUTIONARY, ...NOT_OFFERED]) {
+      if (!rows.unavailable.includes(country)) {
+        problems.push(`${where}.unavailable: must include ${country}`);
+      }
     }
   }
   const servedByJupiter = (country) => {
