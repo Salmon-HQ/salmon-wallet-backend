@@ -8,7 +8,7 @@ covers the backend half; the event catalogue and the client-side opt-in live in
 ## Shape of the pipeline
 
 ```
-wallet (mobile / web / extension)
+wallet (ios / android / seeker / extension)
   → POST /v1/events            src/analytics/handler.js   (isolated Lambda)
       → allow-list re-validation  src/analytics/event-schema.js
       → sink.putRecords(...)      src/analytics/sink.js
@@ -20,9 +20,13 @@ wallet (mobile / web / extension)
   reads the client IP** (`sourceIp` / `X-Forwarded-For` are untouched) and
   re-validates every event against the allow-list — a tampered client cannot
   slip an address, mint, raw number, or oversized string through.
-- **`event-schema.js`** mirrors the wallet's allow-list (defense in depth): 11
-  event names, 5 prop keys (`chain`, `from_chain`, `to_chain`, `success`,
-  `amount_bucket`), enum-checked values. A change here MUST match the client.
+- **`event-schema.js`** mirrors the wallet's allow-list (defense in depth): 20
+  event names, 6 prop keys (`chain`, `from_chain`, `to_chain`, `success`,
+  `amount_bucket`, `powerup`), enum-checked values; `success` is accepted only as
+  a boolean. A change here MUST match the client.
+- **Platforms**: `handler.js` keeps `extension`, `ios`, `android`, `seeker`, and
+  `mobile` (wallet builds before analytics v2); anything else is stored as
+  `unknown`.
 
 ## Anonymity (why we proxy instead of a client SDK)
 
@@ -65,8 +69,8 @@ prefer to script it, but the console is the supported path.
 
 1. **Create a property** (or reuse one): Admin → Create property.
 2. **Add a Web data stream**: Admin → Data Streams → Add stream → Web. Copy its
-   **Measurement ID** (`G-…`) → `GA4_MEASUREMENT_ID`. All platforms (mobile, web,
-   extension) report through this one web stream via the Measurement Protocol —
+   **Measurement ID** (`G-…`) → `GA4_MEASUREMENT_ID`. All platforms (iOS, Android,
+   Seeker, extension) report through this one web stream via the Measurement Protocol —
    we do not create app streams (those would require the Firebase SDK on device,
    which breaks the IP anonymity above).
 3. **Create a Measurement Protocol API secret**: same data stream → Measurement
@@ -74,7 +78,7 @@ prefer to script it, but the console is the supported path.
 4. **Register custom dimensions** (required, easy to forget): Admin → Custom
    definitions → Create custom dimension, scope **Event**, one per param you want
    in reports — `platform`, `app_version`, `chain`, `from_chain`, `to_chain`,
-   `success`, `amount_bucket`. Until a param is registered it is delivered but
+   `success`, `amount_bucket`, `powerup`. Until a param is registered it is delivered but
    **does not surface in reports**. `app_version` was shipped by the sink long
    before it was registered here, so events collected before that registration
    carry the value but cannot be reported on.
