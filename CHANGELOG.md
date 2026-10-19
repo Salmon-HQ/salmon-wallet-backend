@@ -2,7 +2,7 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
-## 0.25.0 — unreleased
+## 0.25.0 — 2026-10-19
 
 - `POST /v1/events` (usage analytics, opt-in): the allow-list grows from 9 to 20 events (`app_opened`, `powerup_installed`, `powerup_uninstalled`, `swap_completed`, `first_swap_completed`, `memo_sent`, `payment_request_created`, `payment_request_paid`, `dapp_connected`, `dapp_message_signed`, `dapp_transaction_signed`) and adds the prop `powerup` (`swap`, `payments`, `memo`, `skr`), forwarded to GA4 as an event param. `success` is accepted only as a boolean. The batch platform accepts `ios`, `android` and `seeker` besides `extension` and `mobile`; `web` and any other value are stored as `unknown`. No other endpoint changes.
 
