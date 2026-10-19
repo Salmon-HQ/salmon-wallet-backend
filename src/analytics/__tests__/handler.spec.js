@@ -30,7 +30,12 @@ describe('analytics ingest handler', () => {
   it('accepts a valid batch and returns 202 with a count', async () => {
     const res = await handler(
       apiEvent({
-        context: { installId: 'abc', sessionId: 'sess', platform: 'web', appVersion: '3.0.0' },
+        context: {
+          installId: 'abc',
+          sessionId: 'sess',
+          platform: 'extension',
+          appVersion: '3.0.0',
+        },
         events: [
           {
             event: 'send_completed',
@@ -47,7 +52,7 @@ describe('analytics ingest handler', () => {
     expect(records[0]).toMatchObject({
       event: 'send_completed',
       install_id: 'abc',
-      platform: 'web',
+      platform: 'extension',
     });
   });
 
@@ -61,11 +66,24 @@ describe('analytics ingest handler', () => {
   ])('records %s as %j', async (_label, appVersion, expected) => {
     await handler(
       apiEvent({
-        context: { installId: 'abc', platform: 'web', appVersion },
+        context: { installId: 'abc', platform: 'extension', appVersion },
         events: [{ event: 'send_completed' }],
       })
     );
     expect(records[0].app_version).toBe(expected);
+  });
+
+  it.each([
+    ['extension', 'extension'],
+    ['mobile', 'mobile'],
+    ['ios', 'ios'],
+    ['android', 'android'],
+    ['seeker', 'seeker'],
+    ['web', 'unknown'],
+    ['desktop', 'unknown'],
+  ])('records platform %j as %j', async (platform, expected) => {
+    await handler(apiEvent({ context: { platform }, events: [{ event: 'app_opened' }] }));
+    expect(records[0].platform).toBe(expected);
   });
 
   it('never stores the client IP', async () => {
@@ -84,7 +102,7 @@ describe('analytics ingest handler', () => {
   it('rejects a batch whose only event carries an address', async () => {
     const res = await handler(
       apiEvent({
-        context: { platform: 'web' },
+        context: { platform: 'extension' },
         events: [
           {
             event: 'send_completed',
@@ -101,7 +119,7 @@ describe('analytics ingest handler', () => {
   it('drops invalid events but keeps valid ones', async () => {
     const res = await handler(
       apiEvent({
-        context: { platform: 'web' },
+        context: { platform: 'extension' },
         events: [
           { event: 'nft_viewed' },
           { event: 'send_completed', props: { chain: 'dogecoin' } },

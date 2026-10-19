@@ -23,7 +23,8 @@ const { createSink } = require('./sink');
 // slow handshake into a hard failure.
 applyConnectTuning();
 
-const PLATFORMS = new Set(['web', 'extension', 'mobile']);
+// `mobile` is what wallet builds before analytics v2 send.
+const PLATFORMS = new Set(['extension', 'mobile', 'ios', 'android', 'seeker']);
 const MAX_EVENTS_PER_BATCH = 100;
 const MAX_ID_LENGTH = 64;
 const MAX_VERSION_LENGTH = 32;
