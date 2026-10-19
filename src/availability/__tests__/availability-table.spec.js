@@ -22,7 +22,8 @@ describe('availability-table', () => {
       expect(swap.default).toBe('jupiter');
       expect(swap.unavailable).toEqual(expect.arrayContaining(['CU', 'IR', 'KP', 'SY']));
       expect(swap.unavailable).not.toContain('US');
-      expect(swap.providers['0x']).toEqual(expect.arrayContaining(['US', 'CN', 'SG', 'NI', 'ZW']));
+      expect([...swap.providers['0x']].sort()).toEqual(['SG', 'TW', 'US']);
+      expect(swap.unavailable).toEqual(expect.arrayContaining(['GB', 'CN', 'NI', 'ZW']));
       expect(validateTable(DEFAULT_TABLE)).toEqual([]);
     });
 

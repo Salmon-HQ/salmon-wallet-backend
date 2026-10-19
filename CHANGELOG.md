@@ -5,6 +5,7 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 ## 0.25.1 — unreleased
 
 - `POST /v1/events` (usage analytics): a POST sent by a web page (`Origin` `http(s)://…` or `null`) is refused with `403 origin_not_allowed`; extension origins and requests without `Origin` (mobile) are unchanged. A batch without a usable install id is refused with `400 install_id_required` instead of being counted under an invented user. Events reach GA4 dated to the start of the hour they arrived, not the exact moment.
+- Swap availability: the built-in table, which serves when the live table cannot be read, now blocks the United Kingdom, mainland China, Myanmar, Côte d'Ivoire, DR Congo, Iraq, Libya, Mali, Nicaragua, Somalia, Sudan, Yemen and Zimbabwe, matching the live table. 0x serves only the United States, Singapore and Taiwan; elsewhere `swap` answers `403 region_restricted` as for any blocked country.
 
 ## 0.25.0 — 2026-10-19
 

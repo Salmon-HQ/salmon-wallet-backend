@@ -60,9 +60,11 @@ const JUPITER_PROHIBITED = Object.freeze([
 ]);
 
 /**
- * Comprehensively embargoed territories: unavailable everywhere. The four
- * Ukrainian regions are OFAC's comprehensive programs for Crimea (E.O. 13685)
- * and the so-called DNR/LNR (E.O. 14065, OFAC FAQ 1008).
+ * Unavailable everywhere, on every row. Cuba, Iran, North Korea and the four
+ * Ukrainian regions are OFAC's comprehensive programs (Crimea E.O. 13685, the
+ * so-called DNR/LNR E.O. 14065, OFAC FAQ 1008). Syria's program was revoked in
+ * 2025; it stays here because Jupiter's terms still exclude it and the App
+ * Store reply declares it blocked.
  */
 const EMBARGOED = Object.freeze(['CU', 'IR', 'KP', 'SY', 'UA-43', 'UA-40', 'UA-14', 'UA-09']);
 
@@ -73,18 +75,40 @@ const EMBARGOED = Object.freeze(['CU', 'IR', 'KP', 'SY', 'UA-43', 'UA-40', 'UA-1
  */
 const PRECAUTIONARY = Object.freeze(['UA-65', 'UA-23']);
 
+/**
+ * Owner decision 2026-10-19, declared to App Review: the United Kingdom, for
+ * the FCA cryptoasset-promotions regime, and the rest of Jupiter's prohibited
+ * localities except the United States, Singapore and Taiwan, which 0x serves.
+ * In the built-in default too, so a table that cannot be read never opens them.
+ */
+const NOT_OFFERED = Object.freeze([
+  'GB',
+  'CN',
+  'MM',
+  'CI',
+  'CD',
+  'IQ',
+  'LY',
+  'ML',
+  'NI',
+  'SO',
+  'SD',
+  'YE',
+  'ZW',
+]);
+
+const DEFAULT_UNAVAILABLE = [...EMBARGOED, ...PRECAUTIONARY, ...NOT_OFFERED];
+
 const DEFAULT_TABLE = Object.freeze({
   version: 1,
   capabilities: {
     swap: {
       default: 'jupiter',
-      unavailable: [...EMBARGOED, ...PRECAUTIONARY],
+      unavailable: DEFAULT_UNAVAILABLE,
       // Owner decision 2026-10-06: the United States is served by 0x, as the
       // Power-ups 1.4 Terms (7.2) and Privacy Policy (5.6) state.
       providers: {
-        '0x': JUPITER_PROHIBITED.filter(
-          (c) => !EMBARGOED.includes(c) && !PRECAUTIONARY.includes(c)
-        ),
+        '0x': JUPITER_PROHIBITED.filter((c) => !DEFAULT_UNAVAILABLE.includes(c)),
       },
       platforms: { ios: {} },
     },

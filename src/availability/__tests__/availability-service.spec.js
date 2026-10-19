@@ -36,7 +36,7 @@ describe('availability-service', () => {
     });
 
     it('routes a country in a provider row to that provider', () => {
-      expect(decide(table(), 'swap', 'ios', 'CN')).toEqual({ enabled: true, provider: '0x' });
+      expect(decide(table(), 'swap', 'ios', 'SG')).toEqual({ enabled: true, provider: '0x' });
     });
 
     it('treats an unknown country as unrestricted, on the default provider', () => {
