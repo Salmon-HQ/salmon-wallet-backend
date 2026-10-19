@@ -11,6 +11,7 @@
  */
 
 const ANALYTICS_EVENTS = [
+  'app_opened',
   'wallet_created',
   'wallet_recovered',
   'first_send_completed',
@@ -20,17 +21,39 @@ const ANALYTICS_EVENTS = [
   'network_switched',
   'wallet_switched',
   'address_book_used',
+  'powerup_installed',
+  'powerup_uninstalled',
+  'swap_completed',
+  'first_swap_completed',
+  'memo_sent',
+  'payment_request_created',
+  'payment_request_paid',
+  'dapp_connected',
+  'dapp_message_signed',
+  'dapp_transaction_signed',
 ];
 
 const CHAINS = ['solana', 'bitcoin', 'ethereum'];
 const AMOUNT_BUCKETS = ['0-10', '10-100', '100-1k', '1k-10k', '10k+'];
-const ALLOWED_PROP_KEYS = ['chain', 'from_chain', 'to_chain', 'success', 'amount_bucket'];
+// The wallet's Powerup registry ids. A new Powerup adds its id here before it ships.
+const POWERUPS = ['swap', 'payments', 'memo', 'skr'];
+const ALLOWED_PROP_KEYS = [
+  'chain',
+  'from_chain',
+  'to_chain',
+  'success',
+  'amount_bucket',
+  'powerup',
+];
 
 const PROP_ENUMS = {
   chain: CHAINS,
   from_chain: CHAINS,
   to_chain: CHAINS,
   amount_bucket: AMOUNT_BUCKETS,
+  powerup: POWERUPS,
+  // Booleans return before the enum check, so an empty list rejects any string.
+  success: [],
 };
 
 const MAX_PROP_STRING_LENGTH = 32;
@@ -106,6 +129,7 @@ module.exports = {
   ANALYTICS_EVENTS,
   CHAINS,
   AMOUNT_BUCKETS,
+  POWERUPS,
   ALLOWED_PROP_KEYS,
   PROP_ENUMS,
   MAX_PROP_STRING_LENGTH,
