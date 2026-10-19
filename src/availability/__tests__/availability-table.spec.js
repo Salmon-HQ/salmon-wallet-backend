@@ -47,6 +47,13 @@ describe('availability-table', () => {
   });
 
   describe('validateTable', () => {
+    // A table that forgot the swap row would otherwise offer swap everywhere.
+    it('rejects a table without the regulated swap row', () => {
+      const t = valid();
+      delete t.capabilities.swap;
+      expect(validateTable(t)).toContain('swap: required, it is regulated');
+    });
+
     it('rejects an unknown provider', () => {
       const t = valid();
       t.capabilities.swap.default = 'raydium';

@@ -1,11 +1,22 @@
 'use strict';
 
-const { countryOf, countryOfRequest } = require('../country-resolver');
+const {
+  countryOf,
+  countryOfRequest,
+  databaseBuiltAt,
+  resetCountryDatabase,
+} = require('../country-resolver');
 
 describe('availability/country-resolver', () => {
+  // The packaged test database was built on 2026-06-01; on prod it counts as
+  // fresh only for 45 days after that.
+  const FRESH_DAY = new Date('2026-06-20T00:00:00Z');
+
   afterEach(() => {
     delete process.env.AVAILABILITY_COUNTRY_OVERRIDE;
     delete process.env.NODE_ENV;
+    jest.useRealTimers();
+    resetCountryDatabase();
   });
 
   it('resolves a public IPv4 address to its ISO country', () => {
@@ -56,6 +67,7 @@ describe('availability/country-resolver', () => {
   });
 
   it('ignores the override on prod', () => {
+    jest.useFakeTimers({ now: FRESH_DAY });
     process.env.NODE_ENV = 'prod';
     process.env.AVAILABILITY_COUNTRY_OVERRIDE = 'CU';
     const req = { requestContext: { identity: { sourceIp: '8.8.8.8' } }, headers: {} };
@@ -65,6 +77,7 @@ describe('availability/country-resolver', () => {
   it('refuses with 503 when the database cannot be opened, instead of answering "no country"', () => {
     jest.isolateModules(() => {
       jest.doMock('fs', () => ({
+        existsSync: () => false,
         readFileSync: () => {
           throw new Error('ENOENT');
         },
@@ -78,6 +91,53 @@ describe('availability/country-resolver', () => {
       expect(error).toHaveBeenCalledTimes(1);
       expect(error).toHaveBeenCalledWith('[COUNTRY_DB_UNAVAILABLE]', expect.any(Object));
       error.mockRestore();
+    });
+  });
+
+  describe('a stale database', () => {
+    // IP blocks change country every month: past 45 days the gate must not
+    // trust an old answer, so nobody is placed and regulated capabilities close.
+    it('places nobody on prod once the database is older than 45 days', () => {
+      const built = databaseBuiltAt();
+      jest.useFakeTimers({ now: new Date(built.getTime() + 46 * 24 * 60 * 60 * 1000) });
+      process.env.NODE_ENV = 'prod';
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(countryOf('8.8.8.8')).toBeNull();
+      expect(countryOf('8.8.4.4')).toBeNull();
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalledWith('[COUNTRY_DB_STALE]', expect.any(Object));
+      error.mockRestore();
+    });
+
+    it('still places addresses on prod within 45 days', () => {
+      jest.useFakeTimers({ now: FRESH_DAY });
+      process.env.NODE_ENV = 'prod';
+      expect(countryOf('8.8.8.8')).toBe('US');
+    });
+
+    it('is not enforced outside prod, where the packaged copy is old', () => {
+      jest.useFakeTimers({ now: new Date('2027-01-01T00:00:00Z') });
+      expect(countryOf('8.8.8.8')).toBe('US');
+    });
+  });
+
+  it("reads DB-IP's own record shape, the one deploys download", () => {
+    jest.isolateModules(() => {
+      // The 503 test above leaves its broken `fs` mock registered.
+      jest.doMock('fs', () => jest.requireActual('fs'));
+      jest.doMock('mmdb-lib', () => ({
+        Reader: class {
+          constructor() {
+            this.metadata = { buildEpoch: new Date() };
+          }
+          get() {
+            return { country: { iso_code: 'GB' } };
+          }
+        },
+      }));
+      const resolver = require('../country-resolver');
+      expect(resolver.countryOf('81.2.69.142')).toBe('GB');
     });
   });
 });

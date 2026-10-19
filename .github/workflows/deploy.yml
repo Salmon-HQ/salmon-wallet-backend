@@ -92,6 +92,13 @@ jobs:
       - name: Install node modules
         run: npm ci
 
+      # The country gate reads this month's DB-IP database, and on prod it
+      # stops placing anyone once the database is 45 days old, which closes
+      # Swap. Fetched before the job holds AWS credentials. A failure fails the
+      # deploy: a database the script could not check is never shipped.
+      - name: Refresh the country database
+        run: node scripts/refresh-geo-data.mjs
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:

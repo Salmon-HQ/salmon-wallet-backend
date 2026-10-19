@@ -39,11 +39,13 @@ describe('availability-service', () => {
       expect(decide(table(), 'swap', 'ios', 'SG')).toEqual({ enabled: true, provider: '0x' });
     });
 
-    it('treats an unknown country as unrestricted, on the default provider', () => {
-      expect(decide(table(), 'swap', 'ios', null)).toEqual({
-        enabled: true,
-        provider: 'jupiter',
-      });
+    // An address the database cannot place could be in a blocked country.
+    it('refuses swap when the country is unknown', () => {
+      expect(decide(table(), 'swap', 'ios', null)).toEqual({ enabled: false, reason: 'region' });
+    });
+
+    it('keeps an unregulated capability open when the country is unknown', () => {
+      expect(decide(table(), 'payments', 'ios', null)).toEqual({ enabled: true });
     });
 
     it('applies a platform override over the capability values', () => {

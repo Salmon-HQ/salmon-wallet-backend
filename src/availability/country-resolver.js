@@ -2,13 +2,17 @@
 
 /**
  * The caller's country, from the source address API Gateway attaches to the
- * request (never from a header), looked up in the DB-IP "IP to Country Lite"
- * database shipped in the bundle (`@ip-location-db/dbip-country-mmdb`,
- * CC BY 4.0 — attribution in NOTICE). The database is opened once per
- * container.
+ * request (never from a header), looked up in DB-IP's "IP to Country Lite"
+ * database (CC BY 4.0 — attribution in NOTICE). Every deploy downloads the
+ * month's edition into `data/` (`scripts/refresh-geo-data.mjs`); without it,
+ * local runs and tests read the copy in `@ip-location-db/dbip-country-mmdb`,
+ * which stopped being republished in June 2026. The database is opened once
+ * per container.
  *
- * Unknown, private or malformed addresses answer `null`; the gate treats
- * that as "no country found", which on a denylist means unrestricted.
+ * Unknown, private or malformed addresses answer `null`, and so does every
+ * address on prod once the database is older than 45 days: IP blocks change
+ * country every month, and the gate refuses a regulated capability when the
+ * country is `null`.
  *
  * Some Ukrainian regions answer their ISO 3166-2 code instead of `UA`
  * (`UA-43` Crimea, `UA-40` Sevastopol, `UA-14` Donetsk, `UA-09` Luhansk,
@@ -28,8 +32,16 @@ const net = require('net');
 const { Reader } = require('mmdb-lib');
 const { resolveSourceIp } = require('../../packages/network-utils');
 
-const DATABASE = require.resolve('@ip-location-db/dbip-country-mmdb/dbip-country.mmdb');
+const path = require('path');
+
+const FRESH_DATABASE = path.join(__dirname, 'data', 'dbip-country-lite.mmdb');
 const COUNTRY_CODE = /^[A-Z]{2}$/;
+const MAX_DATABASE_AGE_MS = 45 * 24 * 60 * 60 * 1000;
+
+const databasePath = () =>
+  fs.existsSync(FRESH_DATABASE)
+    ? FRESH_DATABASE
+    : require.resolve('@ip-location-db/dbip-country-mmdb/dbip-country.mmdb');
 
 /** IPv4 or IPv6 text → BigInt, so both families sort and compare the same way. */
 const toBigInt = (ip) => {
@@ -98,7 +110,7 @@ const getReader = () => {
   if (reader) return reader;
   if (loadError) throw new CountryDatabaseUnavailableError(loadError);
   try {
-    reader = new Reader(fs.readFileSync(DATABASE));
+    reader = new Reader(fs.readFileSync(databasePath()));
     return reader;
   } catch (error) {
     loadError = error;
@@ -107,18 +119,37 @@ const getReader = () => {
   }
 };
 
+/** When the open database was built by DB-IP. */
+const databaseBuiltAt = () => getReader().metadata.buildEpoch;
+
+let warnedStale = false;
+const isStale = () => {
+  if (process.env.NODE_ENV !== 'prod') return false;
+  const age = Date.now() - databaseBuiltAt().getTime();
+  if (age <= MAX_DATABASE_AGE_MS) return false;
+  if (!warnedStale) {
+    warnedStale = true;
+    console.error('[COUNTRY_DB_STALE]', { builtAt: databaseBuiltAt().toISOString() });
+  }
+  return true;
+};
+
 /**
  * @param {string|undefined|null} ip
- * @returns {string|null} ISO 3166-1 alpha-2, upper case, or null for a private, unknown or malformed address.
+ * @returns {string|null} ISO 3166-1 alpha-2, upper case, or null for a private, unknown or
+ *   malformed address, and for every address once the database is stale on prod.
  * @throws {CountryDatabaseUnavailableError} when the database cannot be opened.
  */
 const countryOf = (ip) => {
   if (typeof ip !== 'string' || ip.length === 0) return null;
   const db = getReader();
+  if (isStale()) return null;
   const region = regionOf(ip);
   if (region) return region;
   try {
-    const code = db.get(ip)?.country_code;
+    const record = db.get(ip);
+    // DB-IP's own files carry `country.iso_code`; the npm copy flattens it to `country_code`.
+    const code = record?.country?.iso_code ?? record?.country_code;
     return typeof code === 'string' && COUNTRY_CODE.test(code) ? code : null;
   } catch {
     // A malformed address is the caller's; the database answered nothing.
@@ -130,6 +161,7 @@ const countryOf = (ip) => {
 const resetCountryDatabase = () => {
   reader = undefined;
   loadError = undefined;
+  warnedStale = false;
 };
 
 const localOverride = () => {
@@ -147,6 +179,7 @@ const countryOfRequest = (req) => localOverride() || countryOf(resolveSourceIp(r
 module.exports = {
   countryOf,
   countryOfRequest,
+  databaseBuiltAt,
   resetCountryDatabase,
   CountryDatabaseUnavailableError,
 };

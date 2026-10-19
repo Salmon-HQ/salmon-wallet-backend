@@ -20,6 +20,12 @@
 
 const PROVIDERS = ['jupiter', '0x'];
 const PLATFORMS = ['ios', 'android', 'extension'];
+/**
+ * Capabilities that may be offered only where the caller's country is known
+ * and the table has their row: a table without one is invalid, never "open
+ * everywhere".
+ */
+const REGULATED = ['swap'];
 // ISO 3166-1 alpha-2, or an ISO 3166-2 region the country resolver answers
 // on its own (`UA-43` Crimea…).
 /** Reasons a row may switch a capability off with; `region` is a country's, never a row's. */
@@ -192,6 +198,9 @@ const validateTable = (table) => {
   const capabilities = table.capabilities;
   if (!capabilities || typeof capabilities !== 'object')
     return [...problems, 'capabilities: missing'];
+  for (const name of REGULATED) {
+    if (!capabilities[name]) problems.push(`${name}: required, it is regulated`);
+  }
   for (const [name, capability] of Object.entries(capabilities)) {
     if (!capability || typeof capability !== 'object') {
       problems.push(`${name}: must be an object`);
@@ -303,6 +312,7 @@ module.exports = {
   JUPITER_PROHIBITED,
   EMBARGOED,
   PROVIDERS,
+  REGULATED,
   validateTable,
   createTableLoader,
   loadTable,

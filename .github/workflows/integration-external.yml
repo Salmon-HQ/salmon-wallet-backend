@@ -66,3 +66,43 @@ jobs:
           JUPITER_API_KEY: ${{ secrets.JUPITER_API_KEY }}
           SWAP_FEE_BPS: ${{ vars.SWAP_FEE_BPS }}
           SWAP_FEE_ACCOUNT_OWNER: ${{ vars.SWAP_FEE_ACCOUNT_OWNER }}
+
+  # The country gate, checked where it runs: OFAC's guidance asks that IP
+  # blocking be tested, not assumed. Prod switches Swap off once its DB-IP
+  # database is 45 days old; this goes red at 35, while a re-run of the last
+  # Deploy workflow (which downloads the month's database) still keeps Swap up.
+  production-country-gate:
+    name: production country gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Database fresh, runner placed, the US routed to 0x
+        env:
+          API: ${{ vars.PROD_API_URL || 'https://te4x28v8e0.execute-api.us-east-1.amazonaws.com/prod' }}
+        run: |
+          status="$(curl -fsS --retry 3 --retry-all-errors --max-time 20 "$API/status")"
+          built="$(jq -r '.countryDatabase' <<<"$status")"
+          country="$(jq -r '.country' <<<"$status")"
+          echo "Country database built ${built}; this runner is placed in ${country}"
+          if [ "$built" = "null" ]; then
+            echo "::error::Prod reports no country database."
+            exit 1
+          fi
+          age=$(( ( $(date -u +%s) - $(date -u -d "$built" +%s) ) / 86400 ))
+          if [ "$age" -gt 35 ]; then
+            echo "::error::The country database is ${age} days old. Re-run the last Deploy workflow before day 45, when prod switches Swap off."
+            exit 1
+          fi
+          if [ "$country" = "null" ]; then
+            echo "::error::Prod could not place this runner's address."
+            exit 1
+          fi
+          swap="$(curl -fsS --retry 3 --retry-all-errors --max-time 20 \
+            -H 'X-Salmon-Platform: ios' "$API/v1/solana-mainnet/powerups/availability" \
+            | jq -c '.data[] | select(.id == "swap")')"
+          echo "Swap for ${country}: ${swap}"
+          if [ "$country" = "US" ] && [ "$(jq -r '.provider' <<<"$swap")" != "0x" ]; then
+            echo "::error::A request from the United States was not routed to 0x."
+            exit 1
+          fi

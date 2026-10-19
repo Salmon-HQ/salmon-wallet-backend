@@ -2,8 +2,11 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
-## 0.25.1 — unreleased
+## 0.26.0 — unreleased
 
+- Swap availability fails closed: a caller whose country cannot be worked out gets `403 region_restricted` for `swap` (and `swap` reads as unavailable with `reason: 'region'` in `GET /v1/{network}/powerups/availability`); other Powerups are unaffected. A table without the `swap` row is now invalid.
+- The country database is DB-IP's current monthly edition, downloaded on every deploy; the region ranges for Crimea, Sevastopol, Donetsk, Luhansk, Kherson and Zaporizhzhia come from the same edition. On prod, a database older than 45 days places nobody, so `swap` closes until the next deploy.
+- `GET /status` adds `country` (where the country gate places the caller, or `null`) and `countryDatabase` (the database's build date), and is sent with `Cache-Control: no-store`.
 - `POST /v1/events` (usage analytics): a POST sent by a web page (`Origin` `http(s)://…` or `null`) is refused with `403 origin_not_allowed`; extension origins and requests without `Origin` (mobile) are unchanged. A batch without a usable install id is refused with `400 install_id_required` instead of being counted under an invented user. Events reach GA4 dated to the start of the hour they arrived, not the exact moment.
 - Swap availability: the built-in table, which serves when the live table cannot be read, now blocks the United Kingdom, mainland China, Myanmar, Côte d'Ivoire, DR Congo, Iraq, Libya, Mali, Nicaragua, Somalia, Sudan, Yemen and Zimbabwe, matching the live table. 0x serves only the United States, Singapore and Taiwan; elsewhere `swap` answers `403 region_restricted` as for any blocked country.
 

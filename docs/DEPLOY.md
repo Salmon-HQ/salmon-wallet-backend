@@ -27,6 +27,8 @@ eval "$(aws configure export-credentials --format env)"   # Serverless v3 does n
 npm run serverless:deploy:staging
 ```
 
+Staging reads the country database packaged in `@ip-location-db/dbip-country-mmdb`; run `node scripts/refresh-geo-data.mjs` first to give it the month's DB-IP edition.
+
 The script then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
 
 Staging differs from prod on purpose in three places: the Powerups switched on for testing, analytics written to Lambda's `/tmp` instead of GA4 (so testers never reach the production property), and Redis on Upstash over TLS. It shares every provider key with prod, so a load test against staging spends prod's provider quotas.
@@ -40,6 +42,10 @@ The owner's order is staging first, then prod, so a change runs on the staging s
 3. Squash-merge the `main` PR. `main` requires an approving review; while the owner is the only developer, the merge uses `gh pr merge --squash --admin`.
 4. Tag the merge commit `prod/vX.Y.Z`, matching `package.json#version` and the CHANGELOG entry, and push the tag. The `deploy.yml` run verifies, deploys and smokes `/health`; its log prints the prod execute-api URL.
 5. A red `verify` caused by a timing test is rerun with `gh run rerun <id> --failed`; any other red stops the release.
+
+### The monthly country database
+
+Each prod deploy downloads that month's DB-IP country database (`scripts/refresh-geo-data.mjs`), and a failed download fails the deploy. Prod stops placing callers once the database is 45 days old, which switches Swap off everywhere, so prod needs a deploy at least once a month. When no release is due, re-run the last tag's Deploy workflow: `gh run rerun <id>` on that run downloads the current month and redeploys the same code. The nightly `production country gate` job goes red at 35 days, and also when a request from GitHub's US runners is not routed to 0x.
 
 ## Provisioned but unused: Solana Actions / Blinks infrastructure
 
