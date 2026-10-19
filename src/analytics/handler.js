@@ -26,7 +26,6 @@ applyConnectTuning();
 // `mobile` is what wallet builds before analytics v2 send.
 const PLATFORMS = new Set(['extension', 'mobile', 'ios', 'android', 'seeker']);
 const MAX_EVENTS_PER_BATCH = 100;
-const MAX_ID_LENGTH = 64;
 const MAX_VERSION_LENGTH = 32;
 
 // One sink per warm container.
@@ -47,9 +46,25 @@ function respond(statusCode, body) {
   return { statusCode, headers: CORS_HEADERS, body: JSON.stringify(body) };
 }
 
-/** Trims and length-caps a context string, returning '' for anything invalid. */
-function safeString(value, maxLength) {
-  return typeof value === 'string' ? value.slice(0, maxLength) : '';
+// The wallet's ids are UUIDs, or `<time36>-<random36>` where crypto.randomUUID
+// is missing (some React Native runtimes).
+const SAFE_ID = /^[A-Za-z0-9-]{1,64}$/;
+
+/** Returns the id when it is a plausible wallet id, '' otherwise. */
+function safeId(value) {
+  return typeof value === 'string' && SAFE_ID.test(value) ? value : '';
+}
+
+// Browsers stamp every cross-origin POST with its Origin. The wallet posts from
+// an extension origin or, on mobile, with none; a web page has an http(s) or
+// "null" origin, so refusing those stops pages from making visitors' browsers
+// post invented events. A script outside a browser can still forge one.
+const EXTENSION_ORIGIN = /^(chrome-extension|moz-extension|safari-web-extension):\/\//;
+
+function originOf(event) {
+  const headers = event.headers || {};
+  const key = Object.keys(headers).find((name) => name.toLowerCase() === 'origin');
+  return key === undefined ? undefined : headers[key];
 }
 
 // Every client derives its version from its own package.json/app.json, so a
@@ -70,8 +85,8 @@ function sanitizeContext(raw) {
   const context = raw && typeof raw === 'object' ? raw : {};
   const platform = PLATFORMS.has(context.platform) ? context.platform : 'unknown';
   return {
-    install_id: safeString(context.installId, MAX_ID_LENGTH),
-    session_id: safeString(context.sessionId, MAX_ID_LENGTH),
+    install_id: safeId(context.installId),
+    session_id: safeId(context.sessionId),
     platform,
     app_version: safeVersion(context.appVersion),
   };
@@ -102,6 +117,13 @@ exports.handler = async (event) => {
       error_description: 'This endpoint only accepts POST.',
     });
   }
+  const origin = originOf(event);
+  if (origin !== undefined && !EXTENSION_ORIGIN.test(origin)) {
+    return respond(403, {
+      error: 'origin_not_allowed',
+      error_description: 'Usage events are accepted only from the Salmon wallet.',
+    });
+  }
 
   let payload;
   try {
@@ -121,6 +143,14 @@ exports.handler = async (event) => {
   }
 
   const context = sanitizeContext(payload.context);
+  // Without a usable install id the sink would invent a GA user per batch,
+  // inflating every user count.
+  if (!context.install_id) {
+    return respond(400, {
+      error: 'install_id_required',
+      error_description: 'The batch context must carry the wallet install id.',
+    });
+  }
   const receivedAt = Date.now();
   const dt = new Date(receivedAt).toISOString().slice(0, 10);
 

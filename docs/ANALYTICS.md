@@ -28,6 +28,25 @@ wallet (ios / android / seeker / extension)
   `mobile` (wallet builds before analytics v2); anything else is stored as
   `unknown`.
 
+## Ingest protections
+
+- **Origin**: a POST whose `Origin` is a web page (`http(s)://…` or `null`) gets
+  `403 origin_not_allowed`. The wallet posts from an extension origin
+  (`chrome-extension://`, `moz-extension://`) or, on mobile, with no `Origin`.
+  This stops web pages from making visitors' browsers post invented events; a
+  script outside a browser can still forge the header, so the figures remain
+  self-reported.
+- **Install id**: a batch without a usable `installId` (1–64 characters of
+  `A-Z a-z 0-9 -`) gets `400 install_id_required`, so no GA user is invented for
+  it. The wallet's ids are UUIDs, or `<time36>-<random36>` where
+  `crypto.randomUUID` is missing.
+- **Event time**: the GA4 sink sends `timestamp_micros` set to the start of the
+  hour the batch arrived. GA otherwise dates an event by arrival, which follows
+  a signature by a second or two and would let anyone holding the GA data match
+  an install to its on-chain transactions. Reports keep hourly resolution;
+  GA's Realtime view (last 30 minutes) may not show events stamped earlier in
+  the hour, so verify delivery with a standard report.
+
 ## Anonymity (why we proxy instead of a client SDK)
 
 GA4 attributes an event to the IP of whoever calls `/mp/collect`. That caller is
@@ -78,7 +97,7 @@ prefer to script it, but the console is the supported path.
 4. **Register custom dimensions** (required, easy to forget): Admin → Custom
    definitions → Create custom dimension, scope **Event**, one per param you want
    in reports — `platform`, `app_version`, `chain`, `from_chain`, `to_chain`,
-   `success`, `amount_bucket`, `powerup`. Until a param is registered it is delivered but
+   `success`, `powerup` (`amount_bucket` is allowed but no event sends it). Until a param is registered it is delivered but
    **does not surface in reports**. `app_version` was shipped by the sink long
    before it was registered here, so events collected before that registration
    carry the value but cannot be reported on.
