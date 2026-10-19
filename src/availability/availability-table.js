@@ -8,7 +8,9 @@
  * named by `AVAILABILITY_TABLE_PARAMETER`, read at runtime and cached for a
  * few minutes so a country change is a parameter edit, never a release.
  * Outside prod `AVAILABILITY_TABLE_JSON` overrides it for local runs. The
- * built-in `DEFAULT_TABLE` is the spec's initial rows and is what serves
+ * built-in `DEFAULT_TABLE` blocks what was declared to App Review
+ * (`EMBARGOED`, `PRECAUTIONARY`, `NOT_OFFERED`), sends the United States,
+ * Singapore and Taiwan to 0x and the rest to Jupiter, and is what serves
  * when nothing is configured or a read fails: a failure never opens a
  * country.
  *
@@ -26,10 +28,10 @@ const PLATFORMS = ['ios', 'android', 'extension'];
  * everywhere".
  */
 const REGULATED = ['swap'];
-// ISO 3166-1 alpha-2, or an ISO 3166-2 region the country resolver answers
-// on its own (`UA-43` Crimea…).
 /** Reasons a row may switch a capability off with; `region` is a country's, never a row's. */
 const OFF_REASONS = ['maintenance', 'deprecated'];
+// ISO 3166-1 alpha-2, or an ISO 3166-2 region the country resolver answers
+// on its own (`UA-43` Crimea…).
 const COUNTRY_CODE = /^[A-Z]{2}(-[A-Z0-9]{1,3})?$/;
 /** How long a table that cannot be refreshed may keep serving before the default takes over. */
 const MAX_STALE_MS = 60 * 60 * 1000;
@@ -41,7 +43,8 @@ const TTL_MS = 5 * 60 * 1000;
  */
 const JUPITER_PROHIBITED = Object.freeze([
   'US',
-  // "the Republic of China" is Taiwan; the PRC is not named, kept on 0x too.
+  // "the Republic of China" is Taiwan; the PRC is not named, kept here so
+  // Jupiter never serves it (the built-in table does not offer it at all).
   'TW',
   'CN',
   'SG',
@@ -77,7 +80,8 @@ const EMBARGOED = Object.freeze(['CU', 'IR', 'KP', 'SY', 'UA-43', 'UA-40', 'UA-1
 /**
  * Occupied in part, not under a comprehensive OFAC program (the EU's
  * "specified territories" include them). Blocked whole, because an IP cannot
- * tell the occupied part from the rest.
+ * tell the occupied part from the rest. Declared to App Review as blocked, so
+ * a `swap` row that leaves them out is invalid.
  */
 const PRECAUTIONARY = Object.freeze(['UA-65', 'UA-23']);
 
@@ -168,7 +172,6 @@ const validateRows = (name, platform, rows, problems) => {
     if (!COUNTRY_CODE.test(code))
       problems.push(`${where}: "${code}" is not an ISO 3166-1 alpha-2 or 3166-2 code`);
   }
-  // Jupiter may only serve outside its prohibited list, wherever it ends up serving.
   // The embargoed countries are unavailable on every row, whoever the provider.
   for (const country of EMBARGOED) {
     if (!rows.unavailable.includes(country)) {
@@ -183,6 +186,7 @@ const validateRows = (name, platform, rows, problems) => {
       }
     }
   }
+  // Jupiter may only serve outside its prohibited list, wherever it ends up serving.
   const servedByJupiter = (country) => {
     if (rows.unavailable.includes(country)) return false;
     for (const [provider, countries] of Object.entries(rows.providers)) {

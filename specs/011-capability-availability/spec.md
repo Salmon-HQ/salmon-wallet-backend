@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-14
 
-**Status**: Draft — owner decisions below taken 2026-09-14, amended 2026-09-30 by `specs/018-swap-jupiter-availability` (platform dimension, provider in the answer, screening moves to Salmon)
+**Status**: Draft — owner decisions below taken 2026-09-14, amended 2026-09-30 by `specs/018-swap-jupiter-availability` (platform dimension, provider in the answer, screening moves to Salmon) and 2026-10-19 in 0.26.0 (an unresolved country closes regulated capabilities: decision 3, FR-004)
 
 > The referenced-but-never-written spec 011. `specs/010-signing-boundary`,
 > here for region gating; this document is what they point at.
@@ -31,6 +31,10 @@ configuration edit, not a release.
    lookup failure: a denylist that cannot resolve an address has not found an
    embargo, and failing closed would take every capability down worldwide
    whenever one lookup service is unwell.
+   Amended 2026-10-19 (0.26.0): this holds only outside `REGULATED`. For
+   `swap` an unresolved country is refused, because an address the database
+   cannot place could be in a blocked country; the lookup is a local file
+   shipped with each deploy, never a service that can be unwell.
 
 ## What already exists, and is not to be rebuilt
 
@@ -134,7 +138,9 @@ and client state goes stale and can be forged.
 - **FR-003**: `powerupGate` MUST be mounted on every route that builds a
   `403 region_restricted` before any provider call.
 - **FR-004**: The gate MUST treat an unresolved country as unrestricted, and
-  MUST log the failure to resolve.
+  MUST log the failure to resolve. Amended 2026-10-19 (0.26.0): only for
+  capabilities outside `REGULATED`; for `swap` an unresolved country MUST be
+  refused with `403 region_restricted`.
 - **FR-005**: The client MUST merge the availability answer into the
   `disabledReasons` the catalogue already accepts. No new catalogue UI is
   required and none should be built.

@@ -104,7 +104,7 @@ let loadError;
  * Opened once per container. A load failure (file missing from the bundle,
  * corrupt, a package bump that changed the shape) is logged once and thrown
  * on every lookup: an unreadable database must never read as "no country",
- * which the table treats as unrestricted.
+ * which leaves unregulated capabilities open.
  */
 const getReader = () => {
   if (reader) return reader;

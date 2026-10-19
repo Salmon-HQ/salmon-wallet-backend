@@ -33,7 +33,8 @@ wallet (ios / android / seeker / extension)
 
 - **Origin**: a POST whose `Origin` is a web page (`http(s)://…` or `null`) gets
   `403 origin_not_allowed`. The wallet posts from an extension origin
-  (`chrome-extension://`, `moz-extension://`) or, on mobile, with no `Origin`.
+  (`chrome-extension://`, `moz-extension://`, `safari-web-extension://`) or, on
+  mobile, with no `Origin`; any other `Origin` is refused the same way.
   This stops web pages from making visitors' browsers post invented events; a
   script outside a browser can still forge the header, so the figures remain
   self-reported.

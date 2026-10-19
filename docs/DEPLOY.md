@@ -2,12 +2,13 @@
 
 ## Model
 
-Prod deploys are tag-triggered: push a git tag `prod/vX.Y.Z` from `main`.
+Prod deploys are tag-triggered: push a git tag `prod/vX.Y.Z` from `main`. A scheduled run on the 2nd of every month redeploys the newest `prod/v*` tag as it is (see [The monthly country database](#the-monthly-country-database)).
 
-`.github/workflows/deploy.yml` runs two jobs:
+`.github/workflows/deploy.yml` runs three jobs:
 
+- **`target`** — picks the tag to ship: the pushed one, or on the scheduled run the newest `prod/v*` by version. Both jobs below check out that tag.
 - **`verify`** — no AWS credentials. `npm ci`, the same `format:check` + `lint:check` gate as `ci.yml`, `test:unit`, and a `serverless print --stage local` sanity check (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
-- **`deploy`** (`needs: verify`) — assumes the `GithubActionsRole` via GitHub OIDC (`aws-actions/configure-aws-credentials`), runs `npm run serverless:deploy` (`serverless deploy --stage prod`), then smokes `GET /health` on the stack's execute-api URL (read from `serverless info --verbose`, not CloudFront, whose cache could mask a broken deploy). A red smoke step only alerts — nothing rolls back on its own.
+- **`deploy`** (`needs: [target, verify]`) — first runs `node scripts/refresh-geo-data.mjs` (downloads and checks the month's DB-IP country database, before the job holds any AWS credentials; a download or check failure fails the deploy), then assumes the `GithubActionsRole` via GitHub OIDC (`aws-actions/configure-aws-credentials`), runs `npm run serverless:deploy` (`serverless deploy --stage prod`), runs `refreshSanctionsJob` once, then smokes `GET /health` on the stack's execute-api URL (read from `serverless info --verbose`, not CloudFront, whose cache could mask a broken deploy) and fails when `GET /status` reports no `countryDatabase`, since Swap is then closed. A red smoke step only alerts — nothing rolls back on its own.
 
 Rollback is a human step, run locally with prod credentials:
 
@@ -15,6 +16,8 @@ Rollback is a human step, run locally with prod credentials:
 npx serverless deploy list --stage prod          # timestamps of stored artifacts
 npx serverless rollback --stage prod --timestamp <t>
 ```
+
+Each artifact carries the country database of the deploy that built it. That database is DB-IP's edition of the 1st of the month the artifact was deployed in (of the month before, for a deploy early on the 1st), so check the target's timestamp before rolling back: once its database is more than 45 days old, prod places nobody and Swap closes everywhere. Never roll back to an artifact older than 0.26.0 without the owner: those place a caller whose country is unknown as unrestricted and carry a looser built-in table. After a rollback the newest `prod/v*` tag is still the release that was rolled back, and the monthly run on the 2nd redeploys it; before the 2nd, push a fix as a new tag or delete the bad tag so the newest one is the release now running.
 
 `concurrency: deploy-prod` (`cancel-in-progress: false`) prevents two tags pushed close together from deploying in parallel.
 
@@ -27,9 +30,7 @@ eval "$(aws configure export-credentials --format env)"   # Serverless v3 does n
 npm run serverless:deploy:staging
 ```
 
-Staging reads the country database packaged in `@ip-location-db/dbip-country-mmdb`; run `node scripts/refresh-geo-data.mjs` first to give it the month's DB-IP edition.
-
-The script then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
+The script first runs `node scripts/refresh-geo-data.mjs`, so staging ships the month's DB-IP country database like prod; a failed download stops it before anything is deployed. It then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
 
 Staging differs from prod on purpose in three places: the Powerups switched on for testing, analytics written to Lambda's `/tmp` instead of GA4 (so testers never reach the production property), and Redis on Upstash over TLS. It shares every provider key with prod, so a load test against staging spends prod's provider quotas.
 
@@ -45,7 +46,7 @@ The owner's order is staging first, then prod, so a change runs on the staging s
 
 ### The monthly country database
 
-Each prod deploy downloads that month's DB-IP country database (`scripts/refresh-geo-data.mjs`), and a failed download fails the deploy. Prod stops placing callers once the database is 45 days old, which switches Swap off everywhere, so prod needs a deploy at least once a month. When no release is due, re-run the last tag's Deploy workflow: `gh run rerun <id>` on that run downloads the current month and redeploys the same code. The nightly `production country gate` job goes red at 35 days, and also when a request from GitHub's US runners is not routed to 0x.
+Each prod deploy downloads that month's DB-IP country database (`scripts/refresh-geo-data.mjs`; the previous month's early on the 1st, before DB-IP publishes), rebuilds the Ukrainian region ranges from the same month's City Lite, and checks known addresses in the US, GB, IR, CU and CN plus all six regions; any failure fails the deploy. Prod stops placing callers once the database is 45 days old, which switches Swap off everywhere. DB-IP publishes on the 1st, so `deploy.yml` also runs on a schedule, the 2nd of every month at 06:30 UTC, and redeploys the newest `prod/v*` tag with that month's database: no release is needed to keep Swap open. The nightly `production country gate` job (`integration-external.yml`) goes red when the database is more than 35 days old (the monthly run failed or did not run; find out why and get a deploy out before day 45), when prod cannot place the runner's address, and when a request from a US runner is not routed to 0x.
 
 ## Provisioned but unused: Solana Actions / Blinks infrastructure
 
