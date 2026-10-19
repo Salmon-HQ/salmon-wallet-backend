@@ -31,6 +31,14 @@ describe('toGa4Event', () => {
   });
 });
 
+describe('toGa4Event powerup param', () => {
+  it('forwards the powerup prop as an event param', () => {
+    expect(
+      toGa4Event({ ...RECORD, event: 'powerup_installed', props: { powerup: 'swap' } }).params
+    ).toMatchObject({ powerup: 'swap' });
+  });
+});
+
 describe('createSink', () => {
   const original = process.env.ANALYTICS_SINK;
   afterEach(() => {

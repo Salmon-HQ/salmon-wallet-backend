@@ -1,6 +1,9 @@
 'use strict';
 
 const {
+  ANALYTICS_EVENTS,
+  ALLOWED_PROP_KEYS,
+  POWERUPS,
   validateEvent,
   safeValidateEvent,
   isAddressLike,
@@ -44,6 +47,53 @@ describe('event-schema guardrail (server mirror)', () => {
       /string or boolean/
     );
     expect(() => validateEvent('send_completed', { chain: 'dogecoin' })).toThrow(/not allowed/);
+  });
+
+  it('holds exactly the v2 catalog: 20 events and 6 prop keys', () => {
+    expect(ANALYTICS_EVENTS).toEqual([
+      'app_opened',
+      'wallet_created',
+      'wallet_recovered',
+      'first_send_completed',
+      'send_completed',
+      'nft_viewed',
+      'nft_sent',
+      'network_switched',
+      'wallet_switched',
+      'address_book_used',
+      'powerup_installed',
+      'powerup_uninstalled',
+      'swap_completed',
+      'first_swap_completed',
+      'memo_sent',
+      'payment_request_created',
+      'payment_request_paid',
+      'dapp_connected',
+      'dapp_message_signed',
+      'dapp_transaction_signed',
+    ]);
+    expect(ALLOWED_PROP_KEYS).toEqual([
+      'chain',
+      'from_chain',
+      'to_chain',
+      'success',
+      'amount_bucket',
+      'powerup',
+    ]);
+  });
+
+  it('accepts only registry Powerup ids in powerup', () => {
+    expect(POWERUPS).toEqual(['swap', 'payments', 'memo', 'skr']);
+    expect(validateEvent('powerup_installed', { powerup: 'swap' })).toEqual({
+      event: 'powerup_installed',
+      props: { powerup: 'swap' },
+    });
+    expect(() => validateEvent('powerup_installed', { powerup: 'staking' })).toThrow(/not allowed/);
+  });
+
+  it('accepts success only as a boolean', () => {
+    expect(validateEvent('memo_sent', { success: false }).props).toEqual({ success: false });
+    expect(() => validateEvent('memo_sent', { success: 'true' })).toThrow(/not allowed/);
   });
 
   it('safeValidateEvent returns null instead of throwing', () => {
