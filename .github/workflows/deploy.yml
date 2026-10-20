@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - prod/*
+  # Prod stops placing callers once its DB-IP database is 45 days old, which
+  # closes Swap; DB-IP publishes on the 1st. On the 2nd the newest prod/v* tag
+  # is redeployed as it is, so each month's database ships with no release.
+  schedule:
+    - cron: '30 6 2 * *'
 
 permissions: {}
 
@@ -12,8 +17,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The tag to ship: the pushed one, or on the monthly run the newest prod/v*.
+  target:
+    name: Target tag
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+    steps:
+      - name: Checkout tags
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Pick the tag
+        id: pick
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+            tag="$(git tag --list 'prod/v*' --sort=-v:refname | head -n 1)"
+          else
+            tag="$GITHUB_REF_NAME"
+          fi
+          if [ -z "$tag" ]; then
+            echo "::error::No prod/v* tag to deploy."
+            exit 1
+          fi
+          echo "Deploying ${tag}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
   verify:
     name: Verify
+    needs: target
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -23,6 +58,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ needs.target.outputs.tag }}
       - name: Use Node.js from .nvmrc
         # v7.0.0. Cache is safe here: verify publishes nothing — it only gates.
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # zizmor: ignore[cache-poisoning]
@@ -34,11 +70,13 @@ jobs:
       # it ships a deploy that misreports itself. This has happened: every tag
       # from prod/v0.7.5 to prod/v0.9.0 shipped while package.json sat at 0.7.4.
       - name: Tag matches package.json version
+        env:
+          TAG: ${{ needs.target.outputs.tag }}
         run: |
-          tag_version="${GITHUB_REF_NAME#prod/v}"
+          tag_version="${TAG#prod/v}"
           pkg_version="$(node -p "require('./package.json').version")"
           if [ "$tag_version" != "$pkg_version" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} declares ${tag_version} but package.json says ${pkg_version}."
+            echo "::error::Tag ${TAG} declares ${tag_version} but package.json says ${pkg_version}."
             echo "Bump package.json and retag, or delete the tag and push the right one."
             exit 1
           fi
@@ -66,8 +104,9 @@ jobs:
 
   deploy:
     name: Deploy Serverless PROD
-    needs: verify
+    needs: [target, verify]
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     permissions:
       id-token: write
       contents: read
@@ -77,6 +116,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ needs.target.outputs.tag }}
       - name: Use Node.js from .nvmrc
         # v7.0.0. Deliberately NO dependency cache: this job publishes to
         # prod, and a poisoned cache entry could reach the shipped artifact.
@@ -91,6 +131,13 @@ jobs:
 
       - name: Install node modules
         run: npm ci
+
+      # The country gate reads this month's DB-IP database, and on prod it
+      # stops placing anyone once the database is 45 days old, which closes
+      # Swap. Fetched before the job holds AWS credentials. A failure fails the
+      # deploy: a database the script could not check is never shipped.
+      - name: Refresh the country database
+        run: node scripts/refresh-geo-data.mjs
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
@@ -133,3 +180,10 @@ jobs:
           echo "Smoking ${endpoint}/health"
           curl --fail --show-error --silent --retry 5 --retry-delay 5 \
             --retry-all-errors --max-time 20 "${endpoint}/health" > /dev/null
+          built="$(curl --fail --show-error --silent --retry 5 --retry-delay 5 \
+            --retry-all-errors --max-time 20 "${endpoint}/status" | jq -r '.countryDatabase')"
+          if [ -z "$built" ] || [ "$built" = "null" ]; then
+            echo "::error::The deployed stack reports no country database: Swap is closed."
+            exit 1
+          fi
+          echo "Country database built ${built}"

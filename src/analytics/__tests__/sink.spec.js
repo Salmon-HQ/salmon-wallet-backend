@@ -4,7 +4,7 @@ const { createSink, createGa4Sink, toGa4Event } = require('../sink');
 
 const RECORD = {
   event: 'send_completed',
-  props: { chain: 'solana', success: true, amount_bucket: '10-100' },
+  props: { chain: 'solana', success: true, powerup: 'swap' },
   ts: 1783979939147,
   received_at: 1783979979715,
   dt: '2026-07-13',
@@ -25,7 +25,7 @@ describe('toGa4Event', () => {
         app_version: '3.0.0',
         chain: 'solana',
         success: true,
-        amount_bucket: '10-100',
+        powerup: 'swap',
       },
     });
   });
@@ -95,6 +95,13 @@ describe('createGa4Sink', () => {
     await createGa4Sink().putRecords([RECORD]);
     expect(calls[0].body.client_id).toBe('install-abc');
     expect(calls[0].body.events).toEqual([toGa4Event(RECORD)]);
+  });
+
+  it('stamps the request with the hour the batch arrived, never the exact moment', async () => {
+    await createGa4Sink().putRecords([RECORD]);
+    const hourStartMs = Math.floor(RECORD.received_at / 3_600_000) * 3_600_000;
+    expect(calls[0].body.timestamp_micros).toBe(hourStartMs * 1000);
+    expect(calls[0].body.events[0]).not.toHaveProperty('timestamp_micros');
   });
 
   it('never forwards the user IP (no ip_override / user-ip fields)', async () => {

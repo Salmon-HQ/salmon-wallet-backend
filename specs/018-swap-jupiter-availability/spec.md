@@ -14,6 +14,17 @@
 > the availability table, the platform dimension and the second provider. Depends on spec 010 (signing boundary): the route
 > stays a GET-only build endpoint. The client side is frontend spec 027.
 
+> **Amended 2026-10-19 (0.26.0).** Where this spec and the code differ, the
+> code holds: an unresolved country closes every regulated capability
+> (`REGULATED = ['swap']`) with `403 region_restricted`, and other Powerups
+> stay open; a table without the `swap` row is invalid. The built-in table
+> is `DEFAULT_TABLE` in `src/availability/availability-table.js`: the
+> embargoed territories, Kherson and Zaporizhzhia are unavailable, and so
+> are the United Kingdom and the twelve localities Jupiter names other than
+> Singapore and Taiwan (owner decision 2026-10-19); 0x serves the United
+> States (owner decision 2026-10-06), Singapore and Taiwan; Jupiter serves
+> the rest. A `swap` row that reopens any of those blocked places is invalid.
+
 ## Context
 
 Salmon's swap is build-only: the backend returns an unsigned transaction,

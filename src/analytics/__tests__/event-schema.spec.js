@@ -43,9 +43,7 @@ describe('event-schema guardrail (server mirror)', () => {
   });
 
   it('rejects raw numbers and out-of-enum values', () => {
-    expect(() => validateEvent('send_completed', { amount_bucket: 42 })).toThrow(
-      /string or boolean/
-    );
+    expect(() => validateEvent('send_completed', { chain: 42 })).toThrow(/string or boolean/);
     expect(() => validateEvent('send_completed', { chain: 'dogecoin' })).toThrow(/not allowed/);
   });
 
@@ -72,14 +70,7 @@ describe('event-schema guardrail (server mirror)', () => {
       'dapp_message_signed',
       'dapp_transaction_signed',
     ]);
-    expect(ALLOWED_PROP_KEYS).toEqual([
-      'chain',
-      'from_chain',
-      'to_chain',
-      'success',
-      'amount_bucket',
-      'powerup',
-    ]);
+    expect(ALLOWED_PROP_KEYS).toEqual(['chain', 'from_chain', 'to_chain', 'success', 'powerup']);
   });
 
   it('accepts only registry Powerup ids in powerup', () => {

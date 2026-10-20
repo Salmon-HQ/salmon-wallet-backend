@@ -7,7 +7,8 @@
  * Resolves the caller's platform (`X-Salmon-Platform`) and country (source
  * address → DB-IP), asks the availability table, and either refuses before
  * any provider call — `404 not_found` when the row is switched off,
- * `403 region_restricted` when the country is unavailable — or records the decision
+ * `403 region_restricted` when the country is unavailable, or unknown for a
+ * regulated capability (`swap`) — or records the decision
  * in `res.locals.availability = { capability, platform, country, provider }`
  * for the build service to pick its adapter. Logs `[POWERUP_GATE]` with the
  * decision and never the address or the wallet.

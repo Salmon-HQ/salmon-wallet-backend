@@ -7,11 +7,11 @@ description: How this API is deployed and run (Serverless Framework v3, AWS Lamb
 
 ## Deploy stack
 
-- `serverless.yml`: service `gol-salmon-api`, Serverless Framework **v3**, `nodejs20.x`, region `us-east-1`, default stage `prod`, `versionFunctions: false`.
-- Functions: `api` (`src/index.handler`, ANY proxy, timeout 60), `events` (`src/analytics/handler.handler`, explicit `POST /v1/events`), crons `listTokensJob` (1h, bitcoin) and `refreshPricesJob` (60min, bitcoin).
-- Runtime IAM: no statements — the service needs none. A new capability means a specific statement, not a wildcard.
+- `serverless.yml`: service `gol-salmon-api`, Serverless Framework **v3**, `nodejs24.x`, region `us-east-1`, default stage `prod`, `versionFunctions: false`.
+- Functions: `api` (`src/index.handler`, ANY proxy, timeout 60), `events` (`src/analytics/handler.handler`, explicit `POST /v1/events`), crons `listTokensJob` (1h, bitcoin), `refreshPricesJob` (60min, bitcoin), `refreshSanctionsJob` (1 day, the sanctions list swap screening reads) and `recordSkrSharePriceJob` (02:05 UTC daily).
+- Runtime IAM: one statement, `ssm:GetParameter` on `/salmon-api/<stage>/AVAILABILITY_TABLE` (the availability table, read at runtime). A new capability means a specific statement, not a wildcard.
 - Deployer policy: `aws-deploy-policy.json` — CloudFormation, IAM scoped to `role/gol-salmon-api-*`, Lambda scoped to the service, deployment-bucket S3, EventBridge, CloudFront/Lambda@Edge.
-- CI/CD: `.github/workflows/deploy.yml`, triggered by pushing a `prod/vX.Y.Z` tag. Job `verify` (no AWS: `npm ci` + lint + `test:unit` + `serverless print --stage local` as a config check) → job `deploy` (`needs: verify`, assumes the GitHub Actions role via OIDC, runs `npm run serverless:deploy`). `concurrency: deploy-prod` prevents overlapping deploys. The old `.github/workflows/build.yml` (auto-deploy to develop/main on push) was removed — see `docs/DEPLOY.md`.
+- CI/CD: `.github/workflows/deploy.yml`, triggered by pushing a `prod/vX.Y.Z` tag and by a schedule on the 2nd of every month (06:30 UTC) that redeploys the newest `prod/v*` tag, so prod always ships the month's DB-IP country database (on prod a database older than 45 days closes Swap). Job `target` (the pushed tag, or the newest one) → job `verify` (no AWS: `npm ci` + lint + `test:unit` + `serverless print --stage local` as a config check) → job `deploy` (runs `node scripts/refresh-geo-data.mjs` before it holds AWS credentials, and a download or check failure fails the deploy; then assumes the GitHub Actions role via OIDC, runs `npm run serverless:deploy`, and fails its smoke step when `/status` reports no `countryDatabase`). Rollback caveats (database age, never below 0.26.0, the monthly run redeploys the newest tag) are in `docs/DEPLOY.md`. `concurrency: deploy-prod` prevents overlapping deploys. The old `.github/workflows/build.yml` (auto-deploy to develop/main on push) was removed — see `docs/DEPLOY.md`.
 
 ## Known quirks (do not "fix" these without knowing this)
 

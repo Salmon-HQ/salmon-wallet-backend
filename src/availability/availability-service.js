@@ -8,7 +8,7 @@
  */
 
 const catalog = require('../services/solana/powerups/powerup-catalog-service');
-const { rowsFor } = require('./availability-table');
+const { rowsFor, REGULATED } = require('./availability-table');
 
 /** Providers that do not screen wallets themselves, so Salmon screens (Jupiter §7.3/§7.4). */
 const SCREENED_BY_SALMON = ['jupiter'];
@@ -25,6 +25,9 @@ const decide = (table, capability, platform, country) => {
   if (!entry) return { enabled: true };
   const rows = rowsFor(entry, platform);
   if (!rows.enabled) return { enabled: false, reason: rows.reason };
+  // A regulated capability is offered only where the country is known: an
+  // address the database cannot place could be in a blocked country.
+  if (!country && REGULATED.includes(capability)) return { enabled: false, reason: 'region' };
   if (country && rows.unavailable.includes(country)) return { enabled: false, reason: 'region' };
   let provider = rows.default;
   if (country) {

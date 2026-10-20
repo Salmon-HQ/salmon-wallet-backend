@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Salmon API
-  version: 0.15.1
+  version: 0.26.0
   description: |
     Public HTTP API of the Salmon Wallet backend (`gol-salmon-api`).
 
@@ -9,13 +9,13 @@ info:
     `/v1/<chain>-{env}` (e.g. `/v1/solana-mainnet`), plus cross-chain
     surfaces (`/v1/networks`, `/v1/dapp`, CoinGecko market
     data, and the multichain balance endpoint) and unversioned service-info
-    endpoints (`/health`, `/status`, `/ip`).
+    endpoints (`/health`, `/status`).
 
     Error payloads use the envelope `{ error: '<snake_case_code>',
-    error_description: '<human message>' }` (see the `Error` schema), except
-    the analytics ingest endpoint (`POST /v1/events`), which is a separate
-    dependency-light Lambda and returns `{ error: '<code>' }` without
-    `error_description`.
+    error_description: '<human message>' }` (see the `Error` schema),
+    including the analytics ingest endpoint (`POST /v1/events`), a separate
+    dependency-light Lambda whose `no_valid_events` also carries a
+    `rejected` count.
 
     Response shapes are defined by the `src/resources/` layer — that layer
     is the public contract. Shapes documented as `additionalProperties: true`
@@ -78,9 +78,20 @@ paths:
       tags: [info]
       operationId: getStatus
       summary: Service/build identification
+      description: |
+        Build metadata, plus where the country gate places the caller and the
+        build date of the country database it reads, so a stale database or a
+        tester's location can be checked from outside. The deploy smoke step
+        reads `countryDatabase`; the nightly `production country gate` job
+        reads both. Never cached.
       responses:
         '200':
           description: Build metadata
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
           content:
             application/json:
               schema:
@@ -107,6 +118,24 @@ paths:
                   time:
                     type: string
                     format: date-time
+                  country:
+                    type: string
+                    nullable: true
+                    example: AR
+                    description: |
+                      Where the country gate places the caller: ISO 3166-1
+                      alpha-2, or an ISO 3166-2 code for the Ukrainian
+                      regions the gate treats on their own (`UA-43`…). `null`
+                      when the caller cannot be placed (private or unplaced
+                      address, a request through a CloudFront distribution in
+                      front of API Gateway, a prod database older than 45
+                      days) or the database cannot be opened.
+                  countryDatabase:
+                    type: string
+                    format: date
+                    nullable: true
+                    example: '2026-10-01'
+                    description: Build date of the DB-IP country database, or `null` when it cannot be opened
 
 
   # ─────────────────────── networks ───────────────────────
@@ -584,7 +613,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: "`region_restricted` — swap is not offered in the caller's country on this platform; `wallet_restricted` — the sanctions screening (Salmon's on a Jupiter row, 0x's on a 0x row) refused the taker"
+          description: "`region_restricted` — swap is not offered in the caller's country on this platform, or the caller's country cannot be determined (private or unplaced address, a request through a CloudFront distribution in front of API Gateway, a prod country database older than 45 days); `wallet_restricted` — the sanctions screening (Salmon's on a Jupiter row, 0x's on a 0x row) refused the taker"
           content:
             application/json:
               schema:
@@ -614,7 +643,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '503':
-          description: '`upstream_unavailable` — the row names a provider without a configured credential, or neither sanctions layer could answer; `upstream_rate_limited` — the provider keeps throttling'
+          description: '`upstream_unavailable` — the country database could not be opened, the row names a provider without a configured credential, or neither sanctions layer could answer; `upstream_rate_limited` — the provider keeps throttling'
           content:
             application/json:
               schema:
@@ -832,7 +861,10 @@ paths:
         the caller's country (the source address API Gateway attaches, never
         a header) and the `X-Salmon-Platform` header. Informs only: the build
         route is what refuses. Never cached (`Cache-Control: no-store`).
-        A country that cannot be resolved gets the default provider.
+        When the caller's country cannot be worked out (private or unplaced
+        address, a request through a CloudFront distribution in front of API
+        Gateway, or a prod country database older than 45 days), `swap` is
+        `enabled: false` with `reason: region`; other Powerups are unaffected.
       parameters:
         - $ref: '#/components/parameters/SolanaEnv'
         - $ref: '#/components/parameters/SalmonPlatform'
@@ -857,7 +889,7 @@ paths:
         '400':
           $ref: '#/components/responses/InvalidNetwork'
         '503':
-          description: '`network_catalog_unavailable` — the stage catalog failed to load'
+          description: '`network_catalog_unavailable` — the stage catalog failed to load; `upstream_unavailable` — the country database could not be opened'
           content:
             application/json:
               schema:
@@ -874,8 +906,9 @@ paths:
         transaction-building Powerup; the backend never receives a signed
         transaction and no execute/broadcast route exists. Passes the
         availability gate first: a caller in a country where the capability
-        is not offered on their platform gets 403 `region_restricted` before
-        any provider is called.
+        is not offered on their platform, or whose country cannot be worked
+        out when the capability is regulated (`swap`), gets 403
+        `region_restricted` before any provider is called.
       parameters:
         - $ref: '#/components/parameters/SolanaEnv'
         - $ref: '#/components/parameters/SalmonPlatform'
@@ -906,7 +939,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: '`region_restricted` — not offered in the caller''s country on this platform'
+          description: '`region_restricted` — not offered in the caller''s country on this platform, or the country cannot be determined and the capability is regulated (`swap`)'
           content:
             application/json:
               schema:
@@ -930,7 +963,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '503':
-          description: '`simulation_unavailable` or a resilience 503'
+          description: '`simulation_unavailable`, a resilience 503, or `upstream_unavailable` when the country database could not be opened'
           content:
             application/json:
               schema:
@@ -1005,11 +1038,15 @@ paths:
         function. Events are re-validated against a server-side allow-list;
         anything resembling an address, mint, raw number, or oversized string
         is dropped. The client IP is never read or stored. Up to 100 events
-        per batch are processed.
+        per batch are processed. Events reach GA4 dated to the start of the
+        hour the batch arrived, not the exact moment.
 
-        Error responses use a reduced envelope `{ error: '<code>' }` (no
-        `error_description`). CORS is `Access-Control-Allow-Origin: *`;
-        OPTIONS preflight returns 204.
+        Only the wallet posts here: a request with an `Origin` that is not an
+        extension origin (`chrome-extension://`, `moz-extension://`,
+        `safari-web-extension://`), including `http(s)://…` and `null`, is
+        refused with 403; a request without `Origin` (mobile) is accepted.
+        CORS is `Access-Control-Allow-Origin: *`; OPTIONS preflight returns
+        204.
       requestBody:
         required: true
         content:
@@ -1022,14 +1059,16 @@ paths:
                   properties:
                     installId:
                       type: string
-                      maxLength: 64
+                      pattern: '^[A-Za-z0-9-]{1,64}$'
+                      description: The wallet's install id; a batch without one that matches is refused with 400 `install_id_required`
                     sessionId:
                       type: string
-                      maxLength: 64
+                      pattern: '^[A-Za-z0-9-]{1,64}$'
+                      description: Dropped when it does not match
                     platform:
                       type: string
-                      enum: [web, extension, mobile]
-                      description: Anything else is recorded as `unknown`
+                      enum: [extension, mobile, ios, android, seeker]
+                      description: Anything else, `web` included, is recorded as `unknown`
                     appVersion:
                       type: string
                       description: Must be plain semver (max 32 chars) or it is dropped
@@ -1044,12 +1083,19 @@ paths:
                         description: Allow-listed event name (see `src/analytics/event-schema.js`)
                       props:
                         type: object
+                        description: |
+                          Allow-listed keys only: `chain`, `from_chain`,
+                          `to_chain` (`solana`, `bitcoin`, `ethereum`),
+                          `success` (boolean) and `powerup` (`swap`,
+                          `payments`, `memo`, `skr`). An event carrying any
+                          other key or value is rejected.
                         additionalProperties: true
                       ts:
                         type: number
                         description: Client-side epoch-millis timestamp (defaults to server receive time)
                     required: [event]
-              required: [events]
+                  required: [installId]
+              required: [context, events]
       responses:
         '202':
           description: |
@@ -1069,7 +1115,7 @@ paths:
                     description: Present (false) only when the sink write failed
                 required: [accepted, rejected]
         '400':
-          description: '`invalid_json`, `events_array_required`, or `no_valid_events` (with a `rejected` count)'
+          description: '`invalid_json`, `events_array_required`, `install_id_required` (no `context.installId` matching its pattern), or `no_valid_events` (with a `rejected` count)'
           content:
             application/json:
               schema:
@@ -1077,21 +1123,24 @@ paths:
                 properties:
                   error:
                     type: string
-                    enum: [invalid_json, events_array_required, no_valid_events]
+                    enum: [invalid_json, events_array_required, install_id_required, no_valid_events]
+                  error_description:
+                    type: string
                   rejected:
                     type: integer
-                required: [error]
+                required: [error, error_description]
+        '403':
+          description: '`origin_not_allowed` — the request carries an `Origin` that is not an extension origin (a web page, or `null`)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '405':
           description: '`method_not_allowed` for any verb other than POST/OPTIONS'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    enum: [method_not_allowed]
-                required: [error]
+                $ref: '#/components/schemas/Error'
 
 components:
   parameters:
