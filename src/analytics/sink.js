@@ -47,9 +47,9 @@ function createFileSink() {
 
 /**
  * Maps one validated record to a Measurement Protocol event. The record's
- * allow-listed props (`chain`, `success`, `amount_bucket`, …) become event
+ * allow-listed props (`chain`, `success`, …) become event
  * params alongside the context. `platform` is what lets a single GA4 property
- * tell mobile, web and extension apart — register it (and each prop) as a
+ * tell iOS, Android, Seeker and the extension apart — register it (and each prop) as a
  * custom dimension in the GA4 console or it will not surface in reports.
  */
 function toGa4Event(record) {
@@ -65,6 +65,11 @@ function toGa4Event(record) {
       ...record.props,
     },
   };
+}
+
+/** Start of the hour `ms` falls in, in microseconds (Measurement Protocol unit). */
+function hourStartMicros(ms) {
+  return Math.floor(ms / 3_600_000) * 3_600_000 * 1000;
 }
 
 function createGa4Sink() {
@@ -88,7 +93,15 @@ function createGa4Sink() {
 
       for (let i = 0; i < records.length; i += GA4_MAX_EVENTS_PER_REQUEST) {
         const chunk = records.slice(i, i + GA4_MAX_EVENTS_PER_REQUEST);
-        const body = { client_id: clientId, events: chunk.map(toGa4Event) };
+        const body = {
+          client_id: clientId,
+          // GA dates an event by when it arrives unless told otherwise. Arrival
+          // follows a signature by a second or two, which would let anyone with
+          // the GA data match an install to its on-chain transactions; the hour
+          // the batch arrived is all reports need. GA accepts up to 72 h back.
+          timestamp_micros: hourStartMicros(records[0].received_at),
+          events: chunk.map(toGa4Event),
+        };
         const res = await fetch(url, {
           method: 'POST',
           body: JSON.stringify(body),

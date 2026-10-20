@@ -3,17 +3,33 @@
 const { healthCheck } = require('../../../packages/health-check');
 const { name, version } = require('../../../package.json');
 const { redis } = require('../../repositories/data-source');
+const { countryOfRequest, databaseBuiltAt } = require('../../availability/country-resolver');
+
+/** The country gate's view of this request, or nulls when its database cannot be opened. */
+const geo = (req) => {
+  try {
+    return {
+      country: countryOfRequest(req),
+      countryDatabase: databaseBuiltAt().toISOString().slice(0, 10),
+    };
+  } catch {
+    return { country: null, countryDatabase: null };
+  }
+};
 
 /**
- * Returns basic service/build identification.
+ * Returns basic service/build identification, plus the caller's country as
+ * the availability gate places it and the date of the database it uses, so
+ * the nightly check can tell a stale database and a tester behind a VPN can
+ * see where the gate puts them.
  *
- * @param {import('express').Request} req - Unused; response is derived from package
- *   metadata and env vars.
+ * @param {import('express').Request} req - Its source address is placed by the gate.
  * @param {import('express').Response} res - Responds 200 with
- *   `{ name, version, build, commit, stage, time }`.
+ *   `{ name, version, build, commit, stage, time, country, countryDatabase }`.
  * @returns {Promise<void>}
  */
 const status = async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   res.status(200).send({
     name,
     version,
@@ -21,6 +37,7 @@ const status = async (req, res) => {
     commit: process.env.GITHUB_SHA,
     stage: process.env.STAGE,
     time: new Date(),
+    ...geo(req),
   });
 };
 

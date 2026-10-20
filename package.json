@@ -1,6 +1,6 @@
 {
   "name": "salmon-api",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "description": "Salmon API",
   "main": "index.js",
   "engines": {
@@ -21,7 +21,7 @@
     "serverless:print": "serverless print --stage prod -v",
     "serverless:build": "serverless package --stage prod",
     "serverless:deploy": "serverless deploy --stage prod",
-    "serverless:deploy:staging": "serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
+    "serverless:deploy:staging": "node scripts/refresh-geo-data.mjs && serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
     "test:integration:local-validator": "jest --testPathPatterns=\"local-validator.integration.spec.js$\" --detectOpenHandles --runInBand"
   },
   "repository": {

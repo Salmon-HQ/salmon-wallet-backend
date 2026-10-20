@@ -47,3 +47,6 @@ coverage/
 *.bak
 *.pem
 *.key
+
+# Country database the deploy downloads from DB-IP (scripts/refresh-geo-data.mjs)
+src/availability/data/

@@ -14,6 +14,7 @@ const controller = require('../info-controller');
 
 describe('info-controller', () => {
   const buildRes = () => ({
+    set: jest.fn(),
     status: jest.fn().mockReturnThis(),
     send: jest.fn(),
   });
@@ -52,6 +53,22 @@ describe('info-controller', () => {
           commit: 'sha-deadbeef',
           stage: 'develop',
           time: expect.any(Date),
+        })
+      );
+    });
+
+    it("tells the caller where the country gate places them, and the database's date", async () => {
+      const res = buildRes();
+      await controller.status(
+        { requestContext: { identity: { sourceIp: '8.8.8.8' } }, headers: {} },
+        res
+      );
+
+      expect(res.set).toHaveBeenCalledWith('Cache-Control', 'no-store');
+      expect(res.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          country: 'US',
+          countryDatabase: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         })
       );
     });

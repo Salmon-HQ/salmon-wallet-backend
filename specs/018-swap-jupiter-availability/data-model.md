@@ -27,6 +27,7 @@
 - Provider names: `jupiter`, `0x`. Countries: ISO-3166 alpha-2, upper case.
 - Validation (on load; failure keeps the previous table): known provider names; no `jupiter` row for a country in `JUPITER_PROHIBITED` (constant in code, from Jupiter's Terms of Use); known platform keys; `version` = 1.
 - Built-in default (in code): exactly the document above. It is what serves when SSM is unreadable.
+- Amended 2026-10-19 (0.26.0): the document above is the initial table. The built-in default is `DEFAULT_TABLE` in `src/availability/availability-table.js`: `EMBARGOED` (Cuba, Iran, North Korea, Syria, Crimea, Sevastopol, Donetsk, Luhansk), `PRECAUTIONARY` (Kherson `UA-65`, Zaporizhzhia `UA-23`) and `NOT_OFFERED` (`GB`, `CN`, `MM`, `CI`, `CD`, `IQ`, `LY`, `ML`, `NI`, `SO`, `SD`, `YE`, `ZW`) unavailable, 0x for `US`, `SG`, `TW`, Jupiter elsewhere. Validation also refuses a table without the `swap` row, any row whose `unavailable` lacks an `EMBARGOED` code, and any `swap` row whose `unavailable` lacks a `PRECAUTIONARY` or `NOT_OFFERED` code.
 
 ## Decision (per request, in memory only)
 
@@ -35,7 +36,7 @@
   enabled: boolean, reason?: 'region', provider?: 'jupiter'|'0x' }
 ```
 
-- `country: null` (unresolvable address) → `enabled: true` with the default provider (fail open, logged).
+- `country: null` (unresolvable address) → `enabled: true` with the default provider (fail open, logged). Amended 2026-10-19 (0.26.0): for a capability in `REGULATED` (`swap`), `country: null` → `enabled: false, reason: 'region'`; only the others keep the default provider.
 - Never persisted; logged as `{ capability, platform, country, enabled, provider }` without the wallet address.
 
 ## Sanctions screening (Redis)

@@ -2,10 +2,10 @@
 /**
  * Builds src/availability/region-ranges.json: the IP ranges DB-IP places in
  * the Ukrainian regions the availability gate treats separately from the
- * rest of Ukraine (ISO 3166-2 codes). The country database the gate ships
- * (`@ip-location-db/dbip-country-mmdb`) has no region field, and the
- * region-level one is 134 MB, too heavy for the Lambda bundle — so only the
- * few hundred ranges that matter are extracted here.
+ * rest of Ukraine (ISO 3166-2 codes). The country database the gate ships,
+ * DB-IP's Country Lite downloaded by `scripts/refresh-geo-data.mjs`, has no
+ * region field, and the region-level one is 134 MB, too heavy for the Lambda
+ * bundle — so only the few hundred ranges that matter are extracted here.
  *
  * DB-IP files part of Crimea and Sevastopol under RU, not UA, so both
  * countries are read.
@@ -13,8 +13,8 @@
  * Usage: node scripts/build-region-ranges.mjs [path/to/dbip-city-lite-YYYY-MM.csv.gz]
  * Without a path it downloads the current month's file from db-ip.com.
  * Data: DB-IP IP to City Lite, CC BY 4.0 (attribution in NOTICE).
- * Rerun when the country database package is bumped, so both stay on the
- * same DB-IP release.
+ * `scripts/refresh-geo-data.mjs` runs it on every deploy with the City Lite
+ * of the same month as the country database, so both are one DB-IP release.
  */
 import fs from 'node:fs';
 import zlib from 'node:zlib';
