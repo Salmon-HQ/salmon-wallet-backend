@@ -521,6 +521,20 @@ describe('coingecko-service', () => {
       );
     });
 
+    // A rank-less catalog tags every SPL token `community`, and the balance
+    // hides those: an empty first page cached for a day would show holders
+    // nothing but SOL. It must fail so the last good catalog is served.
+    it.each([[[]], [{ status: { error_code: 429 } }], [null]])(
+      'fails instead of returning no ranks when the first page is %j',
+      async (body) => {
+        repository.getSolanaMarketRanks.mockResolvedValue(null);
+        http.get.mockResolvedValueOnce({ data: body });
+
+        await expect(service.getSolanaMarketRanks()).rejects.toThrow('market ranks');
+        expect(repository.saveSolanaMarketRanks).not.toHaveBeenCalled();
+      }
+    );
+
     it('prices mints in chunks, leaves unlisted mints absent, and caches hits', async () => {
       const priceCache = require('../../../infrastructure/cache/price-cache');
       http.get.mockResolvedValue({

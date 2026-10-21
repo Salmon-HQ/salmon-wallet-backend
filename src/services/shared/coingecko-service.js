@@ -447,10 +447,13 @@ const getSolanaCoinIds = async () => {
 /**
  * CoinGecko coin id → position (1-based) among the top Solana-ecosystem
  * coins by market cap. Orders the catalog so the real USDC outranks a
- * look-alike. Cached with the catalog; a failed read yields an empty map
- * (ordering degrades, nothing else does).
+ * look-alike, and decides which tokens are `verified`. Cached with the
+ * catalog.
  *
  * @returns {Promise<Map<string, number>>}
+ * @throws when CoinGecko fails or answers an empty or malformed first page:
+ *   a rank-less catalog would tag every token `community`, so the caller
+ *   keeps its last good copy instead.
  */
 const getSolanaMarketRanks = async () => {
   const cached = await repository.getSolanaMarketRanks();
@@ -472,6 +475,7 @@ const getSolanaMarketRanks = async () => {
       `CoinGecko Solana market ranks (page ${page})`
     );
     if (!Array.isArray(data) || data.length === 0) {
+      if (page === 1) throw new Error('CoinGecko market ranks: first page is empty or not a list');
       break;
     }
     data.forEach((coin, index) => {
