@@ -5,7 +5,12 @@ const { getProfile, PROVIDER_NAMES } = require('../profiles');
 describe('profiles', () => {
   const saved = { ...process.env };
   afterEach(() => {
-    for (const key of ['COINGECKO_API_KEY', 'COINGECKO_API_URL', 'TRITON_MAX_RPS']) {
+    for (const key of [
+      'COINGECKO_API_KEY',
+      'COINGECKO_API_URL',
+      'TRITON_MAX_RPS',
+      'SOLANA_PUBLIC_MAX_RPS',
+    ]) {
       if (saved[key] === undefined) delete process.env[key];
       else process.env[key] = saved[key];
     }
@@ -15,6 +20,7 @@ describe('profiles', () => {
     expect(PROVIDER_NAMES).toEqual([
       'coingecko',
       'triton',
+      'solana-public',
       'mempool',
       'blockstream',
       'dapp',
@@ -45,5 +51,7 @@ describe('profiles', () => {
   it('honours <PROVIDER>_MAX_RPS overrides and keeps burst ≥ rps', () => {
     process.env.TRITON_MAX_RPS = '200';
     expect(getProfile('triton')).toMatchObject({ rps: 200, burst: 200 });
+    process.env.SOLANA_PUBLIC_MAX_RPS = '2';
+    expect(getProfile('solana-public')).toMatchObject({ rps: 2, burst: 10 });
   });
 });

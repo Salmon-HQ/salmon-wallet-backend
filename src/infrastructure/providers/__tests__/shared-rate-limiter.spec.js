@@ -42,6 +42,17 @@ describe('shared-rate-limiter', () => {
     });
   });
 
+  it('answers 503 at once, without waiting, when asked not to wait and no token is free', async () => {
+    await limiter.acquire(profile);
+    await limiter.acquire(profile);
+    const started = Date.now();
+    await expect(limiter.acquire(profile, undefined, { maxWaitMs: 0 })).rejects.toMatchObject({
+      statusCode: 503,
+      errorCode: 'upstream_rate_limited',
+    });
+    expect(Date.now() - started).toBeLessThan(50);
+  });
+
   it('falls back to the in-memory bucket when Redis errors, warning once', async () => {
     redis.failing = true;
     await limiter.acquire(profile);

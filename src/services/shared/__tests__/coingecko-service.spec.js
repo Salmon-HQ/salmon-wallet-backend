@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require('util');
+
 jest.mock('axios', () => ({
   get: jest.fn(),
 }));
@@ -159,6 +161,31 @@ describe('coingecko-service', () => {
       locals
     );
     expect(result).toBe(cached);
+  });
+
+  it('never logs the API key carried on the failed request when serving the long-term cache', async () => {
+    const { AxiosError } = jest.requireActual('axios');
+    const key = 'cg-secret-key-1234567890';
+    const failure = new AxiosError(
+      'timeout of 2000ms exceeded',
+      'ECONNABORTED',
+      {
+        url: 'https://pro-api.coingecko.com/api/v3/coins/solana',
+        headers: { 'x-cg-pro-api-key': key },
+      },
+      { _header: `GET /api/v3/coins/solana HTTP/1.1\r\nx-cg-pro-api-key: ${key}\r\n\r\n` }
+    );
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    repository.getShortTermChart.mockResolvedValue(null);
+    repository.getLongTermChart.mockResolvedValue({ coinId: 'solana', prices: [] });
+    providerCall.mockRejectedValue(failure);
+
+    await service.getMarketChart({ coinId: 'solana', days: 7, currency: 'usd' }, locals);
+
+    const printed = warn.mock.calls.map((args) => util.format(...args)).join('\n');
+    expect(printed).toContain('timeout of 2000ms exceeded');
+    expect(printed).not.toContain(key);
+    warn.mockRestore();
   });
 
   it('normalizes CoinGecko coin info into the API shape and caches it', async () => {
@@ -502,11 +529,14 @@ describe('coingecko-service', () => {
       await expect(service.getSolanaCoinIds()).rejects.toThrow('no Solana platform');
     });
 
-    it('ranks the top Solana coins by market cap across pages and stops at an empty page', async () => {
+    const fullPage = (prefix) =>
+      Array.from({ length: service.MARKET_RANK_PAGE_SIZE }, (_, i) => ({ id: `${prefix}-${i}` }));
+
+    it('ranks the top Solana coins by market cap across pages and stops after a short page', async () => {
       repository.getSolanaMarketRanks.mockResolvedValue(null);
       http.get
-        .mockResolvedValueOnce({ data: [{ id: 'tether' }, { id: 'usd-coin' }] })
-        .mockResolvedValueOnce({ data: [] });
+        .mockResolvedValueOnce({ data: fullPage('first') })
+        .mockResolvedValueOnce({ data: [{ id: 'tether' }, { id: 'usd-coin' }] });
 
       const ranks = await service.getSolanaMarketRanks();
 
@@ -514,12 +544,57 @@ describe('coingecko-service', () => {
         expect.objectContaining({ category: 'solana-ecosystem', order: 'market_cap_desc', page: 1 })
       );
       expect(http.get).toHaveBeenCalledTimes(2);
-      expect(ranks.get('usd-coin')).toBe(2);
+      expect(ranks.get('usd-coin')).toBe(service.MARKET_RANK_PAGE_SIZE + 2);
       expect(repository.saveSolanaMarketRanks).toHaveBeenCalledWith(
-        { tether: 1, 'usd-coin': 2 },
+        expect.objectContaining({ 'first-0': 1, tether: service.MARKET_RANK_PAGE_SIZE + 1 }),
         24 * 60 * 60
       );
     });
+
+    // A rank-less catalog tags every SPL token `community`, and the balance
+    // hides those: an empty page cached for a day would show holders nothing
+    // but SOL (page 1) or hide every token ranked past it (a later page). A
+    // short or empty later page is the list's end (a full page can be the
+    // last); an empty first page or a malformed page is a fault, and it must
+    // fail so the last good catalog is served.
+    it.each([[[]], [{ status: { error_code: 429 } }], [null]])(
+      'fails instead of returning no ranks when the first page is %j',
+      async (body) => {
+        repository.getSolanaMarketRanks.mockResolvedValue(null);
+        http.get.mockResolvedValueOnce({ data: body });
+
+        await expect(service.getSolanaMarketRanks()).rejects.toThrow('market ranks');
+        expect(repository.saveSolanaMarketRanks).not.toHaveBeenCalled();
+      }
+    );
+
+    it('ends the list at an empty page that follows a full one', async () => {
+      repository.getSolanaMarketRanks.mockResolvedValue(null);
+      http.get
+        .mockResolvedValueOnce({ data: fullPage('first') })
+        .mockResolvedValueOnce({ data: [] });
+
+      const ranks = await service.getSolanaMarketRanks();
+
+      expect(ranks.size).toBe(service.MARKET_RANK_PAGE_SIZE);
+      expect(repository.saveSolanaMarketRanks).toHaveBeenCalledWith(
+        expect.objectContaining({ 'first-0': 1 }),
+        24 * 60 * 60
+      );
+    });
+
+    it.each([[{ status: { error_code: 429 } }], [null]])(
+      'fails instead of returning partial ranks when a later page is %j',
+      async (body) => {
+        repository.getSolanaMarketRanks.mockResolvedValue(null);
+        http.get
+          .mockResolvedValueOnce({ data: fullPage('first') })
+          .mockResolvedValueOnce({ data: body });
+
+        await expect(service.getSolanaMarketRanks()).rejects.toThrow('market ranks');
+        expect(repository.saveSolanaMarketRanks).not.toHaveBeenCalled();
+      }
+    );
 
     it('prices mints in chunks, leaves unlisted mints absent, and caches hits', async () => {
       const priceCache = require('../../../infrastructure/cache/price-cache');

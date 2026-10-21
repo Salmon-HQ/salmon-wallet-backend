@@ -38,14 +38,55 @@ const FETCH_TIMEOUT_MS = 3000;
 const MAX_BYTES = 512 * 1024;
 const MAX_REDIRECTS = 2;
 
-// Content-addressed storage: the document behind a CID cannot change.
-const OK_TTL = 30 * 24 * 60 * 60; // 30 days
+// Content-addressed storage: the document behind a CID cannot change. Any
+// other host can, and may be the minter's own server, so a day.
+const CONTENT_ADDRESSED_TTL = 30 * 24 * 60 * 60; // 30 days
+const OK_TTL = 24 * 60 * 60; // 1 day
 const FAIL_TTL = 60 * 60; // 1 hour
+// After normalizeIpfsUrl, tested on the parsed href (so `..` segments are
+// resolved first): IPFS on the default gateway, or an Arweave transaction id
+// (43 characters, then a path, a query or the end; ArNS names, which can be
+// repointed, are subdomains).
+const CONTENT_ADDRESSED_URL =
+  /^https:\/\/(ipfs\.filebase\.io\/ipfs\/|arweave\.net\/[\w-]{43}(\/|\?|$))/;
+const isContentAddressed = (url) => {
+  try {
+    return CONTENT_ADDRESSED_URL.test(new URL(url).href);
+  } catch {
+    return false;
+  }
+};
+
+// The document is attacker-chosen and is stored in the Redis that rate
+// limits, sanctions and breakers share. Only what the NFT resource and the
+// spam detector read is kept, each field only with the type they read; over
+// MAX_STORED_BYTES the bulky extras go first (DROPPED_FIRST, in order), and a
+// document still too large counts as unresolved: at most 100 NFTs per page x
+// 16 KB = 1.6 MB per listing, against 100 x 512 KB = 50 MB for whole documents.
+const isText = (value) => typeof value === 'string';
+const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+const STORED_FIELDS = {
+  name: isText,
+  symbol: isText,
+  description: isText,
+  image: isText,
+  animation_url: isText,
+  collection: isObject,
+  attributes: Array.isArray,
+  properties: isObject,
+  creators: Array.isArray,
+};
+const DROPPED_FIRST = ['properties', 'creators', 'attributes'];
+const MAX_DESCRIPTION_CHARS = 2000;
+const MAX_ATTRIBUTES = 50;
+const MAX_STORED_BYTES = 16 * 1024;
 
 /**
  * True for addresses no outbound NFT-metadata fetch has any business reaching:
- * loopback, private ranges, CGNAT, multicast, and — the one that matters most —
- * the 169.254.0.0/16 link-local block that hosts cloud instance metadata.
+ * loopback, private ranges, CGNAT, IETF protocol assignments (192.0.0.0/24),
+ * benchmarking (198.18.0.0/15), multicast, IPv6 link-local (fe80::/10), and —
+ * the one that matters most — the 169.254.0.0/16 link-local block that hosts
+ * cloud instance metadata.
  *
  * Anything that is not a parseable IP is refused as well, so a lookup returning
  * something unexpected fails closed.
@@ -54,9 +95,11 @@ const isBlockedIp = (ip) => {
   const version = net.isIP(ip);
 
   if (version === 4) {
-    const [a, b] = ip.split('.').map(Number);
+    const [a, b, c] = ip.split('.').map(Number);
     if (a === 0 || a === 10 || a === 127) return true;
     if (a === 169 && b === 254) return true;
+    if (a === 192 && b === 0 && c === 0) return true;
+    if (a === 198 && (b === 18 || b === 19)) return true;
     if (a === 172 && b >= 16 && b <= 31) return true;
     if (a === 192 && b === 168) return true;
     if (a === 100 && b >= 64 && b <= 127) return true;
@@ -67,7 +110,7 @@ const isBlockedIp = (ip) => {
   if (version === 6) {
     const normalized = ip.toLowerCase();
     if (normalized === '::' || normalized === '::1') return true;
-    if (normalized.startsWith('fe80')) return true;
+    if (/^fe[89ab]/.test(normalized)) return true;
     if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
 
     const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
@@ -102,7 +145,8 @@ const httpAgent = new nodeHttp.Agent({ lookup: guardedLookup });
 
 const cacheKeyFor = (url, locals) =>
   getCacheKey(
-    `nft_offchain_metadata:${crypto.createHash('sha256').update(url).digest('hex')}`,
+    // v2: entries hold the trimmed subset; v1 held whole documents for 30 days.
+    `nft_offchain_metadata:v2:${crypto.createHash('sha256').update(url).digest('hex')}`,
     locals
   );
 
@@ -123,6 +167,23 @@ const asMetadataObject = (payload) => {
 
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value;
+};
+
+const fits = (kept) => Buffer.byteLength(JSON.stringify(kept)) <= MAX_STORED_BYTES;
+
+/** The stored subset of a metadata document, or null when it is too large. */
+const toStoredMetadata = (document) => {
+  const kept = {};
+  for (const [field, hasType] of Object.entries(STORED_FIELDS)) {
+    if (hasType(document[field])) kept[field] = document[field];
+  }
+  if (kept.description) kept.description = kept.description.slice(0, MAX_DESCRIPTION_CHARS);
+  if (kept.attributes) kept.attributes = kept.attributes.slice(0, MAX_ATTRIBUTES);
+  for (const field of DROPPED_FIRST) {
+    if (fits(kept)) return kept;
+    delete kept[field];
+  }
+  return fits(kept) ? kept : null;
 };
 
 /**
@@ -146,7 +207,11 @@ const hasIpLiteralHost = (url) => {
   }
 };
 
-const fetchOffchainMetadata = async (url) => {
+/**
+ * @param {string} url
+ * @param {AbortSignal} [signal] - the listing's deadline; aborts the fetch too.
+ */
+const fetchOffchainMetadata = async (url, signal) => {
   const { protocol } = new URL(url);
   if (protocol !== 'https:' && protocol !== 'http:') {
     return null;
@@ -154,26 +219,37 @@ const fetchOffchainMetadata = async (url) => {
 
   if (hasIpLiteralHost(url)) return null;
 
-  const response = await http.get(url, {
-    timeout: FETCH_TIMEOUT_MS,
-    maxRedirects: MAX_REDIRECTS,
-    maxContentLength: MAX_BYTES,
-    httpsAgent,
-    httpAgent,
-    headers: { Accept: 'application/json' },
-    // A permitted hostname can redirect to an IP literal, which would put the
-    // destination back outside guardedLookup's reach, so every hop is checked.
-    beforeRedirect: (options) => {
-      if (hasIpLiteralHost(options.href)) {
-        const denied = new Error(`Refusing to fetch NFT metadata from ${options.href}`);
-        denied.code = 'BLOCKED_ADDRESS';
-        throw denied;
-      }
-    },
-    validateStatus: (status) => status >= 200 && status < 300,
-  });
+  // A wall-clock deadline over the whole exchange. axios's `timeout` stops
+  // counting once the headers arrive, so a server trickling its body a byte
+  // at a time kept the fetch open until the Lambda timed out. An explicit
+  // timer, not AbortSignal.timeout: that one is unref'd.
+  const deadline = new AbortController();
+  const timer = setTimeout(() => deadline.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await http.get(url, {
+      signal: signal ? AbortSignal.any([deadline.signal, signal]) : deadline.signal,
+      maxRedirects: MAX_REDIRECTS,
+      maxContentLength: MAX_BYTES,
+      httpsAgent,
+      httpAgent,
+      headers: { Accept: 'application/json' },
+      // A permitted hostname can redirect to an IP literal, which would put the
+      // destination back outside guardedLookup's reach, so every hop is checked.
+      beforeRedirect: (options) => {
+        if (hasIpLiteralHost(options.href)) {
+          const denied = new Error(`Refusing to fetch NFT metadata from ${options.href}`);
+          denied.code = 'BLOCKED_ADDRESS';
+          throw denied;
+        }
+      },
+      validateStatus: (status) => status >= 200 && status < 300,
+    });
 
-  return asMetadataObject(response.data);
+    const document = asMetadataObject(response.data);
+    return document && toStoredMetadata(document);
+  } finally {
+    clearTimeout(timer);
+  }
 };
 
 /**
@@ -185,9 +261,11 @@ const fetchOffchainMetadata = async (url) => {
  *
  * @param {string} url - Normalized, fetchable https(s) metadata URL.
  * @param {Object} locals - Request locals (used for the cache key namespace).
+ * @param {AbortSignal} [signal] - The listing's deadline. A fetch it cuts off
+ *   is not cached as a failure: the listing ran out of time, not the server.
  * @returns {Promise<Object|null>} The off-chain JSON, or null when unresolved.
  */
-const getOffchainMetadata = async (url, locals) => {
+const getOffchainMetadata = async (url, locals, signal) => {
   const key = cacheKeyFor(url, locals);
 
   const cached = await getFromCache(key);
@@ -196,14 +274,19 @@ const getOffchainMetadata = async (url, locals) => {
   }
 
   try {
-    const json = await fetchOffchainMetadata(url);
+    const json = await fetchOffchainMetadata(url, signal);
     if (json) {
-      await storeInCache(key, { ok: true, json }, OK_TTL);
+      await storeInCache(
+        key,
+        { ok: true, json },
+        isContentAddressed(url) ? CONTENT_ADDRESSED_TTL : OK_TTL
+      );
       return json;
     }
     await storeInCache(key, { ok: false }, FAIL_TTL);
     return null;
   } catch {
+    if (signal?.aborted) return null;
     await storeInCache(key, { ok: false }, FAIL_TTL);
     return null;
   }
@@ -216,5 +299,9 @@ module.exports = {
     guardedLookup,
     asMetadataObject,
     fetchOffchainMetadata,
+    FETCH_TIMEOUT_MS,
+    MAX_DESCRIPTION_CHARS,
+    MAX_ATTRIBUTES,
+    MAX_STORED_BYTES,
   },
 };

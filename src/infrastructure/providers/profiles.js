@@ -5,7 +5,7 @@
  * circuit-breaker thresholds. Adding a provider is adding a row; the
  * plumbing in `provider-client.js` reads nothing else.
  *
- * `<PROVIDER>_MAX_RPS` (e.g. `TRITON_MAX_RPS`) overrides the sustained rate
+ * `<PROVIDER>_MAX_RPS` (e.g. `TRITON_MAX_RPS`, `SOLANA_PUBLIC_MAX_RPS`) overrides the sustained rate
  * at runtime; burst never drops below the rate so one second of traffic
  * always fits.
  */
@@ -31,6 +31,17 @@ const PROFILES = {
     tier: () => ({ rps: 50, burst: 100 }),
     timeoutMs: 30000,
     retry: { maxAttempts: 2, baseMs: 500, maxMs: 2000, honorRetryAfter: true },
+    breaker: BREAKER_DEFAULT,
+  },
+  // The public Solana clusters, read when Triton does not host the
+  // environment (testnet always, devnet without TRITON_RPC_URL_DEVNET). Its
+  // own bucket, so traffic there never spends Triton's. Solana publishes 40
+  // requests per 10 s per IP for a single method
+  // (solana.com/docs/references/clusters); 4 rps stays within it.
+  'solana-public': {
+    tier: () => ({ rps: 4, burst: 10 }),
+    timeoutMs: 5000,
+    retry: RETRY_NONE,
     breaker: BREAKER_DEFAULT,
   },
   // Bitcoin (Esplora). No retry: `esplora-client` moves to the other host
@@ -89,7 +100,7 @@ const getProfile = (name) => {
   const profile = PROFILES[name];
   if (!profile) throw new Error(`Unknown provider profile: ${name}`);
   const tier = profile.tier();
-  const override = Number(process.env[`${name.toUpperCase()}_MAX_RPS`]);
+  const override = Number(process.env[`${name.toUpperCase().replaceAll('-', '_')}_MAX_RPS`]);
   const rps = override > 0 ? override : tier.rps;
   const burst = override > 0 ? Math.max(Math.ceil(override), tier.burst) : tier.burst;
   return {

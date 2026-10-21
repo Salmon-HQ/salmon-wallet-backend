@@ -19,9 +19,9 @@ provider:
   logRetentionInDays: 30
   apiGateway:
     shouldStartNameWithService: true
-  # Per-stage values live in config/env.<stage>.yml (see custom.envFile below).
-  # local -> plain env vars from .env (no AWS needed); prod -> SSM Parameter Store.
-  environment: ${self:custom.envFile.provider}
+  # No provider-level environment: each function below takes only its own map
+  # from config/env.<stage>.yml (see custom.envFile), so no function holds a
+  # credential it never reads.
   # The availability table is the one parameter read at runtime (spec 018):
   # a country change is an SSM edit, never a release.
   iam:
@@ -48,6 +48,7 @@ functions:
           name: listTokensJobBtc-${self:provider.stage}
           input:
             platform: bitcoin
+    environment: ${self:custom.envFile.coingeckoJob}
 
   refreshPricesJob:
     handler: src/jobs/handler.refreshPricesJob
@@ -59,6 +60,7 @@ functions:
           name: refreshPricesJobBtc-${self:provider.stage}
           input:
             platform: bitcoin
+    environment: ${self:custom.envFile.coingeckoJob}
 
   # Daily copy of the US Treasury SDN digital-currency addresses, the
   # authoritative layer of sanctions screening (spec 018).
@@ -70,6 +72,7 @@ functions:
           rate: rate(1 day)
           enabled: true
           name: refreshSanctionsJob-${self:provider.stage}
+    environment: ${self:custom.envFile.sanctionsJob}
 
   # SKR's staking share price, recorded daily just after the 02:00 UTC payout
   # so the SKR reward history is exact from the first record (spec 022).
@@ -81,6 +84,7 @@ functions:
           rate: cron(5 2 * * ? *)
           enabled: true
           name: recordSkrSharePriceJob-${self:provider.stage}
+    environment: ${self:custom.envFile.skrJob}
 
   api:
     handler: src/index.handler
@@ -88,9 +92,7 @@ functions:
     events:
       - http: ANY /
       - http: ANY /{proxy+}
-    environment:
-      GITHUB_SHA: ${env:GITHUB_SHA,'GITHUB_SHA'}
-      GITHUB_RUN_ID: ${env:GITHUB_RUN_ID,'GITHUB_RUN_ID'}
+    environment: ${self:custom.envFile.api}
 
   # Anonymous usage-analytics ingest. A dedicated function (not the catch-all
   # `api`) so an event-traffic spike can't starve wallet-API concurrency. The
@@ -108,11 +110,7 @@ functions:
           path: /v1/events
           method: post
           cors: true
-    environment:
-      ANALYTICS_SINK: ${self:custom.envFile.functionOnly.ANALYTICS_SINK}
-      ANALYTICS_FILE_PATH: ${self:custom.envFile.functionOnly.ANALYTICS_FILE_PATH}
-      GA4_MEASUREMENT_ID: ${self:custom.envFile.functionOnly.GA4_MEASUREMENT_ID}
-      GA4_API_SECRET: ${self:custom.envFile.functionOnly.GA4_API_SECRET}
+    environment: ${self:custom.envFile.events}
 
 custom:
   # Single reference per stage — config/env.local.yml (plain env vars) or
@@ -124,23 +122,76 @@ custom:
   apiGatewayThrottling:
     maxRequestsPerSecond: 50
     maxConcurrentRequests: 100
+  # AWS WAF per-IP cap (resources.ApiWebAcl): requests one source IP may send
+  # in any 60 s before the rule acts on it. Same number as the Express per-IP
+  # limit (RATE_LIMIT_MAX per RATE_LIMIT_WINDOW_SECONDS in src/index.js),
+  # applied before the request reaches the Lambda, so one client cannot hold
+  # the shared stage throttle above at its ceiling.
+  wafRateLimitPerIp: 300
+  # `count` records the IPs over the cap without blocking them; only `block`
+  # blocks. AWS does not document whether a regional web ACL on this
+  # edge-optimized API sees the client's address or a CloudFront edge's, so
+  # the rule counts until the first deploy shows client addresses
+  # (docs/DEPLOY.md, "AWS WAF in front of the API"), then a follow-up change
+  # sets `block`.
+  wafRuleAction: count
   serverless-offline:
     host: 0.0.0.0
     httpPort: ${env:OFFLINE_HTTP_PORT, 3000}
     lambdaPort: ${env:OFFLINE_LAMBDA_PORT, 3002}
-  # provider/function environment is now assigned explicitly from
-  # custom.envFile (see above), so the plugin's own auto-inject-into-
-  # provider.environment feature is disabled (include: []). It still loads
-  # .env into process.env for ${env:X} resolution — that part is unaffected
-  # by `include`. Auto-inject is not just redundant here: with
-  # provider.environment set to a single `${self:custom.envFile.provider}`
-  # reference, the plugin tries to write into it before that reference is
-  # resolved (sync for local, deferred async for prod's SSM lookups) and
-  # throws "Cannot create property ... on string" for the prod stage.
+  # Function environments are assigned explicitly from custom.envFile (see
+  # above), so the plugin's auto-inject-into-provider.environment feature is
+  # disabled (include: []): it would hand every function every variable in the
+  # dotenv file, undoing the per-function scoping. The plugin still loads that
+  # file into process.env for ${env:X} resolution, which `include` does not
+  # affect.
   dotenv:
     include: []
 
 resources:
+  # AWS WAF on every deployed stage; `local` never reaches AWS, so the
+  # condition leaves both resources out of its template. One rate-based rule
+  # counts, or with custom.wafRuleAction `block` blocks, a source IP above
+  # custom.wafRateLimitPerIp requests per 60 s. Cost and the deploy role's
+  # WAF permissions: docs/DEPLOY.md.
+  Conditions:
+    IsDeployedStage: !Not [!Equals ['${sls:stage}', 'local']]
+    WafRuleBlocks: !Equals ['${self:custom.wafRuleAction}', 'block']
+  Resources:
+    ApiWebAcl:
+      Type: AWS::WAFv2::WebACL
+      Condition: IsDeployedStage
+      Properties:
+        Name: ${self:service}-${sls:stage}-api
+        Scope: REGIONAL
+        DefaultAction:
+          Allow: {}
+        VisibilityConfig:
+          CloudWatchMetricsEnabled: true
+          SampledRequestsEnabled: true
+          MetricName: ${self:service}-${sls:stage}-api
+        Rules:
+          - Name: per-ip-rate-limit
+            Priority: 0
+            Action: !If [WafRuleBlocks, { Block: {} }, { Count: {} }]
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: IP
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafRateLimitPerIp}
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: per-ip-rate-limit
+    # The stage only exists once the API Gateway deployment has created it;
+    # Serverless names that deployment ApiGatewayDeployment<instanceId>.
+    ApiWebAclAssociation:
+      Type: AWS::WAFv2::WebACLAssociation
+      Condition: IsDeployedStage
+      DependsOn: ApiGatewayDeployment${sls:instanceId}
+      Properties:
+        ResourceArn: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${sls:stage}
+        WebACLArn: !GetAtt ApiWebAcl.Arn
   Outputs:
     ServiceEndpoint:
       Export:

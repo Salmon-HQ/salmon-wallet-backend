@@ -24,8 +24,21 @@
  */
 
 const http = require('axios');
-const { PublicKey, TransactionInstruction } = require('@solana/web3.js');
+const {
+  PACKET_DATA_SIZE,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} = require('@solana/web3.js');
+const {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} = require('@solana/spl-token');
 const { providerCall } = require('../../../infrastructure/providers/provider-client');
+const { remainingMs } = require('../../../infrastructure/providers/request-deadline');
 const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
 
 /**
@@ -49,8 +62,8 @@ const toInstruction = (raw) =>
     programId: new PublicKey(raw.programId),
     keys: raw.accounts.map((account) => ({
       pubkey: new PublicKey(account.pubkey),
-      isSigner: account.isSigner,
-      isWritable: account.isWritable,
+      isSigner: account.isSigner === true,
+      isWritable: account.isWritable === true,
     })),
     data: Buffer.from(raw.data, 'base64'),
   });
@@ -114,6 +127,9 @@ const isInstruction = (raw) =>
   Array.isArray(raw.accounts) &&
   typeof raw.data === 'string';
 
+const isInstructionList = (list) =>
+  list === undefined || (Array.isArray(list) && list.every(isInstruction));
+
 /**
  * A 200 whose shape is not the one this adapter was written against is a
  * provider defect, never signable bytes: a missing swap instruction would
@@ -126,9 +142,9 @@ const assertBuildShape = (data) => {
     isInstruction(data.swapInstruction) &&
     /^\d+$/.test(String(data.outAmount)) &&
     /^\d+$/.test(String(data.otherAmountThreshold)) &&
-    (data.setupInstructions === undefined || data.setupInstructions.every(isInstruction)) &&
+    isInstructionList(data.setupInstructions) &&
     (data.cleanupInstruction == null || isInstruction(data.cleanupInstruction)) &&
-    (data.otherInstructions === undefined || data.otherInstructions.every(isInstruction));
+    isInstructionList(data.otherInstructions);
   if (!ok) {
     console.error('[SWAP_PROVIDER_BAD_RESPONSE]', { provider: 'jupiter' });
     throw new SolanaSwapError(
@@ -139,47 +155,302 @@ const assertBuildShape = (data) => {
   }
 };
 
-/**
- * Request swap instructions from Jupiter.
- *
- * @param {Object} params
- * @param {string} params.inputMint
- * @param {string} params.outputMint
- * @param {string} params.amount - input amount in base units.
- * @param {string} params.taker - user's public key (signer + fee payer).
- * @param {number} params.slippageBps
- * @param {{ recipient: string, bps: number, side: 'buy' }|null} params.fee - Salmon's fee;
- *   `recipient` is an existing token account of the output mint.
- * @returns {Promise<{ instructions: TransactionInstruction[], lookupTableAddresses: string[],
- *   amountOut: string, minAmountOut: string, routePlan: Array<{ label: string, percent: number }>,
- *   providerRequestId: null, routeFee: null }>}
- * @throws {SolanaSwapError} 404 `no_route`, 500 `swap_misconfigured`, 503 `upstream_rate_limited`.
- */
-const requestSwapInstructions = async ({
-  inputMint,
-  outputMint,
-  amount,
-  taker,
-  slippageBps,
-  fee,
-}) => {
-  const params = {
-    inputMint,
-    outputMint,
-    amount,
-    taker,
-    slippageBps,
-    ...(fee ? { platformFeeBps: fee.bps, feeAccount: fee.recipient } : {}),
-  };
+const JUPITER_PROGRAM = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
+const SYSTEM_PROGRAM = SystemProgram.programId.toBase58();
+const TOKEN_PROGRAM = TOKEN_PROGRAM_ID.toBase58();
+const ATA_PROGRAM = ASSOCIATED_TOKEN_PROGRAM_ID.toBase58();
+const TOKEN_PROGRAMS = new Set([TOKEN_PROGRAM, TOKEN_2022_PROGRAM_ID.toBase58()]);
+const WRAPPED_SOL_MINT = NATIVE_MINT.toBase58();
+/** ATA program: `Create` (no data, or 0) and `CreateIdempotent` (1). */
+const ATA_CREATE = 0;
+const ATA_CREATE_IDEMPOTENT = 1;
+/** Live builds create at most 4 accounts (taker ATAs for the input, output and hops). */
+const MAX_ACCOUNT_CREATES = 6;
+/** System `Transfer`: u32 discriminator 2 + u64 lamports. */
+const SYSTEM_TRANSFER = 2;
+/** SPL Token discriminators: `CloseAccount` 9, `SyncNative` 17. */
+const CLOSE_ACCOUNT = 9;
+const SYNC_NATIVE = 17;
 
-  let data;
+const ataOf = (owner, mint, tokenProgram) =>
+  getAssociatedTokenAddressSync(
+    new PublicKey(mint),
+    new PublicKey(owner),
+    true,
+    new PublicKey(tokenProgram)
+  ).toBase58();
+
+const keyAt = (ix, index) => ix.keys[index]?.pubkey.toBase58();
+
+/**
+ * Log why and refuse with the public 502: Jupiter's answer is not signed
+ * (unlike 0x's), so a tampered or faulty one must never reach the wallet
+ * as signable bytes.
+ * @throws {SolanaSwapError} 502 `provider_bad_response`
+ */
+const refuse = (reason) => {
+  console.error('[SWAP_PROVIDER_BAD_RESPONSE]', { provider: 'jupiter', reason });
+  throw new SolanaSwapError(
+    'Jupiter answered with instructions a swap does not need',
+    502,
+    'provider_bad_response'
+  );
+};
+
+/**
+ * Why one instruction around the router call is not something a Jupiter
+ * build needs for this taker, or null when it is — probed against live
+ * `/build` answers: create the taker's own token accounts, wrap the input
+ * SOL into the taker's wrapped-SOL account (transfer + `SyncNative`) and
+ * unwrap it back to the taker (`CloseAccount`). Everything else is refused,
+ * because every program on the swap allowlist can also move the taker's
+ * funds once the taker signs: a System transfer to a stranger, an SPL
+ * `Approve`, `SetAuthority`, a close paying someone else, an `Assign`.
+ * Compute-budget instructions are refused too: the shared builder sets its own.
+ */
+const supportMismatch = (ix, { taker, inputMint, amount, wrappedSol }) => {
+  const program = ix.programId.toBase58();
+  const { data } = ix;
+  const unexpected = `unexpected instruction ${data[0] ?? 'empty'} on ${program}`;
+  if (program === ATA_PROGRAM) {
+    // payer, ata, owner, mint, system program, token program
+    const code = data[0] ?? ATA_CREATE;
+    const tokenProgram = keyAt(ix, 5);
+    const ownCreate =
+      ix.keys.length >= 6 &&
+      data.length <= 1 &&
+      (code === ATA_CREATE || code === ATA_CREATE_IDEMPOTENT) &&
+      keyAt(ix, 0) === taker &&
+      keyAt(ix, 2) === taker &&
+      keyAt(ix, 4) === SYSTEM_PROGRAM &&
+      TOKEN_PROGRAMS.has(tokenProgram) &&
+      keyAt(ix, 1) === ataOf(taker, keyAt(ix, 3), tokenProgram);
+    return ownCreate ? null : unexpected;
+  }
+  if (program === SYSTEM_PROGRAM) {
+    const ownWrap =
+      data.length === 12 &&
+      data.readUInt32LE(0) === SYSTEM_TRANSFER &&
+      keyAt(ix, 0) === taker &&
+      keyAt(ix, 1) === wrappedSol;
+    if (!ownWrap) return unexpected;
+    if (inputMint !== WRAPPED_SOL_MINT) return 'wrap transfer without SOL input';
+    return data.readBigUInt64LE(4) === BigInt(amount) ? null : 'wrap transfer amount';
+  }
+  if (program === TOKEN_PROGRAM && data.length === 1) {
+    if (data[0] === SYNC_NATIVE && keyAt(ix, 0) === wrappedSol) return null;
+    // CloseAccount: account, rent destination, authority.
+    if (
+      data[0] === CLOSE_ACCOUNT &&
+      keyAt(ix, 0) === wrappedSol &&
+      keyAt(ix, 1) === taker &&
+      keyAt(ix, 2) === taker
+    ) {
+      return null;
+    }
+  }
+  return unexpected;
+};
+
+/**
+ * The two router calls `/build` answers with (probed live: about a third of
+ * the builds use the shared-accounts form), by Anchor discriminator, with
+ * account positions from the Jupiter v6 on-chain IDL. Both carry in u64,
+ * quoted out u64, slippage u16, platform fee u16 and positive slippage u16
+ * from `args` on (the shared form puts a u8 route id first), then a route
+ * plan whose length varies with the number of hops. `override` is
+ * `route_v2`'s optional destination override, empty when it holds the
+ * program's own id. `fee` is where Salmon's fee account sits: the first
+ * remaining account. That position is observed (24 of 24 live builds), not
+ * named in the IDL; if Jupiter moves it, fee-carrying builds fail closed
+ * with the reason in the log.
+ */
+const ROUTES = {
+  bb64facc31c4af14: {
+    name: 'route_v2',
+    args: 8,
+    authority: 0,
+    source: 1,
+    destination: 2,
+    sourceMint: 3,
+    destinationMint: 4,
+    sourceTokenProgram: 5,
+    destinationTokenProgram: 6,
+    override: 7,
+    fee: 10,
+  },
+  d19853937cfed8e9: {
+    name: 'shared_accounts_route_v2',
+    args: 9,
+    authority: 1,
+    source: 2,
+    destination: 5,
+    sourceMint: 6,
+    destinationMint: 7,
+    sourceTokenProgram: 8,
+    destinationTokenProgram: 9,
+    fee: 12,
+  },
+};
+const ROUTE_ARGS_BYTES = 8 + 8 + 2 + 2 + 2;
+const BPS = 10000n;
+
+/**
+ * Why the router call is not this request's swap, or null when it is. The
+ * call is what moves the swap's whole value: it must spend the input mint
+ * from the taker's own account, pay the output mint into the taker's own
+ * account, pay Salmon's fee to Salmon's fee account, and carry the amount,
+ * slippage and fee Salmon asked for with no positive slippage kept for a
+ * platform. The quote the wallet shows is bound to the quote the program
+ * enforces.
+ */
+const routeMismatch = (ix, request, quote) => {
+  const { data } = ix;
+  const discriminator = data.subarray(0, 8).toString('hex');
+  const route = Object.hasOwn(ROUTES, discriminator) ? ROUTES[discriminator] : null;
+  if (!route) return `unknown router call ${discriminator || 'empty'}`;
+  const why = (check) => `${route.name} ${check}`;
+  const at = route.args;
+  if (data.length < at + ROUTE_ARGS_BYTES) return why('data too short');
+  if (keyAt(ix, route.authority) !== request.taker) return why('authority');
+  if (keyAt(ix, route.sourceMint) !== request.inputMint) return why('source mint');
+  if (keyAt(ix, route.destinationMint) !== request.outputMint) return why('destination mint');
+  const sourceProgram = keyAt(ix, route.sourceTokenProgram);
+  if (!TOKEN_PROGRAMS.has(sourceProgram)) return why('source token program');
+  const destinationProgram = keyAt(ix, route.destinationTokenProgram);
+  if (!TOKEN_PROGRAMS.has(destinationProgram)) return why('destination token program');
+  if (keyAt(ix, route.source) !== ataOf(request.taker, request.inputMint, sourceProgram)) {
+    return why('source');
+  }
+  const destination = ataOf(request.taker, request.outputMint, destinationProgram);
+  if (keyAt(ix, route.destination) !== destination) return why('destination');
+  if (route.override !== undefined && keyAt(ix, route.override) !== JUPITER_PROGRAM) {
+    return why('destination override');
+  }
+  // Without a fee the platform fee is bound to 0 below, so whatever sits in
+  // that slot (the first route account in no-fee builds) receives nothing.
+  if (request.fee && keyAt(ix, route.fee) !== request.fee.recipient) return why('fee account');
+  if (data.readBigUInt64LE(at) !== BigInt(request.amount)) return why('in amount');
+  const quoted = data.readBigUInt64LE(at + 8);
+  if (String(quoted) !== String(quote.outAmount)) return why('quoted out amount');
+  const slippage = data.readUInt16LE(at + 16);
+  if (slippage !== request.slippageBps) return why('slippage');
+  if (data.readUInt16LE(at + 18) !== (request.fee?.bps ?? 0)) return why('platform fee');
+  if (data.readUInt16LE(at + 20) !== 0) return why('positive slippage');
+  // Jupiter rounds the minimum up; within one base unit either way is the
+  // same minimum. assertBuildShape already proved both amounts are digit
+  // strings, so BigInt cannot throw here.
+  const gap = BigInt(quote.otherAmountThreshold) * BPS - quoted * (BPS - BigInt(slippage));
+  if (gap <= -BPS || gap >= BPS) return why('minimum out amount');
+  return null;
+};
+
+/**
+ * Refuse a build that does anything but this taker's own swap.
+ * @throws {SolanaSwapError} 502 `provider_bad_response`
+ */
+const assertTakerOnly = ({ swap, support }, request, quote) => {
+  if (swap.programId.toBase58() !== JUPITER_PROGRAM) refuse('swap instruction is not Jupiter');
+  const mismatch = routeMismatch(swap, request, quote);
+  if (mismatch) refuse(mismatch);
+  const context = { ...request, wrappedSol: ataOf(request.taker, NATIVE_MINT, TOKEN_PROGRAM) };
+  const routeKeys = new Set(swap.keys.map((key) => key.pubkey.toBase58()));
+  let wraps = 0;
+  let creates = 0;
+  for (const ix of support) {
+    const why = supportMismatch(ix, context);
+    if (why) refuse(why);
+    const program = ix.programId.toBase58();
+    wraps += program === SYSTEM_PROGRAM ? 1 : 0;
+    creates += program === ATA_PROGRAM ? 1 : 0;
+    if (wraps > 1) refuse('second wrap transfer');
+    if (creates > MAX_ACCOUNT_CREATES) refuse(`more than ${MAX_ACCOUNT_CREATES} account creates`);
+    // ponytail: the taker's own create for a mint the router call never names
+    // is logged, not refused: one live build carried one and the shape could
+    // not be reproduced. Refuse it once the log shows what it is.
+    if (program === ATA_PROGRAM && !routeKeys.has(keyAt(ix, 3))) {
+      console.warn('[SWAP_JUPITER_ATA_OFF_ROUTE]', {
+        mint: keyAt(ix, 3),
+        accountInRoute: routeKeys.has(keyAt(ix, 1)),
+        route: ROUTES[swap.data.subarray(0, 8).toString('hex')].name,
+      });
+    }
+  }
+};
+
+const JUPITER_BUILD_ATTEMPTS = 3;
+/** A retry needs room for one Jupiter call (10 s cap) plus the simulation that follows. */
+const RETRY_MIN_REMAINING_MS = 15000;
+
+/** Name of the answer's router call (`route_v2`, `shared_accounts_route_v2`), or null. */
+const routeOf = (data) => {
+  if (typeof data?.swapInstruction?.data !== 'string') return null;
+  const discriminator = Buffer.from(data.swapInstruction.data, 'base64')
+    .subarray(0, 8)
+    .toString('hex');
+  return Object.hasOwn(ROUTES, discriminator) ? ROUTES[discriminator].name : null;
+};
+
+/**
+ * Serialized size of the transaction an answer's instructions compile into
+ * (`measure`, from the build service, compiles it as the builder will):
+ * Infinity when it does not compile, null when unknown — no measure, or a
+ * read that failed — and an unknown size never costs another Jupiter call.
+ */
+const sizeOf = async (instructions, data, measure) => {
+  if (!measure) return null;
   try {
-    ({ data } = await providerCall(
+    return await measure(instructions, Object.keys(data.addressesByLookupTableAddress || {}));
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * One `/build` answer's instructions, in Jupiter's reference order, once the
+ * answer has passed every check: shape, decoding, and the taker's own swap
+ * (`computeBudgetInstructions` and `tipInstruction` are ours to decide and
+ * are left out).
+ * @throws {SolanaSwapError} 502 `provider_bad_response`
+ */
+const validate = (data, request) => {
+  assertBuildShape(data);
+  let setup;
+  let swap;
+  let after;
+  try {
+    setup = (data.setupInstructions || []).map(toInstruction);
+    swap = toInstruction(data.swapInstruction);
+    after = [data.cleanupInstruction, ...(data.otherInstructions || [])]
+      .filter(Boolean)
+      .map(toInstruction);
+  } catch {
+    // A program id or account that is not a public key: a provider defect, not ours.
+    refuse('undecodable instruction');
+  }
+  assertTakerOnly({ swap, support: [...setup, ...after] }, request, data);
+  return [...setup, swap, ...after];
+};
+
+const fits = (answer) => answer.size === null || answer.size <= PACKET_DATA_SIZE;
+
+/**
+ * One `/build` call, its refusals mapped onto the public envelope. `noWait`:
+ * only if a rate-limit token is free now, and no backoff retries.
+ * @throws {SolanaSwapError} 404 `no_route`, 500 `swap_misconfigured`, 503 on 401/403/429.
+ */
+const fetchBuild = async (params, { noWait = false } = {}) => {
+  try {
+    const { data } = await providerCall(
       'jupiter',
       ({ timeout, signal }) =>
         http.get(`${JUPITER_API_URL}/build`, { params, timeout, signal, headers: headers() }),
-      { operationName: `Jupiter swap build (${inputMint} → ${outputMint})` }
-    ));
+      {
+        operationName: `Jupiter swap build (${params.inputMint} → ${params.outputMint})`,
+        ...(noWait ? { noWait } : {}),
+      }
+    );
+    return data;
   } catch (error) {
     const status = error.response?.status;
     if (status === 429) {
@@ -202,19 +473,103 @@ const requestSwapInstructions = async ({
     }
     throw error;
   }
+};
 
-  assertBuildShape(data);
+/**
+ * Request swap instructions from Jupiter.
+ *
+ * @param {Object} params
+ * @param {string} params.inputMint
+ * @param {string} params.outputMint
+ * @param {string} params.amount - input amount in base units.
+ * @param {string} params.taker - user's public key (signer + fee payer).
+ * @param {number} params.slippageBps
+ * @param {{ recipient: string, bps: number, side: 'buy' }|null} params.fee - Salmon's fee;
+ *   `recipient` is an existing token account of the output mint.
+ * @param {(instructions: TransactionInstruction[], lookupTableAddresses: string[]) =>
+ *   Promise<number>} [params.measure] - serialized size of the transaction an answer becomes;
+ *   without it every answer is taken to fit.
+ * @returns {Promise<{ instructions: TransactionInstruction[], lookupTableAddresses: string[],
+ *   amountOut: string, minAmountOut: string, routePlan: Array<{ label: string, percent: number }>,
+ *   providerRequestId: null, routeFee: null }>}
+ * @throws {SolanaSwapError} 404 `no_route`, 500 `swap_misconfigured`, 502 `provider_bad_response`
+ *   (unexpected shape, or instructions beyond the taker's own swap), 503 `upstream_rate_limited`.
+ */
+const requestSwapInstructions = async ({
+  inputMint,
+  outputMint,
+  amount,
+  taker,
+  slippageBps,
+  fee,
+  measure,
+}) => {
+  const params = {
+    inputMint,
+    outputMint,
+    amount,
+    taker,
+    slippageBps,
+    ...(fee ? { platformFeeBps: fee.bps, feeAccount: fee.recipient } : {}),
+  };
 
-  // Order per Jupiter's reference assembly; `computeBudgetInstructions` and
-  // `tipInstruction` (Jito) are ours to decide and are left out.
-  const instructions = [
-    ...(data.setupInstructions || []),
-    data.swapInstruction,
-    data.cleanupInstruction,
-    ...(data.otherInstructions || []),
-  ]
-    .filter(Boolean)
-    .map(toInstruction);
+  // ponytail: installed wallets verify only route_v2, so a shared-accounts
+  // answer, or a route_v2 answer too big to send, is asked again (one call
+  // after another, inside the request budget). The first route_v2 answer that
+  // fits wins, else the first answer that fits (new wallets accept the shared
+  // form), else the first valid answer, which fails as before. Only answers
+  // that pass every check are chosen from: an invalid one ends the retries.
+  // Remove once wallets that accept shared_accounts_route_v2 are the only
+  // ones in use; each retry spends the org's 600/min quota.
+  const request = { taker, inputMint, outputMint, amount, slippageBps, fee };
+  // A retry is a nicety: it runs only on a token free now, never waits or backs off.
+  const answer = async (noWait) => {
+    const data = await fetchBuild(params, { noWait });
+    try {
+      const instructions = validate(data, request);
+      return {
+        data,
+        instructions,
+        route: routeOf(data),
+        size: await sizeOf(instructions, data, measure),
+      };
+    } catch (error) {
+      if (error.errorCode !== 'provider_bad_response') throw error;
+      return { data, invalid: error };
+    }
+  };
+  const wantsAnother = (a) =>
+    !a.invalid && (a.route === 'shared_accounts_route_v2' || (a.route === 'route_v2' && !fits(a)));
+  const answers = [await answer(false)];
+  let attempts = 1;
+  let retryError;
+  while (
+    wantsAnother(answers.at(-1)) &&
+    attempts < JUPITER_BUILD_ATTEMPTS &&
+    remainingMs() > RETRY_MIN_REMAINING_MS
+  ) {
+    attempts += 1;
+    try {
+      answers.push(await answer(true));
+    } catch (error) {
+      retryError = error.errorCode || 'unknown';
+      break;
+    }
+  }
+  const valid = answers.filter((a) => !a.invalid);
+  const chosen =
+    valid.find((a) => a.route === 'route_v2' && fits(a)) ?? valid.find(fits) ?? valid[0];
+  if (wantsAnother(answers[0])) {
+    console.warn('[SWAP_JUPITER_SHARED_RETRY]', {
+      attempts,
+      route: chosen.route,
+      sizes: answers.map((a) => (a.invalid ? 'invalid' : a.size)),
+      ...(retryError ? { retryError } : {}),
+    });
+  }
+  // Only the first answer can be invalid with nothing valid before it.
+  if (!chosen) throw answers[0].invalid;
+  const { data, instructions } = chosen;
 
   return {
     instructions,
