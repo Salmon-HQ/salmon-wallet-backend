@@ -48,6 +48,25 @@ The owner's order is staging first, then prod, so a change runs on the staging s
 
 Each prod deploy downloads that month's DB-IP country database (`scripts/refresh-geo-data.mjs`; the previous month's early on the 1st, before DB-IP publishes), rebuilds the Ukrainian region ranges from the same month's City Lite, and checks known addresses in the US, GB, IR, CU and CN plus all six regions; any failure fails the deploy. Prod stops placing callers once the database is 45 days old, which switches Swap off everywhere. DB-IP publishes on the 1st, so `deploy.yml` also runs on a schedule, the 2nd of every month at 06:30 UTC, and redeploys the newest `prod/v*` tag with that month's database: no release is needed to keep Swap open. The nightly `production country gate` job (`integration-external.yml`) goes red when the database is more than 35 days old (the monthly run failed or did not run; find out why and get a deploy out before day 45), when prod cannot place the runner's address, and when a request from a US runner is not routed to 0x.
 
+## AWS WAF in front of the API
+
+Every deployed stage (`prod`, `staging`; never `local`) gets a regional AWS WAF web ACL, `gol-salmon-api-<stage>-api`, associated with its API Gateway stage (`resources` in `serverless.yml`). Its one rule blocks, with a 403, a source IP that sends more than `custom.wafRateLimitPerIp` requests (300) in any 60 seconds; every other request is allowed. The number matches the Express per-IP limit (`RATE_LIMIT_MAX` per `RATE_LIMIT_WINDOW_SECONDS`, `src/index.js`), so it blocks no caller the API would have served. Without it, one client sending more than 50 requests per second empties the stage throttle (`custom.apiGatewayThrottling`, 50 rps per method), which every wallet route shares through `ANY /{proxy+}`, and every user gets API Gateway's 429. WAF checks the rate about every 10 seconds, so a flood is cut off within seconds rather than at once.
+
+Cost per stage, from [AWS WAF pricing](https://aws.amazon.com/waf/pricing/): about USD 5 per web ACL per month, USD 1 per rule per month and USD 0.60 per million requests inspected, so roughly USD 6 a month per stage plus the request charge.
+
+The deploy role needs WAF permissions before the first deploy that carries the web ACL: `wafv2:CreateWebACL`, `UpdateWebACL`, `DeleteWebACL`, `GetWebACL`, `ListTagsForResource`, `TagResource`, `UntagResource`, `AssociateWebACL`, `DisassociateWebACL` and `GetWebACLForResource` on `arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/gol-salmon-api-*/*` (the actions CloudFormation's handlers for `AWS::WAFv2::WebACL` and `AWS::WAFv2::WebACLAssociation` call), plus `apigateway:SetWebACL` on the stage (`arn:aws:apigateway:us-east-1::/restapis/*/stages/*`), which API Gateway requires both to attach and to remove a web ACL. Without them the stack update fails and CloudFormation rolls it back. `aws-deploy-policy.json` carries them; the order to apply them in is under [CI IAM permissions](#ci-iam-permissions).
+
+After the first deploy of each stage, check the association and the rule:
+
+```bash
+aws wafv2 get-web-acl-for-resource --region us-east-1 \
+  --resource-arn arn:aws:apigateway:us-east-1::/restapis/<api-id>/stages/<stage>
+aws wafv2 get-rate-based-statement-managed-keys --region us-east-1 --scope REGIONAL \
+  --web-acl-name gol-salmon-api-<stage>-api --web-acl-id <web-acl-id> --rule-name per-ip-rate-limit
+```
+
+The second command lists the addresses WAF is blocking at that moment; they must be client addresses, not CloudFront's, since the API is edge-optimized. A load test from one address against staging (above 5 requests per second for a minute) should start getting 403 from WAF while a second address still gets 200.
+
 ## Provisioned but unused: Solana Actions / Blinks infrastructure
 
 The Blinks design (`docs/plans/2026-05-05-solana-actions-blinks.md`, a local
