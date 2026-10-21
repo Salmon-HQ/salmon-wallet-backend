@@ -92,7 +92,7 @@ const resolvePriorityFee = async (connection, instructions) => {
  * true }` when the RPC could not simulate at all — the caller's transaction is
  * not to blame for that one.
  */
-const simulate = async (connection, message, watchAccounts = []) => {
+const simulate = async (connection, message, watchAccounts = [], minContextSlot) => {
   try {
     const { value } = await connection.simulateTransaction(new VersionedTransaction(message), {
       sigVerify: false,
@@ -100,6 +100,7 @@ const simulate = async (connection, message, watchAccounts = []) => {
       ...(watchAccounts.length > 0
         ? { accounts: { encoding: 'base64', addresses: watchAccounts } }
         : {}),
+      ...(minContextSlot ? { minContextSlot } : {}),
     });
     if (value.err || !value.unitsConsumed) {
       return { err: value.err || 'no compute units reported', logs: (value.logs || []).slice(-3) };
@@ -190,6 +191,8 @@ const programIdsOf = (message, lookupTables) => {
  *   after `instructions`; dropped when the simulation rejects them
  * @param {string[]} [input.watchAccounts] - accounts whose post-simulation state the
  *   result's `simulation.accounts` carries (each must appear in the transaction)
+ * @param {number} [input.minContextSlot] - simulate on state no older than this slot (the
+ *   slot the caller read the watched accounts at, so before and after compare)
  * @param {boolean} [input.simulationFallback=true] - when the simulation fails, still
  *   ship the bytes with a fixed compute-unit limit (the wallet simulates
  *   again before signing). `false` returns `transaction: null` and the failed
@@ -208,6 +211,7 @@ const compileUnsigned = async ({
   cleanup = [],
   simulationFallback = true,
   watchAccounts = [],
+  minContextSlot,
 }) => {
   const [lookupTables, { blockhash }, priorityFee] = await Promise.all([
     fetchLookupTables(connection, lookupTableAddresses),
@@ -241,7 +245,7 @@ const compileUnsigned = async ({
 
   let applied = cleanup;
   let simulated = compile([...placeholderBudget, ...instructions, ...applied]);
-  let simulation = await simulate(connection, simulated, watchAccounts);
+  let simulation = await simulate(connection, simulated, watchAccounts, minContextSlot);
   if (simulation.err && applied.length > 0) {
     console.warn('[CLEANUP_SKIPPED] intermediate account close rejected in simulation', {
       accounts: applied.length,
@@ -250,7 +254,7 @@ const compileUnsigned = async ({
     });
     applied = [];
     simulated = compile([...placeholderBudget, ...instructions]);
-    simulation = await simulate(connection, simulated, watchAccounts);
+    simulation = await simulate(connection, simulated, watchAccounts, minContextSlot);
   }
   const base = {
     priorityFeeMicroLamports: priorityFee,

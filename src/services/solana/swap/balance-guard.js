@@ -31,7 +31,8 @@ const { COMMITMENT } = require('../powerups/unsigned-transaction-builder');
 
 /**
  * SPL token account layout, shared by both token programs: mint 0..32,
- * owner 32..64, amount u64 @64, delegate 72..108 (COption), close authority
+ * owner 32..64, amount u64 @64, delegate 72..108 (COption), state @108,
+ * native reserve 109..121, delegated amount u64 121..129, close authority
  * 129..165 (COption). Token-2022 adds an account-type byte at 165 (2 =
  * account, 1 = mint) when the account carries extensions.
  */
@@ -62,30 +63,41 @@ const readTokenFields = (data) => ({
   mint: new PublicKey(data.subarray(0, 32)).toBase58(),
   owner: new PublicKey(data.subarray(32, 64)).toBase58(),
   amount: data.readBigUInt64LE(64),
-  authorities: Buffer.concat([data.subarray(72, 108), data.subarray(129, ACCOUNT_SIZE)]),
+  // Delegate, then delegated amount and close authority: a raised allowance is a grant too.
+  authorities: Buffer.concat([data.subarray(72, 108), data.subarray(121, ACCOUNT_SIZE)]),
 });
 
-const noAuthorities = Buffer.alloc(36 + 36);
+const noAuthorities = Buffer.alloc(36 + 44);
+
+/** `Create` (no data, or 0) and `CreateIdempotent` (1) on the ATA program. */
+const isAtaCreate = (ix) =>
+  ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID) && ix.keys.length > 1 && (ix.data[0] ?? 0) <= 1;
 
 /**
  * The taker's wallet, its token accounts the transaction touches and the
- * associated token accounts it creates for the taker, with their state now.
+ * associated token accounts it creates for the taker (including one someone
+ * funded before it existed, which reads as a plain system account), with
+ * their state now and the slot it was read at. `foreignCreates` counts the
+ * creates whose account is not watched: only their rent leaves the taker's
+ * accounts for good.
  *
- * @returns {Promise<{ addresses: string[], before: Map<string, Object|null> }>}
+ * @returns {Promise<{ addresses: string[], before: Map<string, Object|null>,
+ *   minContextSlot: number, foreignCreates: number }>}
  */
 const readTakerAccounts = async (connection, taker, instructions) => {
   const keys = [
     ...new Set([taker, ...instructions.flatMap((ix) => ix.keys.map((k) => k.pubkey.toBase58()))]),
   ];
   const infos = [];
+  let minContextSlot = 0;
   for (let start = 0; start < keys.length; start += MAX_KEYS_PER_READ) {
     const chunk = keys.slice(start, start + MAX_KEYS_PER_READ).map((key) => new PublicKey(key));
-    infos.push(
-      ...(await connection.getMultipleAccountsInfo(chunk, {
-        commitment: COMMITMENT,
-        dataSlice: READ_SLICE,
-      }))
-    );
+    const { context, value } = await connection.getMultipleAccountsInfoAndContext(chunk, {
+      commitment: COMMITMENT,
+      dataSlice: READ_SLICE,
+    });
+    infos.push(...value);
+    minContextSlot = Math.max(minContextSlot, context.slot);
   }
   const before = new Map(keys.map((key, index) => [key, infos[index] ?? null]));
   const owned = keys.filter((key) => {
@@ -97,14 +109,16 @@ const readTakerAccounts = async (connection, taker, instructions) => {
       readTokenFields(info.data).owner === taker
     );
   });
-  const created = instructions
-    .filter(
-      (ix) =>
-        ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID) && ix.keys[2]?.pubkey.toBase58() === taker
-    )
+  const creates = instructions.filter(isAtaCreate);
+  const created = creates
+    .filter((ix) => ix.keys[2]?.pubkey.toBase58() === taker)
     .map((ix) => ix.keys[1].pubkey.toBase58())
-    .filter((address) => !before.get(address));
-  return { addresses: [...new Set([taker, ...owned, ...created])], before };
+    .filter((address) => !owned.includes(address));
+  const addresses = [...new Set([taker, ...owned, ...created])];
+  const foreignCreates = creates.filter(
+    (ix) => !addresses.includes(ix.keys[1].pubkey.toBase58())
+  ).length;
+  return { addresses, before, minContextSlot, foreignCreates };
 };
 
 /** Post-simulation account (RPC shape) → `{ lamports, owner, data }`, or null when absent. */
@@ -127,7 +141,7 @@ const fromSimulation = (account) =>
  * @param {string} input.taker
  * @param {string} input.inputMint
  * @param {string} input.amount - input amount in base units
- * @param {number} input.accountCreates - associated token account creates in the transaction
+ * @param {number} [input.foreignCreates] - account creates whose account is not watched
  * @param {number} input.signatures
  * @param {number} input.priorityFeeMicroLamports
  * @param {number} input.computeUnitLimit - the limit the simulation ran under
@@ -138,7 +152,7 @@ const balanceMismatch = ({
   taker,
   inputMint,
   amount,
-  accountCreates,
+  foreignCreates = 0,
   signatures,
   priorityFeeMicroLamports,
   computeUnitLimit,
@@ -154,7 +168,7 @@ const balanceMismatch = ({
     lamportsAfter += BigInt(post?.lamports ?? 0);
     if (address === taker) continue;
 
-    const preFields = pre ? readTokenFields(pre.data) : null;
+    const preFields = pre && isTokenAccount(pre.owner, pre.data) ? readTokenFields(pre.data) : null;
     const postFields =
       post && isTokenAccount(post.owner, post.data) ? readTokenFields(post.data) : null;
     if (postFields && postFields.owner !== taker) return `taker account ${address} changes owner`;
@@ -179,7 +193,7 @@ const balanceMismatch = ({
   const allowance =
     (inputMint === SOL_ADDRESS ? BigInt(amount) : 0n) +
     fees +
-    ATA_RENT_ALLOWANCE * BigInt(accountCreates);
+    ATA_RENT_ALLOWANCE * BigInt(foreignCreates);
   const lost = lamportsBefore - lamportsAfter;
   return lost > allowance ? `taker loses ${lost} lamports, more than ${allowance}` : null;
 };

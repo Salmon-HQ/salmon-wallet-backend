@@ -26,7 +26,7 @@
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
-const { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } = require('@solana/spl-token');
+const { getAssociatedTokenAddressSync } = require('@solana/spl-token');
 const { SOL_ADDRESS, SOL_DECIMALS } = require('../../../constants/solana-constants');
 const { getByMints } = require('../solana-ft-service');
 const tokenMetadata = require('../token-metadata-service');
@@ -310,7 +310,7 @@ const assertRoutable = async (mints, locals) => {
  * (`balance-guard.js`), and one whose effect on them cannot be read.
  * @throws {SolanaSwapError} 502 `provider_bad_response`, 503 `simulation_unavailable`
  */
-const assertBalances = ({ built, watched, quote, inputMint, amount, publicKey, provider }) => {
+const assertBalances = ({ built, watched, inputMint, amount, publicKey, provider }) => {
   const after = built.simulation.accounts;
   // The wallet missing after the run is the RPC declining to report it, not a drain.
   if (!Array.isArray(after) || (watched.before.get(publicKey) && !after[0])) {
@@ -326,9 +326,7 @@ const assertBalances = ({ built, watched, quote, inputMint, amount, publicKey, p
     taker: publicKey,
     inputMint,
     amount,
-    accountCreates: quote.instructions.filter((ix) =>
-      ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)
-    ).length,
+    foreignCreates: watched.foreignCreates,
     signatures: built.requiredSignatures,
     priorityFeeMicroLamports: built.priorityFeeMicroLamports,
     computeUnitLimit: MAX_COMPUTE_UNIT_LIMIT,
@@ -382,6 +380,7 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     lookupTableAddresses: quote.lookupTableAddresses,
     cleanup,
     watchAccounts: watched.addresses,
+    minContextSlot: watched.minContextSlot,
     // A quote the runtime rejects (slippage already exceeded, a stale pool)
     // is refused here: the user must never sign bytes that are known to fail
     // and pay the fee to watch them fail.
@@ -404,7 +403,6 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
   assertBalances({
     built,
     watched,
-    quote,
     inputMint,
     amount,
     publicKey,
