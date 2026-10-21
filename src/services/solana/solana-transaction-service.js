@@ -208,11 +208,23 @@ const getRpcUrlFromLocals = (locals) => {
 };
 
 const RPC_MIN_PAGE_SIZE = 1;
-const RPC_MAX_PAGE_SIZE = 1000;
+// Same ceiling as the Triton provider's history page (`MAX_HISTORY_BATCH`):
+// one fallback page costs at most 1 + 25 Triton calls, each taking a token
+// from the shared Triton budget.
+const RPC_MAX_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 10;
 // Upper bound for the enriched path; the Triton provider caps a page at 25.
 const ENHANCED_MAX_PAGE_SIZE = 100;
-// ponytail: fixed fan-out ceiling per RPC batch; tune if the node rate-limits.
-const RPC_FETCH_BATCH_SIZE = 50;
+
+// The provider layer's own refusals: the shared Triton budget is spent, the
+// Triton breaker is open, or the request budget is gone. The bare-RPC
+// fallback calls the same Triton endpoint under the same gates, so falling
+// back would only repeat the refusal with 26 more calls.
+const FAIL_FAST_CODES = new Set([
+  'upstream_rate_limited',
+  'upstream_unavailable',
+  'request_budget_exhausted',
+]);
 
 /**
  * Normalizes a caller-supplied `pageSize` into the range the target accepts,
@@ -225,15 +237,6 @@ const clampPageSize = (pageSize, max = RPC_MAX_PAGE_SIZE) => {
   const parsed = parseInt(pageSize, 10);
   if (Number.isNaN(parsed)) return undefined;
   return Math.min(Math.max(parsed, RPC_MIN_PAGE_SIZE), max);
-};
-
-/** Runs `fn` over `items` in sequential batches of `size`, preserving order. */
-const mapInBatches = async (items, size, fn) => {
-  const results = [];
-  for (let i = 0; i < items.length; i += size) {
-    results.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
-  }
-  return results;
 };
 
 /**
@@ -251,16 +254,16 @@ const getRpcHistory = async (address, filters, locals) => {
   const publicKey = new PublicKey(address);
   const options = {
     before: filters.pageToken,
-    // Clamp rather than forward: `getSignaturesForAddress` rejects a limit
-    // outside 1..1000 with an RPC error, which surfaced as a 500 for what is
-    // really a bad query param. A non-numeric value falls back to the RPC
-    // default, same as before.
-    limit: clampPageSize(filters.pageSize),
+    // Clamp rather than forward: an out-of-range limit is an RPC error (a
+    // 500 for a bad query param), and the RPC's own default is 1000.
+    limit: clampPageSize(filters.pageSize) ?? DEFAULT_PAGE_SIZE,
   };
   const signatures = await connection.getSignaturesForAddress(publicKey, options, COMMITMENT);
 
-  const transactions = await mapInBatches(signatures, RPC_FETCH_BATCH_SIZE, ({ signature }) =>
-    connection.getParsedTransaction(signature, TRANSACTION_CONFIG)
+  const transactions = await Promise.all(
+    signatures.map(({ signature }) =>
+      connection.getParsedTransaction(signature, TRANSACTION_CONFIG)
+    )
   );
 
   console.log(`[getTransactions] Loaded ${signatures.length} transactions from ${rpcUrl}`);
@@ -285,7 +288,8 @@ const getRpcHistory = async (address, filters, locals) => {
 
 /**
  * Try the enhanced (provider-resolver) path first; fall through to the RPC
- * path on null result, throw, or when the env is not enhanced-supported.
+ * path on null result, throw, or when the env is not enhanced-supported —
+ * except when the provider layer itself refused (`FAIL_FAST_CODES`).
  */
 const withEnhancedThenRpc = async ({ environment, tryEnhanced, runRpc, onError }) => {
   if (isEnhancedApiSupported(environment)) {
@@ -293,6 +297,7 @@ const withEnhancedThenRpc = async ({ environment, tryEnhanced, runRpc, onError }
       const result = await tryEnhanced();
       if (result) return result;
     } catch (error) {
+      if (FAIL_FAST_CODES.has(error.errorCode)) throw error;
       onError(error);
     }
   }
@@ -317,7 +322,7 @@ const getTransactions = (address, filters, locals) => {
         address,
         {
           before: pageToken,
-          limit: clampPageSize(pageSize, ENHANCED_MAX_PAGE_SIZE) ?? 10,
+          limit: clampPageSize(pageSize, ENHANCED_MAX_PAGE_SIZE) ?? DEFAULT_PAGE_SIZE,
           includeSpam: filters.includeSpam,
         },
         locals,

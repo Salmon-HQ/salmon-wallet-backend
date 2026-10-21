@@ -382,27 +382,31 @@ describe('Solana Transaction Service - unit tests', () => {
     );
   });
 
-  test('fans out RPC transaction fetches in batches of 50', async () => {
-    const signatures = Array.from({ length: 120 }, (_, i) => ({ signature: `sig-${i}` }));
-    let inFlight = 0;
-    let peak = 0;
-    const getParsedTransaction = jest.fn(async () => {
-      inFlight += 1;
-      peak = Math.max(peak, inFlight);
-      await new Promise((resolve) => setImmediate(resolve));
-      inFlight -= 1;
-      return { slot: 1, meta: { err: null } };
-    });
+  test('caps the RPC fallback page at the enriched maximum and defaults it like the enriched path', async () => {
+    const getSignaturesForAddress = jest.fn().mockResolvedValue([]);
     heliusService.getEnhancedTransactionHistory.mockRejectedValue(new Error('timeout'));
     Connection.mockImplementation(() => ({
-      getSignaturesForAddress: jest.fn().mockResolvedValue(signatures),
-      getParsedTransaction,
+      getSignaturesForAddress,
+      getParsedTransaction: jest.fn(),
     }));
 
-    const result = await service.getTransactions('batched-address', { pageSize: 120 }, locals);
+    await service.getTransactions('capped-rpc-address', { pageSize: 1000 }, locals);
+    await service.getTransactions('default-rpc-address', {}, locals);
 
-    expect(getParsedTransaction).toHaveBeenCalledTimes(120);
-    expect(peak).toBe(50);
-    expect(result.data.map((tx) => tx.signature)).toEqual(signatures.map((s) => s.signature));
+    expect(getSignaturesForAddress.mock.calls[0][1]).toMatchObject({ limit: 25 });
+    expect(getSignaturesForAddress.mock.calls[1][1]).toMatchObject({ limit: 10 });
   });
+
+  test.each(['upstream_rate_limited', 'upstream_unavailable', 'request_budget_exhausted'])(
+    'fails fast instead of falling back to RPC when the enriched path answers %s',
+    async (errorCode) => {
+      const refused = Object.assign(new Error('refused'), { statusCode: 503, errorCode });
+      heliusService.getEnhancedTransactionHistory.mockRejectedValue(refused);
+
+      await expect(service.getTransactions('busy-address', { pageSize: 20 }, locals)).rejects.toBe(
+        refused
+      );
+      expect(Connection).not.toHaveBeenCalled();
+    }
+  );
 });

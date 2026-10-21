@@ -9,7 +9,9 @@ These rules apply to Solana service code only.
 - `solana-transaction-service.js`
   - orchestrates transaction lookup/history
   - delegates the enriched-tx path to the provider resolver (`./providers`)
-  - falls back to bare RPC when Triton is not configured for the env or the resolver throws
+  - falls back to bare RPC when Triton is not configured for the env or the resolver throws, except on the provider layer's own 503s (`upstream_rate_limited`, `upstream_unavailable`, `request_budget_exhausted`), which reach the caller: the fallback calls the same Triton endpoint under the same gates. The fallback page is capped at 25, like the enriched page
+- `budgeted-connection.js`
+  - the `@solana/web3.js` Connection every service uses against Triton; each of its HTTP calls goes through `providerCall('triton')`, so the shared Triton budget, the breaker and the request deadline apply to it
 - `solana-rpc-enrichment.js`
   - preloads the lookups the bare-RPC transaction resource reads (token list, per-tx NFT metadata) onto `locals`, so `src/resources/solana/solana-transaction-resource.js` stays a pure mapper with no network I/O
 - `providers/`
