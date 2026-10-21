@@ -54,7 +54,13 @@ Every deployed stage (`prod`, `staging`; never `local`) gets a regional AWS WAF 
 
 Cost per stage, from [AWS WAF pricing](https://aws.amazon.com/waf/pricing/): about USD 5 per web ACL per month, USD 1 per rule per month and USD 0.60 per million requests inspected, so roughly USD 6 a month per stage plus the request charge.
 
-The deploy role needs WAF permissions before the first deploy that carries the web ACL: `wafv2:CreateWebACL`, `UpdateWebACL`, `DeleteWebACL`, `GetWebACL`, `ListTagsForResource`, `TagResource`, `UntagResource`, `AssociateWebACL`, `DisassociateWebACL` and `GetWebACLForResource` on `arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/gol-salmon-api-*/*` (the actions CloudFormation's handlers for `AWS::WAFv2::WebACL` and `AWS::WAFv2::WebACLAssociation` call), plus `apigateway:SetWebACL` on the stage (`arn:aws:apigateway:us-east-1::/restapis/*/stages/*`), which API Gateway requires both to attach and to remove a web ACL. Without them the stack update fails and CloudFormation rolls it back. `aws-deploy-policy.json` carries them; the order to apply them in is under [CI IAM permissions](#ci-iam-permissions).
+The GitHub deploy role needs WAF permissions before the first deploy that carries the web ACL; these are the actions CloudFormation's handlers for `AWS::WAFv2::WebACL` and `AWS::WAFv2::WebACLAssociation` call:
+
+- `wafv2:CreateWebACL`, `UpdateWebACL`, `DeleteWebACL`, `GetWebACL`, `ListTagsForResource`, `TagResource` and `UntagResource` on `arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/gol-salmon-api-*/*`;
+- `wafv2:AssociateWebACL`, `DisassociateWebACL` and `GetWebACLForResource` on that web ACL and on the stage, `arn:aws:apigateway:us-east-1::/restapis/*/stages/*`, since IAM checks both;
+- `apigateway:SetWebACL` on the stage, which API Gateway requires both to attach and to remove a web ACL.
+
+Without them the stack update fails and CloudFormation rolls it back. They belong in `aws-deploy-policy.json` (statements `WafWebAclForProject` and `WafAssociateStage`); the order to apply them in IAM is under [CI IAM permissions](#ci-iam-permissions). Staging is deployed by hand with the owner's own credentials, not with this role.
 
 After the first deploy of each stage, check the association and the rule:
 
