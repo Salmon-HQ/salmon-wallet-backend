@@ -67,6 +67,8 @@ The GitHub deploy role needs WAF permissions before the first deploy that carrie
 
 Without them the stack update fails and CloudFormation rolls it back. They belong in `aws-deploy-policy.json` (statements `WafWebAclForProject` and `WafAssociateStage`); the order to apply them in IAM is under [CI IAM permissions](#ci-iam-permissions). Staging is deployed by hand with the owner's own credentials, not with this role.
 
+Release order: the web ACL ships after the deploy-role change that carries these permissions (`fix/deploy-least-privilege`, which also adds the Lambda role's permissions boundary). Merge it after that change, and push its `prod/vX.Y.Z` tag only once step 1 of that change's rollout (the temporary inline policy with the WAF permissions) is applied in IAM. A tag pushed earlier fails: CloudFormation cannot create the web ACL and rolls the stack back. The monthly scheduled run then redeploys that same newest tag and fails the same way, so the country database stops being refreshed and Swap closes once it is 45 days old.
+
 After the first deploy of each stage, check the association, then confirm the rule sees client addresses before it blocks anything:
 
 ```bash
@@ -82,7 +84,13 @@ aws wafv2 get-web-acl-for-resource --region us-east-1 \
    ```
 3. Cross-check in the sampled requests (AWS WAF console → the web ACL → Sampled requests, or `aws wafv2 get-sampled-requests` with the rule's metric name `per-ip-rate-limit`): the source IP of the counted requests must be the client's.
 
-Only when both show client addresses, set `custom.wafRuleAction: block` in a follow-up change (and update the guard in `src/__tests__/prod-config.spec.js`), deploy staging, and repeat the load test: the loaded address must now get 403 from WAF while a second address still gets 200. If CloudFront addresses show up instead, leave the rule counting; per-client limiting then needs a different design.
+Before the rule may block, one more source of shared addresses has to be excluded. Requests that reach the API through Salmon's own CloudFront distribution (the static API hostname, which already sits behind that distribution's own WAF) arrive at API Gateway from CloudFront's addresses, many users per address, so an IP-aggregated rule would block them together. The required scope-down, which needs a CloudFront change by the owner and is not built yet:
+
+1. The distribution adds a secret custom header to every request it forwards to the API (an origin custom header, [CloudFront: adding custom headers to origin requests](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/add-origin-custom-headers.html)). The value lives in SSM Parameter Store (for example `/salmon-api/<stage>/ORIGIN_VERIFY_HEADER`), never in this repository.
+2. The rate rule gets a `ScopeDownStatement` that leaves out requests carrying that header: a `NotStatement` around a `ByteMatchStatement` on the header (`FieldToMatch.SingleHeader`, `PositionalConstraint: EXACTLY`, the value resolved from SSM at deploy time). The distribution's own WAF limits those requests.
+3. On a busy day, list prod's managed keys (the `get-rate-based-statement-managed-keys` command above, with `--web-acl-name gol-salmon-api-prod-api`) and check none fall in the `CLOUDFRONT` ranges.
+
+Only when the load test and the managed keys show client addresses, and the scope-down is in place, set `custom.wafRuleAction: block` in a follow-up change (and update the guard in `src/__tests__/prod-config.spec.js`), deploy staging, and repeat the load test: the loaded address must now get 403 from WAF while a second address still gets 200. If CloudFront addresses show up for direct requests, leave the rule counting; per-client limiting then needs a different design.
 
 ## Provisioned but unused: Solana Actions / Blinks infrastructure
 
