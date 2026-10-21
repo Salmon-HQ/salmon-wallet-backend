@@ -128,4 +128,81 @@ No deploy workflow reads GitHub repo secrets; any entries remaining under Settin
 
 ## CI IAM permissions
 
-The GitHub Actions OIDC role's live policy is `GithubActionsPolicy` in AWS, and it is the policy this repository checks in as `aws-deploy-policy.json`: the attached version matches the file statement for statement (including `LambdaInvokeSanctionsRefresh`, which lets the deploy run `refreshSanctionsJob` once and nothing else), and the role additionally carries an inline `ReadSalmonApiProdParams` that lets it read `/salmon-api/prod/*` from SSM. Confirmed against the account on 2026-09-14. The deploy resolves every `${ssm:...}` ref with it: the `v0.14.0` tag deploy resolved every `${ssm:...}` ref and completed successfully. Keep any future tightening scoped to `ssm:GetParameter*` on that prefix.
+The GitHub Actions OIDC role (`GithubActionsRole`) deploys with the customer managed policy `GithubActionsPolicy`, which this repository checks in as `aws-deploy-policy.json` (`LambdaInvokeSanctionsRefresh` lets the deploy run `refreshSanctionsJob` once and nothing else). The role also carries an inline `ReadSalmonApiProdParams` that lets it read `/salmon-api/prod/*` from SSM, which the deploy needs to resolve every `${ssm:...}` ref; keep any tightening of that one scoped to `ssm:GetParameter*` on that prefix. The policy is close to IAM's limit of 6,144 characters for a managed policy (white space not counted), so a large addition needs a second managed policy on the role.
+
+### The Lambda role's permissions boundary
+
+The Lambda role of each stage (`gol-salmon-api-<stage>-us-east-1-lambdaRole`) carries the managed policy `gol-salmon-api-lambda-boundary` (`aws-lambda-permissions-boundary.json`) as its permissions boundary (`provider.iam.role.permissionsBoundary` in `serverless.yml`). Whatever policy is put on the role, it can only write its own log groups and read the availability table parameter, and nothing in IAM. The functions read no other parameter at runtime: every other value reaches them as an environment variable at deploy time. A feature that reads another parameter, or calls another AWS service, at runtime needs the boundary widened first.
+
+`aws-deploy-policy.json` holds the deploy role to that boundary:
+
+- it may create, change or delete a `gol-salmon-api-*` role, its inline policies, attached policies or trust policy only while that role carries `gol-salmon-api-lambda-boundary` (`iam:PermissionsBoundary` condition), and set no other boundary;
+- it may pass those roles only to Lambda (`iam:PassedToService`);
+- it may never remove a boundary or edit, roll back or delete the boundary policy (explicit denies).
+
+So a compromised deploy job can no longer create an administrator role. What it can still do: IAM has no condition key on the contents of a trust policy, so it could make a bounded project role trust another account, which then gets only what the boundary allows.
+
+To change the boundary, edit `aws-lambda-permissions-boundary.json` and publish it with administrator credentials (the deploy role is denied this):
+
+```bash
+ACCOUNT_ID=<AWS_ACCOUNT_ID>
+sed "s/<AWS_ACCOUNT_ID>/$ACCOUNT_ID/g" aws-lambda-permissions-boundary.json > /tmp/lambda-boundary.json
+aws iam create-policy-version --set-as-default \
+  --policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/gol-salmon-api-lambda-boundary" \
+  --policy-document file:///tmp/lambda-boundary.json
+```
+
+### Rollout order
+
+Applying the restrictive `aws-deploy-policy.json` before a deploy has attached the boundary to the Lambda role breaks every deploy: CloudFormation could no longer update a role that carries no boundary. The first rollout therefore runs in three steps, in this order, with administrator credentials (`aws login`). Every command uses the account id placeholder the rest of this repository uses.
+
+**Step 1 — create the boundary policy and add only what the next deploy needs.** This is additive: the live `GithubActionsPolicy` keeps working unchanged, and a temporary inline policy adds setting the boundary on project roles plus the WAF permissions the stage's web ACL needs (statements `WafWebAclForProject` and `WafAssociateStage`).
+
+```bash
+ACCOUNT_ID=<AWS_ACCOUNT_ID>
+sed "s/<AWS_ACCOUNT_ID>/$ACCOUNT_ID/g" aws-lambda-permissions-boundary.json > /tmp/lambda-boundary.json
+aws iam create-policy --policy-name gol-salmon-api-lambda-boundary \
+  --description "Ceiling for the gol-salmon-api Lambda roles" \
+  --policy-document file:///tmp/lambda-boundary.json
+
+jq '{Version, Statement: [(.Statement[] | select(.Sid == "WafWebAclForProject" or .Sid == "WafAssociateStage")), (.Statement[] | select(.Sid == "IamWriteOnlyWithBoundary") | .Sid = "IamSetProjectRoleBoundary" | .Action = ["iam:PutRolePermissionsBoundary"])]}' \
+  aws-deploy-policy.json | sed "s/<AWS_ACCOUNT_ID>/$ACCOUNT_ID/g" > /tmp/deploy-step1.json
+aws iam put-role-policy --role-name GithubActionsRole \
+  --policy-name SalmonApiBoundaryAndWaf --policy-document file:///tmp/deploy-step1.json
+```
+
+**Step 2 — merge and deploy.** Merge the change and push its `prod/vX.Y.Z` tag ([Release, step by step](#release-step-by-step)); the deploy attaches the boundary to the prod Lambda role. Deploy staging the same way, by hand, so its role carries the boundary too. Then confirm both roles show the boundary:
+
+```bash
+aws iam get-role --role-name gol-salmon-api-prod-us-east-1-lambdaRole --query 'Role.PermissionsBoundary'
+aws iam get-role --role-name gol-salmon-api-staging-us-east-1-lambdaRole --query 'Role.PermissionsBoundary'
+```
+
+**Step 3 — apply the restrictive policy and drop the temporary one.** A managed policy keeps at most five versions; when `list-policy-versions` shows five, delete the oldest non-default one first.
+
+```bash
+ACCOUNT_ID=<AWS_ACCOUNT_ID>
+aws iam list-policy-versions --policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/GithubActionsPolicy"
+# only when five versions exist:
+aws iam delete-policy-version --policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/GithubActionsPolicy" --version-id <oldest-non-default>
+
+sed "s/<AWS_ACCOUNT_ID>/$ACCOUNT_ID/g" aws-deploy-policy.json > /tmp/deploy-policy.json
+aws iam create-policy-version --set-as-default \
+  --policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/GithubActionsPolicy" \
+  --policy-document file:///tmp/deploy-policy.json
+aws iam delete-role-policy --role-name GithubActionsRole --policy-name SalmonApiBoundaryAndWaf
+```
+
+Check the result without deploying: creating a project role with no boundary must come back `implicitDeny`, and passing a project role to Lambda `allowed`:
+
+```bash
+aws iam simulate-principal-policy --policy-source-arn "arn:aws:iam::$ACCOUNT_ID:role/GithubActionsRole" \
+  --action-names iam:CreateRole --resource-arns "arn:aws:iam::$ACCOUNT_ID:role/gol-salmon-api-check" \
+  --query 'EvaluationResults[].EvalDecision'
+aws iam simulate-principal-policy --policy-source-arn "arn:aws:iam::$ACCOUNT_ID:role/GithubActionsRole" \
+  --action-names iam:PassRole --resource-arns "arn:aws:iam::$ACCOUNT_ID:role/gol-salmon-api-prod-us-east-1-lambdaRole" \
+  --context-entries "ContextKeyName=iam:PassedToService,ContextKeyValues=lambda.amazonaws.com,ContextKeyType=string" \
+  --query 'EvaluationResults[].EvalDecision'
+```
+
+If the next deploy fails on an IAM permission, roll step 3 back by making the previous version the default again (`aws iam set-default-policy-version --policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/GithubActionsPolicy" --version-id <previous>`) and re-run the `put-role-policy` of step 1.

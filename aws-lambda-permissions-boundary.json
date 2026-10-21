@@ -1,0 +1,28 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "WriteOwnLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:TagResource"
+      ],
+      "Resource": [
+        "arn:aws:logs:us-east-1:<AWS_ACCOUNT_ID>:log-group:/aws/lambda/gol-salmon-api-*",
+        "arn:aws:logs:us-east-1:<AWS_ACCOUNT_ID>:log-group:/aws/lambda/gol-salmon-api-*:*"
+      ]
+    },
+    {
+      "Sid": "ReadAvailabilityTable",
+      "Effect": "Allow",
+      "Action": "ssm:GetParameter",
+      "Resource": [
+        "arn:aws:ssm:us-east-1:<AWS_ACCOUNT_ID>:parameter/salmon-api/prod/AVAILABILITY_TABLE",
+        "arn:aws:ssm:us-east-1:<AWS_ACCOUNT_ID>:parameter/salmon-api/staging/AVAILABILITY_TABLE"
+      ]
+    }
+  ]
+}

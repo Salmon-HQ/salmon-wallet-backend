@@ -26,6 +26,12 @@ provider:
   # a country change is an SSM edit, never a release.
   iam:
     role:
+      # Caps the Lambda role at aws-lambda-permissions-boundary.json (its log
+      # groups and the availability table, nothing in IAM) whatever policy is
+      # put on it. The deploy role may only create or change project roles
+      # that carry this boundary (aws-deploy-policy.json); rollout order in
+      # docs/DEPLOY.md, "CI IAM permissions".
+      permissionsBoundary: !Sub arn:aws:iam::${AWS::AccountId}:policy/gol-salmon-api-lambda-boundary
       statements:
         - Effect: Allow
           Action: ssm:GetParameter
