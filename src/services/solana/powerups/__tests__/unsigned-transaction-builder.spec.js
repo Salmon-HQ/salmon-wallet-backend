@@ -122,3 +122,27 @@ describe('unsigned-transaction-builder compileUnsigned', () => {
     expect(built.simulation).toEqual({ err: 'rpc down', transport: true, logs: [] });
   });
 });
+
+describe('unsigned-transaction-builder fetchLookupTables', () => {
+  const TABLE = 'AddressLookupTab1e1111111111111111111111111';
+  const ALT_PROGRAM = 'AddressLookupTab1e1111111111111111111111111';
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('refuses an account that the lookup-table program does not own', async () => {
+    connection.getMultipleAccountsInfo.mockResolvedValue([
+      { owner: new PublicKey(MEMO), data: Buffer.alloc(56) },
+    ]);
+    await expect(builder.fetchLookupTables(connection, [TABLE])).rejects.toThrow(
+      `${TABLE} is not an address lookup table`
+    );
+  });
+
+  it('refuses more than 10 lookup tables without reading any', async () => {
+    const tables = Array.from({ length: 11 }, () => ALT_PROGRAM);
+    await expect(builder.fetchLookupTables(connection, tables)).rejects.toThrow(
+      '11 address lookup tables named; at most 10 are read'
+    );
+    expect(connection.getMultipleAccountsInfo).not.toHaveBeenCalled();
+  });
+});

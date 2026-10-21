@@ -20,6 +20,7 @@
 
 const {
   AddressLookupTableAccount,
+  AddressLookupTableProgram,
   ComputeBudgetProgram,
   PublicKey,
   TransactionMessage,
@@ -42,6 +43,8 @@ const MAX_COMPUTE_UNIT_LIMIT = 1400000;
 const COMPUTE_UNIT_FALLBACK = 400000;
 /** getRecentPrioritizationFees accepts at most this many accounts. */
 const PRIORITY_FEE_MAX_ACCOUNTS = 128;
+/** Live swap builds name at most 5 tables; more is a provider defect, not a bigger read. */
+const MAX_LOOKUP_TABLES = 10;
 
 /**
  * Priority fee in micro-lamports per compute unit. `POWERUP_PRIORITY_FEE_MICROLAMPORTS`
@@ -116,11 +119,20 @@ const fetchLookupTables = async (connection, addresses) => {
   if (addresses.length === 0) {
     return [];
   }
+  if (addresses.length > MAX_LOOKUP_TABLES) {
+    throw new Error(
+      `${addresses.length} address lookup tables named; at most ${MAX_LOOKUP_TABLES} are read`
+    );
+  }
   const keys = addresses.map((address) => new PublicKey(address));
   const infos = await connection.getMultipleAccountsInfo(keys, COMMITMENT);
   return infos.map((info, index) => {
     if (!info) {
       throw new Error(`Address lookup table ${addresses[index]} not found`);
+    }
+    // Any other account would deserialize into addresses the message then trusts.
+    if (!info.owner?.equals(AddressLookupTableProgram.programId)) {
+      throw new Error(`${addresses[index]} is not an address lookup table`);
     }
     return new AddressLookupTableAccount({
       key: keys[index],
