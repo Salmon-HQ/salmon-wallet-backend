@@ -818,6 +818,41 @@ describe('jupiter-swap-provider', () => {
         });
       });
 
+      it('never lets a later answer that fails validation displace an earlier valid one', async () => {
+        const stranger = getAssociatedTokenAddressSync(
+          new PublicKey('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'),
+          STRANGER,
+          true
+        ).toBase58();
+        const tampered = routeV2();
+        const paysStranger = {
+          ...tampered,
+          swapInstruction: {
+            ...tampered.swapInstruction,
+            accounts: tampered.swapInstruction.accounts.map((account, index) =>
+              index === 2 ? { ...account, pubkey: stranger } : account
+            ),
+          },
+        };
+        http.get
+          .mockResolvedValueOnce({ data: shared() })
+          .mockResolvedValueOnce({ data: paysStranger });
+
+        const result = await requestFor(SHARED);
+
+        expect(http.get).toHaveBeenCalledTimes(2);
+        expect(formOf(result)).toBe('d19853937cfed8e9');
+        expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_BAD_RESPONSE]', {
+          provider: 'jupiter',
+          reason: 'route_v2 destination',
+        });
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 2,
+          route: 'shared_accounts_route_v2',
+          sizes: [null, 'invalid'],
+        });
+      });
+
       it('returns the first answer when none fits, so the build fails as before', async () => {
         http.get
           .mockResolvedValueOnce({ data: routeV2() })

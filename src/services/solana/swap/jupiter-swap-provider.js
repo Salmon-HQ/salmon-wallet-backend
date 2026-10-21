@@ -391,31 +391,44 @@ const routeOf = (data) => {
   return Object.hasOwn(ROUTES, discriminator) ? ROUTES[discriminator].name : null;
 };
 
-const instructionsOf = (data) =>
-  [
-    ...(data.setupInstructions || []),
-    data.swapInstruction,
-    data.cleanupInstruction,
-    ...(data.otherInstructions || []),
-  ]
-    .filter(Boolean)
-    .map(toInstruction);
-
 /**
- * Serialized size of the transaction `data` compiles into (`measure`, from the
- * build service, compiles it as the builder will), null when there is nothing
- * to measure with, Infinity when it does not compile at all.
+ * Serialized size of the transaction an answer's instructions compile into
+ * (`measure`, from the build service, compiles it as the builder will), null
+ * when there is nothing to measure with, Infinity when it does not compile.
  */
-const sizeOf = async (data, measure) => {
+const sizeOf = async (instructions, data, measure) => {
   if (!measure) return null;
   try {
-    return await measure(
-      instructionsOf(data),
-      Object.keys(data.addressesByLookupTableAddress || {})
-    );
+    return await measure(instructions, Object.keys(data.addressesByLookupTableAddress || {}));
   } catch {
     return Infinity;
   }
+};
+
+/**
+ * One `/build` answer's instructions, in Jupiter's reference order, once the
+ * answer has passed every check: shape, decoding, and the taker's own swap
+ * (`computeBudgetInstructions` and `tipInstruction` are ours to decide and
+ * are left out).
+ * @throws {SolanaSwapError} 502 `provider_bad_response`
+ */
+const validate = (data, request) => {
+  assertBuildShape(data);
+  let setup;
+  let swap;
+  let after;
+  try {
+    setup = (data.setupInstructions || []).map(toInstruction);
+    swap = toInstruction(data.swapInstruction);
+    after = [data.cleanupInstruction, ...(data.otherInstructions || [])]
+      .filter(Boolean)
+      .map(toInstruction);
+  } catch {
+    // A program id or account that is not a public key: a provider defect, not ours.
+    refuse('undecodable instruction');
+  }
+  assertTakerOnly({ swap, support: [...setup, ...after] }, request, data);
+  return [...setup, swap, ...after];
 };
 
 const fits = (answer) => answer.size === null || answer.size <= PACKET_DATA_SIZE;
@@ -499,15 +512,28 @@ const requestSwapInstructions = async ({
   // answer, or a route_v2 answer too big to send, is asked again (one call
   // after another, inside the request budget). The first route_v2 answer that
   // fits wins, else the first answer that fits (new wallets accept the shared
-  // form), else the first answer, which fails as before. Remove once wallets
-  // that accept shared_accounts_route_v2 are the only ones in use; each retry
-  // spends the org's 600/min quota.
+  // form), else the first valid answer, which fails as before. Only answers
+  // that pass every check are chosen from: an invalid one ends the retries.
+  // Remove once wallets that accept shared_accounts_route_v2 are the only
+  // ones in use; each retry spends the org's 600/min quota.
+  const request = { taker, inputMint, outputMint, amount, slippageBps, fee };
   const answer = async () => {
     const data = await fetchBuild(params);
-    return { data, route: routeOf(data), size: await sizeOf(data, measure) };
+    try {
+      const instructions = validate(data, request);
+      return {
+        data,
+        instructions,
+        route: routeOf(data),
+        size: await sizeOf(instructions, data, measure),
+      };
+    } catch (error) {
+      if (error.errorCode !== 'provider_bad_response') throw error;
+      return { data, invalid: error };
+    }
   };
   const wantsAnother = (a) =>
-    a.route === 'shared_accounts_route_v2' || (a.route === 'route_v2' && !fits(a));
+    !a.invalid && (a.route === 'shared_accounts_route_v2' || (a.route === 'route_v2' && !fits(a)));
   const answers = [await answer()];
   let attempts = 1;
   let retryError;
@@ -524,41 +550,20 @@ const requestSwapInstructions = async ({
       break;
     }
   }
+  const valid = answers.filter((a) => !a.invalid);
   const chosen =
-    answers.find((a) => a.route === 'route_v2' && fits(a)) ?? answers.find(fits) ?? answers[0];
+    valid.find((a) => a.route === 'route_v2' && fits(a)) ?? valid.find(fits) ?? valid[0];
   if (wantsAnother(answers[0])) {
     console.warn('[SWAP_JUPITER_SHARED_RETRY]', {
       attempts,
       route: chosen.route,
-      sizes: answers.map((a) => a.size),
+      sizes: answers.map((a) => (a.invalid ? 'invalid' : a.size)),
       ...(retryError ? { retryError } : {}),
     });
   }
-  const { data } = chosen;
-
-  assertBuildShape(data);
-
-  // Order per Jupiter's reference assembly; `computeBudgetInstructions` and
-  // `tipInstruction` (Jito) are ours to decide and are left out.
-  let setup;
-  let swap;
-  let after;
-  try {
-    setup = (data.setupInstructions || []).map(toInstruction);
-    swap = toInstruction(data.swapInstruction);
-    after = [data.cleanupInstruction, ...(data.otherInstructions || [])]
-      .filter(Boolean)
-      .map(toInstruction);
-  } catch {
-    // A program id or account that is not a public key: a provider defect, not ours.
-    refuse('undecodable instruction');
-  }
-  assertTakerOnly(
-    { swap, support: [...setup, ...after] },
-    { taker, inputMint, outputMint, amount, slippageBps, fee },
-    data
-  );
-  const instructions = [...setup, swap, ...after];
+  // Only the first answer can be invalid with nothing valid before it.
+  if (!chosen) throw answers[0].invalid;
+  const { data, instructions } = chosen;
 
   return {
     instructions,
