@@ -38,9 +38,35 @@ const FETCH_TIMEOUT_MS = 3000;
 const MAX_BYTES = 512 * 1024;
 const MAX_REDIRECTS = 2;
 
-// Content-addressed storage: the document behind a CID cannot change.
-const OK_TTL = 30 * 24 * 60 * 60; // 30 days
+// Content-addressed storage: the document behind a CID cannot change. Any
+// other host can, and may be the minter's own server, so a day.
+const CONTENT_ADDRESSED_TTL = 30 * 24 * 60 * 60; // 30 days
+const OK_TTL = 24 * 60 * 60; // 1 day
 const FAIL_TTL = 60 * 60; // 1 hour
+// After normalizeIpfsUrl: IPFS on the default gateway, or an Arweave
+// transaction id (ArNS names, which can be repointed, are subdomains).
+const CONTENT_ADDRESSED_URL =
+  /^https:\/\/(ipfs\.filebase\.io\/ipfs\/|arweave\.net\/[\w-]{43}(\/|$))/;
+
+// The document is attacker-chosen and is stored in the Redis that rate
+// limits, sanctions and breakers share. Only what the NFT resource and the
+// spam detector read is kept, and a document still over MAX_STORED_BYTES once
+// trimmed counts as unresolved: at most 100 NFTs per page x 16 KB = 1.6 MB
+// per listing, against 100 x 512 KB = 50 MB for whole documents.
+const STORED_FIELDS = [
+  'name',
+  'symbol',
+  'description',
+  'image',
+  'animation_url',
+  'collection',
+  'attributes',
+  'properties',
+  'creators',
+];
+const MAX_DESCRIPTION_CHARS = 2000;
+const MAX_ATTRIBUTES = 50;
+const MAX_STORED_BYTES = 16 * 1024;
 
 /**
  * True for addresses no outbound NFT-metadata fetch has any business reaching:
@@ -125,6 +151,19 @@ const asMetadataObject = (payload) => {
   return value;
 };
 
+/** The stored subset of a metadata document, or null when it is too large. */
+const toStoredMetadata = (document) => {
+  const kept = {};
+  for (const field of STORED_FIELDS) {
+    if (document[field] !== undefined) kept[field] = document[field];
+  }
+  if (typeof kept.description === 'string') {
+    kept.description = kept.description.slice(0, MAX_DESCRIPTION_CHARS);
+  }
+  if (Array.isArray(kept.attributes)) kept.attributes = kept.attributes.slice(0, MAX_ATTRIBUTES);
+  return Buffer.byteLength(JSON.stringify(kept)) <= MAX_STORED_BYTES ? kept : null;
+};
+
 /**
  * True when a URL's host is an IP literal.
  *
@@ -184,7 +223,8 @@ const fetchOffchainMetadata = async (url, signal) => {
       validateStatus: (status) => status >= 200 && status < 300,
     });
 
-    return asMetadataObject(response.data);
+    const document = asMetadataObject(response.data);
+    return document && toStoredMetadata(document);
   } finally {
     clearTimeout(timer);
   }
@@ -214,7 +254,11 @@ const getOffchainMetadata = async (url, locals, signal) => {
   try {
     const json = await fetchOffchainMetadata(url, signal);
     if (json) {
-      await storeInCache(key, { ok: true, json }, OK_TTL);
+      await storeInCache(
+        key,
+        { ok: true, json },
+        CONTENT_ADDRESSED_URL.test(url) ? CONTENT_ADDRESSED_TTL : OK_TTL
+      );
       return json;
     }
     await storeInCache(key, { ok: false }, FAIL_TTL);
@@ -234,5 +278,8 @@ module.exports = {
     asMetadataObject,
     fetchOffchainMetadata,
     FETCH_TIMEOUT_MS,
+    MAX_DESCRIPTION_CHARS,
+    MAX_ATTRIBUTES,
+    MAX_STORED_BYTES,
   },
 };

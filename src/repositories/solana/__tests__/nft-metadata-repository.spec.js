@@ -78,6 +78,73 @@ describe('getOffchainMetadata', () => {
     );
   });
 
+  // The document is attacker-chosen and lands in the Redis every other
+  // feature shares, so only what the NFT resource reads is kept, and bounded.
+  test('stores only the fields the NFT resource reads, capped', async () => {
+    const { MAX_DESCRIPTION_CHARS, MAX_ATTRIBUTES } = repository.__testing;
+    http.get.mockResolvedValue({
+      data: {
+        name: 'n',
+        description: 'd'.repeat(MAX_DESCRIPTION_CHARS + 500),
+        image: 'https://arweave.net/i.png',
+        attributes: Array.from({ length: MAX_ATTRIBUTES + 20 }, (_, i) => ({ value: i })),
+        properties: { category: 'image' },
+        padding: 'x'.repeat(100000),
+      },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(Object.keys(result).sort()).toEqual([
+      'attributes',
+      'description',
+      'image',
+      'name',
+      'properties',
+    ]);
+    expect(result.description).toHaveLength(MAX_DESCRIPTION_CHARS);
+    expect(result.attributes).toHaveLength(MAX_ATTRIBUTES);
+    expect(storeInCache).toHaveBeenCalledWith(
+      expect.any(String),
+      { ok: true, json: result },
+      expect.any(Number)
+    );
+  });
+
+  test('stores no document that is still over the size cap once trimmed', async () => {
+    const { MAX_STORED_BYTES } = repository.__testing;
+    http.get.mockResolvedValue({
+      data: { description: 'ok', properties: { files: ['f'.repeat(MAX_STORED_BYTES)] } },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(result).toBeNull();
+    expect(storeInCache).toHaveBeenCalledWith(expect.any(String), { ok: false }, 60 * 60);
+  });
+
+  // A content-addressed document cannot change; anything else can, and is
+  // the attacker's own server, so it is kept a day rather than a month.
+  test.each([
+    [`https://arweave.net/${'a'.repeat(43)}`, 30 * 24 * 60 * 60],
+    [
+      'https://ipfs.filebase.io/ipfs/bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
+      30 * 24 * 60 * 60,
+    ],
+    ['https://metadata.example/1.json', 24 * 60 * 60],
+    [
+      'https://attacker.example/ipfs/bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
+      24 * 60 * 60,
+    ],
+    ['https://name.arweave.net/1.json', 24 * 60 * 60],
+  ])('keeps %s for %i seconds', async (documentUrl, ttl) => {
+    http.get.mockResolvedValue({ data: { description: 'x' } });
+
+    await repository.getOffchainMetadata(documentUrl, {});
+
+    expect(storeInCache).toHaveBeenCalledWith(expect.any(String), expect.any(Object), ttl);
+  });
+
   test('serves a cached document without re-fetching', async () => {
     getFromCache.mockResolvedValue({ ok: true, json: { description: 'cached' } });
 
