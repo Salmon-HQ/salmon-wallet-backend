@@ -375,12 +375,18 @@ describe('jupiter-swap-provider', () => {
         new PublicKey(mint)
       );
 
-    it("refuses an account create for a mint the route never touches, even the taker's own", async () => {
+    it("logs, without refusing, the taker's own account create for a mint the route never names", async () => {
+      // One live USDC → PYUSD build carried such a create and could not be
+      // reproduced; the log records the shape so the rule can tighten later.
       const bonk = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
-      await expectRefused(
-        withOther(ownAtaCreate(bonk)),
-        'ATA create for a mint the route does not use'
-      );
+      http.get.mockResolvedValue({ data: withOther(ownAtaCreate(bonk)) });
+
+      await expect(requestWithFee()).resolves.toBeDefined();
+      expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_ATA_OFF_ROUTE]', {
+        mint: bonk,
+        accountInRoute: false,
+        route: 'route_v2',
+      });
     });
 
     it('refuses more than 6 account creates (live builds create at most 4)', async () => {

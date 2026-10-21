@@ -203,7 +203,7 @@ const refuse = (reason) => {
  * `Approve`, `SetAuthority`, a close paying someone else, an `Assign`.
  * Compute-budget instructions are refused too: the shared builder sets its own.
  */
-const supportMismatch = (ix, { taker, inputMint, amount, wrappedSol, routeKeys }) => {
+const supportMismatch = (ix, { taker, inputMint, amount, wrappedSol }) => {
   const program = ix.programId.toBase58();
   const { data } = ix;
   const unexpected = `unexpected instruction ${data[0] ?? 'empty'} on ${program}`;
@@ -220,8 +220,7 @@ const supportMismatch = (ix, { taker, inputMint, amount, wrappedSol, routeKeys }
       keyAt(ix, 4) === SYSTEM_PROGRAM &&
       TOKEN_PROGRAMS.has(tokenProgram) &&
       keyAt(ix, 1) === ataOf(taker, keyAt(ix, 3), tokenProgram);
-    if (!ownCreate) return unexpected;
-    return routeKeys.has(keyAt(ix, 3)) ? null : 'ATA create for a mint the route does not use';
+    return ownCreate ? null : unexpected;
   }
   if (program === SYSTEM_PROGRAM) {
     const ownWrap =
@@ -349,12 +348,8 @@ const assertTakerOnly = ({ swap, support }, request, quote) => {
   if (swap.programId.toBase58() !== JUPITER_PROGRAM) refuse('swap instruction is not Jupiter');
   const mismatch = routeMismatch(swap, request, quote);
   if (mismatch) refuse(mismatch);
-  const context = {
-    ...request,
-    wrappedSol: ataOf(request.taker, NATIVE_MINT, TOKEN_PROGRAM),
-    // The input, output and hop mints all appear among the router call's accounts.
-    routeKeys: new Set(swap.keys.map((key) => key.pubkey.toBase58())),
-  };
+  const context = { ...request, wrappedSol: ataOf(request.taker, NATIVE_MINT, TOKEN_PROGRAM) };
+  const routeKeys = new Set(swap.keys.map((key) => key.pubkey.toBase58()));
   let wraps = 0;
   let creates = 0;
   for (const ix of support) {
@@ -365,6 +360,16 @@ const assertTakerOnly = ({ swap, support }, request, quote) => {
     creates += program === ATA_PROGRAM ? 1 : 0;
     if (wraps > 1) refuse('second wrap transfer');
     if (creates > MAX_ACCOUNT_CREATES) refuse(`more than ${MAX_ACCOUNT_CREATES} account creates`);
+    // ponytail: the taker's own create for a mint the router call never names
+    // is logged, not refused: one live build carried one and the shape could
+    // not be reproduced. Refuse it once the log shows what it is.
+    if (program === ATA_PROGRAM && !routeKeys.has(keyAt(ix, 3))) {
+      console.warn('[SWAP_JUPITER_ATA_OFF_ROUTE]', {
+        mint: keyAt(ix, 3),
+        accountInRoute: routeKeys.has(keyAt(ix, 1)),
+        route: ROUTES[swap.data.subarray(0, 8).toString('hex')].name,
+      });
+    }
   }
 };
 
