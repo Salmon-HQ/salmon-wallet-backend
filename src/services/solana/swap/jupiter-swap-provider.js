@@ -213,10 +213,32 @@ const isTakerSupport = (ix, taker, wrappedSol) => {
   return false;
 };
 
-/** Anchor discriminator of `route_v2`, the only router call `/build` answers with. */
-const ROUTE_V2 = Buffer.from('bb64facc31c4af14', 'hex');
-/** route_v2 data: discriminator, in u64 @8, quoted out u64 @16, slippage u16 @24, platform fee u16 @26. */
-const ROUTE_ARGS_END = 28;
+/**
+ * The two router calls `/build` answers with (probed live: about a third of
+ * the builds use the shared-accounts form), by Anchor discriminator. Both
+ * carry in u64, quoted out u64, slippage u16 and platform fee u16 from
+ * `args` on (the shared form puts a u8 route id first), then a route plan
+ * whose length varies with the number of hops. `override` is `route_v2`'s
+ * optional destination override, empty when it holds the program's own id.
+ */
+const ROUTES = {
+  bb64facc31c4af14: {
+    name: 'route_v2',
+    args: 8,
+    authority: 0,
+    source: 1,
+    destination: 2,
+    override: 7,
+  },
+  d19853937cfed8e9: {
+    name: 'shared_accounts_route_v2',
+    args: 9,
+    authority: 1,
+    source: 2,
+    destination: 5,
+  },
+};
+const ROUTE_ARGS_BYTES = 8 + 8 + 2 + 2;
 const BPS = 10000n;
 
 const takerAtas = (taker, mint) => [...TOKEN_PROGRAMS].map((p) => ataOf(taker, mint, p));
@@ -224,27 +246,37 @@ const takerAtas = (taker, mint) => [...TOKEN_PROGRAMS].map((p) => ataOf(taker, m
 /**
  * Why the router call is not this request's swap, or null when it is. The
  * call is what moves the swap's whole value: it must spend the input token
- * from the taker's own account, pay the output into the taker's own account
- * (the override slot empty, which Anchor encodes as the program's own id),
+ * from the taker's own account, pay the output into the taker's own account,
  * and carry the amount, slippage and fee Salmon asked for. The quote the
  * wallet shows is bound to the quote the program enforces.
  */
 const routeMismatch = (ix, request, quote) => {
   const { data } = ix;
-  if (data.length < ROUTE_ARGS_END || !data.subarray(0, 8).equals(ROUTE_V2)) return 'not route_v2';
-  if (keyAt(ix, 0) !== request.taker) return 'authority';
-  if (!takerAtas(request.taker, request.inputMint).includes(keyAt(ix, 1))) return 'source';
-  if (!takerAtas(request.taker, request.outputMint).includes(keyAt(ix, 2))) return 'destination';
-  if (keyAt(ix, 7) !== JUPITER_PROGRAM) return 'destination override';
-  if (data.readBigUInt64LE(8) !== BigInt(request.amount)) return 'in amount';
-  const quoted = data.readBigUInt64LE(16);
-  if (String(quoted) !== String(quote.outAmount)) return 'quoted out amount';
-  const slippage = data.readUInt16LE(24);
-  if (slippage !== request.slippageBps) return 'slippage';
-  if (data.readUInt16LE(26) !== (request.fee?.bps ?? 0)) return 'platform fee';
+  const discriminator = data.subarray(0, 8).toString('hex');
+  const route = Object.hasOwn(ROUTES, discriminator) ? ROUTES[discriminator] : null;
+  if (!route) return `unknown router call ${discriminator || 'empty'}`;
+  const why = (check) => `${route.name} ${check}`;
+  const at = route.args;
+  if (data.length < at + ROUTE_ARGS_BYTES) return why('data too short');
+  if (keyAt(ix, route.authority) !== request.taker) return why('authority');
+  const source = keyAt(ix, route.source);
+  if (!takerAtas(request.taker, request.inputMint).includes(source)) return why('source');
+  const destination = keyAt(ix, route.destination);
+  if (!takerAtas(request.taker, request.outputMint).includes(destination)) {
+    return why('destination');
+  }
+  if (route.override !== undefined && keyAt(ix, route.override) !== JUPITER_PROGRAM) {
+    return why('destination override');
+  }
+  if (data.readBigUInt64LE(at) !== BigInt(request.amount)) return why('in amount');
+  const quoted = data.readBigUInt64LE(at + 8);
+  if (String(quoted) !== String(quote.outAmount)) return why('quoted out amount');
+  const slippage = data.readUInt16LE(at + 16);
+  if (slippage !== request.slippageBps) return why('slippage');
+  if (data.readUInt16LE(at + 18) !== (request.fee?.bps ?? 0)) return why('platform fee');
   // Jupiter rounds the minimum up; within one base unit either way is the same minimum.
   const gap = BigInt(quote.otherAmountThreshold) * BPS - quoted * (BPS - BigInt(slippage));
-  if (gap <= -BPS || gap >= BPS) return 'minimum out amount';
+  if (gap <= -BPS || gap >= BPS) return why('minimum out amount');
   return null;
 };
 
@@ -265,7 +297,7 @@ const assertTakerOnly = ({ swap, support }, request, quote) => {
   };
   if (swap.programId.toBase58() !== JUPITER_PROGRAM) refuse('swap instruction is not Jupiter');
   const mismatch = routeMismatch(swap, request, quote);
-  if (mismatch) refuse(`route_v2 ${mismatch}`);
+  if (mismatch) refuse(mismatch);
   const wrappedSol = ataOf(request.taker, NATIVE_MINT, TOKEN_PROGRAM);
   const stray = support.find((ix) => !isTakerSupport(ix, request.taker, wrappedSol));
   if (stray) refuse(`instruction ${stray.data[0] ?? 'empty'} on ${stray.programId.toBase58()}`);

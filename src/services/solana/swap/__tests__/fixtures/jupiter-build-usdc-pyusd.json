@@ -1,0 +1,223 @@
+{
+  "inputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  "outputMint": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+  "inAmount": "1000000",
+  "outAmount": "994773",
+  "otherAmountThreshold": "989800",
+  "swapMode": "ExactIn",
+  "slippageBps": 50,
+  "priceImpactPct": "0.000000101509548969728725717",
+  "routePlan": [
+    {
+      "percent": 100,
+      "bps": 10000,
+      "swapInfo": {
+        "ammKey": "GVJfHJsvrsWZmVj2JVQ3KyY1n7azyi8Z2FdBPxucUe58",
+        "label": "Manifest",
+        "inputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "outputMint": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+        "inAmount": "1000000",
+        "outAmount": "999771"
+      }
+    }
+  ],
+  "computeBudgetInstructions": [
+    {
+      "programId": "ComputeBudget111111111111111111111111111111",
+      "accounts": [],
+      "data": "A20MAAAAAAAA"
+    }
+  ],
+  "setupInstructions": [
+    {
+      "programId": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "accounts": [
+        {
+          "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+          "isSigner": true,
+          "isWritable": true
+        },
+        {
+          "pubkey": "FV4GxBcHduVh6cq8jVVJQQLefj1M6eWGEpPnWx8Z1GsT",
+          "isSigner": false,
+          "isWritable": true
+        },
+        {
+          "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+          "isSigner": false,
+          "isWritable": false
+        },
+        {
+          "pubkey": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+          "isSigner": false,
+          "isWritable": false
+        },
+        {
+          "pubkey": "11111111111111111111111111111111",
+          "isSigner": false,
+          "isWritable": false
+        },
+        {
+          "pubkey": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+          "isSigner": false,
+          "isWritable": false
+        }
+      ],
+      "data": "AQ=="
+    }
+  ],
+  "swapInstruction": {
+    "programId": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "accounts": [
+      {
+        "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+        "isSigner": true,
+        "isWritable": false
+      },
+      {
+        "pubkey": "9SHQTA66Ekh7ZgMnKWsjxXk6DwXku8przs45E8bcEe38",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "FV4GxBcHduVh6cq8jVVJQQLefj1M6eWGEpPnWx8Z1GsT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "5vkp91Qq5Pe2DjZ6qh1jGk52PKQj6pTbvLzU5HUi8ADV",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "MNFSTqtC93rEfYHB6hF82sKdZpUDFWkViLByLd1k1Ms",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "GVJfHJsvrsWZmVj2JVQ3KyY1n7azyi8Z2FdBPxucUe58",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "11111111111111111111111111111111",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "FV4GxBcHduVh6cq8jVVJQQLefj1M6eWGEpPnWx8Z1GsT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "9SHQTA66Ekh7ZgMnKWsjxXk6DwXku8przs45E8bcEe38",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "DXK4yMpigbTSqv33nJk1tJucXB4E3rDmTXn3yZmiFAXt",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "3iCcc5iXwqtnZeJ3x5aui6j4SCAGSXwz6fDYjr2nueVA",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "5Ycu1FCKX7TTWmScXvzGkYCpJxQw8s2FYMQa9V4K86F1",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "CG8vBSopUJE3SvW3bNaerqj2rrtBX2U13AeB1tHTvcrM",
+        "isSigner": false,
+        "isWritable": true
+      }
+    ],
+    "data": "u2T6zDHErxRAQg8AAAAAANUtDwAAAAAAMgAyAAAAAQAAAHQAECcAAQ=="
+  },
+  "cleanupInstruction": null,
+  "otherInstructions": [],
+  "tipInstruction": null,
+  "addressesByLookupTableAddress": {
+    "CYN8QfFfXEtMZZKppoNxQwuuqnZZKHfk9G6DzprNRjBS": []
+  },
+  "blockhashWithMetadata": {
+    "blockhash": [
+      229, 62, 10, 255, 249, 4, 201, 245, 56, 49, 252, 126, 17, 237, 0, 181, 66, 19, 174, 96, 220,
+      162, 248, 135, 145, 234, 237, 177, 71, 128, 189, 58
+    ],
+    "lastValidBlockHeight": 437702764,
+    "fetchedAt": {
+      "secs_since_epoch": 1792594052,
+      "nanos_since_epoch": 512518495
+    }
+  },
+  "transactionVersion": 0
+}

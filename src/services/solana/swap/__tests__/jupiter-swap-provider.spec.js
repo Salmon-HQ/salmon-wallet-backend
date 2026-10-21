@@ -405,4 +405,157 @@ describe('jupiter-swap-provider', () => {
       });
     });
   });
+
+  /**
+   * Real `/build` answers (taker 86xC…, slippage 50, Salmon fee 50 bps into
+   * the fee owner's account of the output mint). Lookup-table contents are
+   * emptied: the adapter reads only the table addresses.
+   */
+  describe('accepts the builds Jupiter really answers with', () => {
+    const BONK = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+    const PYUSD = '2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo';
+    const JUP = 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN';
+    const CASES = {
+      'route_v2, multi-hop USDC → BONK': [
+        'jupiter-build-usdc-bonk-multihop.json',
+        USDC,
+        BONK,
+        '1000000',
+        '7ncQheYomTJUFPZdM2p67S6Q4sVnAQHouZUCRiCr5irJ',
+      ],
+      'route_v2, USDC → PYUSD (Token-2022 output)': [
+        'jupiter-build-usdc-pyusd.json',
+        USDC,
+        PYUSD,
+        '1000000',
+        '5vkp91Qq5Pe2DjZ6qh1jGk52PKQj6pTbvLzU5HUi8ADV',
+      ],
+      'shared_accounts_route_v2, multi-hop USDC → BONK': [
+        'jupiter-build-usdc-bonk-shared.json',
+        USDC,
+        BONK,
+        '1000000',
+        '7ncQheYomTJUFPZdM2p67S6Q4sVnAQHouZUCRiCr5irJ',
+      ],
+      'shared_accounts_route_v2, PYUSD (Token-2022 input) → USDC': [
+        'jupiter-build-pyusd-usdc-shared.json',
+        PYUSD,
+        USDC,
+        '1000000',
+        FEE_ATA,
+      ],
+      'shared_accounts_route_v2, SOL → JUP with wrap and unwrap': [
+        'jupiter-build-sol-jup-shared.json',
+        SOL,
+        JUP,
+        '10000000',
+        '4HZjsLFVfPqkamTiCaHypxiApqQLBx57r6hG59TmJyvc',
+      ],
+    };
+    const load = (file) => require(`./fixtures/${file}`);
+    const requestFor = (name) => {
+      const [, inputMint, outputMint, amount, recipient] = CASES[name];
+      return request({ inputMint, outputMint, amount, fee: { recipient, bps: 50, side: 'buy' } });
+    };
+
+    it.each(Object.keys(CASES))('%s', async (name) => {
+      const body = load(CASES[name][0]);
+      http.get.mockResolvedValue({ data: body });
+
+      const result = await requestFor(name);
+
+      expect(result.amountOut).toBe(body.outAmount);
+      expect(result.minAmountOut).toBe(body.otherAmountThreshold);
+      const groups = [
+        ...body.setupInstructions,
+        body.swapInstruction,
+        ...(body.cleanupInstruction ? [body.cleanupInstruction] : []),
+        ...body.otherInstructions,
+      ];
+      expect(result.instructions).toHaveLength(groups.length);
+    });
+
+    /**
+     * shared_accounts_route_v2 data: 8-byte discriminator, route id u8 @8,
+     * in u64 @9, quoted out u64 @17, slippage u16 @25, platform fee u16 @27;
+     * accounts: 1 authority, 2 source, 5 destination.
+     */
+    const SHARED = 'shared_accounts_route_v2, multi-hop USDC → BONK';
+    const sharedWith = (edit) => {
+      const body = load(CASES[SHARED][0]);
+      const data = Buffer.from(body.swapInstruction.data, 'base64');
+      const accounts = body.swapInstruction.accounts.map((account) => ({ ...account }));
+      const edited = edit({ data, accounts }) || data;
+      return {
+        ...body,
+        swapInstruction: { ...body.swapInstruction, accounts, data: edited.toString('base64') },
+      };
+    };
+    const takerBonkAta = getAssociatedTokenAddressSync(
+      new PublicKey(BONK),
+      new PublicKey(TAKER)
+    ).toBase58();
+    const strangerBonk = getAssociatedTokenAddressSync(
+      new PublicKey(BONK),
+      STRANGER,
+      true
+    ).toBase58();
+
+    it.each([
+      [
+        'shared_accounts_route_v2 destination',
+        () =>
+          sharedWith(({ accounts }) => {
+            accounts[5].pubkey = strangerBonk;
+          }),
+      ],
+      [
+        'shared_accounts_route_v2 authority',
+        () =>
+          sharedWith(({ accounts }) => {
+            accounts[1].pubkey = STRANGER.toBase58();
+          }),
+      ],
+      [
+        'shared_accounts_route_v2 source',
+        () =>
+          sharedWith(({ accounts }) => {
+            accounts[2].pubkey = takerBonkAta;
+          }),
+      ],
+      [
+        'shared_accounts_route_v2 in amount',
+        () => sharedWith(({ data }) => void data.writeBigUInt64LE(2000000n, 9)),
+      ],
+      [
+        'shared_accounts_route_v2 slippage',
+        () => sharedWith(({ data }) => void data.writeUInt16LE(10000, 25)),
+      ],
+      [
+        'shared_accounts_route_v2 platform fee',
+        () => sharedWith(({ data }) => void data.writeUInt16LE(500, 27)),
+      ],
+      [
+        'shared_accounts_route_v2 quoted out amount',
+        () => ({ ...sharedWith(() => {}), outAmount: '99999999999' }),
+      ],
+      [
+        'unknown router call 9d8ab85215f4f324',
+        () =>
+          sharedWith(({ data }) =>
+            Buffer.concat([Buffer.from('9d8ab85215f4f324', 'hex'), data.subarray(8)])
+          ),
+      ],
+    ])('refuses a tampered call, naming the check: %s', async (reason, tampered) => {
+      http.get.mockResolvedValue({ data: tampered() });
+      await expect(requestFor(SHARED)).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_bad_response',
+      });
+      expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_BAD_RESPONSE]', {
+        provider: 'jupiter',
+        reason,
+      });
+    });
+  });
 });
