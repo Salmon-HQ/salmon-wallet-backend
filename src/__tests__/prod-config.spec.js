@@ -55,6 +55,14 @@ describe('production config defaults', () => {
     );
   });
 
+  // Whether the regional web ACL sees client addresses on this edge-optimized
+  // API is not documented by AWS: the rule only counts until a deploy shows
+  // it does (docs/DEPLOY.md), and blocking is a deliberate follow-up change.
+  it('ships the WAF per-IP rule counting, not blocking', () => {
+    const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
+    expect(serverless.match(/^\s*wafRuleAction:\s*(\w+)\s*$/m)?.[1]).toBe('count');
+  });
+
   it('reads the Redis TLS switch from configuration on every stage', () => {
     expect(defaultFor('REDIS_TLS')).toBe('false');
     const local = fs.readFileSync(
