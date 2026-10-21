@@ -30,6 +30,7 @@
 
 const tritonProvider = require('./triton-provider');
 const tritonClient = require('../../../infrastructure/triton-client');
+const { redact } = require('../../../infrastructure/log-redaction');
 
 const PROVIDER_NAME = tritonProvider.name;
 
@@ -51,25 +52,6 @@ const extractEnvironment = (method, args) => {
   // tx methods: env is the last arg
   const last = args[args.length - 1];
   return typeof last === 'string' ? last : 'mainnet';
-};
-
-/**
- * Redact the Triton API token from any string before logging. Triton URLs
- * embed the token as a path segment (`...rpcpool.com/<TOKEN>`); some axios /
- * RPC error messages echo the request URL back, which would leak the secret
- * to CloudWatch.
- */
-const redact = (value) => {
-  if (typeof value !== 'string' || !value) return value;
-  let safe = value;
-  const token = tritonClient.getApiToken();
-  if (token) {
-    safe = safe.split(token).join('[REDACTED]');
-  }
-  // Belt-and-braces: redact long base58/UUID-shaped path segments behind
-  // rpcpool.com regardless of TRITON_API_TOKEN being set.
-  safe = safe.replace(/(\.rpcpool\.com)\/[A-Za-z0-9_-]{8,}/g, '$1/[REDACTED]');
-  return safe;
 };
 
 /**
@@ -181,7 +163,6 @@ module.exports = {
   ...resolver,
   __testing: {
     extractEnvironment,
-    redact,
     sanitizePayload,
   },
 };

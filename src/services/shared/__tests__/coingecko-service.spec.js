@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require('util');
+
 jest.mock('axios', () => ({
   get: jest.fn(),
 }));
@@ -159,6 +161,31 @@ describe('coingecko-service', () => {
       locals
     );
     expect(result).toBe(cached);
+  });
+
+  it('never logs the API key carried on the failed request when serving the long-term cache', async () => {
+    const { AxiosError } = jest.requireActual('axios');
+    const key = 'cg-secret-key-1234567890';
+    const failure = new AxiosError(
+      'timeout of 2000ms exceeded',
+      'ECONNABORTED',
+      {
+        url: 'https://pro-api.coingecko.com/api/v3/coins/solana',
+        headers: { 'x-cg-pro-api-key': key },
+      },
+      { _header: `GET /api/v3/coins/solana HTTP/1.1\r\nx-cg-pro-api-key: ${key}\r\n\r\n` }
+    );
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    repository.getShortTermChart.mockResolvedValue(null);
+    repository.getLongTermChart.mockResolvedValue({ coinId: 'solana', prices: [] });
+    providerCall.mockRejectedValue(failure);
+
+    await service.getMarketChart({ coinId: 'solana', days: 7, currency: 'usd' }, locals);
+
+    const printed = warn.mock.calls.map((args) => util.format(...args)).join('\n');
+    expect(printed).toContain('timeout of 2000ms exceeded');
+    expect(printed).not.toContain(key);
+    warn.mockRestore();
   });
 
   it('normalizes CoinGecko coin info into the API shape and caches it', async () => {

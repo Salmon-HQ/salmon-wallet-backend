@@ -20,6 +20,7 @@
 
 const {
   AddressLookupTableAccount,
+  AddressLookupTableProgram,
   ComputeBudgetProgram,
   PublicKey,
   TransactionMessage,
@@ -42,6 +43,8 @@ const MAX_COMPUTE_UNIT_LIMIT = 1400000;
 const COMPUTE_UNIT_FALLBACK = 400000;
 /** getRecentPrioritizationFees accepts at most this many accounts. */
 const PRIORITY_FEE_MAX_ACCOUNTS = 128;
+/** Live swap builds name at most 5 tables; more is a provider defect, not a bigger read. */
+const MAX_LOOKUP_TABLES = 10;
 
 /**
  * Priority fee in micro-lamports per compute unit. `POWERUP_PRIORITY_FEE_MICROLAMPORTS`
@@ -83,20 +86,26 @@ const resolvePriorityFee = async (connection, instructions) => {
 };
 
 /**
- * Simulate the unsigned message. `{ units }` on success, `{ err, logs }` when
- * the runtime rejected it, `{ err, transport: true }` when the RPC could not
- * simulate at all — the caller's transaction is not to blame for that one.
+ * Simulate the unsigned message. `{ units, accounts }` on success (`accounts`:
+ * the post-simulation state of `watchAccounts`, in order, or null when the RPC
+ * sent none), `{ err, logs }` when the runtime rejected it, `{ err, transport:
+ * true }` when the RPC could not simulate at all — the caller's transaction is
+ * not to blame for that one.
  */
-const simulate = async (connection, message) => {
+const simulate = async (connection, message, watchAccounts = [], minContextSlot) => {
   try {
     const { value } = await connection.simulateTransaction(new VersionedTransaction(message), {
       sigVerify: false,
       replaceRecentBlockhash: true,
+      ...(watchAccounts.length > 0
+        ? { accounts: { encoding: 'base64', addresses: watchAccounts } }
+        : {}),
+      ...(minContextSlot ? { minContextSlot } : {}),
     });
     if (value.err || !value.unitsConsumed) {
       return { err: value.err || 'no compute units reported', logs: (value.logs || []).slice(-3) };
     }
-    return { units: value.unitsConsumed };
+    return { units: value.unitsConsumed, accounts: value.accounts ?? null };
   } catch (error) {
     return { err: error.message, transport: true, logs: [] };
   }
@@ -116,17 +125,59 @@ const fetchLookupTables = async (connection, addresses) => {
   if (addresses.length === 0) {
     return [];
   }
+  if (addresses.length > MAX_LOOKUP_TABLES) {
+    throw new Error(
+      `${addresses.length} address lookup tables named; at most ${MAX_LOOKUP_TABLES} are read`
+    );
+  }
   const keys = addresses.map((address) => new PublicKey(address));
   const infos = await connection.getMultipleAccountsInfo(keys, COMMITMENT);
   return infos.map((info, index) => {
     if (!info) {
       throw new Error(`Address lookup table ${addresses[index]} not found`);
     }
+    // Any other account would deserialize into addresses the message then trusts.
+    if (!info.owner?.equals(AddressLookupTableProgram.programId)) {
+      throw new Error(`${addresses[index]} is not an address lookup table`);
+    }
     return new AddressLookupTableAccount({
       key: keys[index],
       state: AddressLookupTableAccount.deserialize(info.data),
     });
   });
+};
+
+/**
+ * Serialized size, in bytes, of the transaction `compileUnsigned` would return
+ * for `instructions`: the same lookup tables and both compute-budget
+ * instructions, without any cleanup (dropped anyway when it does not fit).
+ * Compares against `PACKET_DATA_SIZE` (1232), the most a transaction may be.
+ * Null when a lookup table cannot be read (the size is unknown, not too big);
+ * Infinity when the message does not compile or overruns the encoder's
+ * 1232-byte message buffer.
+ */
+const serializedSize = async (connection, { payer, instructions, lookupTableAddresses = [] }) => {
+  let lookupTables;
+  try {
+    lookupTables = await fetchLookupTables(connection, lookupTableAddresses);
+  } catch {
+    return null;
+  }
+  try {
+    const message = new TransactionMessage({
+      payerKey: new PublicKey(payer),
+      // Any 32 bytes take the blockhash's place; only the length matters here.
+      recentBlockhash: PublicKey.default.toBase58(),
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: MAX_COMPUTE_UNIT_LIMIT }),
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: PRIORITY_FEE_MAX }),
+        ...instructions,
+      ],
+    }).compileToV0Message(lookupTables);
+    return new VersionedTransaction(message).serialize().length;
+  } catch {
+    return Infinity;
+  }
 };
 
 /** Program id (base58) of every top-level instruction in `message`, lookup tables resolved. */
@@ -149,6 +200,10 @@ const programIdsOf = (message, lookupTables) => {
  * @param {string[]} [input.lookupTableAddresses]
  * @param {import('@solana/web3.js').TransactionInstruction[]} [input.cleanup] - appended
  *   after `instructions`; dropped when the simulation rejects them
+ * @param {string[]} [input.watchAccounts] - accounts whose post-simulation state the
+ *   result's `simulation.accounts` carries (each must appear in the transaction)
+ * @param {number} [input.minContextSlot] - simulate on state no older than this slot (the
+ *   slot the caller read the watched accounts at, so before and after compare)
  * @param {boolean} [input.simulationFallback=true] - when the simulation fails, still
  *   ship the bytes with a fixed compute-unit limit (the wallet simulates
  *   again before signing). `false` returns `transaction: null` and the failed
@@ -166,6 +221,8 @@ const compileUnsigned = async ({
   lookupTableAddresses = [],
   cleanup = [],
   simulationFallback = true,
+  watchAccounts = [],
+  minContextSlot,
 }) => {
   const [lookupTables, { blockhash }, priorityFee] = await Promise.all([
     fetchLookupTables(connection, lookupTableAddresses),
@@ -199,7 +256,7 @@ const compileUnsigned = async ({
 
   let applied = cleanup;
   let simulated = compile([...placeholderBudget, ...instructions, ...applied]);
-  let simulation = await simulate(connection, simulated);
+  let simulation = await simulate(connection, simulated, watchAccounts, minContextSlot);
   if (simulation.err && applied.length > 0) {
     console.warn('[CLEANUP_SKIPPED] intermediate account close rejected in simulation', {
       accounts: applied.length,
@@ -208,7 +265,7 @@ const compileUnsigned = async ({
     });
     applied = [];
     simulated = compile([...placeholderBudget, ...instructions]);
-    simulation = await simulate(connection, simulated);
+    simulation = await simulate(connection, simulated, watchAccounts, minContextSlot);
   }
   const base = {
     priorityFeeMicroLamports: priorityFee,
@@ -242,9 +299,11 @@ module.exports = {
   ALWAYS_ALLOWED_PROGRAMS,
   BUILD_TTL_MS,
   COMMITMENT,
+  MAX_COMPUTE_UNIT_LIMIT,
   compileUnsigned,
   computeUnitLimitFrom,
   fetchLookupTables,
   resolvePriorityFee,
+  serializedSize,
   simulate,
 };

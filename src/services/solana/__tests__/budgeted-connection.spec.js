@@ -49,10 +49,7 @@ describe('createBudgetedConnection', () => {
 
     await expect(connection.getSlot()).resolves.toBe(7);
     expect(breaker.check).toHaveBeenCalledWith('triton', 'mainnet', expect.any(Object));
-    expect(limiter.acquire).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'triton' }),
-      expect.any(Object)
-    );
+    expect(limiter.acquire.mock.calls.map(([profile]) => profile.name)).toEqual(['triton']);
   });
 
   // The public cluster is not Triton: drawing its calls from the Triton
@@ -64,14 +61,9 @@ describe('createBudgetedConnection', () => {
     await expect(
       connection.getSignaturesForAddress(new PublicKey(SystemProgram.programId), { limit: 25 })
     ).resolves.toEqual([]);
-    expect(limiter.acquire).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'solana-public' }),
-      expect.any(Object)
-    );
-    expect(limiter.acquire).not.toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'triton' }),
-      expect.anything()
-    );
+    const buckets = limiter.acquire.mock.calls.map(([profile]) => profile.name);
+    expect(buckets.length).toBeGreaterThan(0);
+    expect(buckets.every((name) => name === 'solana-public')).toBe(true);
   });
 
   it('never reaches the node while the breaker is open', async () => {

@@ -47,7 +47,6 @@ ENV_FILE="${SCRIPT_DIR}/../.env"
 # (ssm refs with safe defaults — seed them only to override the defaults).
 PARAM_NAMES=(
   NODE_ENV
-  SERVICE_NAME
   REDIS_HOST
   REDIS_PORT
   REDIS_PASSWORD

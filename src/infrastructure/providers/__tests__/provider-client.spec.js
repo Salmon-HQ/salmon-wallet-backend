@@ -66,6 +66,15 @@ describe('providerCall', () => {
     );
   });
 
+  it('with noWait, takes only a token free now and never retries', async () => {
+    const fn = jest.fn().mockRejectedValue(http(502));
+    await expect(providerCall('stub', fn, { noWait: true })).rejects.toMatchObject({
+      response: { status: 502 },
+    });
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(limiter.acquire).toHaveBeenCalledWith(expect.anything(), undefined, { maxWaitMs: 0 });
+  });
+
   it('does not retry a 4xx and does not count it against the breaker', async () => {
     const fn = jest.fn().mockRejectedValue(http(400));
     await expect(providerCall('stub', fn)).rejects.toMatchObject({ response: { status: 400 } });
