@@ -87,7 +87,7 @@ at a time.
 
 Prod env values live in **AWS SSM Parameter Store** under `/salmon-api/prod/*`, type `SecureString`, region `us-east-1`.
 
-- `config/env.prod.yml` — the map of `${ssm:/salmon-api/prod/X}` refs consumed by `serverless.yml` via `custom.envFile`. Vars that previously had an `${env:X, <default>}` fallback keep a matching `${ssm:X, <default>}` fallback, so an optional/missing param doesn't break a deploy. Vars that were previously required (no default) stay strict and fail the deploy loudly if the param is missing.
+- `config/env.prod.yml` — the `${ssm:/salmon-api/prod/X}` refs consumed by `serverless.yml` via `custom.envFile`, laid out as one map per function (`api`, `coingeckoJob`, `sanctionsJob`, `skrJob`, `events`) built from shared groups (`redis`, `resilience`, `coingecko`, `triton`) merged with `<<`. Each Lambda receives only its own map, so a function never holds a credential its code does not read; `src/__tests__/prod-config.spec.js` pins which secrets each map may hold. Vars that previously had an `${env:X, <default>}` fallback keep a matching `${ssm:X, <default>}` fallback, so an optional/missing param doesn't break a deploy. Vars that were previously required (no default) stay strict and fail the deploy loudly if the param is missing.
 - `config/env.staging.yml` — the same map pointed at `/salmon-api/staging/*`. To refresh staging after a prod param changes, copy that param to the staging path.
 - `config/env.local.yml` — the local/dev mirror: every var comes from `${env:X, ''}`, loaded from `.env` via `serverless-dotenv-plugin`. The `local` stage never touches AWS.
 
@@ -102,7 +102,7 @@ Prod env values live in **AWS SSM Parameter Store** under `/salmon-api/prod/*`, 
      --overwrite \
      --region us-east-1
    ```
-2. New var: add it to `config/env.prod.yml` (`${ssm:/salmon-api/prod/YOUR_VAR}`), `config/env.local.yml` (`${env:YOUR_VAR, ''}`), and the `PARAM_NAMES` list in `scripts/ssm-put-params.sh`.
+2. New var: add it to the map (or group) of every function that reads it in `config/env.prod.yml` (`${ssm:/salmon-api/prod/YOUR_VAR}`), `config/env.staging.yml` and `config/env.local.yml` (`${env:YOUR_VAR, ''}`), and to the `PARAM_NAMES` list in `scripts/ssm-put-params.sh`.
 3. Push a new `prod/vX.Y.Z` tag to roll it out. Lambda env vars only refresh on deploy, not live.
 
 ## One-time / bulk seeding

@@ -92,6 +92,7 @@
     "bigint-buffer": "$bigint-buffer",
     "@serverless/platform-client": {
       "adm-zip": "^0.6.1"
-    }
+    },
+    "follow-redirects": "^1.16.1"
   }
 }
