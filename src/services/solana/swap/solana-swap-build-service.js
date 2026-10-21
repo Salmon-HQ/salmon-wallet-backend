@@ -111,15 +111,19 @@ const feeConfig = () => {
 };
 
 /**
+ * Decimal digits only, inside u64: `1e3`, `0x10`, `0` and 2^64 are refused
+ * here, not by the provider, so a caller cannot farm our own error logs.
+ */
+const isBaseUnitAmount = (value) => /^[1-9]\d{0,19}$/.test(value) && BigInt(value) <= U64_MAX;
+
+/**
  * Resolve the base-unit `amount` from either a raw `amount` or a
  * human-readable `uiAmount` (decimals looked up in the token catalog; SOL
  * short-circuits). Returns `{ amount }` or a 400 error envelope.
  */
 const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   if (amount !== undefined) {
-    // Decimal digits only, inside u64: `1e3`, `0x10` and 2^64 are refused
-    // here, not by the provider, so a caller cannot farm our own error logs.
-    if (!/^[1-9]\d{0,19}$/.test(String(amount)) || BigInt(amount) > U64_MAX) {
+    if (!isBaseUnitAmount(String(amount))) {
       return {
         error: 'invalid_parameter',
         error_description: 'amount must be a positive integer in the token smallest unit',
@@ -135,16 +139,21 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
     };
   }
 
-  const numeric = Number(uiAmount);
-  if (!/^\d+(\.\d+)?$/.test(String(uiAmount)) || !Number.isFinite(numeric) || numeric <= 0) {
-    return { error: 'invalid_parameter', error_description: 'uiAmount must be a positive number' };
+  const invalid = {
+    error: 'invalid_parameter',
+    error_description:
+      "uiAmount must be a positive decimal number with no more decimal places than the token's",
+  };
+  const parts = /^(\d+)(?:\.(\d+))?$/.exec(String(uiAmount));
+  if (!parts) {
+    return invalid;
   }
 
   let decimals = SOL_DECIMALS;
   if (inputMint !== SOL_ADDRESS) {
     const tokens = await getByMints([inputMint], locals);
     const token = tokens.find((t) => (t.id || t.address) === inputMint);
-    if (!token || typeof token.decimals !== 'number') {
+    if (!token || !Number.isInteger(token.decimals) || token.decimals < 0) {
       return {
         error: 'unknown_mint',
         error_description: `Could not resolve decimals for inputMint=${inputMint}`,
@@ -153,8 +162,13 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
     decimals = token.decimals;
   }
 
-  // Math.round avoids 1.5 * 10^9 = 1499999999.9999998 rounding artefacts.
-  return { amount: String(Math.round(numeric * Math.pow(10, decimals))) };
+  // String arithmetic: a float turns 1e-10 SOL into "0" and 1e20 SOL into "1e+29".
+  const [, whole, fraction = ''] = parts;
+  if (fraction.length > decimals) {
+    return invalid;
+  }
+  const baseUnits = BigInt(whole + fraction.padEnd(decimals, '0')).toString();
+  return isBaseUnitAmount(baseUnits) ? { amount: baseUnits } : invalid;
 };
 
 /** `{ slippageBps }` (default 50) or a 400 error envelope. */

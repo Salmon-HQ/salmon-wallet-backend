@@ -629,5 +629,41 @@ describe('solana-swap-build-service', () => {
         service.resolveAmount({ uiAmount: '1e30', inputMint: SOL }, locals)
       ).resolves.toMatchObject({ error: 'invalid_parameter' });
     });
+
+    it.each([
+      ['the smallest unit', '0.000000001', '1'],
+      ['past 2^53 without rounding', '9007199.254740993', '9007199254740993'],
+      ['the u64 ceiling', '18446744073.709551615', '18446744073709551615'],
+      ['trailing zeros within the decimals', '2.500000000', '2500000000'],
+    ])('converts a SOL uiAmount at %s exactly', async (_, uiAmount, amount) => {
+      await expect(service.resolveAmount({ uiAmount, inputMint: SOL }, locals)).resolves.toEqual({
+        amount,
+      });
+    });
+
+    it.each([
+      ['zero', '0'],
+      ['zero with decimals', '0.000000000'],
+      ['more decimal places than SOL has', '0.0000000001'],
+      ['past u64', '18446744073.709551616'],
+      ['far past u64', '100000000000000000000'],
+      ['a negative number', '-1'],
+      ['a bare fraction', '.5'],
+      ['a trailing point', '1.'],
+    ])('refuses a SOL uiAmount that is %s with 400 invalid_parameter', async (_, uiAmount) => {
+      await expect(
+        service.resolveAmount({ uiAmount, inputMint: SOL }, locals)
+      ).resolves.toMatchObject({ error: 'invalid_parameter' });
+    });
+
+    it("uses the token's own decimals: 6 places pass for USDC, 7 do not", async () => {
+      getByMints.mockResolvedValue([{ id: USDC, decimals: 6 }]);
+      await expect(
+        service.resolveAmount({ uiAmount: '1.123456', inputMint: USDC }, locals)
+      ).resolves.toEqual({ amount: '1123456' });
+      await expect(
+        service.resolveAmount({ uiAmount: '1.1234567', inputMint: USDC }, locals)
+      ).resolves.toMatchObject({ error: 'invalid_parameter' });
+    });
   });
 });
