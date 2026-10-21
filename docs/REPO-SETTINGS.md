@@ -115,7 +115,11 @@ repository secrets: a repository secret reaches any workflow a collaborator
 pushes on any branch, while an environment secret reaches only jobs the
 environment's deployment-branch rule admits. The job also runs only on
 `refs/heads/main`, so a manual dispatch on another branch skips it. One-time
-setup (Settings → Environments, or the commands below):
+setup (Settings → Environments, or the commands below), done before the change
+that adds `environment: provider-tests` to the workflow is merged: a job that
+names an environment which does not exist yet creates it with no branch rule,
+and until step 1 is done a workflow edited on another branch could reach the
+keys through it.
 
 1. Create the environment `provider-tests` with deployment branches limited to
    the selected branch `main`:
