@@ -15,7 +15,7 @@
  */
 
 const { applyConnectTuning } = require('../infrastructure/connect-tuning');
-const { safeValidateEvent } = require('./event-schema');
+const { safeValidateEvent, TRANSACTION_EVENTS } = require('./event-schema');
 const { createSink } = require('./sink');
 
 // Raise Node's 250ms per-address connect budget before any provider is
@@ -27,6 +27,9 @@ applyConnectTuning();
 const PLATFORMS = new Set(['extension', 'mobile', 'ios', 'android', 'seeker']);
 const MAX_EVENTS_PER_BATCH = 100;
 const MAX_VERSION_LENGTH = 32;
+const DAY_MS = 86_400_000;
+
+const dayStart = (ms) => ms - (ms % DAY_MS);
 
 // One sink per warm container.
 let sink = null;
@@ -169,11 +172,13 @@ exports.handler = async (event) => {
       rejected += 1;
       continue;
     }
+    const ts = typeof raw.ts === 'number' ? raw.ts : receivedAt;
+    const dayOnly = TRANSACTION_EVENTS.has(validated.event);
     records.push({
       event: validated.event,
       props: validated.props,
-      ts: typeof raw.ts === 'number' ? raw.ts : receivedAt,
-      received_at: receivedAt,
+      ts: dayOnly ? dayStart(ts) : ts,
+      received_at: dayOnly ? dayStart(receivedAt) : receivedAt,
       dt,
       ...context,
     });

@@ -56,6 +56,25 @@ describe('analytics ingest handler', () => {
     });
   });
 
+  // The moment a transaction completes can be matched to the public chain;
+  // the day is all the reports need.
+  it('dates an event that follows an on-chain transaction to its day only', async () => {
+    const moment = Date.UTC(2026, 9, 21, 15, 4, 5, 6);
+    await handler(
+      apiEvent({
+        context: { installId: 'abc', platform: 'extension', appVersion: '3.0.0' },
+        events: [
+          { event: 'send_completed', props: { chain: 'solana', success: true }, ts: moment },
+          { event: 'app_opened', ts: moment },
+        ],
+      })
+    );
+
+    expect(records[0].ts).toBe(Date.UTC(2026, 9, 21));
+    expect(records[0].received_at % 86_400_000).toBe(0);
+    expect(records[1].ts).toBe(moment);
+  });
+
   it.each([
     ['plain semver', '1.0.2', '1.0.2'],
     ['a prerelease', '0.10.0-beta.1', '0.10.0-beta.1'],
