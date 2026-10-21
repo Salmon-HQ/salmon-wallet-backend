@@ -66,6 +66,15 @@ describe('providerCall', () => {
     );
   });
 
+  it('with noWait, takes only a token free now and never retries', async () => {
+    const fn = jest.fn().mockRejectedValue(http(502));
+    await expect(providerCall('stub', fn, { noWait: true })).rejects.toMatchObject({
+      response: { status: 502 },
+    });
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(limiter.acquire).toHaveBeenCalledWith(expect.anything(), undefined, { maxWaitMs: 0 });
+  });
+
   it('does not retry a 4xx and does not count it against the breaker', async () => {
     const fn = jest.fn().mockRejectedValue(http(400));
     await expect(providerCall('stub', fn)).rejects.toMatchObject({ response: { status: 400 } });
@@ -110,5 +119,22 @@ describe('providerCall', () => {
         metrics: expect.objectContaining({ BreakerOpen: 1 }),
       })
     );
+  });
+
+  // A caller with a fallback on another provider needs to know whose gate
+  // refused: an open CoinGecko breaker says nothing about Triton.
+  it('names the provider on its own refusals', async () => {
+    breaker.check.mockRejectedValueOnce(
+      Object.assign(new Error('open'), { statusCode: 503, errorCode: 'upstream_unavailable' })
+    );
+    await expect(providerCall('stub', jest.fn())).rejects.toMatchObject({ provider: 'stub' });
+
+    limiter.acquire.mockRejectedValueOnce(
+      Object.assign(new Error('busy'), { statusCode: 503, errorCode: 'upstream_rate_limited' })
+    );
+    await expect(providerCall('stub', jest.fn())).rejects.toMatchObject({
+      errorCode: 'upstream_rate_limited',
+      provider: 'stub',
+    });
   });
 });

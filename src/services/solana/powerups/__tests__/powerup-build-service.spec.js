@@ -203,7 +203,7 @@ describe('powerup-build-service', () => {
   });
 
   it('resolves lookup-table programs before checking: an ALT-loaded program must be declared', async () => {
-    const { AddressLookupTableAccount } = require('@solana/web3.js');
+    const { AddressLookupTableAccount, AddressLookupTableProgram } = require('@solana/web3.js');
     const LOOKUP = 'AddressLookupTab1e1111111111111111111111111';
     // OTHER lives in the table only; the message references it by table index, not statically.
     jest.spyOn(AddressLookupTableAccount, 'deserialize').mockReturnValueOnce({
@@ -213,7 +213,9 @@ describe('powerup-build-service', () => {
       authority: undefined,
       addresses: [new PublicKey(OTHER)],
     });
-    mockConnection.getMultipleAccountsInfo.mockResolvedValue([{ data: Buffer.alloc(56) }]);
+    mockConnection.getMultipleAccountsInfo.mockResolvedValue([
+      { owner: AddressLookupTableProgram.programId, data: Buffer.alloc(56) },
+    ]);
     mockAdapter.build.mockResolvedValue({
       instructions: [
         instruction(MEMO),

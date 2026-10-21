@@ -28,6 +28,7 @@ const { loadRpcEnrichment } = require('./solana-rpc-enrichment');
 const { RECEIVE } = require('../../constants/transaction-types');
 const { isNftTokenStandard } = require('../../constants/token-standards');
 const { SOL_ADDRESS } = require('../../constants/solana-constants');
+const { toOrigin, toSafeError } = require('../../infrastructure/log-redaction');
 
 const COMMITMENT = 'confirmed';
 // Integer 1, never the string "1": opts this reader into v1 (4096-byte)
@@ -155,7 +156,7 @@ const buildRpcTransaction = (address, signature, transaction) => ({
 
 const logEnhancedHistoryFallback = (address, error) => {
   // `address` is caller input: keep it out of the format-string argument.
-  console.error('Enhanced provider error for address', address, error.message);
+  console.error('Enhanced provider error for address', address, toSafeError(error));
   console.log('Falling back to standard RPC');
 };
 
@@ -208,11 +209,24 @@ const getRpcUrlFromLocals = (locals) => {
 };
 
 const RPC_MIN_PAGE_SIZE = 1;
-const RPC_MAX_PAGE_SIZE = 1000;
+// Same ceiling as the Triton provider's history page (`MAX_HISTORY_BATCH`):
+// one fallback page costs at most 1 + 25 Triton calls, each taking a token
+// from the shared Triton budget.
+const RPC_MAX_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 10;
 // Upper bound for the enriched path; the Triton provider caps a page at 25.
 const ENHANCED_MAX_PAGE_SIZE = 100;
-// ponytail: fixed fan-out ceiling per RPC batch; tune if the node rate-limits.
-const RPC_FETCH_BATCH_SIZE = 50;
+
+// The provider layer's own refusals that the fallback would only repeat: the
+// request budget is gone, or Triton's shared budget is spent or its breaker
+// is open. The enriched path runs only where Triton hosts the environment
+// (`isEnhancedApiSupported`), and there the bare-RPC fallback reads the same
+// Triton endpoint under the same gates. A refusal from another provider the
+// enriched page reads (the token catalog) still falls back.
+const TRITON_REFUSALS = new Set(['upstream_rate_limited', 'upstream_unavailable']);
+const failsFast = (error) =>
+  error?.errorCode === 'request_budget_exhausted' ||
+  (TRITON_REFUSALS.has(error?.errorCode) && error?.provider === 'triton');
 
 /**
  * Normalizes a caller-supplied `pageSize` into the range the target accepts,
@@ -225,15 +239,6 @@ const clampPageSize = (pageSize, max = RPC_MAX_PAGE_SIZE) => {
   const parsed = parseInt(pageSize, 10);
   if (Number.isNaN(parsed)) return undefined;
   return Math.min(Math.max(parsed, RPC_MIN_PAGE_SIZE), max);
-};
-
-/** Runs `fn` over `items` in sequential batches of `size`, preserving order. */
-const mapInBatches = async (items, size, fn) => {
-  const results = [];
-  for (let i = 0; i < items.length; i += size) {
-    results.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
-  }
-  return results;
 };
 
 /**
@@ -251,19 +256,21 @@ const getRpcHistory = async (address, filters, locals) => {
   const publicKey = new PublicKey(address);
   const options = {
     before: filters.pageToken,
-    // Clamp rather than forward: `getSignaturesForAddress` rejects a limit
-    // outside 1..1000 with an RPC error, which surfaced as a 500 for what is
-    // really a bad query param. A non-numeric value falls back to the RPC
-    // default, same as before.
-    limit: clampPageSize(filters.pageSize),
+    // Clamp rather than forward: an out-of-range limit is an RPC error (a
+    // 500 for a bad query param), and the RPC's own default is 1000.
+    limit: clampPageSize(filters.pageSize) ?? DEFAULT_PAGE_SIZE,
   };
   const signatures = await connection.getSignaturesForAddress(publicKey, options, COMMITMENT);
 
-  const transactions = await mapInBatches(signatures, RPC_FETCH_BATCH_SIZE, ({ signature }) =>
-    connection.getParsedTransaction(signature, TRANSACTION_CONFIG)
+  const transactions = await Promise.all(
+    signatures.map(({ signature }) =>
+      connection.getParsedTransaction(signature, TRANSACTION_CONFIG)
+    )
   );
 
-  console.log(`[getTransactions] Loaded ${signatures.length} transactions from ${rpcUrl}`);
+  console.log(
+    `[getTransactions] Loaded ${signatures.length} transactions from ${toOrigin(rpcUrl)}`
+  );
 
   const data = signatures.map(({ signature, ...rest }, index) => ({
     address,
@@ -285,7 +292,9 @@ const getRpcHistory = async (address, filters, locals) => {
 
 /**
  * Try the enhanced (provider-resolver) path first; fall through to the RPC
- * path on null result, throw, or when the env is not enhanced-supported.
+ * path on null result, throw, or when the env is not enhanced-supported —
+ * except when the provider layer refused in a way the fallback would repeat
+ * (`failsFast`).
  */
 const withEnhancedThenRpc = async ({ environment, tryEnhanced, runRpc, onError }) => {
   if (isEnhancedApiSupported(environment)) {
@@ -293,6 +302,7 @@ const withEnhancedThenRpc = async ({ environment, tryEnhanced, runRpc, onError }
       const result = await tryEnhanced();
       if (result) return result;
     } catch (error) {
+      if (failsFast(error)) throw error;
       onError(error);
     }
   }
@@ -317,7 +327,7 @@ const getTransactions = (address, filters, locals) => {
         address,
         {
           before: pageToken,
-          limit: clampPageSize(pageSize, ENHANCED_MAX_PAGE_SIZE) ?? 10,
+          limit: clampPageSize(pageSize, ENHANCED_MAX_PAGE_SIZE) ?? DEFAULT_PAGE_SIZE,
           includeSpam: filters.includeSpam,
         },
         locals,

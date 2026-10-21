@@ -2,6 +2,18 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.27.0 — 2026-10-21
+
+- `GET /v1/solana-*/ft/swap/build`: every instruction of an upstream build is checked against the taker's own accounts before it is returned (one router call, the taker's token accounts for the requested mints, the requested amount, slippage and fee, SOL wrap and unwrap only), and a simulated balance check refuses a build that would move the taker's funds beyond the swap. A refused upstream answer is `502 provider_bad_response`. Both of Jupiter's router forms are accepted; while installed wallets accept only one of them, the build asks Jupiter again (at most 3 calls, within the request budget) and prefers an answer whose transaction fits the 1232-byte limit.
+- `uiAmount` is converted to base units exactly; a value with more decimal places than the token, zero, past u64 or longer than 300 characters is `400 invalid_parameter`.
+- Transaction history: when the enriched provider fails, the basic RPC fallback serves at most 25 rows per page and runs within the provider budget; while the provider is rate limited or down the request answers `503` instead of falling back.
+- NFT listing: off-chain metadata documents are fetched within hard deadlines, stored trimmed to the fields the API returns (at most 16 KB), and kept 30 days only for content-addressed links (1 day otherwise). The stored copies start fresh after this release.
+- dApp metadata (`GET /v1/dapp/metadata`) resolves sites given by hostname again.
+- The country database age limit (45 days) also applies on staging.
+- Logs and error descriptions never carry a provider credential. Each Lambda function receives only the environment variables it reads.
+- A regional AWS WAF web ACL with a per-IP rate rule (300 requests per 60 s) sits in front of the API stage, counting only: it blocks nothing until the switch to blocking is made in a later release.
+- `follow-redirects` 1.16.1.
+
 ## 0.26.1 — 2026-10-21
 
 - No endpoint, response or behavior change. Deployment hardening:

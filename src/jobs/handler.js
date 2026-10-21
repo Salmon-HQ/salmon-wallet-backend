@@ -7,6 +7,7 @@ const { redis } = require('../repositories/data-source');
 const { BASE_ENDPOINT, apiHeaders } = require('../services/shared/coingecko-service');
 const skrStaking = require('../services/solana/skr-staking-service');
 const NETWORKS = require('../constants/networks');
+const { toSafeError, withoutCredentials } = require('../infrastructure/log-redaction');
 
 // Raise Node's 250ms per-address connect budget before any provider is
 // dialed; see `infrastructure/connect-tuning` for why the default turns a
@@ -48,7 +49,7 @@ module.exports.listTokensJob = async (event) => {
   try {
     await listTokens(platform);
   } catch (error) {
-    console.error('Error fetching tokens from CoinGecko:', error);
+    console.error('Error fetching tokens from CoinGecko:', toSafeError(error));
   }
 
   return createResponse('Token list job completed!');
@@ -151,7 +152,7 @@ module.exports.refreshPricesJob = async (event) => {
     await repository.saveTokensList(tokens, platform);
     return createResponse('Prices refresh job completed!');
   } catch (error) {
-    console.error('Error fetching prices from CoinGecko:', error);
+    console.error('Error fetching prices from CoinGecko:', toSafeError(error));
     return createResponse(`Prices refresh job failed: ${error.message}`);
   } finally {
     // On local invoke, close Redis and exit so the process terminates (Lambda reuses the connection)
@@ -330,6 +331,11 @@ module.exports.recordSkrSharePriceJob = async () => {
   try {
     const sharePrice = await skrStaking.recordSharePrice(locals);
     return createResponse(`SKR share price recorded: ${sharePrice}`);
+  } catch (error) {
+    console.error('[SKR_SHARE_PRICE]', toSafeError(error));
+    // The Lambda runtime logs a rejection whole, axios request (and Triton
+    // token) included.
+    throw withoutCredentials(error);
   } finally {
     if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
       await redis.quit().catch(() => {});

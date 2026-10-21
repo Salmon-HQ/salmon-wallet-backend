@@ -36,18 +36,29 @@ describe('isBlockedIp', () => {
     ['::1', 'IPv6 loopback'],
     ['fd00::1', 'IPv6 unique local'],
     ['fe80::1', 'IPv6 link-local'],
+    ['fe9a::1', 'IPv6 link-local, fe80::/10 beyond fe80'],
+    ['febf:ffff::1', 'IPv6 link-local upper bound'],
+    ['192.0.0.9', 'IETF protocol assignments (192.0.0.0/24)'],
+    ['198.18.0.1', 'benchmarking (198.18.0.0/15)'],
+    ['198.19.255.255', 'benchmarking upper bound'],
     ['::ffff:169.254.169.254', 'IPv4-mapped metadata address'],
     ['not-an-ip', 'unparseable input fails closed'],
   ])('blocks %s (%s)', (ip) => {
     expect(isBlockedIp(ip)).toBe(true);
   });
 
-  test.each([['8.8.8.8'], ['1.1.1.1'], ['172.15.0.1'], ['172.32.0.1'], ['2606:4700::1111']])(
-    'allows public address %s',
-    (ip) => {
-      expect(isBlockedIp(ip)).toBe(false);
-    }
-  );
+  test.each([
+    ['8.8.8.8'],
+    ['1.1.1.1'],
+    ['172.15.0.1'],
+    ['172.32.0.1'],
+    ['192.0.1.1'],
+    ['198.20.0.1'],
+    ['fec0::1'],
+    ['2606:4700::1111'],
+  ])('allows public address %s', (ip) => {
+    expect(isBlockedIp(ip)).toBe(false);
+  });
 });
 
 describe('asMetadataObject', () => {
@@ -78,6 +89,138 @@ describe('getOffchainMetadata', () => {
     );
   });
 
+  // The document is attacker-chosen and lands in the Redis every other
+  // feature shares, so only what the NFT resource reads is kept, and bounded.
+  test('stores only the fields the NFT resource reads, capped', async () => {
+    const { MAX_DESCRIPTION_CHARS, MAX_ATTRIBUTES } = repository.__testing;
+    http.get.mockResolvedValue({
+      data: {
+        name: 'n',
+        description: 'd'.repeat(MAX_DESCRIPTION_CHARS + 500),
+        image: 'https://arweave.net/i.png',
+        attributes: Array.from({ length: MAX_ATTRIBUTES + 20 }, (_, i) => ({ value: i })),
+        properties: { category: 'image' },
+        padding: 'x'.repeat(100000),
+      },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(Object.keys(result).sort()).toEqual([
+      'attributes',
+      'description',
+      'image',
+      'name',
+      'properties',
+    ]);
+    expect(result.description).toHaveLength(MAX_DESCRIPTION_CHARS);
+    expect(result.attributes).toHaveLength(MAX_ATTRIBUTES);
+    expect(storeInCache).toHaveBeenCalledWith(
+      expect.any(String),
+      { ok: true, json: result },
+      expect.any(Number)
+    );
+  });
+
+  // An oversized document keeps what the listing shows (name, description,
+  // image); the bulky extras go first, and only a document still too large
+  // without them is discarded.
+  test('drops properties, creators and attributes before discarding a large document', async () => {
+    const { MAX_STORED_BYTES } = repository.__testing;
+    http.get.mockResolvedValue({
+      data: {
+        description: 'ok',
+        image: 'https://arweave.net/i.png',
+        attributes: [{ value: 'a' }],
+        creators: [{ address: 'c'.repeat(MAX_STORED_BYTES) }],
+        properties: { files: ['f'.repeat(MAX_STORED_BYTES)] },
+      },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(result).toEqual({
+      description: 'ok',
+      image: 'https://arweave.net/i.png',
+      attributes: [{ value: 'a' }],
+    });
+  });
+
+  test('stores no document that is still over the size cap without its extras', async () => {
+    const { MAX_STORED_BYTES } = repository.__testing;
+    http.get.mockResolvedValue({
+      data: { description: 'ok', image: 'i'.repeat(MAX_STORED_BYTES) },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(result).toBeNull();
+    expect(storeInCache).toHaveBeenCalledWith(expect.any(String), { ok: false }, 60 * 60);
+  });
+
+  // The resource and the spam detector call string methods on these fields;
+  // an attacker's object or number there must not reach them.
+  test('keeps a field only when it has the type the resource reads', async () => {
+    http.get.mockResolvedValue({
+      data: {
+        name: { evil: true },
+        symbol: 7,
+        description: ['d'],
+        image: { url: 'x' },
+        animation_url: 'https://arweave.net/a.mp4',
+        collection: 'not-an-object',
+        attributes: { not: 'an array' },
+        properties: ['not', 'an object'],
+        creators: 'nobody',
+      },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(result).toEqual({ animation_url: 'https://arweave.net/a.mp4' });
+  });
+
+  // Entries written before the fields were trimmed held whole documents for
+  // 30 days; a new key version stops them from being served.
+  test('reads and writes a versioned cache key', async () => {
+    http.get.mockResolvedValue({ data: { description: 'x' } });
+
+    await repository.getOffchainMetadata(url, {});
+
+    expect(getFromCache).toHaveBeenCalledWith(expect.stringContaining('nft_offchain_metadata:v2:'));
+    expect(storeInCache).toHaveBeenCalledWith(
+      expect.stringContaining('nft_offchain_metadata:v2:'),
+      expect.any(Object),
+      expect.any(Number)
+    );
+  });
+
+  // A content-addressed document cannot change; anything else can, and is
+  // the attacker's own server, so it is kept a day rather than a month.
+  test.each([
+    [`https://arweave.net/${'a'.repeat(43)}`, 30 * 24 * 60 * 60],
+    [
+      'https://ipfs.filebase.io/ipfs/bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
+      30 * 24 * 60 * 60,
+    ],
+    ['https://metadata.example/1.json', 24 * 60 * 60],
+    [
+      'https://attacker.example/ipfs/bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
+      24 * 60 * 60,
+    ],
+    ['https://name.arweave.net/1.json', 24 * 60 * 60],
+    [`https://arweave.net/${'a'.repeat(43)}/1.json`, 30 * 24 * 60 * 60],
+    [`https://arweave.net/${'a'.repeat(43)}?ext=json`, 30 * 24 * 60 * 60],
+    [`https://arweave.net/${'a'.repeat(50)}`, 24 * 60 * 60],
+    ['https://ipfs.filebase.io/ipfs/../attacker.json', 24 * 60 * 60],
+  ])('keeps %s for %i seconds', async (documentUrl, ttl) => {
+    http.get.mockResolvedValue({ data: { description: 'x' } });
+
+    await repository.getOffchainMetadata(documentUrl, {});
+
+    expect(storeInCache).toHaveBeenCalledWith(expect.any(String), expect.any(Object), ttl);
+  });
+
   test('serves a cached document without re-fetching', async () => {
     getFromCache.mockResolvedValue({ ok: true, json: { description: 'cached' } });
 
@@ -100,6 +243,42 @@ describe('getOffchainMetadata', () => {
       { ok: false },
       expect.any(Number)
     );
+  });
+
+  // axios's `timeout` stops counting once the headers arrive, so a server
+  // that trickles its body one byte at a time held the listing until the
+  // Lambda timed out. The deadline has to cover the whole exchange.
+  describe('a server that never finishes its body', () => {
+    const hangUntilAborted = (_url, options) =>
+      new Promise((_resolve, reject) => {
+        options.signal.addEventListener('abort', () => reject(new Error('canceled')));
+      });
+
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    test('is cut off at the per-fetch deadline and cached as a failure', async () => {
+      const { FETCH_TIMEOUT_MS } = repository.__testing;
+      http.get.mockImplementation(hangUntilAborted);
+
+      const pending = repository.getOffchainMetadata(url, {});
+      await jest.advanceTimersByTimeAsync(FETCH_TIMEOUT_MS);
+
+      await expect(pending).resolves.toBeNull();
+      expect(storeInCache).toHaveBeenCalledWith(expect.any(String), { ok: false }, 60 * 60);
+    });
+
+    test('is cut off when the listing runs out of time, without blaming the server', async () => {
+      http.get.mockImplementation(hangUntilAborted);
+      const listing = new AbortController();
+
+      const pending = repository.getOffchainMetadata(url, {}, listing.signal);
+      await jest.advanceTimersByTimeAsync(10);
+      listing.abort();
+
+      await expect(pending).resolves.toBeNull();
+      expect(storeInCache).not.toHaveBeenCalled();
+    });
   });
 
   test('does not re-fetch a known-bad document', async () => {

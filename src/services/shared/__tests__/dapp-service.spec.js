@@ -18,6 +18,10 @@ const htmlWith = (tags) => `<!doctype html><html><head>${tags}</head><body>ignor
 
 const ok = (html) => ({ status: 200, data: html, headers: {} });
 
+/** What a pinned lookup hands its callback for the given options. */
+const resolveWith = (lookup, options) =>
+  new Promise((resolve) => lookup('salmon.example', options, (...args) => resolve(args)));
+
 describe('dapp-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -112,9 +116,11 @@ describe('dapp-service', () => {
       await getMetadata('https://salmon.example/');
 
       const { lookup } = http.get.mock.calls[0][1];
-      expect(lookup('salmon.example', { all: true })).toEqual([
-        { address: '93.184.216.34', family: 4 },
+      expect(await resolveWith(lookup, { all: true })).toEqual([
+        null,
+        [{ address: '93.184.216.34', family: 4 }],
       ]);
+      expect(await resolveWith(lookup, {})).toEqual([null, '93.184.216.34', 4]);
     });
 
     it('re-pins each redirect hop to its own validated address', async () => {
@@ -135,8 +141,8 @@ describe('dapp-service', () => {
 
       await getMetadata('https://salmon.example/');
 
-      expect(http.get.mock.calls[0][1].lookup()).toEqual([{ address: '1.1.1.1', family: 4 }]);
-      expect(http.get.mock.calls[1][1].lookup()).toEqual([{ address: '2.2.2.2', family: 4 }]);
+      expect(await resolveWith(http.get.mock.calls[0][1].lookup, {})).toEqual([null, '1.1.1.1', 4]);
+      expect(await resolveWith(http.get.mock.calls[1][1].lookup, {})).toEqual([null, '2.2.2.2', 4]);
     });
 
     it('re-validates a redirect target before following it', async () => {
