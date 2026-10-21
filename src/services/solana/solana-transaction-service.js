@@ -28,6 +28,7 @@ const { loadRpcEnrichment } = require('./solana-rpc-enrichment');
 const { RECEIVE } = require('../../constants/transaction-types');
 const { isNftTokenStandard } = require('../../constants/token-standards');
 const { SOL_ADDRESS } = require('../../constants/solana-constants');
+const { toOrigin, toSafeError } = require('../../infrastructure/log-redaction');
 
 const COMMITMENT = 'confirmed';
 // Integer 1, never the string "1": opts this reader into v1 (4096-byte)
@@ -155,7 +156,7 @@ const buildRpcTransaction = (address, signature, transaction) => ({
 
 const logEnhancedHistoryFallback = (address, error) => {
   // `address` is caller input: keep it out of the format-string argument.
-  console.error('Enhanced provider error for address', address, error.message);
+  console.error('Enhanced provider error for address', address, toSafeError(error));
   console.log('Falling back to standard RPC');
 };
 
@@ -263,7 +264,9 @@ const getRpcHistory = async (address, filters, locals) => {
     connection.getParsedTransaction(signature, TRANSACTION_CONFIG)
   );
 
-  console.log(`[getTransactions] Loaded ${signatures.length} transactions from ${rpcUrl}`);
+  console.log(
+    `[getTransactions] Loaded ${signatures.length} transactions from ${toOrigin(rpcUrl)}`
+  );
 
   const data = signatures.map(({ signature, ...rest }, index) => ({
     address,

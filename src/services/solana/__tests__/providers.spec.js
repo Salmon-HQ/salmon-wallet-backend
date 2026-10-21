@@ -417,37 +417,12 @@ describe('ProviderResolver', () => {
     });
   });
 
-  describe('redact() / sanitizePayload() — security', () => {
+  describe('sanitizePayload() — security', () => {
     const TOKEN = 'super-secret-triton-token-1234567890';
 
     beforeEach(() => {
       process.env.TRITON_RPC_URL = 'https://test.solana-mainnet.rpcpool.com';
       process.env.TRITON_API_TOKEN = TOKEN;
-    });
-
-    it('replaces TRITON_API_TOKEN with [REDACTED] anywhere in the string', () => {
-      const { resolver } = loadFresh();
-      const dirty = `axios timeout while fetching https://x.rpcpool.com/${TOKEN}`;
-      const safe = resolver.__testing.redact(dirty);
-      expect(safe).not.toContain(TOKEN);
-      expect(safe).toContain('[REDACTED]');
-    });
-
-    it('redacts rpcpool.com path segments even without TRITON_API_TOKEN set', () => {
-      delete process.env.TRITON_API_TOKEN;
-      const { resolver } = loadFresh();
-      const dirty =
-        'request to https://x.solana-mainnet.rpcpool.com/some-secret-path-segment failed';
-      const safe = resolver.__testing.redact(dirty);
-      expect(safe).not.toContain('some-secret-path-segment');
-      expect(safe).toContain('rpcpool.com/[REDACTED]');
-    });
-
-    it('returns non-string inputs unchanged', () => {
-      const { resolver } = loadFresh();
-      expect(resolver.__testing.redact(undefined)).toBeUndefined();
-      expect(resolver.__testing.redact(null)).toBeNull();
-      expect(resolver.__testing.redact(42)).toBe(42);
     });
 
     it('sanitizePayload redacts error_message and reason fields', () => {

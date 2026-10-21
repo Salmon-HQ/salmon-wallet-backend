@@ -27,6 +27,7 @@ jest.mock('../../repositories/data-source', () => ({
 }));
 
 const http = require('axios');
+const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const repository = require('../../repositories/shared/coingecko-repository');
@@ -35,6 +36,17 @@ const skrStaking = require('../../services/solana/skr-staking-service');
 const handler = require('../handler');
 
 const SDN_FIXTURE = fs.readFileSync(path.join(__dirname, 'fixtures/sdn-sample.csv'), 'utf8');
+
+const axiosError = (url, headers = {}) => {
+  const { AxiosError } = jest.requireActual('axios');
+  return new AxiosError(
+    'Request failed with status code 500',
+    'ERR_BAD_RESPONSE',
+    { url, method: 'get', headers },
+    { _header: `GET / HTTP/1.1\r\n${Object.entries(headers).map((h) => h.join(': '))}\r\n\r\n` },
+    { status: 500, data: {}, headers: {} }
+  );
+};
 
 describe('jobs/handler', () => {
   beforeEach(() => {
@@ -73,6 +85,28 @@ describe('jobs/handler', () => {
       expect.stringContaining('/api/v3/simple/price'),
       expect.objectContaining({ headers: { 'x-cg-demo-api-key': 'test-key' } })
     );
+  });
+
+  describe('a failed CoinGecko call', () => {
+    const KEY = 'cg-secret-key-1234567890';
+    let error;
+
+    beforeEach(() => {
+      error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      http.get.mockRejectedValue(
+        axiosError('https://pro-api.coingecko.com/api/v3/coins/list', { 'x-cg-pro-api-key': KEY })
+      );
+      repository.getTokensList.mockResolvedValue(null);
+    });
+    afterEach(() => error.mockRestore());
+
+    it.each(['listTokensJob', 'refreshPricesJob'])('%s never logs the API key', async (job) => {
+      await handler[job]({ platform: 'bitcoin' });
+
+      const printed = error.mock.calls.map((args) => util.format(...args)).join('\n');
+      expect(printed).toContain('Request failed with status code 500');
+      expect(printed).not.toContain(KEY);
+    });
   });
 
   it('listTokensJob filters tokens by platform and preserves existing timestamps', async () => {
@@ -162,6 +196,25 @@ describe('jobs/handler', () => {
       const [locals] = skrStaking.recordSharePrice.mock.calls[0];
       expect(locals.network.id).toBe('solana-mainnet');
       expect(JSON.parse(result.body).message).toMatch(/1151142678/);
+    });
+
+    it('fails the invocation without the Triton token in its log or its error', async () => {
+      const token = 'triton-secret-token-1234567890';
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      skrStaking.recordSharePrice.mockRejectedValueOnce(
+        axiosError(`https://tenant.solana-mainnet.rpcpool.com/${token}`)
+      );
+
+      const thrown = await handler.recordSkrSharePriceJob().catch((e) => e);
+
+      expect(thrown).toBeInstanceOf(Error);
+      // The Lambda runtime logs a rejected invocation with JSON.stringify.
+      expect(JSON.stringify(thrown)).not.toContain(token);
+      expect(util.inspect(thrown)).not.toContain(token);
+      const printed = error.mock.calls.map((args) => util.format(...args)).join('\n');
+      expect(printed).toContain('Request failed with status code 500');
+      expect(printed).not.toContain(token);
+      error.mockRestore();
     });
   });
 

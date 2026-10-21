@@ -130,6 +130,7 @@ is build-only (`GET /powerups/{id}/build`): the wallet's Apple
 ## Secrets
 
 - Never commit secrets — not in code, config YAML, or docs. Prod secrets live only in AWS SSM Parameter Store (`/salmon-api/prod/*`); this keeps rotation out of git history and off forks. Every prod var in `config/env.prod.yml` is an `${ssm:...}` ref; five of them (`COINGECKO_API_KEY`, `TRITON_RPC_URL`, `TRITON_RPC_URL_DEVNET`, `GA4_MEASUREMENT_ID`, `GA4_API_SECRET`) carry an empty-string fallback, so a missing parameter deploys as unset rather than failing the deploy — check SSM, not the deploy log, when one of those features is silently off in prod.
+- Never log a caught error object or a provider URL: an axios error carries the request headers (CoinGecko, 0x, Jupiter keys) and URL (the Triton token is a path segment), and Node prints both. Log `toSafeError(error)` and `toOrigin(url)` from `src/infrastructure/log-redaction.js`; a job that rethrows deletes the error's `config`, `request` and `response` first, because the Lambda runtime logs a rejected invocation with them.
 - `.env` is gitignored, development-only, and intentionally diverges from prod (dev-safe values limit blast radius). Never treat it as a source of truth for prod values. Rotation flow: `docs/DEPLOY.md`.
 
 ## Maintenance triggers

@@ -193,6 +193,17 @@ describe('error-handler middleware', () => {
     );
   });
 
+  it('never logs a Triton token echoed in the error message or stack', () => {
+    const res = buildRes();
+    const err = new Error(
+      'request to https://tenant.solana-mainnet.rpcpool.com/super-secret-key failed'
+    );
+
+    errorHandler(err, req, res, jest.fn());
+
+    expect(JSON.stringify(console.error.mock.calls)).not.toContain('super-secret-key');
+  });
+
   it("logs the provider reason, not axios's opaque message, for client errors", () => {
     const res = buildRes();
     const err = Object.assign(new Error('Request failed with status code 400'), {

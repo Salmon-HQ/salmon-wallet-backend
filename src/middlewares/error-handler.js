@@ -20,6 +20,7 @@
  */
 
 const { maskUrl } = require('../../packages/middleware/logger/mask-url');
+const { redact, toOrigin } = require('../infrastructure/log-redaction');
 
 const UPSTREAM_CLIENT_ERRORS = {
   400: 'bad_request',
@@ -89,25 +90,6 @@ const describe = (err) => {
  * @param {string} error - the snake_case envelope code
  * @returns {Object}
  */
-/**
- * Reduces an upstream URL to its origin. The scheme and host are the whole
- * diagnostic value of the field — which provider was called — while the path
- * and query are exactly where Helius (`?api-key=`) and Triton (trailing path
- * segment) put their live credential, so dropping both closes every
- * URL-embedded case without per-provider special-casing.
- *
- * @param {string|undefined} url
- * @returns {string|undefined}
- */
-const toOrigin = (url) => {
-  if (!url) return undefined;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return undefined;
-  }
-};
-
 const toLogRecord = (err, req, status, error) => ({
   method: req?.method,
   // Routes carry the wallet address in the path; the log keeps it trimmed,
@@ -115,11 +97,11 @@ const toLogRecord = (err, req, status, error) => ({
   path: req?.path ? maskUrl(req.path) : undefined,
   status,
   error,
-  reason: describe(err),
-  message: err?.message,
+  reason: redact(describe(err)),
+  message: redact(err?.message),
   upstreamStatus: err?.response?.status,
   upstreamUrl: toOrigin(err?.config?.url),
-  stack: err?.stack,
+  stack: redact(err?.stack),
 });
 
 /**
@@ -142,7 +124,9 @@ const errorHandler = (err, req, res, next) => {
   if (status >= 500) {
     console.error('[error-handler]', toLogRecord(err, req, status, error));
   } else {
-    console.warn(`${req.method} ${maskUrl(req.path)} -> ${status} ${error}: ${describe(err)}`);
+    console.warn(
+      `${req.method} ${maskUrl(req.path)} -> ${status} ${error}: ${redact(describe(err))}`
+    );
   }
 
   if (res.headersSent) {
