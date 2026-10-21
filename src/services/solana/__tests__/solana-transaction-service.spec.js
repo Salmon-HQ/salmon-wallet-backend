@@ -412,27 +412,56 @@ describe('Solana Transaction Service - unit tests', () => {
     );
   });
 
-  test('fans out RPC transaction fetches in batches of 50', async () => {
-    const signatures = Array.from({ length: 120 }, (_, i) => ({ signature: `sig-${i}` }));
-    let inFlight = 0;
-    let peak = 0;
-    const getParsedTransaction = jest.fn(async () => {
-      inFlight += 1;
-      peak = Math.max(peak, inFlight);
-      await new Promise((resolve) => setImmediate(resolve));
-      inFlight -= 1;
-      return { slot: 1, meta: { err: null } };
-    });
+  test('caps the RPC fallback page at the enriched maximum and defaults it like the enriched path', async () => {
+    const getSignaturesForAddress = jest.fn().mockResolvedValue([]);
     heliusService.getEnhancedTransactionHistory.mockRejectedValue(new Error('timeout'));
     Connection.mockImplementation(() => ({
-      getSignaturesForAddress: jest.fn().mockResolvedValue(signatures),
-      getParsedTransaction,
+      getSignaturesForAddress,
+      getParsedTransaction: jest.fn(),
     }));
 
-    const result = await service.getTransactions('batched-address', { pageSize: 120 }, locals);
+    await service.getTransactions('capped-rpc-address', { pageSize: 1000 }, locals);
+    await service.getTransactions('default-rpc-address', {}, locals);
 
-    expect(getParsedTransaction).toHaveBeenCalledTimes(120);
-    expect(peak).toBe(50);
-    expect(result.data.map((tx) => tx.signature)).toEqual(signatures.map((s) => s.signature));
+    expect(getSignaturesForAddress.mock.calls[0][1]).toMatchObject({ limit: 25 });
+    expect(getSignaturesForAddress.mock.calls[1][1]).toMatchObject({ limit: 10 });
+  });
+
+  test.each([
+    ['upstream_rate_limited', 'triton'],
+    ['upstream_unavailable', 'triton'],
+    ['request_budget_exhausted', undefined],
+  ])(
+    'fails fast instead of falling back to RPC when the enriched path answers %s (%s)',
+    async (errorCode, provider) => {
+      const refused = Object.assign(new Error('refused'), { statusCode: 503, errorCode, provider });
+      heliusService.getEnhancedTransactionHistory.mockRejectedValue(refused);
+
+      await expect(service.getTransactions('busy-address', { pageSize: 20 }, locals)).rejects.toBe(
+        refused
+      );
+      expect(Connection).not.toHaveBeenCalled();
+    }
+  );
+
+  // The enriched page also reads the token catalog (CoinGecko); its refusal
+  // says nothing about Triton, which the fallback reads.
+  test('still falls back to RPC when another provider refused', async () => {
+    const getSignaturesForAddress = jest.fn().mockResolvedValue([]);
+    heliusService.getEnhancedTransactionHistory.mockRejectedValue(
+      Object.assign(new Error('open'), {
+        statusCode: 503,
+        errorCode: 'upstream_unavailable',
+        provider: 'coingecko',
+      })
+    );
+    Connection.mockImplementation(() => ({
+      getSignaturesForAddress,
+      getParsedTransaction: jest.fn(),
+    }));
+
+    await service.getTransactions('catalog-down-address', { pageSize: 20 }, locals);
+
+    expect(getSignaturesForAddress).toHaveBeenCalled();
   });
 });

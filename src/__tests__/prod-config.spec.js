@@ -43,6 +43,27 @@ describe('production config defaults', () => {
     expect(serverless.match(/^\s*logRetentionInDays:\s*(\d+)\s*$/m)?.[1]).toBe('30');
   });
 
+  // AWS WAF blocks a source IP before the request reaches API Gateway's
+  // shared stage throttle; it must never block an IP the Express limiter
+  // would still serve, nor let through more than it does.
+  it('caps each IP at AWS WAF with the Express per-IP budget and window', () => {
+    const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
+    expect(serverless.match(/^\s*wafRateLimitPerIp:\s*(\d+)\s*$/m)?.[1]).toBe(
+      defaultFor('RATE_LIMIT_MAX')
+    );
+    expect(serverless.match(/^\s*EvaluationWindowSec:\s*(\d+)\s*$/m)?.[1]).toBe(
+      defaultFor('RATE_LIMIT_WINDOW_SECONDS')
+    );
+  });
+
+  // Whether the regional web ACL sees client addresses on this edge-optimized
+  // API is not documented by AWS: the rule only counts until a deploy shows
+  // it does (docs/DEPLOY.md), and blocking is a deliberate follow-up change.
+  it('ships the WAF per-IP rule counting, not blocking', () => {
+    const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
+    expect(serverless.match(/^\s*wafRuleAction:\s*(\w+)\s*$/m)?.[1]).toBe('count');
+  });
+
   it('reads the Redis TLS switch from configuration on every stage', () => {
     expect(defaultFor('REDIS_TLS')).toBe('false');
     const local = fs.readFileSync(

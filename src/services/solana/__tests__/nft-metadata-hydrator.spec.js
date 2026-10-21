@@ -8,6 +8,7 @@ const repository = require('../../../repositories/solana/nft-metadata-repository
 const hydrator = require('../nft-metadata-hydrator');
 
 beforeEach(() => jest.clearAllMocks());
+afterEach(() => jest.useRealTimers());
 
 // What Triton's DAS index hands back: on-chain fields only.
 const tritonShaped = {
@@ -95,7 +96,8 @@ describe('hydrate', () => {
 
     expect(repository.getOffchainMetadata).toHaveBeenCalledWith(
       'https://ipfs.filebase.io/ipfs/bafyabc',
-      {}
+      {},
+      expect.any(AbortSignal)
     );
   });
 });
@@ -155,6 +157,24 @@ describe('hydrateMany', () => {
     await hydrator.hydrateMany(nfts, {});
 
     expect(peak).toBeLessThanOrEqual(CONCURRENCY);
+  });
+
+  // One metadata server that never finishes must not hold the listing: at the
+  // listing deadline every fetch still in flight is aborted and its NFT comes
+  // back unresolved.
+  test('aborts the fetches still in flight at the listing deadline', async () => {
+    jest.useFakeTimers();
+    const { TOTAL_BUDGET_MS } = hydrator.__testing;
+    repository.getOffchainMetadata.mockImplementation(
+      (_url, _locals, signal) =>
+        new Promise((resolve) => signal.addEventListener('abort', () => resolve(null)))
+    );
+
+    const pending = hydrator.hydrateMany([tritonShaped], {});
+    await jest.advanceTimersByTimeAsync(TOTAL_BUDGET_MS);
+
+    const [nft] = await pending;
+    expect(nft.metadataResolved).toBe(false);
   });
 
   test('returns an empty list untouched', async () => {

@@ -448,10 +448,13 @@ const getSolanaCoinIds = async () => {
 /**
  * CoinGecko coin id → position (1-based) among the top Solana-ecosystem
  * coins by market cap. Orders the catalog so the real USDC outranks a
- * look-alike. Cached with the catalog; a failed read yields an empty map
- * (ordering degrades, nothing else does).
+ * look-alike, and decides which tokens are `verified`. Cached with the
+ * catalog.
  *
  * @returns {Promise<Map<string, number>>}
+ * @throws when CoinGecko fails or answers an empty or malformed page (a short
+ *   page ends the list): a rank-less or truncated catalog would tag tokens
+ *   `community`, so the caller keeps its last good copy instead.
  */
 const getSolanaMarketRanks = async () => {
   const cached = await repository.getSolanaMarketRanks();
@@ -472,14 +475,18 @@ const getSolanaMarketRanks = async () => {
       10000,
       `CoinGecko Solana market ranks (page ${page})`
     );
-    if (!Array.isArray(data) || data.length === 0) {
-      break;
+    // A malformed page or an empty first page is a CoinGecko fault. A short or
+    // empty later page is the end of the list: the previous page can be the
+    // last full one, and CoinGecko errors arrive as HTTP failures instead.
+    if (!Array.isArray(data) || (page === 1 && data.length === 0)) {
+      throw new Error(`CoinGecko market ranks: page ${page} is empty or not a list`);
     }
     data.forEach((coin, index) => {
       if (coin?.id && ranks[coin.id] === undefined) {
         ranks[coin.id] = (page - 1) * MARKET_RANK_PAGE_SIZE + index + 1;
       }
     });
+    if (data.length < MARKET_RANK_PAGE_SIZE) break;
   }
   if (Object.keys(ranks).length > 0) {
     await repository.saveSolanaMarketRanks(ranks, CATALOG_TTL_SECONDS);
@@ -544,6 +551,7 @@ module.exports = {
   getTokenPrices,
   ATTRIBUTION,
   MAX_ADDRESSES_PER_PRICE_CALL,
+  MARKET_RANK_PAGE_SIZE,
   getMarketChart,
   getContractMarketChart,
   getCoinInfo,

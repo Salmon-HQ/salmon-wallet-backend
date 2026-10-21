@@ -24,8 +24,9 @@ const { normalizeIpfsUrl } = require('../../resources/solana/content-urls');
 const CONCURRENCY = 8;
 
 // Whole-listing budget. A wallet full of NFTs with dead pins would otherwise
-// serialize into one timeout after another; past the deadline the rest stay
-// unresolved instead of holding the response open.
+// serialize into one timeout after another; at the deadline the fetches still
+// in flight are aborted and the rest stay unresolved instead of holding the
+// response open.
 const TOTAL_BUDGET_MS = 8000;
 
 /** True when the DAS payload already carries the off-chain fields (Helius). */
@@ -40,7 +41,7 @@ const hasOffchainFields = (json) =>
  * to score is complete. It is never left undefined: `false` means "we could not
  * find out", which is the signal to fail open.
  */
-const hydrateOne = async (nft, locals, deadline) => {
+const hydrateOne = async (nft, locals, signal) => {
   if (!nft) return nft;
 
   if (hasOffchainFields(nft.json)) {
@@ -48,11 +49,11 @@ const hydrateOne = async (nft, locals, deadline) => {
   }
 
   const url = nft.uri ? normalizeIpfsUrl(nft.uri) : null;
-  if (!url || Date.now() > deadline) {
+  if (!url || signal.aborted) {
     return { ...nft, metadataResolved: false };
   }
 
-  const offchain = await repository.getOffchainMetadata(url, locals);
+  const offchain = await repository.getOffchainMetadata(url, locals, signal);
   if (!offchain) {
     return { ...nft, metadataResolved: false };
   }
@@ -81,6 +82,17 @@ const mapWithConcurrency = async (items, limit, fn) => {
   return results;
 };
 
+/** Runs `fn(signal)` with a signal that aborts after TOTAL_BUDGET_MS. */
+const withBudget = async (fn) => {
+  const budget = new AbortController();
+  const timer = setTimeout(() => budget.abort(), TOTAL_BUDGET_MS);
+  try {
+    return await fn(budget.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 /**
  * @param {Array<Object>} nfts
  * @param {Object} locals
@@ -89,8 +101,9 @@ const mapWithConcurrency = async (items, limit, fn) => {
 const hydrateMany = async (nfts, locals) => {
   if (!Array.isArray(nfts) || nfts.length === 0) return nfts;
 
-  const deadline = Date.now() + TOTAL_BUDGET_MS;
-  return mapWithConcurrency(nfts, CONCURRENCY, (nft) => hydrateOne(nft, locals, deadline));
+  return withBudget((signal) =>
+    mapWithConcurrency(nfts, CONCURRENCY, (nft) => hydrateOne(nft, locals, signal))
+  );
 };
 
 /**
@@ -98,7 +111,7 @@ const hydrateMany = async (nfts, locals) => {
  * @param {Object} locals
  * @returns {Promise<Object>} The same NFT, with off-chain metadata merged in.
  */
-const hydrate = async (nft, locals) => hydrateOne(nft, locals, Date.now() + TOTAL_BUDGET_MS);
+const hydrate = async (nft, locals) => withBudget((signal) => hydrateOne(nft, locals, signal));
 
 module.exports = {
   hydrate,

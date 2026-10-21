@@ -122,6 +122,19 @@ custom:
   apiGatewayThrottling:
     maxRequestsPerSecond: 50
     maxConcurrentRequests: 100
+  # AWS WAF per-IP cap (resources.ApiWebAcl): requests one source IP may send
+  # in any 60 s before the rule acts on it. Same number as the Express per-IP
+  # limit (RATE_LIMIT_MAX per RATE_LIMIT_WINDOW_SECONDS in src/index.js),
+  # applied before the request reaches the Lambda, so one client cannot hold
+  # the shared stage throttle above at its ceiling.
+  wafRateLimitPerIp: 300
+  # `count` records the IPs over the cap without blocking them; only `block`
+  # blocks. AWS does not document whether a regional web ACL on this
+  # edge-optimized API sees the client's address or a CloudFront edge's, so
+  # the rule counts until the first deploy shows client addresses
+  # (docs/DEPLOY.md, "AWS WAF in front of the API"), then a follow-up change
+  # sets `block`.
+  wafRuleAction: count
   serverless-offline:
     host: 0.0.0.0
     httpPort: ${env:OFFLINE_HTTP_PORT, 3000}
@@ -136,6 +149,49 @@ custom:
     include: []
 
 resources:
+  # AWS WAF on every deployed stage; `local` never reaches AWS, so the
+  # condition leaves both resources out of its template. One rate-based rule
+  # counts, or with custom.wafRuleAction `block` blocks, a source IP above
+  # custom.wafRateLimitPerIp requests per 60 s. Cost and the deploy role's
+  # WAF permissions: docs/DEPLOY.md.
+  Conditions:
+    IsDeployedStage: !Not [!Equals ['${sls:stage}', 'local']]
+    WafRuleBlocks: !Equals ['${self:custom.wafRuleAction}', 'block']
+  Resources:
+    ApiWebAcl:
+      Type: AWS::WAFv2::WebACL
+      Condition: IsDeployedStage
+      Properties:
+        Name: ${self:service}-${sls:stage}-api
+        Scope: REGIONAL
+        DefaultAction:
+          Allow: {}
+        VisibilityConfig:
+          CloudWatchMetricsEnabled: true
+          SampledRequestsEnabled: true
+          MetricName: ${self:service}-${sls:stage}-api
+        Rules:
+          - Name: per-ip-rate-limit
+            Priority: 0
+            Action: !If [WafRuleBlocks, { Block: {} }, { Count: {} }]
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: IP
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafRateLimitPerIp}
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: per-ip-rate-limit
+    # The stage only exists once the API Gateway deployment has created it;
+    # Serverless names that deployment ApiGatewayDeployment<instanceId>.
+    ApiWebAclAssociation:
+      Type: AWS::WAFv2::WebACLAssociation
+      Condition: IsDeployedStage
+      DependsOn: ApiGatewayDeployment${sls:instanceId}
+      Properties:
+        ResourceArn: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${sls:stage}
+        WebACLArn: !GetAtt ApiWebAcl.Arn
   Outputs:
     ServiceEndpoint:
       Export:

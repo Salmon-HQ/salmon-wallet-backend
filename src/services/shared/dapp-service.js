@@ -87,7 +87,12 @@ const fetchHtml = async (rawUrl) => {
         'dapp',
         ({ timeout, signal }) =>
           http.get(target.toString(), {
-            lookup: () => [{ address, family }],
+            // Node's connect calls this callback-style, with `all: true`
+            // when it may try several addresses; a returned value is ignored.
+            lookup: (_hostname, options, callback) =>
+              options?.all
+                ? callback(null, [{ address, family }])
+                : callback(null, address, family),
             timeout: Math.min(REQUEST_TIMEOUT, timeout),
             signal,
             maxRedirects: 0,

@@ -58,6 +58,9 @@ describe('info-controller', () => {
     });
 
     it("tells the caller where the country gate places them, and the database's date", async () => {
+      // A deployed stage places nobody with the packaged database, which is
+      // older than 45 days; the stage's age rule is country-resolver's test.
+      process.env.STAGE = 'local';
       const res = buildRes();
       await controller.status(
         { requestContext: { identity: { sourceIp: '8.8.8.8' } }, headers: {} },
