@@ -68,11 +68,16 @@ const requestWithFee = () =>
     fee: { recipient: FEE_ATA, bps: 50, side: 'buy' },
   });
 
-const expectRefused = async (data) => {
+/** `send` answers 502 provider_bad_response and logs exactly `reason`. */
+const expectRefused = async (data, reason, send = requestWithFee) => {
   http.get.mockResolvedValue({ data });
-  await expect(requestWithFee()).rejects.toMatchObject({
+  await expect(send()).rejects.toMatchObject({
     statusCode: 502,
     errorCode: 'provider_bad_response',
+  });
+  expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_BAD_RESPONSE]', {
+    provider: 'jupiter',
+    reason,
   });
 };
 
@@ -259,19 +264,27 @@ describe('jupiter-swap-provider', () => {
     const usdcAta = new PublicKey(TAKER_USDC);
     const wsolAta = new PublicKey(TAKER_WSOL);
 
+    const SYSTEM = '11111111111111111111111111111111';
+    const TOKEN = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+    const wrap = (lamports) =>
+      SystemProgram.transfer({ fromPubkey: taker, toPubkey: wsolAta, lamports });
+
     it.each([
       [
         'a SOL transfer to a foreign account',
         () =>
           withOther(SystemProgram.transfer({ fromPubkey: taker, toPubkey: STRANGER, lamports: 1 })),
+        `unexpected instruction 2 on ${SYSTEM}`,
       ],
       [
         'an Assign of the wallet to another program',
         () => withOther(SystemProgram.assign({ accountPubkey: taker, programId: STRANGER })),
+        `unexpected instruction 1 on ${SYSTEM}`,
       ],
       [
         'an SPL Approve to a foreign delegate',
         () => withOther(createApproveInstruction(usdcAta, STRANGER, taker, 1n)),
+        `unexpected instruction 4 on ${TOKEN}`,
       ],
       [
         'an SPL SetAuthority handing the token account away',
@@ -279,6 +292,7 @@ describe('jupiter-swap-provider', () => {
           withOther(
             createSetAuthorityInstruction(usdcAta, taker, AuthorityType.AccountOwner, STRANGER)
           ),
+        `unexpected instruction 6 on ${TOKEN}`,
       ],
       [
         'a CloseAccount paying the rent to a foreign account',
@@ -286,6 +300,7 @@ describe('jupiter-swap-provider', () => {
           ...withFee,
           cleanupInstruction: toWire(createCloseAccountInstruction(wsolAta, STRANGER, taker)),
         }),
+        `unexpected instruction 9 on ${TOKEN}`,
       ],
       [
         "an account created for someone else at the taker's expense",
@@ -298,21 +313,39 @@ describe('jupiter-swap-provider', () => {
               new PublicKey(USDC)
             )
           ),
+        'unexpected instruction 1 on ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
       ],
       [
         'a compute-budget instruction (the builder sets its own)',
         () => withOther(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 10n ** 12n })),
+        'unexpected instruction 3 on ComputeBudget111111111111111111111111111111',
       ],
       [
         'a second Jupiter instruction',
         () => ({ ...withFee, otherInstructions: [withFee.swapInstruction] }),
+        `unexpected instruction 187 on ${JUPITER}`,
       ],
-    ])('refuses %s with 502 provider_bad_response', async (_, tampered) => {
-      await expectRefused(tampered());
-      expect(console.error).toHaveBeenCalledWith(
-        '[SWAP_PROVIDER_BAD_RESPONSE]',
-        expect.objectContaining({ provider: 'jupiter', reason: expect.any(String) })
-      );
+      [
+        'a wrap of more SOL than the swap spends',
+        () => ({
+          ...withFee,
+          setupInstructions: withFee.setupInstructions.map((ix) =>
+            ix.programId === SYSTEM ? toWire(wrap(20000000)) : ix
+          ),
+        }),
+        'wrap transfer amount',
+      ],
+      ['a second wrap', () => withOther(wrap(10000000)), 'second wrap transfer'],
+    ])('refuses %s with 502 provider_bad_response', async (_, tampered, reason) => {
+      await expectRefused(tampered(), reason);
+    });
+
+    it('refuses a wrap when the input is not SOL', async () => {
+      const usdcToSolWithWrap = {
+        ...noFee,
+        setupInstructions: [...noFee.setupInstructions, toWire(wrap(1000000))],
+      };
+      await expectRefused(usdcToSolWithWrap, 'wrap transfer without SOL input', () => request());
     });
   });
 
@@ -324,10 +357,12 @@ describe('jupiter-swap-provider', () => {
     ).toBase58();
 
     /**
-     * The fee fixture with its router call edited. route_v2 data: 8-byte
-     * discriminator, in u64 @8, quoted out u64 @16, slippage u16 @24,
-     * platform fee u16 @26; accounts: 0 authority, 1 source, 2 destination,
-     * 7 destination override (the Jupiter program id when empty).
+     * The fee fixture with its router call edited. route_v2 data (Jupiter v6
+     * on-chain IDL): 8-byte discriminator, in u64 @8, quoted out u64 @16,
+     * slippage u16 @24, platform fee u16 @26, positive slippage u16 @28;
+     * accounts: 0 authority, 1 source, 2 destination, 3 source mint,
+     * 4 destination mint, 5/6 their token programs, 7 destination override
+     * (the Jupiter program id when empty), 10 Salmon's fee account.
      */
     const routeWith = (edit) => {
       const data = Buffer.from(withFee.swapInstruction.data, 'base64');
@@ -339,63 +374,90 @@ describe('jupiter-swap-provider', () => {
       };
     };
 
+    const setAccount = (index, pubkey) => () =>
+      routeWith(({ accounts }) => {
+        accounts[index].pubkey = pubkey;
+      });
+
     it.each([
-      [
-        'pays the output to a foreign account',
-        () =>
-          routeWith(({ accounts }) => {
-            accounts[2].pubkey = strangerUsdc;
-          }),
-      ],
+      ['pays the output to a foreign account', setAccount(2, strangerUsdc), 'route_v2 destination'],
       [
         'redirects the output through the override slot',
-        () =>
-          routeWith(({ accounts }) => {
-            accounts[7].pubkey = strangerUsdc;
-          }),
+        setAccount(7, strangerUsdc),
+        'route_v2 destination override',
+      ],
+      ['swaps under another authority', setAccount(0, STRANGER.toBase58()), 'route_v2 authority'],
+      ['spends a token other than the input', setAccount(1, TAKER_USDC), 'route_v2 source'],
+      ['names another source mint', setAccount(3, USDC), 'route_v2 source mint'],
+      ['names another destination mint', setAccount(4, SOL), 'route_v2 destination mint'],
+      [
+        'names a source token program that is not a token program',
+        setAccount(5, STRANGER.toBase58()),
+        'route_v2 source token program',
       ],
       [
-        'swaps under another authority',
-        () =>
-          routeWith(({ accounts }) => {
-            accounts[0].pubkey = STRANGER.toBase58();
-          }),
+        'names a token program the source account does not belong to',
+        setAccount(5, 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'),
+        'route_v2 source',
       ],
       [
-        'spends a token other than the input',
-        () =>
-          routeWith(({ accounts }) => {
-            accounts[1].pubkey = TAKER_USDC;
-          }),
+        "pays Salmon's fee to a foreign account",
+        setAccount(10, strangerUsdc),
+        'route_v2 fee account',
       ],
-      ['is not route_v2', () => routeWith(({ data }) => Buffer.from([0, ...data.subarray(1)]))],
-      ['is truncated', () => routeWith(({ data }) => data.subarray(0, 20))],
+      [
+        'is not route_v2',
+        () => routeWith(({ data }) => Buffer.from([0, ...data.subarray(1)])),
+        'unknown router call 0064facc31c4af14',
+      ],
+      [
+        'is truncated',
+        () => routeWith(({ data }) => data.subarray(0, 20)),
+        'route_v2 data too short',
+      ],
+      [
+        'stops before its positive-slippage field',
+        () => routeWith(({ data }) => data.subarray(0, 29)),
+        'route_v2 data too short',
+      ],
       [
         'spends more than the requested amount',
         () => routeWith(({ data }) => void data.writeBigUInt64LE(20000000n, 8)),
+        'route_v2 in amount',
       ],
       [
         'allows more slippage than requested',
         () => routeWith(({ data }) => void data.writeUInt16LE(10000, 24)),
+        'route_v2 slippage',
       ],
       [
         'takes another platform fee than Salmon asked for',
         () => routeWith(({ data }) => void data.writeUInt16LE(500, 26)),
+        'route_v2 platform fee',
       ],
-      ['reports an output the call does not quote', () => ({ ...withFee, outAmount: '2000000' })],
+      [
+        'keeps positive slippage for the platform',
+        () => routeWith(({ data }) => void data.writeUInt16LE(10000, 28)),
+        'route_v2 positive slippage',
+      ],
+      [
+        'reports an output the call does not quote',
+        () => ({ ...withFee, outAmount: '2000000' }),
+        'route_v2 quoted out amount',
+      ],
       [
         'reports a minimum the call does not enforce',
         () => ({ ...withFee, otherAmountThreshold: '1170000' }),
+        'route_v2 minimum out amount',
       ],
-    ])('refuses a router call that %s', async (_, tampered) => {
-      await expectRefused(tampered());
+    ])('refuses a router call that %s', async (_, tampered, reason) => {
+      await expectRefused(tampered(), reason);
     });
 
     it('refuses a platform fee when Salmon asked for none', async () => {
-      http.get.mockResolvedValue({ data: withFee });
-      await expect(
+      await expectRefused(withFee, 'route_v2 platform fee', () =>
         request({ inputMint: SOL, outputMint: USDC, amount: '10000000' })
-      ).rejects.toMatchObject({ statusCode: 502, errorCode: 'provider_bad_response' });
+      );
     });
 
     it('accepts the minimum rounded down as well as up (1173138 at 50 bps = 1167272.31)', async () => {
@@ -476,10 +538,30 @@ describe('jupiter-swap-provider', () => {
       expect(result.instructions).toHaveLength(groups.length);
     });
 
+    it("refuses a Token-2022 output paid to someone else's account", async () => {
+      const body = load(CASES['route_v2, USDC → PYUSD (Token-2022 output)'][0]);
+      const strangerPyusd = getAssociatedTokenAddressSync(
+        new PublicKey(PYUSD),
+        STRANGER,
+        true,
+        new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb')
+      ).toBase58();
+      const accounts = body.swapInstruction.accounts.map((account, index) =>
+        index === 2 ? { ...account, pubkey: strangerPyusd } : account
+      );
+      await expectRefused(
+        { ...body, swapInstruction: { ...body.swapInstruction, accounts } },
+        'route_v2 destination',
+        () => requestFor('route_v2, USDC → PYUSD (Token-2022 output)')
+      );
+    });
+
     /**
-     * shared_accounts_route_v2 data: 8-byte discriminator, route id u8 @8,
-     * in u64 @9, quoted out u64 @17, slippage u16 @25, platform fee u16 @27;
-     * accounts: 1 authority, 2 source, 5 destination.
+     * shared_accounts_route_v2 data (Jupiter v6 on-chain IDL): 8-byte
+     * discriminator, route id u8 @8, in u64 @9, quoted out u64 @17, slippage
+     * u16 @25, platform fee u16 @27, positive slippage u16 @29; accounts:
+     * 1 authority, 2 source, 5 destination, 6/7 mints, 8/9 their token
+     * programs, 12 Salmon's fee account.
      */
     const SHARED = 'shared_accounts_route_v2, multi-hop USDC → BONK';
     const sharedWith = (edit) => {
@@ -503,6 +585,31 @@ describe('jupiter-swap-provider', () => {
     ).toBase58();
 
     it.each([
+      [
+        'shared_accounts_route_v2 positive slippage',
+        () => sharedWith(({ data }) => void data.writeUInt16LE(10000, 29)),
+      ],
+      [
+        'shared_accounts_route_v2 fee account',
+        () =>
+          sharedWith(({ accounts }) => {
+            accounts[12].pubkey = strangerBonk;
+          }),
+      ],
+      [
+        'shared_accounts_route_v2 source mint',
+        () =>
+          sharedWith(({ accounts }) => {
+            accounts[6].pubkey = BONK;
+          }),
+      ],
+      [
+        'shared_accounts_route_v2 destination mint',
+        () =>
+          sharedWith(({ accounts }) => {
+            accounts[7].pubkey = USDC;
+          }),
+      ],
       [
         'shared_accounts_route_v2 destination',
         () =>
