@@ -104,12 +104,35 @@ aggregate; Maintained is 0 until the repo is 90 days old.
 ## 5. Actions secrets for the nightly integration workflow
 
 The external-provider integration suite (nightly workflow, separate from PR
-checks) needs real provider keys as repository secrets:
-`COINGECKO_API_KEY`, `TRITON_RPC_URL`, `TRITON_API_TOKEN`, `ZEROEX_API_KEY`,
-`JUPITER_API_KEY`, plus the repository variables `SWAP_FEE_BPS` and
-`SWAP_FEE_ACCOUNT_OWNER` (public values) so the swap suites assert the fee
-leg. Fork PRs
-never see these — the PR workflow uses plain `pull_request` and no secrets.
+checks) needs real provider keys: `COINGECKO_API_KEY`, `TRITON_RPC_URL`,
+`TRITON_API_TOKEN`, `ZEROEX_API_KEY`, `JUPITER_API_KEY`, plus the repository
+variables `SWAP_FEE_BPS` and `SWAP_FEE_ACCOUNT_OWNER` (public values) so the
+swap suites assert the fee leg. Fork PRs never see these — the PR workflow uses
+plain `pull_request` and no secrets.
+
+The keys are environment secrets of the `provider-tests` environment, not
+repository secrets: a repository secret reaches any workflow a collaborator
+pushes on any branch, while an environment secret reaches only jobs the
+environment's deployment-branch rule admits. The job also runs only on
+`refs/heads/main`, so a manual dispatch on another branch skips it. One-time
+setup (Settings → Environments, or the commands below):
+
+1. Create the environment `provider-tests` with deployment branches limited to
+   the selected branch `main`:
+   ```bash
+   gh api -X PUT repos/Salmon-HQ/salmon-wallet-backend/environments/provider-tests \
+     -F 'deployment_branch_policy[protected_branches]=false' \
+     -F 'deployment_branch_policy[custom_branch_policies]=true'
+   gh api -X POST repos/Salmon-HQ/salmon-wallet-backend/environments/provider-tests/deployment-branch-policies \
+     -f name=main -f type=branch
+   ```
+2. Add the five keys as secrets of that environment
+   (`gh secret set <NAME> --env provider-tests`, which prompts for the value).
+3. Delete the repository-level copies
+   (`gh secret delete <NAME>`), so no other workflow can read them.
+
+Until step 3, the job still reads the repository copies; after it, a run
+outside `main` gets no key at all.
 
 The same workflow's `production country gate` job needs no secrets: it calls
 prod's public `GET /status` and `GET /v1/solana-mainnet/powerups/availability`.
