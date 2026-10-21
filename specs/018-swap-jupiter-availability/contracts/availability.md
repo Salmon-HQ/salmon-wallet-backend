@@ -17,7 +17,8 @@
 ```
 
 - One entry per registered Powerup on the network plus `swap`; `reason` only when `enabled: false`, from `region | maintenance | deprecated`; `provider` only when `enabled: true` and the capability has providers.
-- Unresolvable country → the default provider, `enabled: true`.
+- Unresolvable country → the default provider, `enabled: true`. Amended 2026-10-19 (0.26.0): an unresolvable country (private or unplaced address, a request through a CloudFront distribution in front of API Gateway, a prod country database older than 45 days) gives `swap` `enabled: false, reason: 'region'`; other Powerups keep the default.
+- `503 upstream_unavailable` when the country database cannot be opened.
 - Errors: `400 invalid_parameter` for an unknown network; never 403 (this route informs, the build route refuses).
 
 Client contract (frontend spec 027 §4): the `PowerupAllowlist` the hooks consume is built from this response; `/v1/networks.powerups` remains for 1.2.0 clients and is not read by clients that know this route.

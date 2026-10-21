@@ -34,23 +34,14 @@ const ANALYTICS_EVENTS = [
 ];
 
 const CHAINS = ['solana', 'bitcoin', 'ethereum'];
-const AMOUNT_BUCKETS = ['0-10', '10-100', '100-1k', '1k-10k', '10k+'];
 // The wallet's Powerup registry ids. A new Powerup adds its id here before it ships.
 const POWERUPS = ['swap', 'payments', 'memo', 'skr'];
-const ALLOWED_PROP_KEYS = [
-  'chain',
-  'from_chain',
-  'to_chain',
-  'success',
-  'amount_bucket',
-  'powerup',
-];
+const ALLOWED_PROP_KEYS = ['chain', 'from_chain', 'to_chain', 'success', 'powerup'];
 
 const PROP_ENUMS = {
   chain: CHAINS,
   from_chain: CHAINS,
   to_chain: CHAINS,
-  amount_bucket: AMOUNT_BUCKETS,
   powerup: POWERUPS,
   // Booleans return before the enum check, so an empty list rejects any string.
   success: [],
@@ -128,7 +119,6 @@ function safeValidateEvent(name, props = {}) {
 module.exports = {
   ANALYTICS_EVENTS,
   CHAINS,
-  AMOUNT_BUCKETS,
   POWERUPS,
   ALLOWED_PROP_KEYS,
   PROP_ENUMS,

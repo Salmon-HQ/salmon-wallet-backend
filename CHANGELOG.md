@@ -2,7 +2,19 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
-## 0.25.0 — unreleased
+## 0.26.0 — 2026-10-20
+
+- Swap availability fails closed: a caller whose country cannot be worked out gets `403 region_restricted` for `swap` (and `swap` reads as unavailable with `reason: 'region'` in `GET /v1/{network}/powerups/availability`); other Powerups are unaffected. A table without the `swap` row is now invalid.
+- The country database is DB-IP's current monthly edition, downloaded on every deploy; the region ranges for Crimea, Sevastopol, Donetsk, Luhansk, Kherson and Zaporizhzhia come from the same edition. On prod, a database older than 45 days places nobody, so `swap` closes until the next deploy.
+- `GET /status` adds `country` (where the country gate places the caller, or `null`) and `countryDatabase` (the database's build date), and is sent with `Cache-Control: no-store`.
+- A request that reaches the API through a CloudFront distribution in front of API Gateway (two or more CloudFront hops in `Via`) is not placed in any country, so `swap` is refused: the source address is then a CloudFront server, not the caller. The wallet calls the execute-api URL and is unaffected.
+- The availability table must keep the United Kingdom, Kherson, Zaporizhzhia and the twelve Jupiter localities 0x does not serve unavailable for `swap`; a table that reopens any of them is invalid and never applied.
+- `POST /v1/events` no longer accepts the `amount_bucket` prop (no client sent it); a refused `Origin` is logged with its scheme only.
+- The prod deploy runs on its own on the 2nd of every month, redeploying the newest `prod/v*` tag with that month's country database, and its smoke test fails when the deployed stack reports no country database.
+- `POST /v1/events` (usage analytics): a POST sent by a web page (`Origin` `http(s)://…` or `null`) is refused with `403 origin_not_allowed`; extension origins and requests without `Origin` (mobile) are unchanged. A batch without a usable install id is refused with `400 install_id_required` instead of being counted under an invented user. Events reach GA4 dated to the start of the hour they arrived, not the exact moment.
+- Swap availability: the built-in table, which serves when the live table cannot be read, now blocks the United Kingdom, mainland China, Myanmar, Côte d'Ivoire, DR Congo, Iraq, Libya, Mali, Nicaragua, Somalia, Sudan, Yemen and Zimbabwe, matching the live table. 0x serves only the United States, Singapore and Taiwan; elsewhere `swap` answers `403 region_restricted` as for any blocked country.
+
+## 0.25.0 — 2026-10-19
 
 - `POST /v1/events` (usage analytics, opt-in): the allow-list grows from 9 to 20 events (`app_opened`, `powerup_installed`, `powerup_uninstalled`, `swap_completed`, `first_swap_completed`, `memo_sent`, `payment_request_created`, `payment_request_paid`, `dapp_connected`, `dapp_message_signed`, `dapp_transaction_signed`) and adds the prop `powerup` (`swap`, `payments`, `memo`, `skr`), forwarded to GA4 as an event param. `success` is accepted only as a boolean. The batch platform accepts `ios`, `android` and `seeker` besides `extension` and `mobile`; `web` and any other value are stored as `unknown`. No other endpoint changes.
 

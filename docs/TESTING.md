@@ -339,9 +339,12 @@ Three workflows split the suites by determinism (specs 001–003 under
   `npm run test:integration` against live providers with repository
   secrets. Suites probe their provider and skip with a logged reason when
   unreachable or unconfigured. A red run signals provider drift or a real
-  regression — maintainer signal, not a merge blocker.
-- **`deploy.yml`** (tag `prod/v*`): re-runs lint + unit as a pre-deploy
-  gate.
+  regression — maintainer signal, not a merge blocker. Its
+  `production country gate` job checks prod itself: the country database is
+  at most 35 days old, the runner's address is placed, and a US runner is
+  routed to 0x.
+- **`deploy.yml`** (tag `prod/v*`, and the newest such tag on the 2nd of
+  every month): re-runs lint + unit as a pre-deploy gate.
 
 A new integration suite that only needs docker-compose services belongs in
 the hermetic set (extend the `test:integration:hermetic` pattern); anything

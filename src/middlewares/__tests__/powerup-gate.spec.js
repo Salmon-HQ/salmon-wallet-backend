@@ -73,11 +73,12 @@ describe('powerup-gate', () => {
     expect(res.locals.availability.provider).toBe('0x');
   });
 
-  it('fails open with the default provider when the country is unresolvable', async () => {
+  it('refuses swap with 403 region_restricted when the country is unresolvable', async () => {
     countryOfRequest.mockReturnValue(null);
     const { res, next } = await run(DEFAULT_TABLE, req('ios'));
-    expect(next).toHaveBeenCalledWith();
-    expect(res.locals.availability).toMatchObject({ country: null, provider: 'jupiter' });
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'region_restricted' }));
   });
 
   it('sends the US to 0x on every platform, header or not', async () => {

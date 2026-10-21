@@ -8,7 +8,9 @@
  * named by `AVAILABILITY_TABLE_PARAMETER`, read at runtime and cached for a
  * few minutes so a country change is a parameter edit, never a release.
  * Outside prod `AVAILABILITY_TABLE_JSON` overrides it for local runs. The
- * built-in `DEFAULT_TABLE` is the spec's initial rows and is what serves
+ * built-in `DEFAULT_TABLE` blocks what was declared to App Review
+ * (`EMBARGOED`, `PRECAUTIONARY`, `NOT_OFFERED`), sends the United States,
+ * Singapore and Taiwan to 0x and the rest to Jupiter, and is what serves
  * when nothing is configured or a read fails: a failure never opens a
  * country.
  *
@@ -20,10 +22,16 @@
 
 const PROVIDERS = ['jupiter', '0x'];
 const PLATFORMS = ['ios', 'android', 'extension'];
-// ISO 3166-1 alpha-2, or an ISO 3166-2 region the country resolver answers
-// on its own (`UA-43` Crimea…).
+/**
+ * Capabilities that may be offered only where the caller's country is known
+ * and the table has their row: a table without one is invalid, never "open
+ * everywhere".
+ */
+const REGULATED = ['swap'];
 /** Reasons a row may switch a capability off with; `region` is a country's, never a row's. */
 const OFF_REASONS = ['maintenance', 'deprecated'];
+// ISO 3166-1 alpha-2, or an ISO 3166-2 region the country resolver answers
+// on its own (`UA-43` Crimea…).
 const COUNTRY_CODE = /^[A-Z]{2}(-[A-Z0-9]{1,3})?$/;
 /** How long a table that cannot be refreshed may keep serving before the default takes over. */
 const MAX_STALE_MS = 60 * 60 * 1000;
@@ -35,7 +43,8 @@ const TTL_MS = 5 * 60 * 1000;
  */
 const JUPITER_PROHIBITED = Object.freeze([
   'US',
-  // "the Republic of China" is Taiwan; the PRC is not named, kept on 0x too.
+  // "the Republic of China" is Taiwan; the PRC is not named, kept here so
+  // Jupiter never serves it (the built-in table does not offer it at all).
   'TW',
   'CN',
   'SG',
@@ -60,31 +69,56 @@ const JUPITER_PROHIBITED = Object.freeze([
 ]);
 
 /**
- * Comprehensively embargoed territories: unavailable everywhere. The four
- * Ukrainian regions are OFAC's comprehensive programs for Crimea (E.O. 13685)
- * and the so-called DNR/LNR (E.O. 14065, OFAC FAQ 1008).
+ * Unavailable everywhere, on every row. Cuba, Iran, North Korea and the four
+ * Ukrainian regions are OFAC's comprehensive programs (Crimea E.O. 13685, the
+ * so-called DNR/LNR E.O. 14065, OFAC FAQ 1008). Syria's program was revoked in
+ * 2025; it stays here because Jupiter's terms still exclude it and the App
+ * Store reply declares it blocked.
  */
 const EMBARGOED = Object.freeze(['CU', 'IR', 'KP', 'SY', 'UA-43', 'UA-40', 'UA-14', 'UA-09']);
 
 /**
  * Occupied in part, not under a comprehensive OFAC program (the EU's
- * "specified territories" include them). Off by default; an IP cannot tell the
- * occupied part from the rest, so the table may open them.
+ * "specified territories" include them). Blocked whole, because an IP cannot
+ * tell the occupied part from the rest. Declared to App Review as blocked, so
+ * a `swap` row that leaves them out is invalid.
  */
 const PRECAUTIONARY = Object.freeze(['UA-65', 'UA-23']);
+
+/**
+ * Owner decision 2026-10-19, declared to App Review: the United Kingdom, for
+ * the FCA cryptoasset-promotions regime, and the rest of Jupiter's prohibited
+ * localities except the United States, Singapore and Taiwan, which 0x serves.
+ * In the built-in default too, so a table that cannot be read never opens them.
+ */
+const NOT_OFFERED = Object.freeze([
+  'GB',
+  'CN',
+  'MM',
+  'CI',
+  'CD',
+  'IQ',
+  'LY',
+  'ML',
+  'NI',
+  'SO',
+  'SD',
+  'YE',
+  'ZW',
+]);
+
+const DEFAULT_UNAVAILABLE = [...EMBARGOED, ...PRECAUTIONARY, ...NOT_OFFERED];
 
 const DEFAULT_TABLE = Object.freeze({
   version: 1,
   capabilities: {
     swap: {
       default: 'jupiter',
-      unavailable: [...EMBARGOED, ...PRECAUTIONARY],
+      unavailable: DEFAULT_UNAVAILABLE,
       // Owner decision 2026-10-06: the United States is served by 0x, as the
       // Power-ups 1.4 Terms (7.2) and Privacy Policy (5.6) state.
       providers: {
-        '0x': JUPITER_PROHIBITED.filter(
-          (c) => !EMBARGOED.includes(c) && !PRECAUTIONARY.includes(c)
-        ),
+        '0x': JUPITER_PROHIBITED.filter((c) => !DEFAULT_UNAVAILABLE.includes(c)),
       },
       platforms: { ios: {} },
     },
@@ -138,13 +172,21 @@ const validateRows = (name, platform, rows, problems) => {
     if (!COUNTRY_CODE.test(code))
       problems.push(`${where}: "${code}" is not an ISO 3166-1 alpha-2 or 3166-2 code`);
   }
-  // Jupiter may only serve outside its prohibited list, wherever it ends up serving.
   // The embargoed countries are unavailable on every row, whoever the provider.
   for (const country of EMBARGOED) {
     if (!rows.unavailable.includes(country)) {
       problems.push(`${where}.unavailable: must include embargoed ${country}`);
     }
   }
+  // Declared to App Review as blocked: a table edit must not reopen them.
+  if (REGULATED.includes(name)) {
+    for (const country of [...PRECAUTIONARY, ...NOT_OFFERED]) {
+      if (!rows.unavailable.includes(country)) {
+        problems.push(`${where}.unavailable: must include ${country}`);
+      }
+    }
+  }
+  // Jupiter may only serve outside its prohibited list, wherever it ends up serving.
   const servedByJupiter = (country) => {
     if (rows.unavailable.includes(country)) return false;
     for (const [provider, countries] of Object.entries(rows.providers)) {
@@ -168,6 +210,9 @@ const validateTable = (table) => {
   const capabilities = table.capabilities;
   if (!capabilities || typeof capabilities !== 'object')
     return [...problems, 'capabilities: missing'];
+  for (const name of REGULATED) {
+    if (!capabilities[name]) problems.push(`${name}: required, it is regulated`);
+  }
   for (const [name, capability] of Object.entries(capabilities)) {
     if (!capability || typeof capability !== 'object') {
       problems.push(`${name}: must be an object`);
@@ -279,6 +324,7 @@ module.exports = {
   JUPITER_PROHIBITED,
   EMBARGOED,
   PROVIDERS,
+  REGULATED,
   validateTable,
   createTableLoader,
   loadTable,

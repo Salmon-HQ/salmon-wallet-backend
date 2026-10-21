@@ -17,12 +17,12 @@ beforeEach(() => {
   });
 });
 
-function apiEvent(body, { method = 'POST', sourceIp = '203.0.113.9' } = {}) {
+function apiEvent(body, { method = 'POST', sourceIp = '203.0.113.9', headers = {} } = {}) {
   return {
     httpMethod: method,
     body: typeof body === 'string' ? body : JSON.stringify(body),
     requestContext: { identity: { sourceIp } },
-    headers: { 'X-Forwarded-For': sourceIp },
+    headers: { 'X-Forwarded-For': sourceIp, ...headers },
   };
 }
 
@@ -82,8 +82,56 @@ describe('analytics ingest handler', () => {
     ['web', 'unknown'],
     ['desktop', 'unknown'],
   ])('records platform %j as %j', async (platform, expected) => {
-    await handler(apiEvent({ context: { platform }, events: [{ event: 'app_opened' }] }));
+    await handler(
+      apiEvent({ context: { installId: 'abc', platform }, events: [{ event: 'app_opened' }] })
+    );
     expect(records[0].platform).toBe(expected);
+  });
+
+  describe('ingest protections', () => {
+    const batch = (installId) => ({
+      context: { installId, platform: 'ios' },
+      events: [{ event: 'app_opened' }],
+    });
+
+    it.each([
+      ['a missing id', undefined],
+      ['an empty id', ''],
+      ['an id with spaces', 'abc def'],
+      ['an id longer than 64 chars', 'a'.repeat(65)],
+    ])('rejects a batch with %s, so no user is invented for it', async (_label, installId) => {
+      const res = await handler(apiEvent(batch(installId)));
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.body).error).toBe('install_id_required');
+      expect(records).toHaveLength(0);
+    });
+
+    it.each([
+      ['a UUID', '0f8fad5b-d9cb-469f-a165-70867728950e'],
+      ['the fallback id the wallet uses without crypto.randomUUID', 'mgx2k9p1-k3j9x0a2qz'],
+    ])('accepts %s', async (_label, installId) => {
+      const res = await handler(apiEvent(batch(installId)));
+      expect(res.statusCode).toBe(202);
+      expect(records[0].install_id).toBe(installId);
+    });
+
+    it.each([['https://evil.example'], ['http://localhost:8080'], ['null']])(
+      'refuses a POST sent by a web page (Origin %s)',
+      async (origin) => {
+        const res = await handler(apiEvent(batch('abc'), { headers: { Origin: origin } }));
+        expect(res.statusCode).toBe(403);
+        expect(records).toHaveLength(0);
+      }
+    );
+
+    it.each([
+      ['the Chrome extension', { Origin: 'chrome-extension://ejbidfepgijlcgahbmbckmnaljagjoll' }],
+      ['the Firefox extension', { origin: 'moz-extension://0f8fad5b-d9cb-469f-a165-70867728950e' }],
+      ['the mobile app (no Origin)', {}],
+    ])('accepts a POST from %s', async (_label, headers) => {
+      const res = await handler(apiEvent(batch('abc'), { headers }));
+      expect(res.statusCode).toBe(202);
+    });
   });
 
   it('never stores the client IP', async () => {
@@ -102,7 +150,7 @@ describe('analytics ingest handler', () => {
   it('rejects a batch whose only event carries an address', async () => {
     const res = await handler(
       apiEvent({
-        context: { platform: 'extension' },
+        context: { installId: 'abc', platform: 'extension' },
         events: [
           {
             event: 'send_completed',
@@ -119,7 +167,7 @@ describe('analytics ingest handler', () => {
   it('drops invalid events but keeps valid ones', async () => {
     const res = await handler(
       apiEvent({
-        context: { platform: 'extension' },
+        context: { installId: 'abc', platform: 'extension' },
         events: [
           { event: 'nft_viewed' },
           { event: 'send_completed', props: { chain: 'dogecoin' } },
@@ -158,7 +206,7 @@ describe('analytics ingest handler', () => {
 
       const response = await handler({
         httpMethod: 'POST',
-        body: JSON.stringify({ events, context: { platform: 'mobile' } }),
+        body: JSON.stringify({ events, context: { installId: 'abc', platform: 'mobile' } }),
       });
 
       // Reporting 100 accepted / 0 rejected hid the 50 dropped events from

@@ -7,8 +7,8 @@
  *
  * Usage:
  *   node scripts/availability-table.mjs                          # print the live table
- *   node scripts/availability-table.mjs --unavailable +GB        # dry-run: validate and diff
- *   node scripts/availability-table.mjs --unavailable -GB --execute
+ *   node scripts/availability-table.mjs --unavailable +CC        # dry-run: validate and diff
+ *   node scripts/availability-table.mjs --unavailable -CC --execute
  *   node scripts/availability-table.mjs --file table.json [--execute]
  * Options: --capability <name> (default swap), --stage <stage> (default prod).
  * Dry-run is the default; --execute writes, then reads the parameter back.

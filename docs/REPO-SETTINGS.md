@@ -111,6 +111,11 @@ checks) needs real provider keys as repository secrets:
 leg. Fork PRs
 never see these — the PR workflow uses plain `pull_request` and no secrets.
 
+The same workflow's `production country gate` job needs no secrets: it calls
+prod's public `GET /status` and `GET /v1/solana-mainnet/powerups/availability`.
+The optional repository variable `PROD_API_URL` points it at another base URL;
+unset, it uses the prod execute-api URL.
+
 ## 6. Who can push
 
 The repo is public, so anyone can fork and open a PR, but only collaborators
