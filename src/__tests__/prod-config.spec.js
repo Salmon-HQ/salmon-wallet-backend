@@ -118,4 +118,64 @@ describe('per-function environment', () => {
       }
     }
   );
+
+  // Every variable each function's code reads (its require graph, including
+  // the dynamically mounted routes). A name dropped from a map deploys as
+  // unset and switches that feature off, so a missing one fails here first.
+  const REDIS = [
+    'STAGE',
+    'REDIS_HOST',
+    'REDIS_PORT',
+    'REDIS_PASSWORD',
+    'REDIS_TLS',
+    'REDIS_CONNECT_TIMEOUT',
+    'REDIS_RECONNECT_MAX_RETRIES',
+    'REDIS_FAIL_FAST_LAPSE',
+  ];
+  const RESILIENCE = ['REQUEST_BUDGET_MS', 'BREAKER_DISABLED', 'METRICS_DISABLED'];
+  const COINGECKO = ['COINGECKO_API_KEY', 'COINGECKO_API_URL'];
+  const REQUIRED = {
+    api: [
+      ...REDIS,
+      ...RESILIENCE,
+      ...COINGECKO,
+      'NODE_ENV',
+      'TRITON_RPC_URL',
+      'TRITON_RPC_URL_DEVNET',
+      'TRM_API_KEY',
+      'AVAILABILITY_TABLE_PARAMETER',
+      'JUPITER_API_KEY',
+      'JUPITER_SWAP_API_URL',
+      'ZEROEX_API_URL',
+      'ZEROEX_API_KEY',
+      'ZEROEX_DISABLED_SOURCES',
+      'ZEROEX_SIGNING_KEYS',
+      'SWAP_FEE_BPS',
+      'SWAP_FEE_ACCOUNT_OWNER',
+      'POWERUP_PRIORITY_FEE_MICROLAMPORTS',
+      'SOLANA_PUBLIC_RPC_URL_MAINNET',
+      'SOLANA_PUBLIC_RPC_URL_DEVNET',
+      'RATE_LIMIT_MODE',
+      'RATE_LIMIT_MAX',
+      'RATE_LIMIT_TX_MAX',
+      'RATE_LIMIT_WINDOW_SECONDS',
+      'GITHUB_SHA',
+      'GITHUB_RUN_ID',
+    ],
+    coingeckoJob: [...REDIS, ...COINGECKO],
+    sanctionsJob: [...REDIS, 'SANCTIONS_SOURCE_URL'],
+    skrJob: [...REDIS, ...RESILIENCE, 'TRITON_RPC_URL'],
+    events: ['ANALYTICS_SINK', 'ANALYTICS_FILE_PATH', 'GA4_MEASUREMENT_ID', 'GA4_API_SECRET'],
+  };
+
+  it.each(['local', 'staging', 'prod'])(
+    'hands each function every variable its code reads (%s)',
+    (stage) => {
+      const config = readStage(stage);
+      for (const [map, required] of Object.entries(REQUIRED)) {
+        const missing = required.filter((name) => !(name in config[map]));
+        expect({ map, missing }).toEqual({ map, missing: [] });
+      }
+    }
+  );
 });
