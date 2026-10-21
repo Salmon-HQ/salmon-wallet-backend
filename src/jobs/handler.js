@@ -7,7 +7,7 @@ const { redis } = require('../repositories/data-source');
 const { BASE_ENDPOINT, apiHeaders } = require('../services/shared/coingecko-service');
 const skrStaking = require('../services/solana/skr-staking-service');
 const NETWORKS = require('../constants/networks');
-const { toSafeError } = require('../infrastructure/log-redaction');
+const { toSafeError, withoutCredentials } = require('../infrastructure/log-redaction');
 
 // Raise Node's 250ms per-address connect budget before any provider is
 // dialed; see `infrastructure/connect-tuning` for why the default turns a
@@ -333,12 +333,9 @@ module.exports.recordSkrSharePriceJob = async () => {
     return createResponse(`SKR share price recorded: ${sharePrice}`);
   } catch (error) {
     console.error('[SKR_SHARE_PRICE]', toSafeError(error));
-    // The Lambda runtime logs a rejection with its axios request, whose url
-    // carries the Triton token.
-    delete error.config;
-    delete error.request;
-    delete error.response;
-    throw error;
+    // The Lambda runtime logs a rejection whole, axios request (and Triton
+    // token) included.
+    throw withoutCredentials(error);
   } finally {
     if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
       await redis.quit().catch(() => {});

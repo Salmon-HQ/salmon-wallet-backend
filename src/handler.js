@@ -1,6 +1,6 @@
 'use strict';
 
-const { redact, toSafeError } = require('./infrastructure/log-redaction');
+const { toSafeError } = require('./infrastructure/log-redaction');
 
 /**
  * Lambda handler wrapper shared by every function in this service (the main
@@ -21,6 +21,6 @@ module.exports = (handler) => async (event, context) => {
     }
     return await handler(event, context);
   } catch (err) {
-    console.error('[handler]', { ...toSafeError(err), stack: redact(err?.stack) });
+    console.error('[handler]', toSafeError(err));
   }
 };

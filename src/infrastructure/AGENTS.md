@@ -17,8 +17,10 @@
 - `log-redaction.js` — keeps provider credentials out of CloudWatch:
   `toSafeError(error)` (message/code/status/method/origin — log this,
   never a caught error object, because an axios error carries the request
-  headers and URL), `toOrigin(url)` for any provider URL, and `redact(text)`
-  (Triton token, `api-key=` query values).
+  headers and URL), `toOrigin(url)` for any provider URL, `redact(text)`
+  (Triton token, `*api-key` / `*api_secret` query values and header text;
+  not a general scrubber), and `withoutCredentials(error)` for an error that
+  is rethrown to something that logs it whole.
 - `connect-tuning.js` — raises Node's 250ms happy-eyeballs
   per-address connect budget at boot. Required from every Lambda
   entrypoint (`src/index.js`, `src/jobs/handler.js`,

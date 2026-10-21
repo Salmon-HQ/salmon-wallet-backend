@@ -216,6 +216,35 @@ describe('jobs/handler', () => {
       expect(printed).not.toContain(token);
       error.mockRestore();
     });
+
+    it('redacts a Triton token the failure message carries', async () => {
+      const token = 'triton-secret-token-1234567890';
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const failure = axiosError(`https://tenant.solana-mainnet.rpcpool.com/${token}`);
+      failure.message = `request to https://tenant.solana-mainnet.rpcpool.com/${token} failed`;
+      failure.stack = `AxiosError: ${failure.message}\n    at post`;
+      skrStaking.recordSharePrice.mockRejectedValueOnce(failure);
+
+      const thrown = await handler.recordSkrSharePriceJob().catch((e) => e);
+
+      expect(thrown.message).toContain('rpcpool.com/[REDACTED]');
+      expect(JSON.stringify(thrown)).not.toContain(token);
+      expect(util.inspect(thrown)).not.toContain(token);
+      expect(error.mock.calls.map((args) => util.format(...args)).join('\n')).not.toContain(token);
+      error.mockRestore();
+    });
+
+    it('still fails the invocation when the failure is not an object', async () => {
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      skrStaking.recordSharePrice.mockRejectedValueOnce(null);
+
+      const thrown = await handler.recordSkrSharePriceJob().catch((e) => e);
+
+      expect(thrown).toBeInstanceOf(Error);
+      expect(thrown).not.toBeInstanceOf(TypeError);
+      expect(thrown.message).toBe('null');
+      error.mockRestore();
+    });
   });
 
   describe('refreshSanctionsJob', () => {

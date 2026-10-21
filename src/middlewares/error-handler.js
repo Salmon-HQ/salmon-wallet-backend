@@ -20,7 +20,7 @@
  */
 
 const { maskUrl } = require('../../packages/middleware/logger/mask-url');
-const { redact, toOrigin } = require('../infrastructure/log-redaction');
+const { redact, toOrigin, withoutCredentials } = require('../infrastructure/log-redaction');
 
 const UPSTREAM_CLIENT_ERRORS = {
   400: 'bad_request',
@@ -130,14 +130,15 @@ const errorHandler = (err, req, res, next) => {
   }
 
   if (res.headersSent) {
-    return next(err);
+    // Express's default handler logs the error it is given.
+    return next(withoutCredentials(err));
   }
 
   res.removeHeader('Cache-Control');
 
   return res.status(status).json({
     error,
-    error_description: describe(err),
+    error_description: redact(describe(err)),
   });
 };
 
