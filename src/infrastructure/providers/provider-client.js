@@ -34,6 +34,15 @@ const outcomeOf = (error) => {
   return 'network';
 };
 
+/**
+ * Names the provider on the layer's own 503s (breaker open, no shared token),
+ * so a caller with a fallback on another provider can tell whose gate refused.
+ */
+const ownRefusal = (error, name) => {
+  if (error.errorCode && !error.provider) error.provider = name;
+  return error;
+};
+
 const countsAsOutage = (error) =>
   isRetryableError(error) && error.response?.status !== 429 && !error.errorCode;
 
@@ -68,7 +77,7 @@ const providerCall = async (name, fn, { locals, environment, operationName = nam
     await breaker.check(name, env, profile.breaker);
   } catch (error) {
     record({ name, environment: env, error, retries, throttleWaitMs, opened: true });
-    throw error;
+    throw ownRefusal(error, name);
   }
 
   for (;;) {
@@ -97,7 +106,7 @@ const providerCall = async (name, fn, { locals, environment, operationName = nam
         retryAfter ?? calculateBackoffDelay(retries, profile.retry.baseMs, 2, profile.retry.maxMs);
       if (!canRetry || delay >= remainingMs(locals)) {
         record({ name, environment: env, error, retries, throttleWaitMs, opened });
-        throw error;
+        throw ownRefusal(error, name);
       }
       console.warn(
         `${operationName} failed with ${error.response?.status || error.code || 'network error'}, ` +

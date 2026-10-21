@@ -216,15 +216,16 @@ const DEFAULT_PAGE_SIZE = 10;
 // Upper bound for the enriched path; the Triton provider caps a page at 25.
 const ENHANCED_MAX_PAGE_SIZE = 100;
 
-// The provider layer's own refusals: the shared Triton budget is spent, the
-// Triton breaker is open, or the request budget is gone. The bare-RPC
-// fallback calls the same Triton endpoint under the same gates, so falling
-// back would only repeat the refusal with 26 more calls.
-const FAIL_FAST_CODES = new Set([
-  'upstream_rate_limited',
-  'upstream_unavailable',
-  'request_budget_exhausted',
-]);
+// The provider layer's own refusals that the fallback would only repeat: the
+// request budget is gone, or Triton's shared budget is spent or its breaker
+// is open. The enriched path runs only where Triton hosts the environment
+// (`isEnhancedApiSupported`), and there the bare-RPC fallback reads the same
+// Triton endpoint under the same gates. A refusal from another provider the
+// enriched page reads (the token catalog) still falls back.
+const TRITON_REFUSALS = new Set(['upstream_rate_limited', 'upstream_unavailable']);
+const failsFast = (error) =>
+  error?.errorCode === 'request_budget_exhausted' ||
+  (TRITON_REFUSALS.has(error?.errorCode) && error?.provider === 'triton');
 
 /**
  * Normalizes a caller-supplied `pageSize` into the range the target accepts,
@@ -289,7 +290,8 @@ const getRpcHistory = async (address, filters, locals) => {
 /**
  * Try the enhanced (provider-resolver) path first; fall through to the RPC
  * path on null result, throw, or when the env is not enhanced-supported —
- * except when the provider layer itself refused (`FAIL_FAST_CODES`).
+ * except when the provider layer refused in a way the fallback would repeat
+ * (`failsFast`).
  */
 const withEnhancedThenRpc = async ({ environment, tryEnhanced, runRpc, onError }) => {
   if (isEnhancedApiSupported(environment)) {
@@ -297,7 +299,7 @@ const withEnhancedThenRpc = async ({ environment, tryEnhanced, runRpc, onError }
       const result = await tryEnhanced();
       if (result) return result;
     } catch (error) {
-      if (FAIL_FAST_CODES.has(error.errorCode)) throw error;
+      if (failsFast(error)) throw error;
       onError(error);
     }
   }

@@ -111,4 +111,21 @@ describe('providerCall', () => {
       })
     );
   });
+
+  // A caller with a fallback on another provider needs to know whose gate
+  // refused: an open CoinGecko breaker says nothing about Triton.
+  it('names the provider on its own refusals', async () => {
+    breaker.check.mockRejectedValueOnce(
+      Object.assign(new Error('open'), { statusCode: 503, errorCode: 'upstream_unavailable' })
+    );
+    await expect(providerCall('stub', jest.fn())).rejects.toMatchObject({ provider: 'stub' });
+
+    limiter.acquire.mockRejectedValueOnce(
+      Object.assign(new Error('busy'), { statusCode: 503, errorCode: 'upstream_rate_limited' })
+    );
+    await expect(providerCall('stub', jest.fn())).rejects.toMatchObject({
+      errorCode: 'upstream_rate_limited',
+      provider: 'stub',
+    });
+  });
 });
