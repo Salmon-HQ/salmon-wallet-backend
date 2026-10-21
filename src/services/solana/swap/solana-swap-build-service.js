@@ -142,7 +142,7 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   const invalid = {
     error: 'invalid_parameter',
     error_description:
-      "uiAmount must be a positive decimal number with no more decimal places than the token's",
+      "uiAmount must be a positive decimal number within the token's decimals and u64",
   };
   const parts = /^(\d+)(?:\.(\d+))?$/.exec(String(uiAmount));
   if (!parts) {
@@ -153,7 +153,8 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   if (inputMint !== SOL_ADDRESS) {
     const tokens = await getByMints([inputMint], locals);
     const token = tokens.find((t) => (t.id || t.address) === inputMint);
-    if (!token || !Number.isInteger(token.decimals) || token.decimals < 0) {
+    // SPL decimals are a u8; anything else is not a mint this can price.
+    if (!token || !Number.isInteger(token.decimals) || token.decimals < 0 || token.decimals > 255) {
       return {
         error: 'unknown_mint',
         error_description: `Could not resolve decimals for inputMint=${inputMint}`,
@@ -163,7 +164,9 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   }
 
   // String arithmetic: a float turns 1e-10 SOL into "0" and 1e20 SOL into "1e+29".
-  const [, whole, fraction = ''] = parts;
+  const [, whole] = parts;
+  // Trailing zeros carry no value: "1.0000000000" SOL is exactly one SOL.
+  const fraction = (parts[2] || '').replace(/0+$/, '');
   if (fraction.length > decimals) {
     return invalid;
   }

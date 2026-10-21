@@ -635,6 +635,8 @@ describe('solana-swap-build-service', () => {
       ['past 2^53 without rounding', '9007199.254740993', '9007199254740993'],
       ['the u64 ceiling', '18446744073.709551615', '18446744073709551615'],
       ['trailing zeros within the decimals', '2.500000000', '2500000000'],
+      ['trailing zeros past the decimals', '1.0000000000', '1000000000'],
+      ['a last digit inside the decimals followed by zeros', '0.0000000010', '1'],
     ])('converts a SOL uiAmount at %s exactly', async (_, uiAmount, amount) => {
       await expect(service.resolveAmount({ uiAmount, inputMint: SOL }, locals)).resolves.toEqual({
         amount,
@@ -663,7 +665,18 @@ describe('solana-swap-build-service', () => {
       ).resolves.toEqual({ amount: '1123456' });
       await expect(
         service.resolveAmount({ uiAmount: '1.1234567', inputMint: USDC }, locals)
-      ).resolves.toMatchObject({ error: 'invalid_parameter' });
+      ).resolves.toEqual({
+        error: 'invalid_parameter',
+        error_description:
+          "uiAmount must be a positive decimal number within the token's decimals and u64",
+      });
+    });
+
+    it('treats catalog decimals outside 0..255 as an unknown mint', async () => {
+      getByMints.mockResolvedValue([{ id: USDC, decimals: 256 }]);
+      await expect(
+        service.resolveAmount({ uiAmount: '1', inputMint: USDC }, locals)
+      ).resolves.toMatchObject({ error: 'unknown_mint' });
     });
   });
 });
