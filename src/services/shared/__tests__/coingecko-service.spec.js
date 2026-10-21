@@ -502,11 +502,14 @@ describe('coingecko-service', () => {
       await expect(service.getSolanaCoinIds()).rejects.toThrow('no Solana platform');
     });
 
-    it('ranks the top Solana coins by market cap across pages and stops at an empty page', async () => {
+    const fullPage = (prefix) =>
+      Array.from({ length: service.MARKET_RANK_PAGE_SIZE }, (_, i) => ({ id: `${prefix}-${i}` }));
+
+    it('ranks the top Solana coins by market cap across pages and stops after a short page', async () => {
       repository.getSolanaMarketRanks.mockResolvedValue(null);
       http.get
-        .mockResolvedValueOnce({ data: [{ id: 'tether' }, { id: 'usd-coin' }] })
-        .mockResolvedValueOnce({ data: [] });
+        .mockResolvedValueOnce({ data: fullPage('first') })
+        .mockResolvedValueOnce({ data: [{ id: 'tether' }, { id: 'usd-coin' }] });
 
       const ranks = await service.getSolanaMarketRanks();
 
@@ -514,21 +517,36 @@ describe('coingecko-service', () => {
         expect.objectContaining({ category: 'solana-ecosystem', order: 'market_cap_desc', page: 1 })
       );
       expect(http.get).toHaveBeenCalledTimes(2);
-      expect(ranks.get('usd-coin')).toBe(2);
+      expect(ranks.get('usd-coin')).toBe(service.MARKET_RANK_PAGE_SIZE + 2);
       expect(repository.saveSolanaMarketRanks).toHaveBeenCalledWith(
-        { tether: 1, 'usd-coin': 2 },
+        expect.objectContaining({ 'first-0': 1, tether: service.MARKET_RANK_PAGE_SIZE + 1 }),
         24 * 60 * 60
       );
     });
 
     // A rank-less catalog tags every SPL token `community`, and the balance
-    // hides those: an empty first page cached for a day would show holders
-    // nothing but SOL. It must fail so the last good catalog is served.
+    // hides those: an empty page cached for a day would show holders nothing
+    // but SOL (page 1) or hide every token ranked past it (a later page). A
+    // short page is the list's end; an empty or malformed one is a fault, and
+    // it must fail so the last good catalog is served.
     it.each([[[]], [{ status: { error_code: 429 } }], [null]])(
       'fails instead of returning no ranks when the first page is %j',
       async (body) => {
         repository.getSolanaMarketRanks.mockResolvedValue(null);
         http.get.mockResolvedValueOnce({ data: body });
+
+        await expect(service.getSolanaMarketRanks()).rejects.toThrow('market ranks');
+        expect(repository.saveSolanaMarketRanks).not.toHaveBeenCalled();
+      }
+    );
+
+    it.each([[[]], [{ status: { error_code: 429 } }]])(
+      'fails instead of returning partial ranks when a later page is %j',
+      async (body) => {
+        repository.getSolanaMarketRanks.mockResolvedValue(null);
+        http.get
+          .mockResolvedValueOnce({ data: fullPage('first') })
+          .mockResolvedValueOnce({ data: body });
 
         await expect(service.getSolanaMarketRanks()).rejects.toThrow('market ranks');
         expect(repository.saveSolanaMarketRanks).not.toHaveBeenCalled();

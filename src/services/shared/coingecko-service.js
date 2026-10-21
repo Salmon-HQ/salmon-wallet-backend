@@ -451,9 +451,9 @@ const getSolanaCoinIds = async () => {
  * catalog.
  *
  * @returns {Promise<Map<string, number>>}
- * @throws when CoinGecko fails or answers an empty or malformed first page:
- *   a rank-less catalog would tag every token `community`, so the caller
- *   keeps its last good copy instead.
+ * @throws when CoinGecko fails or answers an empty or malformed page (a short
+ *   page ends the list): a rank-less or truncated catalog would tag tokens
+ *   `community`, so the caller keeps its last good copy instead.
  */
 const getSolanaMarketRanks = async () => {
   const cached = await repository.getSolanaMarketRanks();
@@ -474,15 +474,17 @@ const getSolanaMarketRanks = async () => {
       10000,
       `CoinGecko Solana market ranks (page ${page})`
     );
+    // A short page is the end of the list; an empty or malformed one is a
+    // CoinGecko fault, whichever page it is.
     if (!Array.isArray(data) || data.length === 0) {
-      if (page === 1) throw new Error('CoinGecko market ranks: first page is empty or not a list');
-      break;
+      throw new Error(`CoinGecko market ranks: page ${page} is empty or not a list`);
     }
     data.forEach((coin, index) => {
       if (coin?.id && ranks[coin.id] === undefined) {
         ranks[coin.id] = (page - 1) * MARKET_RANK_PAGE_SIZE + index + 1;
       }
     });
+    if (data.length < MARKET_RANK_PAGE_SIZE) break;
   }
   if (Object.keys(ranks).length > 0) {
     await repository.saveSolanaMarketRanks(ranks, CATALOG_TTL_SECONDS);
@@ -547,6 +549,7 @@ module.exports = {
   getTokenPrices,
   ATTRIBUTION,
   MAX_ADDRESSES_PER_PRICE_CALL,
+  MARKET_RANK_PAGE_SIZE,
   getMarketChart,
   getContractMarketChart,
   getCoinInfo,
