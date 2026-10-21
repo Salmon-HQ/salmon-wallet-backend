@@ -64,6 +64,17 @@ describe('production config defaults', () => {
     expect(serverless.match(/^\s*wafRuleAction:\s*(\w+)\s*$/m)?.[1]).toBe('count');
   });
 
+  // The web ACL is the largest line on the AWS bill (USD 6 a month per
+  // stage); staging carries partner tests, not public traffic.
+  it('puts the WAF on production only', () => {
+    const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
+    expect(serverless).toMatch(/^\s*IsProd:\s*!Equals \['\$\{sls:stage\}', 'prod'\]\s*$/m);
+    for (const resource of ['ApiWebAcl', 'ApiWebAclAssociation']) {
+      const block = serverless.split(new RegExp(`^\\s*${resource}:\\s*$`, 'm'))[1];
+      expect(block?.match(/^\s*Condition:\s*(\w+)\s*$/m)?.[1]).toBe('IsProd');
+    }
+  });
+
   it('reads the Redis TLS switch from configuration on every stage', () => {
     expect(defaultFor('REDIS_TLS')).toBe('false');
     const local = fs.readFileSync(
