@@ -6,7 +6,15 @@ jest.mock('../../../../infrastructure/providers/provider-client', () => ({
 }));
 
 const http = require('axios');
-const { ComputeBudgetProgram } = require('@solana/web3.js');
+const { ComputeBudgetProgram, PublicKey, SystemProgram } = require('@solana/web3.js');
+const {
+  AuthorityType,
+  createApproveInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createCloseAccountInstruction,
+  createSetAuthorityInstruction,
+  getAssociatedTokenAddressSync,
+} = require('@solana/spl-token');
 const { providerCall } = require('../../../../infrastructure/providers/provider-client');
 const {
   requestSwapInstructions,
@@ -21,6 +29,10 @@ const TAKER = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
 const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const SOL = 'So11111111111111111111111111111111111111112';
 const FEE_ATA = 'DjqW361S9LFPpgwTbjuVa993ZGsk2U7AeXpiptNDpcBq';
+// The taker's own accounts in the fixtures (associated token accounts under SPL Token).
+const TAKER_WSOL = 'HXkHFMCRQP6pw66QEGBqVsduqUQdSyrrrq82S7Rffsms';
+const TAKER_USDC = '9SHQTA66Ekh7ZgMnKWsjxXk6DwXku8przs45E8bcEe38';
+const STRANGER = new PublicKey(Buffer.alloc(32, 7));
 
 const request = (overrides = {}) =>
   requestSwapInstructions({
@@ -32,6 +44,36 @@ const request = (overrides = {}) =>
     fee: null,
     ...overrides,
   });
+
+/** A web3.js instruction in Jupiter's wire format. */
+const toWire = (ix) => ({
+  programId: ix.programId.toBase58(),
+  accounts: ix.keys.map((k) => ({
+    pubkey: k.pubkey.toBase58(),
+    isSigner: k.isSigner,
+    isWritable: k.isWritable,
+  })),
+  data: Buffer.from(ix.data).toString('base64'),
+});
+
+/** The fee fixture (SOL → USDC: wrap, swap, unwrap) with `extra` appended to `otherInstructions`. */
+const withOther = (...extra) => ({ ...withFee, otherInstructions: extra.map(toWire) });
+
+const requestWithFee = () =>
+  request({
+    inputMint: SOL,
+    outputMint: USDC,
+    amount: '10000000',
+    fee: { recipient: FEE_ATA, bps: 50, side: 'buy' },
+  });
+
+const expectRefused = async (data) => {
+  http.get.mockResolvedValue({ data });
+  await expect(requestWithFee()).rejects.toMatchObject({
+    statusCode: 502,
+    errorCode: 'provider_bad_response',
+  });
+};
 
 describe('jupiter-swap-provider', () => {
   beforeEach(() => {
@@ -208,6 +250,159 @@ describe('jupiter-swap-provider', () => {
     expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_AUTH]', {
       provider: 'jupiter',
       status: 401,
+    });
+  });
+
+  describe("refuses a build that does more than the taker's own swap", () => {
+    const taker = new PublicKey(TAKER);
+    const usdcAta = new PublicKey(TAKER_USDC);
+    const wsolAta = new PublicKey(TAKER_WSOL);
+
+    it.each([
+      [
+        'a SOL transfer to a foreign account',
+        () =>
+          withOther(SystemProgram.transfer({ fromPubkey: taker, toPubkey: STRANGER, lamports: 1 })),
+      ],
+      [
+        'an Assign of the wallet to another program',
+        () => withOther(SystemProgram.assign({ accountPubkey: taker, programId: STRANGER })),
+      ],
+      [
+        'an SPL Approve to a foreign delegate',
+        () => withOther(createApproveInstruction(usdcAta, STRANGER, taker, 1n)),
+      ],
+      [
+        'an SPL SetAuthority handing the token account away',
+        () =>
+          withOther(
+            createSetAuthorityInstruction(usdcAta, taker, AuthorityType.AccountOwner, STRANGER)
+          ),
+      ],
+      [
+        'a CloseAccount paying the rent to a foreign account',
+        () => ({
+          ...withFee,
+          cleanupInstruction: toWire(createCloseAccountInstruction(wsolAta, STRANGER, taker)),
+        }),
+      ],
+      [
+        "an account created for someone else at the taker's expense",
+        () =>
+          withOther(
+            createAssociatedTokenAccountIdempotentInstruction(
+              taker,
+              new PublicKey(FEE_ATA),
+              STRANGER,
+              new PublicKey(USDC)
+            )
+          ),
+      ],
+      [
+        'a compute-budget instruction (the builder sets its own)',
+        () => withOther(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 10n ** 12n })),
+      ],
+      [
+        'a second Jupiter instruction',
+        () => ({ ...withFee, otherInstructions: [withFee.swapInstruction] }),
+      ],
+    ])('refuses %s with 502 provider_bad_response', async (_, tampered) => {
+      await expectRefused(tampered());
+      expect(console.error).toHaveBeenCalledWith(
+        '[SWAP_PROVIDER_BAD_RESPONSE]',
+        expect.objectContaining({ provider: 'jupiter', reason: expect.any(String) })
+      );
+    });
+  });
+
+  describe('binds the route_v2 call to the taker and to the amounts it reports', () => {
+    const strangerUsdc = getAssociatedTokenAddressSync(
+      new PublicKey(USDC),
+      STRANGER,
+      true
+    ).toBase58();
+
+    /**
+     * The fee fixture with its router call edited. route_v2 data: 8-byte
+     * discriminator, in u64 @8, quoted out u64 @16, slippage u16 @24,
+     * platform fee u16 @26; accounts: 0 authority, 1 source, 2 destination,
+     * 7 destination override (the Jupiter program id when empty).
+     */
+    const routeWith = (edit) => {
+      const data = Buffer.from(withFee.swapInstruction.data, 'base64');
+      const accounts = withFee.swapInstruction.accounts.map((account) => ({ ...account }));
+      const edited = edit({ data, accounts }) || data;
+      return {
+        ...withFee,
+        swapInstruction: { ...withFee.swapInstruction, accounts, data: edited.toString('base64') },
+      };
+    };
+
+    it.each([
+      [
+        'pays the output to a foreign account',
+        () =>
+          routeWith(({ accounts }) => {
+            accounts[2].pubkey = strangerUsdc;
+          }),
+      ],
+      [
+        'redirects the output through the override slot',
+        () =>
+          routeWith(({ accounts }) => {
+            accounts[7].pubkey = strangerUsdc;
+          }),
+      ],
+      [
+        'swaps under another authority',
+        () =>
+          routeWith(({ accounts }) => {
+            accounts[0].pubkey = STRANGER.toBase58();
+          }),
+      ],
+      [
+        'spends a token other than the input',
+        () =>
+          routeWith(({ accounts }) => {
+            accounts[1].pubkey = TAKER_USDC;
+          }),
+      ],
+      ['is not route_v2', () => routeWith(({ data }) => Buffer.from([0, ...data.subarray(1)]))],
+      ['is truncated', () => routeWith(({ data }) => data.subarray(0, 20))],
+      [
+        'spends more than the requested amount',
+        () => routeWith(({ data }) => void data.writeBigUInt64LE(20000000n, 8)),
+      ],
+      [
+        'allows more slippage than requested',
+        () => routeWith(({ data }) => void data.writeUInt16LE(10000, 24)),
+      ],
+      [
+        'takes another platform fee than Salmon asked for',
+        () => routeWith(({ data }) => void data.writeUInt16LE(500, 26)),
+      ],
+      ['reports an output the call does not quote', () => ({ ...withFee, outAmount: '2000000' })],
+      [
+        'reports a minimum the call does not enforce',
+        () => ({ ...withFee, otherAmountThreshold: '1170000' }),
+      ],
+    ])('refuses a router call that %s', async (_, tampered) => {
+      await expectRefused(tampered());
+    });
+
+    it('refuses a platform fee when Salmon asked for none', async () => {
+      http.get.mockResolvedValue({ data: withFee });
+      await expect(
+        request({ inputMint: SOL, outputMint: USDC, amount: '10000000' })
+      ).rejects.toMatchObject({ statusCode: 502, errorCode: 'provider_bad_response' });
+    });
+
+    it('accepts the minimum rounded down as well as up (1173138 at 50 bps = 1167272.31)', async () => {
+      http.get.mockResolvedValue({ data: { ...withFee, otherAmountThreshold: '1167272' } });
+      await expect(requestWithFee()).resolves.toMatchObject({
+        amountOut: '1173138',
+        minAmountOut: '1167272',
+      });
     });
   });
 });

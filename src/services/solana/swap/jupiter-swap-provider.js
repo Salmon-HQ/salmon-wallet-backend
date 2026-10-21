@@ -24,7 +24,14 @@
  */
 
 const http = require('axios');
-const { PublicKey, TransactionInstruction } = require('@solana/web3.js');
+const { PublicKey, SystemProgram, TransactionInstruction } = require('@solana/web3.js');
+const {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} = require('@solana/spl-token');
 const { providerCall } = require('../../../infrastructure/providers/provider-client');
 const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
 
@@ -139,6 +146,131 @@ const assertBuildShape = (data) => {
   }
 };
 
+const JUPITER_PROGRAM = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
+const SYSTEM_PROGRAM = SystemProgram.programId.toBase58();
+const TOKEN_PROGRAM = TOKEN_PROGRAM_ID.toBase58();
+const ATA_PROGRAM = ASSOCIATED_TOKEN_PROGRAM_ID.toBase58();
+const TOKEN_PROGRAMS = new Set([TOKEN_PROGRAM, TOKEN_2022_PROGRAM_ID.toBase58()]);
+/** System `Transfer`: u32 discriminator 2 + u64 lamports. */
+const SYSTEM_TRANSFER = 2;
+/** SPL Token discriminators: `CloseAccount` 9, `SyncNative` 17. */
+const CLOSE_ACCOUNT = 9;
+const SYNC_NATIVE = 17;
+
+const ataOf = (owner, mint, tokenProgram) =>
+  getAssociatedTokenAddressSync(
+    new PublicKey(mint),
+    new PublicKey(owner),
+    true,
+    new PublicKey(tokenProgram)
+  ).toBase58();
+
+const keyAt = (ix, index) => ix.keys[index]?.pubkey.toBase58();
+
+/**
+ * Whether one instruction around the router call is something a Jupiter
+ * build needs for this taker — probed against live `/build` answers: create
+ * the taker's own token accounts, wrap SOL into the taker's wrapped-SOL
+ * account (transfer + `SyncNative`) and unwrap it back to the taker
+ * (`CloseAccount`). Everything else is refused, because every program on the
+ * swap allowlist can also move the taker's funds once the taker signs:
+ * a System transfer to a stranger, an SPL `Approve`, `SetAuthority`, a close
+ * paying someone else, an `Assign`. Compute-budget instructions are refused
+ * too: the shared builder sets its own.
+ */
+const isTakerSupport = (ix, taker, wrappedSol) => {
+  const program = ix.programId.toBase58();
+  const { data } = ix;
+  if (program === ATA_PROGRAM) {
+    // `Create` (no data or 0) / `CreateIdempotent` (1): payer, ata, owner, mint, system, token program.
+    const tokenProgram = keyAt(ix, 5);
+    return (
+      ix.keys.length >= 6 &&
+      data.length <= 1 &&
+      (data[0] ?? 0) <= 1 &&
+      keyAt(ix, 0) === taker &&
+      keyAt(ix, 2) === taker &&
+      keyAt(ix, 4) === SYSTEM_PROGRAM &&
+      TOKEN_PROGRAMS.has(tokenProgram) &&
+      keyAt(ix, 1) === ataOf(taker, keyAt(ix, 3), tokenProgram)
+    );
+  }
+  if (program === SYSTEM_PROGRAM) {
+    return (
+      data.length === 12 &&
+      data.readUInt32LE(0) === SYSTEM_TRANSFER &&
+      keyAt(ix, 0) === taker &&
+      keyAt(ix, 1) === wrappedSol
+    );
+  }
+  if (program === TOKEN_PROGRAM && data.length === 1) {
+    if (data[0] === SYNC_NATIVE) return keyAt(ix, 0) === wrappedSol;
+    // CloseAccount: account, rent destination, authority.
+    if (data[0] === CLOSE_ACCOUNT) {
+      return keyAt(ix, 0) === wrappedSol && keyAt(ix, 1) === taker && keyAt(ix, 2) === taker;
+    }
+  }
+  return false;
+};
+
+/** Anchor discriminator of `route_v2`, the only router call `/build` answers with. */
+const ROUTE_V2 = Buffer.from('bb64facc31c4af14', 'hex');
+/** route_v2 data: discriminator, in u64 @8, quoted out u64 @16, slippage u16 @24, platform fee u16 @26. */
+const ROUTE_ARGS_END = 28;
+const BPS = 10000n;
+
+const takerAtas = (taker, mint) => [...TOKEN_PROGRAMS].map((p) => ataOf(taker, mint, p));
+
+/**
+ * Why the router call is not this request's swap, or null when it is. The
+ * call is what moves the swap's whole value: it must spend the input token
+ * from the taker's own account, pay the output into the taker's own account
+ * (the override slot empty, which Anchor encodes as the program's own id),
+ * and carry the amount, slippage and fee Salmon asked for. The quote the
+ * wallet shows is bound to the quote the program enforces.
+ */
+const routeMismatch = (ix, request, quote) => {
+  const { data } = ix;
+  if (data.length < ROUTE_ARGS_END || !data.subarray(0, 8).equals(ROUTE_V2)) return 'not route_v2';
+  if (keyAt(ix, 0) !== request.taker) return 'authority';
+  if (!takerAtas(request.taker, request.inputMint).includes(keyAt(ix, 1))) return 'source';
+  if (!takerAtas(request.taker, request.outputMint).includes(keyAt(ix, 2))) return 'destination';
+  if (keyAt(ix, 7) !== JUPITER_PROGRAM) return 'destination override';
+  if (data.readBigUInt64LE(8) !== BigInt(request.amount)) return 'in amount';
+  const quoted = data.readBigUInt64LE(16);
+  if (String(quoted) !== String(quote.outAmount)) return 'quoted out amount';
+  const slippage = data.readUInt16LE(24);
+  if (slippage !== request.slippageBps) return 'slippage';
+  if (data.readUInt16LE(26) !== (request.fee?.bps ?? 0)) return 'platform fee';
+  // Jupiter rounds the minimum up; within one base unit either way is the same minimum.
+  const gap = BigInt(quote.otherAmountThreshold) * BPS - quoted * (BPS - BigInt(slippage));
+  if (gap <= -BPS || gap >= BPS) return 'minimum out amount';
+  return null;
+};
+
+/**
+ * Refuse a build that does anything but this taker's own swap: Jupiter's
+ * answer is not signed (unlike 0x's), so a tampered or faulty one must not
+ * reach the wallet as signable bytes.
+ * @throws {SolanaSwapError} 502 `provider_bad_response`
+ */
+const assertTakerOnly = ({ swap, support }, request, quote) => {
+  const refuse = (reason) => {
+    console.error('[SWAP_PROVIDER_BAD_RESPONSE]', { provider: 'jupiter', reason });
+    throw new SolanaSwapError(
+      'Jupiter answered with instructions a swap does not need',
+      502,
+      'provider_bad_response'
+    );
+  };
+  if (swap.programId.toBase58() !== JUPITER_PROGRAM) refuse('swap instruction is not Jupiter');
+  const mismatch = routeMismatch(swap, request, quote);
+  if (mismatch) refuse(`route_v2 ${mismatch}`);
+  const wrappedSol = ataOf(request.taker, NATIVE_MINT, TOKEN_PROGRAM);
+  const stray = support.find((ix) => !isTakerSupport(ix, request.taker, wrappedSol));
+  if (stray) refuse(`instruction ${stray.data[0] ?? 'empty'} on ${stray.programId.toBase58()}`);
+};
+
 /**
  * Request swap instructions from Jupiter.
  *
@@ -153,7 +285,8 @@ const assertBuildShape = (data) => {
  * @returns {Promise<{ instructions: TransactionInstruction[], lookupTableAddresses: string[],
  *   amountOut: string, minAmountOut: string, routePlan: Array<{ label: string, percent: number }>,
  *   providerRequestId: null, routeFee: null }>}
- * @throws {SolanaSwapError} 404 `no_route`, 500 `swap_misconfigured`, 503 `upstream_rate_limited`.
+ * @throws {SolanaSwapError} 404 `no_route`, 500 `swap_misconfigured`, 502 `provider_bad_response`
+ *   (unexpected shape, or instructions beyond the taker's own swap), 503 `upstream_rate_limited`.
  */
 const requestSwapInstructions = async ({
   inputMint,
@@ -207,14 +340,17 @@ const requestSwapInstructions = async ({
 
   // Order per Jupiter's reference assembly; `computeBudgetInstructions` and
   // `tipInstruction` (Jito) are ours to decide and are left out.
-  const instructions = [
-    ...(data.setupInstructions || []),
-    data.swapInstruction,
-    data.cleanupInstruction,
-    ...(data.otherInstructions || []),
-  ]
+  const setup = (data.setupInstructions || []).map(toInstruction);
+  const swap = toInstruction(data.swapInstruction);
+  const after = [data.cleanupInstruction, ...(data.otherInstructions || [])]
     .filter(Boolean)
     .map(toInstruction);
+  assertTakerOnly(
+    { swap, support: [...setup, ...after] },
+    { taker, inputMint, outputMint, amount, slippageBps, fee },
+    data
+  );
+  const instructions = [...setup, swap, ...after];
 
   return {
     instructions,
