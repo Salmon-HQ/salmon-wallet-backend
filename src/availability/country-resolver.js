@@ -10,9 +10,9 @@
  * per container.
  *
  * Unknown, private or malformed addresses answer `null`, and so does every
- * address on prod once the database is older than 45 days: IP blocks change
- * country every month, and the gate refuses a regulated capability when the
- * country is `null`.
+ * address on a deployed stage (prod, staging) once the database is older than
+ * 45 days: IP blocks change country every month, and the gate refuses a
+ * regulated capability when the country is `null`.
  *
  * Some Ukrainian regions answer their ISO 3166-2 code instead of `UA`
  * (`UA-43` Crimea, `UA-40` Sevastopol, `UA-14` Donetsk, `UA-09` Luhansk,
@@ -122,9 +122,14 @@ const getReader = () => {
 /** When the open database was built by DB-IP. */
 const databaseBuiltAt = () => getReader().metadata.buildEpoch;
 
+// Every deployed stage downloads the month's database, and staging builds
+// real mainnet swaps, so the age limit holds on all of them. `local` runs and
+// tests (no STAGE) read the packaged copy, which is older than 45 days.
+const enforcesDatabaseAge = () => Boolean(process.env.STAGE) && process.env.STAGE !== 'local';
+
 let warnedStale = false;
 const isStale = () => {
-  if (process.env.NODE_ENV !== 'prod') return false;
+  if (!enforcesDatabaseAge()) return false;
   const age = Date.now() - databaseBuiltAt().getTime();
   if (age <= MAX_DATABASE_AGE_MS) return false;
   if (!warnedStale) {
@@ -137,7 +142,7 @@ const isStale = () => {
 /**
  * @param {string|undefined|null} ip
  * @returns {string|null} ISO 3166-1 alpha-2, upper case, or null for a private, unknown or
- *   malformed address, and for every address once the database is stale on prod.
+ *   malformed address, and for every address once the database is stale on a deployed stage.
  * @throws {CountryDatabaseUnavailableError} when the database cannot be opened.
  */
 const countryOf = (ip) => {

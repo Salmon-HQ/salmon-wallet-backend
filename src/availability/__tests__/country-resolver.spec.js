@@ -12,9 +12,13 @@ describe('availability/country-resolver', () => {
   // fresh only for 45 days after that.
   const FRESH_DAY = new Date('2026-06-20T00:00:00Z');
 
+  const { STAGE } = process.env;
+
   afterEach(() => {
     delete process.env.AVAILABILITY_COUNTRY_OVERRIDE;
     delete process.env.NODE_ENV;
+    if (STAGE === undefined) delete process.env.STAGE;
+    else process.env.STAGE = STAGE;
     jest.useRealTimers();
     resetCountryDatabase();
   });
@@ -123,12 +127,13 @@ describe('availability/country-resolver', () => {
   });
 
   describe('a stale database', () => {
+    const staleDay = () => new Date(databaseBuiltAt().getTime() + 46 * 24 * 60 * 60 * 1000);
+
     // IP blocks change country every month: past 45 days the gate must not
     // trust an old answer, so nobody is placed and regulated capabilities close.
     it('places nobody on prod once the database is older than 45 days', () => {
-      const built = databaseBuiltAt();
-      jest.useFakeTimers({ now: new Date(built.getTime() + 46 * 24 * 60 * 60 * 1000) });
-      process.env.NODE_ENV = 'prod';
+      jest.useFakeTimers({ now: staleDay() });
+      process.env.STAGE = 'prod';
       const error = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       expect(countryOf('8.8.8.8')).toBeNull();
@@ -138,16 +143,33 @@ describe('availability/country-resolver', () => {
       error.mockRestore();
     });
 
+    // Staging builds real mainnet swaps, so its country gate holds to the
+    // same rule; it is keyed on the stage, not on NODE_ENV.
+    it('places nobody on staging either once the database is older than 45 days', () => {
+      jest.useFakeTimers({ now: staleDay() });
+      process.env.STAGE = 'staging';
+      process.env.NODE_ENV = 'staging';
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(countryOf('8.8.8.8')).toBeNull();
+      error.mockRestore();
+    });
+
     it('still places addresses on prod within 45 days', () => {
       jest.useFakeTimers({ now: FRESH_DAY });
-      process.env.NODE_ENV = 'prod';
+      process.env.STAGE = 'prod';
       expect(countryOf('8.8.8.8')).toBe('US');
     });
 
-    it('is not enforced outside prod, where the packaged copy is old', () => {
-      jest.useFakeTimers({ now: new Date('2027-01-01T00:00:00Z') });
-      expect(countryOf('8.8.8.8')).toBe('US');
-    });
+    it.each([['local'], [undefined]])(
+      'is not enforced on stage %s, where the packaged copy is old',
+      (stage) => {
+        jest.useFakeTimers({ now: new Date('2027-01-01T00:00:00Z') });
+        if (stage) process.env.STAGE = stage;
+        else delete process.env.STAGE;
+        expect(countryOf('8.8.8.8')).toBe('US');
+      }
+    );
   });
 
   it("reads DB-IP's own record shape, the one deploys download", () => {
