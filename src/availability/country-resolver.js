@@ -123,9 +123,11 @@ const getReader = () => {
 const databaseBuiltAt = () => getReader().metadata.buildEpoch;
 
 // Every deployed stage downloads the month's database, and staging builds
-// real mainnet swaps, so the age limit holds on all of them. `local` runs and
-// tests (no STAGE) read the packaged copy, which is older than 45 days.
-const enforcesDatabaseAge = () => Boolean(process.env.STAGE) && process.env.STAGE !== 'local';
+// real mainnet swaps, so the age limit holds on all of them, and on anything
+// running with NODE_ENV prod. `local` runs and tests (no STAGE) read the
+// packaged copy, which is older than 45 days.
+const enforcesDatabaseAge = () =>
+  process.env.NODE_ENV === 'prod' || (Boolean(process.env.STAGE) && process.env.STAGE !== 'local');
 
 let warnedStale = false;
 const isStale = () => {

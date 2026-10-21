@@ -155,6 +155,17 @@ describe('availability/country-resolver', () => {
       error.mockRestore();
     });
 
+    // A prod NODE_ENV holds to the rule even if STAGE were missing.
+    it('places nobody once the database is older than 45 days when NODE_ENV is prod', () => {
+      jest.useFakeTimers({ now: staleDay() });
+      delete process.env.STAGE;
+      process.env.NODE_ENV = 'prod';
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(countryOf('8.8.8.8')).toBeNull();
+      error.mockRestore();
+    });
+
     it('still places addresses on prod within 45 days', () => {
       jest.useFakeTimers({ now: FRESH_DAY });
       process.env.STAGE = 'prod';
