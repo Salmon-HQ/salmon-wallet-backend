@@ -47,12 +47,36 @@ describe('deploy role policy', () => {
     expect(iamActions.filter((a) => a.includes('*'))).toEqual([]);
   });
 
-  it('passes project roles to Lambda only', () => {
+  it('passes project roles, and only to Lambda', () => {
     const passing = allows.filter((s) => list(s.Action).includes('iam:PassRole'));
     expect(passing).toHaveLength(1);
+    expect(passing[0].Resource).toBe('arn:aws:iam::<AWS_ACCOUNT_ID>:role/gol-salmon-api-*');
     expect(passing[0].Condition).toEqual({
       StringEquals: { 'iam:PassedToService': 'lambda.amazonaws.com' },
     });
+  });
+
+  // A stack with a service role runs under that role, not the caller's, so
+  // write access to any stack is access to whatever role it carries.
+  it.each([
+    'cloudformation:CreateStack',
+    'cloudformation:UpdateStack',
+    'cloudformation:DeleteStack',
+    'cloudformation:CreateChangeSet',
+    'cloudformation:ExecuteChangeSet',
+    'cloudformation:DeleteChangeSet',
+  ])('allows %s on the project stacks only', (action) => {
+    const granting = allows.filter((s) =>
+      list(s.Action).some(
+        (a) => a === action || (a.endsWith('*') && action.startsWith(a.slice(0, -1)))
+      )
+    );
+    expect(granting.length).toBeGreaterThan(0);
+    for (const statement of granting) {
+      expect(list(statement.Resource)).toEqual([
+        'arn:aws:cloudformation:us-east-1:<AWS_ACCOUNT_ID>:stack/gol-salmon-api-*/*',
+      ]);
+    }
   });
 
   it('can neither remove a boundary nor edit the boundary policy', () => {

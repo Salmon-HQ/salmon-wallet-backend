@@ -2,15 +2,9 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "CloudFormationAll",
+      "Sid": "CfnRead",
       "Effect": "Allow",
       "Action": [
-        "cloudformation:CreateStack",
-        "cloudformation:UpdateStack",
-        "cloudformation:DeleteStack",
-        "cloudformation:CreateChangeSet",
-        "cloudformation:ExecuteChangeSet",
-        "cloudformation:DeleteChangeSet",
         "cloudformation:Describe*",
         "cloudformation:GetTemplate*",
         "cloudformation:List*",
@@ -20,7 +14,20 @@
       "Resource": "*"
     },
     {
-      "Sid": "IamReadProjectRoles",
+      "Sid": "CfnWriteProjectStacks",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:UpdateStack",
+        "cloudformation:DeleteStack",
+        "cloudformation:CreateChangeSet",
+        "cloudformation:ExecuteChangeSet",
+        "cloudformation:DeleteChangeSet"
+      ],
+      "Resource": "arn:aws:cloudformation:us-east-1:<AWS_ACCOUNT_ID>:stack/gol-salmon-api-*/*"
+    },
+    {
+      "Sid": "IamReadTagProjectRoles",
       "Effect": "Allow",
       "Action": [
         "iam:GetRole",
@@ -184,9 +191,7 @@
         "apigateway:POST",
         "apigateway:PUT",
         "apigateway:PATCH",
-        "apigateway:DELETE",
-        "apigateway:HEAD",
-        "apigateway:OPTIONS"
+        "apigateway:DELETE"
       ],
       "Resource": [
         "arn:aws:apigateway:us-east-1::/restapis",
@@ -202,7 +207,7 @@
     {
       "Sid": "ApiGatewayReadOnly",
       "Effect": "Allow",
-      "Action": ["apigateway:List*", "apigateway:Describe*"],
+      "Action": ["apigateway:List*"],
       "Resource": "*"
     },
     {

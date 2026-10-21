@@ -19,10 +19,7 @@
       "Sid": "ReadAvailabilityTable",
       "Effect": "Allow",
       "Action": "ssm:GetParameter",
-      "Resource": [
-        "arn:aws:ssm:us-east-1:<AWS_ACCOUNT_ID>:parameter/salmon-api/prod/AVAILABILITY_TABLE",
-        "arn:aws:ssm:us-east-1:<AWS_ACCOUNT_ID>:parameter/salmon-api/staging/AVAILABILITY_TABLE"
-      ]
+      "Resource": "arn:aws:ssm:us-east-1:<AWS_ACCOUNT_ID>:parameter/salmon-api/*/AVAILABILITY_TABLE"
     }
   ]
 }
