@@ -45,6 +45,32 @@ describe('unsigned-transaction-builder compileUnsigned', () => {
     expect(size).toBe(Buffer.from(built.transaction, 'base64').length);
   });
 
+  it('answers null (unknown) when a lookup table cannot be read', async () => {
+    connection.getMultipleAccountsInfo.mockRejectedValueOnce(new Error('rpc down'));
+    await expect(
+      builder.serializedSize(connection, {
+        payer: PAYER,
+        instructions: [instruction(MEMO)],
+        lookupTableAddresses: ['AddressLookupTab1e1111111111111111111111111'],
+      })
+    ).resolves.toBeNull();
+  });
+
+  it('answers Infinity when the instructions cannot compile into one transaction', async () => {
+    const tooMany = new TransactionInstruction({
+      programId: new PublicKey(MEMO),
+      keys: Array.from({ length: 300 }, (_, i) => ({
+        pubkey: new PublicKey(Buffer.alloc(32, i % 255).fill(Math.floor(i / 255) + 1, 0, 1)),
+        isSigner: false,
+        isWritable: false,
+      })),
+      data: Buffer.from([1]),
+    });
+    await expect(
+      builder.serializedSize(connection, { payer: PAYER, instructions: [tooMany] })
+    ).resolves.toBe(Infinity);
+  });
+
   it('asks the simulation for the watched accounts and hands their state back', async () => {
     const post = [{ lamports: 1, owner: MEMO, data: ['', 'base64'] }];
     connection.simulateTransaction.mockResolvedValue({

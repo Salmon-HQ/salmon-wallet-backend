@@ -393,15 +393,16 @@ const routeOf = (data) => {
 
 /**
  * Serialized size of the transaction an answer's instructions compile into
- * (`measure`, from the build service, compiles it as the builder will), null
- * when there is nothing to measure with, Infinity when it does not compile.
+ * (`measure`, from the build service, compiles it as the builder will):
+ * Infinity when it does not compile, null when unknown — no measure, or a
+ * read that failed — and an unknown size never costs another Jupiter call.
  */
 const sizeOf = async (instructions, data, measure) => {
   if (!measure) return null;
   try {
     return await measure(instructions, Object.keys(data.addressesByLookupTableAddress || {}));
   } catch {
-    return Infinity;
+    return null;
   }
 };
 
@@ -434,16 +435,20 @@ const validate = (data, request) => {
 const fits = (answer) => answer.size === null || answer.size <= PACKET_DATA_SIZE;
 
 /**
- * One `/build` call, its refusals mapped onto the public envelope.
+ * One `/build` call, its refusals mapped onto the public envelope. `noWait`:
+ * only if a rate-limit token is free now, and no backoff retries.
  * @throws {SolanaSwapError} 404 `no_route`, 500 `swap_misconfigured`, 503 on 401/403/429.
  */
-const fetchBuild = async (params) => {
+const fetchBuild = async (params, { noWait = false } = {}) => {
   try {
     const { data } = await providerCall(
       'jupiter',
       ({ timeout, signal }) =>
         http.get(`${JUPITER_API_URL}/build`, { params, timeout, signal, headers: headers() }),
-      { operationName: `Jupiter swap build (${params.inputMint} → ${params.outputMint})` }
+      {
+        operationName: `Jupiter swap build (${params.inputMint} → ${params.outputMint})`,
+        ...(noWait ? { noWait } : {}),
+      }
     );
     return data;
   } catch (error) {
@@ -517,8 +522,9 @@ const requestSwapInstructions = async ({
   // Remove once wallets that accept shared_accounts_route_v2 are the only
   // ones in use; each retry spends the org's 600/min quota.
   const request = { taker, inputMint, outputMint, amount, slippageBps, fee };
-  const answer = async () => {
-    const data = await fetchBuild(params);
+  // A retry is a nicety: it runs only on a token free now, never waits or backs off.
+  const answer = async (noWait) => {
+    const data = await fetchBuild(params, { noWait });
     try {
       const instructions = validate(data, request);
       return {
@@ -534,7 +540,7 @@ const requestSwapInstructions = async ({
   };
   const wantsAnother = (a) =>
     !a.invalid && (a.route === 'shared_accounts_route_v2' || (a.route === 'route_v2' && !fits(a)));
-  const answers = [await answer()];
+  const answers = [await answer(false)];
   let attempts = 1;
   let retryError;
   while (
@@ -544,7 +550,7 @@ const requestSwapInstructions = async ({
   ) {
     attempts += 1;
     try {
-      answers.push(await answer());
+      answers.push(await answer(true));
     } catch (error) {
       retryError = error.errorCode || 'unknown';
       break;

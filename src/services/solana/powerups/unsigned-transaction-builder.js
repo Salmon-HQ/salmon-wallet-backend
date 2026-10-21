@@ -152,21 +152,32 @@ const fetchLookupTables = async (connection, addresses) => {
  * for `instructions`: the same lookup tables and both compute-budget
  * instructions, without any cleanup (dropped anyway when it does not fit).
  * Compares against `PACKET_DATA_SIZE` (1232), the most a transaction may be.
- * @throws when a lookup table cannot be read or the message cannot compile
+ * Null when a lookup table cannot be read (the size is unknown, not too big);
+ * Infinity when the message does not compile or overruns the encoder's
+ * 1232-byte message buffer.
  */
 const serializedSize = async (connection, { payer, instructions, lookupTableAddresses = [] }) => {
-  const lookupTables = await fetchLookupTables(connection, lookupTableAddresses);
-  const message = new TransactionMessage({
-    payerKey: new PublicKey(payer),
-    // Any 32 bytes take the blockhash's place; only the length matters here.
-    recentBlockhash: PublicKey.default.toBase58(),
-    instructions: [
-      ComputeBudgetProgram.setComputeUnitLimit({ units: MAX_COMPUTE_UNIT_LIMIT }),
-      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: PRIORITY_FEE_MAX }),
-      ...instructions,
-    ],
-  }).compileToV0Message(lookupTables);
-  return new VersionedTransaction(message).serialize().length;
+  let lookupTables;
+  try {
+    lookupTables = await fetchLookupTables(connection, lookupTableAddresses);
+  } catch {
+    return null;
+  }
+  try {
+    const message = new TransactionMessage({
+      payerKey: new PublicKey(payer),
+      // Any 32 bytes take the blockhash's place; only the length matters here.
+      recentBlockhash: PublicKey.default.toBase58(),
+      instructions: [
+        ComputeBudgetProgram.setComputeUnitLimit({ units: MAX_COMPUTE_UNIT_LIMIT }),
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: PRIORITY_FEE_MAX }),
+        ...instructions,
+      ],
+    }).compileToV0Message(lookupTables);
+    return new VersionedTransaction(message).serialize().length;
+  } catch {
+    return Infinity;
+  }
 };
 
 /** Program id (base58) of every top-level instruction in `message`, lookup tables resolved. */

@@ -86,19 +86,21 @@ const tryAcquire = async (profile) => {
 
 /**
  * Take one token for `profile`, sleeping while a slot is due within both
- * `MAX_WAIT_MS` and the request budget.
+ * `maxWaitMs` (default `MAX_WAIT_MS`; 0 = only a token free now) and the
+ * request budget.
  *
  * @param {{ name: string, rps: number, burst: number }} profile
  * @param {Object} [locals]
+ * @param {{ maxWaitMs?: number }} [options]
  * @returns {Promise<number>} total ms waited.
  * @throws 503 `upstream_rate_limited` when no slot fits the wait window.
  */
-const acquire = async (profile, locals) => {
+const acquire = async (profile, locals, { maxWaitMs = MAX_WAIT_MS } = {}) => {
   let waited = 0;
   for (;;) {
     const wait = await tryAcquire(profile);
     if (wait === 0) return waited;
-    if (waited + wait > Math.min(MAX_WAIT_MS, remainingMs(locals))) throw rateLimited();
+    if (waited + wait > Math.min(maxWaitMs, remainingMs(locals))) throw rateLimited();
     await sleep(wait);
     waited += wait;
   }

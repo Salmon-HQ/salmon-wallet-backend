@@ -770,6 +770,30 @@ describe('jupiter-swap-provider', () => {
         });
       });
 
+      it('spends no extra call on a route_v2 answer whose size is unknown', async () => {
+        http.get.mockResolvedValue({ data: routeV2() });
+
+        await requestFor(SHARED, { measure: measuring(null) });
+        await requestFor(SHARED, { measure: jest.fn().mockRejectedValue(new Error('rpc down')) });
+
+        expect(http.get).toHaveBeenCalledTimes(2);
+        expect(console.warn).not.toHaveBeenCalledWith(
+          '[SWAP_JUPITER_SHARED_RETRY]',
+          expect.anything()
+        );
+      });
+
+      it('asks again only when a rate-limit token is free now, with no backoff retries', async () => {
+        http.get
+          .mockResolvedValueOnce({ data: shared() })
+          .mockResolvedValueOnce({ data: routeV2() });
+
+        await requestFor(SHARED);
+
+        expect(providerCall.mock.calls[0][2]).not.toHaveProperty('noWait');
+        expect(providerCall.mock.calls[1][2]).toMatchObject({ noWait: true });
+      });
+
       it('calls once when the first answer is route_v2 and fits', async () => {
         http.get.mockResolvedValue({ data: routeV2() });
         const measure = measuring(1100);
