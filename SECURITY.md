@@ -36,6 +36,7 @@ Already resolved via `overrides` (kept here so nobody removes them):
 
 - `cross-fetch ^3.1.8` — `@solana/spl-token-registry` pins `cross-fetch@3.0.6` → vulnerable `node-fetch` 2.6.1. 3.1.x/3.2.x is API-identical. Note the registry package itself is unmaintained (`solana-labs/token-list` archived 2024); replacing it is a separate task.
 - `uuid ^11.1.1` under `jayson` and `rpc-websockets` — both call `v4()`/`v1()` with no `buf`, so the advisory (`v3/v5/v6` with caller buffer) was never reachable; the override just silences it. Both still declare `^8.3.2` upstream.
+- `follow-redirects ^1.16.1` — `axios` (every provider call) declares `^1.16.0`, and 1.16.0 carries [GHSA-8r9p-f939-6h3c](https://github.com/advisories/GHSA-8r9p-f939-6h3c) and [GHSA-q3jh-wrc6-jgq8](https://github.com/advisories/GHSA-q3jh-wrc6-jgq8), fixed in 1.16.1. The override keeps a regenerated lockfile from resolving back to 1.16.0.
 - `bn.js ^4.12.5` under `ethjs-unit` and `number-to-bn` — `mpl-bubblegum` → `merkletreejs@0.3.11` declares `web3-utils` but never imports it, so the 4.x copy is never loaded at runtime.
 
 ### Development only (`serverless@3` tree)
