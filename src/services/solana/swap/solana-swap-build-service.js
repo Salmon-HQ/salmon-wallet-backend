@@ -26,16 +26,18 @@
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
-const { getAssociatedTokenAddressSync } = require('@solana/spl-token');
+const { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } = require('@solana/spl-token');
 const { SOL_ADDRESS, SOL_DECIMALS } = require('../../../constants/solana-constants');
 const { getByMints } = require('../solana-ft-service');
 const tokenMetadata = require('../token-metadata-service');
 const zeroex = require('./zeroex-swap-provider');
 const jupiter = require('./jupiter-swap-provider');
 const { intermediateAccountCleanup } = require('./intermediate-account-cleanup');
+const { readTakerAccounts, balanceMismatch } = require('./balance-guard');
 const {
   BUILD_TTL_MS,
   COMMITMENT,
+  MAX_COMPUTE_UNIT_LIMIT,
   compileUnsigned,
 } = require('../powerups/unsigned-transaction-builder');
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
@@ -302,6 +304,44 @@ const assertRoutable = async (mints, locals) => {
   }
 };
 
+/**
+ * Refuse a build whose simulation moves the taker's funds beyond the swap
+ * (`balance-guard.js`), and one whose effect on them cannot be read.
+ * @throws {SolanaSwapError} 502 `provider_bad_response`, 503 `simulation_unavailable`
+ */
+const assertBalances = ({ built, watched, quote, inputMint, amount, publicKey, provider }) => {
+  const after = built.simulation.accounts;
+  // The wallet missing after the run is the RPC declining to report it, not a drain.
+  if (!Array.isArray(after) || (watched.before.get(publicKey) && !after[0])) {
+    throw new SolanaSwapError(
+      "The swap's effect on the wallet could not be checked; retry shortly",
+      503,
+      'simulation_unavailable'
+    );
+  }
+  const reason = balanceMismatch({
+    watched,
+    after,
+    taker: publicKey,
+    inputMint,
+    amount,
+    accountCreates: quote.instructions.filter((ix) =>
+      ix.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)
+    ).length,
+    signatures: built.requiredSignatures,
+    priorityFeeMicroLamports: built.priorityFeeMicroLamports,
+    computeUnitLimit: MAX_COMPUTE_UNIT_LIMIT,
+  });
+  if (reason) {
+    console.error('[SWAP_BALANCE_GUARD]', { provider: provider.id, reason });
+    throw new SolanaSwapError(
+      "The swap would move the wallet's funds beyond the swap itself",
+      502,
+      'provider_bad_response'
+    );
+  }
+};
+
 const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, locals) => {
   const adapter = resolveAdapter(locals);
   await assertRoutable([inputMint, outputMint], locals);
@@ -327,12 +367,17 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     inputMint,
     outputMint,
   });
+  const watched = await readTakerAccounts(connection, publicKey, [
+    ...quote.instructions,
+    ...cleanup,
+  ]);
   const built = await compileUnsigned({
     connection,
     payer: publicKey,
     instructions: quote.instructions,
     lookupTableAddresses: quote.lookupTableAddresses,
     cleanup,
+    watchAccounts: watched.addresses,
     // A quote the runtime rejects (slippage already exceeded, a stale pool)
     // is refused here: the user must never sign bytes that are known to fail
     // and pay the fee to watch them fail.
@@ -352,6 +397,15 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
   if (built.simulation.err) {
     throw classifySimulationError(built.simulation) || new PowerupSimulationError(built.simulation);
   }
+  assertBalances({
+    built,
+    watched,
+    quote,
+    inputMint,
+    amount,
+    publicKey,
+    provider: adapter.PROVIDER,
+  });
 
   return {
     provider: adapter.PROVIDER,

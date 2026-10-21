@@ -86,20 +86,25 @@ const resolvePriorityFee = async (connection, instructions) => {
 };
 
 /**
- * Simulate the unsigned message. `{ units }` on success, `{ err, logs }` when
- * the runtime rejected it, `{ err, transport: true }` when the RPC could not
- * simulate at all — the caller's transaction is not to blame for that one.
+ * Simulate the unsigned message. `{ units, accounts }` on success (`accounts`:
+ * the post-simulation state of `watchAccounts`, in order, or null when the RPC
+ * sent none), `{ err, logs }` when the runtime rejected it, `{ err, transport:
+ * true }` when the RPC could not simulate at all — the caller's transaction is
+ * not to blame for that one.
  */
-const simulate = async (connection, message) => {
+const simulate = async (connection, message, watchAccounts = []) => {
   try {
     const { value } = await connection.simulateTransaction(new VersionedTransaction(message), {
       sigVerify: false,
       replaceRecentBlockhash: true,
+      ...(watchAccounts.length > 0
+        ? { accounts: { encoding: 'base64', addresses: watchAccounts } }
+        : {}),
     });
     if (value.err || !value.unitsConsumed) {
       return { err: value.err || 'no compute units reported', logs: (value.logs || []).slice(-3) };
     }
-    return { units: value.unitsConsumed };
+    return { units: value.unitsConsumed, accounts: value.accounts ?? null };
   } catch (error) {
     return { err: error.message, transport: true, logs: [] };
   }
@@ -161,6 +166,8 @@ const programIdsOf = (message, lookupTables) => {
  * @param {string[]} [input.lookupTableAddresses]
  * @param {import('@solana/web3.js').TransactionInstruction[]} [input.cleanup] - appended
  *   after `instructions`; dropped when the simulation rejects them
+ * @param {string[]} [input.watchAccounts] - accounts whose post-simulation state the
+ *   result's `simulation.accounts` carries (each must appear in the transaction)
  * @param {boolean} [input.simulationFallback=true] - when the simulation fails, still
  *   ship the bytes with a fixed compute-unit limit (the wallet simulates
  *   again before signing). `false` returns `transaction: null` and the failed
@@ -178,6 +185,7 @@ const compileUnsigned = async ({
   lookupTableAddresses = [],
   cleanup = [],
   simulationFallback = true,
+  watchAccounts = [],
 }) => {
   const [lookupTables, { blockhash }, priorityFee] = await Promise.all([
     fetchLookupTables(connection, lookupTableAddresses),
@@ -211,7 +219,7 @@ const compileUnsigned = async ({
 
   let applied = cleanup;
   let simulated = compile([...placeholderBudget, ...instructions, ...applied]);
-  let simulation = await simulate(connection, simulated);
+  let simulation = await simulate(connection, simulated, watchAccounts);
   if (simulation.err && applied.length > 0) {
     console.warn('[CLEANUP_SKIPPED] intermediate account close rejected in simulation', {
       accounts: applied.length,
@@ -220,7 +228,7 @@ const compileUnsigned = async ({
     });
     applied = [];
     simulated = compile([...placeholderBudget, ...instructions]);
-    simulation = await simulate(connection, simulated);
+    simulation = await simulate(connection, simulated, watchAccounts);
   }
   const base = {
     priorityFeeMicroLamports: priorityFee,
@@ -254,6 +262,7 @@ module.exports = {
   ALWAYS_ALLOWED_PROGRAMS,
   BUILD_TTL_MS,
   COMMITMENT,
+  MAX_COMPUTE_UNIT_LIMIT,
   compileUnsigned,
   computeUnitLimitFrom,
   fetchLookupTables,

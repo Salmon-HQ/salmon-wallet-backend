@@ -36,6 +36,27 @@ describe('unsigned-transaction-builder compileUnsigned', () => {
 
   afterAll(() => delete process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS);
 
+  it('asks the simulation for the watched accounts and hands their state back', async () => {
+    const post = [{ lamports: 1, owner: MEMO, data: ['', 'base64'] }];
+    connection.simulateTransaction.mockResolvedValue({
+      value: { err: null, unitsConsumed: 1000, logs: [], accounts: post },
+    });
+
+    const built = await builder.compileUnsigned({
+      connection,
+      payer: PAYER,
+      instructions: [instruction(MEMO)],
+      watchAccounts: [PAYER],
+    });
+
+    expect(connection.simulateTransaction.mock.calls[0][1]).toEqual({
+      sigVerify: false,
+      replaceRecentBlockhash: true,
+      accounts: { encoding: 'base64', addresses: [PAYER] },
+    });
+    expect(built.simulation.accounts).toBe(post);
+  });
+
   // The compute-budget instructions cost a fixed 300 units (150 each, measured
   // against mainnet). Simulating without them derives the limit from a message
   // that is not the one returned, and the proportional headroom then has to
