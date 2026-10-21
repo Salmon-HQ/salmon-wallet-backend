@@ -94,6 +94,17 @@ describe('deploy role policy', () => {
     }
   });
 
+  // GetWebACLForResource and DisassociateWebACL name only the stage, so IAM
+  // checks them against every web ACL; scoped to the project's ACL, the
+  // stack's WAF association failed and the deploy rolled back.
+  it('can look up and remove the stage association', () => {
+    const anyAcl = 'arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/*/*';
+    const allowedOn = (action, resource) =>
+      allows.some((s) => list(s.Action).includes(action) && list(s.Resource).includes(resource));
+    expect(allowedOn('wafv2:GetWebACLForResource', anyAcl)).toBe(true);
+    expect(allowedOn('wafv2:DisassociateWebACL', anyAcl)).toBe(true);
+  });
+
   // IAM refuses a managed policy over 6,144 characters, white space not counted.
   it('fits in one managed policy', () => {
     const size = JSON.stringify(deploy).replaceAll('<AWS_ACCOUNT_ID>', '123456789012').length;
