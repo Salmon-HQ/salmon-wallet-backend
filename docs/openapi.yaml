@@ -1039,7 +1039,8 @@ paths:
         anything resembling an address, mint, raw number, or oversized string
         is dropped. The client IP is never read or stored. Up to 100 events
         per batch are processed. Events reach GA4 dated to the start of the
-        hour the batch arrived, not the exact moment.
+        hour the batch arrived, not the exact moment; events that follow an
+        on-chain transaction are dated to the day.
 
         Only the wallet posts here: a request with an `Origin` that is not an
         extension origin (`chrome-extension://`, `moz-extension://`,

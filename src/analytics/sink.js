@@ -91,30 +91,34 @@ function createGa4Sink() {
       // one so the Measurement Protocol call still has a non-empty client_id.
       const clientId = records[0].install_id || randomUUID();
 
-      for (let i = 0; i < records.length; i += GA4_MAX_EVENTS_PER_REQUEST) {
-        const chunk = records.slice(i, i + GA4_MAX_EVENTS_PER_REQUEST);
-        const body = {
-          client_id: clientId,
-          // GA dates an event by when it arrives unless told otherwise. Arrival
-          // follows a signature by a second or two, which would let anyone with
-          // the GA data match an install to its on-chain transactions; the hour
-          // the batch arrived is all reports need. GA accepts up to 72 h back.
-          timestamp_micros: hourStartMicros(records[0].received_at),
-          events: chunk.map(toGa4Event),
-        };
-        const res = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify(body),
-          // Without this the call inherits no deadline and a hung Google
-          // endpoint burns the whole Lambda timeout, after which the client
-          // retries the same batch.
-          signal: AbortSignal.timeout(GA4_REQUEST_TIMEOUT),
-        });
-        // Measurement Protocol always answers 2xx for a well-formed request and
-        // never validates event contents synchronously, so a non-2xx here is a
-        // transport failure. Throw it into the handler's best-effort catch.
-        if (!res.ok) {
-          throw new Error(`GA4 Measurement Protocol returned ${res.status}`);
+      // The handler dates transaction events to the day; they travel in their
+      // own request so the rest of the batch keeps its hour.
+      for (const [receivedAt, group] of Map.groupBy(records, (record) => record.received_at)) {
+        for (let i = 0; i < group.length; i += GA4_MAX_EVENTS_PER_REQUEST) {
+          const chunk = group.slice(i, i + GA4_MAX_EVENTS_PER_REQUEST);
+          const body = {
+            client_id: clientId,
+            // GA dates an event by when it arrives unless told otherwise. Arrival
+            // follows a signature by a second or two, which would let anyone with
+            // the GA data match an install to its on-chain transactions; the hour
+            // the batch arrived is all reports need. GA accepts up to 72 h back.
+            timestamp_micros: hourStartMicros(receivedAt),
+            events: chunk.map(toGa4Event),
+          };
+          const res = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            // Without this the call inherits no deadline and a hung Google
+            // endpoint burns the whole Lambda timeout, after which the client
+            // retries the same batch.
+            signal: AbortSignal.timeout(GA4_REQUEST_TIMEOUT),
+          });
+          // Measurement Protocol always answers 2xx for a well-formed request and
+          // never validates event contents synchronously, so a non-2xx here is a
+          // transport failure. Throw it into the handler's best-effort catch.
+          if (!res.ok) {
+            throw new Error(`GA4 Measurement Protocol returned ${res.status}`);
+          }
         }
       }
     },
