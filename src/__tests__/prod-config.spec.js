@@ -12,6 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const yaml = require('js-yaml');
 
 const readProdConfig = () =>
   fs.readFileSync(path.join(__dirname, '..', '..', 'config', 'env.prod.yml'), 'utf8');
@@ -50,4 +51,71 @@ describe('production config defaults', () => {
     );
     expect(local).toMatch(/^\s*REDIS_TLS:/m);
   });
+});
+
+// Each Lambda receives only the variables its own code reads, so a flaw in the
+// anonymous analytics ingest or a scheduled job cannot expose the credentials
+// the wallet API holds.
+describe('per-function environment', () => {
+  const readStage = (stage) =>
+    yaml.load(fs.readFileSync(path.join(__dirname, '..', '..', 'config', `env.${stage}.yml`)), {
+      // Serverless parses these files as YAML 1.1, where `<<` merges a group.
+      schema: yaml.YAML11_SCHEMA,
+    });
+  const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
+
+  const SECRETS = [
+    'REDIS_PASSWORD',
+    'COINGECKO_API_KEY',
+    'TRM_API_KEY',
+    'JUPITER_API_KEY',
+    'ZEROEX_API_KEY',
+    'ZEROEX_SIGNING_KEYS',
+    'TRITON_RPC_URL',
+    'TRITON_RPC_URL_DEVNET',
+    'GA4_API_SECRET',
+  ];
+  const ALLOWED = {
+    api: [
+      'COINGECKO_API_KEY',
+      'JUPITER_API_KEY',
+      'REDIS_PASSWORD',
+      'TRITON_RPC_URL',
+      'TRITON_RPC_URL_DEVNET',
+      'TRM_API_KEY',
+      'ZEROEX_API_KEY',
+      'ZEROEX_SIGNING_KEYS',
+    ],
+    coingeckoJob: ['COINGECKO_API_KEY', 'REDIS_PASSWORD'],
+    sanctionsJob: ['REDIS_PASSWORD'],
+    skrJob: ['REDIS_PASSWORD', 'TRITON_RPC_URL'],
+    events: ['GA4_API_SECRET'],
+  };
+
+  it('sets no environment that every function inherits', () => {
+    expect(serverless).not.toMatch(/^ {2}environment:/m);
+  });
+
+  it('wires every function to one of the per-function maps', () => {
+    const maps = [...serverless.matchAll(/^ {4}environment: \$\{self:custom\.envFile\.(\w+)\}$/gm)];
+    expect(maps.map((m) => m[1]).sort()).toEqual([
+      'api',
+      'coingeckoJob',
+      'coingeckoJob',
+      'events',
+      'sanctionsJob',
+      'skrJob',
+    ]);
+  });
+
+  it.each(['local', 'staging', 'prod'])(
+    'hands each function only its own secrets (%s)',
+    (stage) => {
+      const config = readStage(stage);
+      for (const [map, allowed] of Object.entries(ALLOWED)) {
+        const held = Object.keys(config[map]).filter((name) => SECRETS.includes(name));
+        expect({ map, held: held.sort() }).toEqual({ map, held: allowed });
+      }
+    }
+  );
 });
