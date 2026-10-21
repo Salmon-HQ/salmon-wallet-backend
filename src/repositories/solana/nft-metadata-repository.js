@@ -146,7 +146,11 @@ const hasIpLiteralHost = (url) => {
   }
 };
 
-const fetchOffchainMetadata = async (url) => {
+/**
+ * @param {string} url
+ * @param {AbortSignal} [signal] - the listing's deadline; aborts the fetch too.
+ */
+const fetchOffchainMetadata = async (url, signal) => {
   const { protocol } = new URL(url);
   if (protocol !== 'https:' && protocol !== 'http:') {
     return null;
@@ -154,26 +158,36 @@ const fetchOffchainMetadata = async (url) => {
 
   if (hasIpLiteralHost(url)) return null;
 
-  const response = await http.get(url, {
-    timeout: FETCH_TIMEOUT_MS,
-    maxRedirects: MAX_REDIRECTS,
-    maxContentLength: MAX_BYTES,
-    httpsAgent,
-    httpAgent,
-    headers: { Accept: 'application/json' },
-    // A permitted hostname can redirect to an IP literal, which would put the
-    // destination back outside guardedLookup's reach, so every hop is checked.
-    beforeRedirect: (options) => {
-      if (hasIpLiteralHost(options.href)) {
-        const denied = new Error(`Refusing to fetch NFT metadata from ${options.href}`);
-        denied.code = 'BLOCKED_ADDRESS';
-        throw denied;
-      }
-    },
-    validateStatus: (status) => status >= 200 && status < 300,
-  });
+  // A wall-clock deadline over the whole exchange. axios's `timeout` stops
+  // counting once the headers arrive, so a server trickling its body a byte
+  // at a time kept the fetch open until the Lambda timed out. An explicit
+  // timer, not AbortSignal.timeout: that one is unref'd.
+  const deadline = new AbortController();
+  const timer = setTimeout(() => deadline.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await http.get(url, {
+      signal: signal ? AbortSignal.any([deadline.signal, signal]) : deadline.signal,
+      maxRedirects: MAX_REDIRECTS,
+      maxContentLength: MAX_BYTES,
+      httpsAgent,
+      httpAgent,
+      headers: { Accept: 'application/json' },
+      // A permitted hostname can redirect to an IP literal, which would put the
+      // destination back outside guardedLookup's reach, so every hop is checked.
+      beforeRedirect: (options) => {
+        if (hasIpLiteralHost(options.href)) {
+          const denied = new Error(`Refusing to fetch NFT metadata from ${options.href}`);
+          denied.code = 'BLOCKED_ADDRESS';
+          throw denied;
+        }
+      },
+      validateStatus: (status) => status >= 200 && status < 300,
+    });
 
-  return asMetadataObject(response.data);
+    return asMetadataObject(response.data);
+  } finally {
+    clearTimeout(timer);
+  }
 };
 
 /**
@@ -185,9 +199,11 @@ const fetchOffchainMetadata = async (url) => {
  *
  * @param {string} url - Normalized, fetchable https(s) metadata URL.
  * @param {Object} locals - Request locals (used for the cache key namespace).
+ * @param {AbortSignal} [signal] - The listing's deadline. A fetch it cuts off
+ *   is not cached as a failure: the listing ran out of time, not the server.
  * @returns {Promise<Object|null>} The off-chain JSON, or null when unresolved.
  */
-const getOffchainMetadata = async (url, locals) => {
+const getOffchainMetadata = async (url, locals, signal) => {
   const key = cacheKeyFor(url, locals);
 
   const cached = await getFromCache(key);
@@ -196,7 +212,7 @@ const getOffchainMetadata = async (url, locals) => {
   }
 
   try {
-    const json = await fetchOffchainMetadata(url);
+    const json = await fetchOffchainMetadata(url, signal);
     if (json) {
       await storeInCache(key, { ok: true, json }, OK_TTL);
       return json;
@@ -204,6 +220,7 @@ const getOffchainMetadata = async (url, locals) => {
     await storeInCache(key, { ok: false }, FAIL_TTL);
     return null;
   } catch {
+    if (signal?.aborted) return null;
     await storeInCache(key, { ok: false }, FAIL_TTL);
     return null;
   }
@@ -216,5 +233,6 @@ module.exports = {
     guardedLookup,
     asMetadataObject,
     fetchOffchainMetadata,
+    FETCH_TIMEOUT_MS,
   },
 };

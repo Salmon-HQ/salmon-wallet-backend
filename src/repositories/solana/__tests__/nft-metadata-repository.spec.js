@@ -102,6 +102,42 @@ describe('getOffchainMetadata', () => {
     );
   });
 
+  // axios's `timeout` stops counting once the headers arrive, so a server
+  // that trickles its body one byte at a time held the listing until the
+  // Lambda timed out. The deadline has to cover the whole exchange.
+  describe('a server that never finishes its body', () => {
+    const hangUntilAborted = (_url, options) =>
+      new Promise((_resolve, reject) => {
+        options.signal.addEventListener('abort', () => reject(new Error('canceled')));
+      });
+
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    test('is cut off at the per-fetch deadline and cached as a failure', async () => {
+      const { FETCH_TIMEOUT_MS } = repository.__testing;
+      http.get.mockImplementation(hangUntilAborted);
+
+      const pending = repository.getOffchainMetadata(url, {});
+      await jest.advanceTimersByTimeAsync(FETCH_TIMEOUT_MS);
+
+      await expect(pending).resolves.toBeNull();
+      expect(storeInCache).toHaveBeenCalledWith(expect.any(String), { ok: false }, 60 * 60);
+    });
+
+    test('is cut off when the listing runs out of time, without blaming the server', async () => {
+      http.get.mockImplementation(hangUntilAborted);
+      const listing = new AbortController();
+
+      const pending = repository.getOffchainMetadata(url, {}, listing.signal);
+      await jest.advanceTimersByTimeAsync(10);
+      listing.abort();
+
+      await expect(pending).resolves.toBeNull();
+      expect(storeInCache).not.toHaveBeenCalled();
+    });
+  });
+
   test('does not re-fetch a known-bad document', async () => {
     getFromCache.mockResolvedValue({ ok: false });
 
