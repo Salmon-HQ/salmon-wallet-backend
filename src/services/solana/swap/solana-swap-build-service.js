@@ -77,6 +77,8 @@ const resolveAdapter = (locals) => {
 const PPM_PER_BPS = 100;
 const DEFAULT_SLIPPAGE_BPS = 50;
 const MAX_SLIPPAGE_BPS = 10000;
+/** u64 has 20 digits and SPL decimals stop at 255: no real uiAmount is longer. */
+const MAX_UI_AMOUNT_LENGTH = 300;
 /**
  * Bytes 0x leaves free for what we add: two ComputeBudget instructions (52,
  * the docs' worked example) plus a CloseAccount per intermediate account
@@ -147,7 +149,11 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
     error_description:
       "uiAmount must be a positive decimal number within the token's decimals and u64",
   };
-  const parts = /^(\d+)(?:\.(\d+))?$/.exec(String(uiAmount));
+  const raw = String(uiAmount);
+  if (raw.length > MAX_UI_AMOUNT_LENGTH) {
+    return invalid;
+  }
+  const parts = /^(\d+)(?:\.(\d+))?$/.exec(raw);
   if (!parts) {
     return invalid;
   }
@@ -169,7 +175,11 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   // String arithmetic: a float turns 1e-10 SOL into "0" and 1e20 SOL into "1e+29".
   const [, whole] = parts;
   // Trailing zeros carry no value: "1.0000000000" SOL is exactly one SOL.
-  const fraction = (parts[2] || '').replace(/0+$/, '');
+  // A loop, not /0+$/, which backtracks quadratically on caller input.
+  let fraction = parts[2] || '';
+  let end = fraction.length;
+  while (end > 0 && fraction[end - 1] === '0') end -= 1;
+  fraction = fraction.slice(0, end);
   if (fraction.length > decimals) {
     return invalid;
   }

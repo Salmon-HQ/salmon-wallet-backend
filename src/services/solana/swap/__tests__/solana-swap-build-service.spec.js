@@ -1025,10 +1025,17 @@ describe('solana-swap-build-service', () => {
       ['a negative number', '-1'],
       ['a bare fraction', '.5'],
       ['a trailing point', '1.'],
+      ['longer than any real amount', `1.${'0'.repeat(400)}`],
     ])('refuses a SOL uiAmount that is %s with 400 invalid_parameter', async (_, uiAmount) => {
       await expect(
         service.resolveAmount({ uiAmount, inputMint: SOL }, locals)
       ).resolves.toMatchObject({ error: 'invalid_parameter' });
+    });
+
+    it('accepts trailing zeros up to the length cap', async () => {
+      await expect(
+        service.resolveAmount({ uiAmount: `1.${'0'.repeat(250)}`, inputMint: SOL }, locals)
+      ).resolves.toEqual({ amount: '1000000000' });
     });
 
     it("uses the token's own decimals: 6 places pass for USDC, 7 do not", async () => {
