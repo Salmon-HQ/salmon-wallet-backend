@@ -230,6 +230,8 @@ describe('jupiter-swap-provider', () => {
       { ...noFee, outAmount: undefined },
       { ...noFee, otherAmountThreshold: 'abc' },
       {},
+      { ...noFee, setupInstructions: 'not a list' },
+      { ...noFee, otherInstructions: {} },
     ]) {
       http.get.mockResolvedValue({ data });
       await expect(request()).rejects.toMatchObject({
@@ -240,6 +242,31 @@ describe('jupiter-swap-provider', () => {
     expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_BAD_RESPONSE]', {
       provider: 'jupiter',
     });
+  });
+
+  it('refuses an instruction whose account is not a public key as a provider defect', async () => {
+    const accounts = noFee.swapInstruction.accounts.map((account, index) =>
+      index === 3 ? { ...account, pubkey: 'not base58!' } : account
+    );
+    await expectRefused(
+      { ...noFee, swapInstruction: { ...noFee.swapInstruction, accounts } },
+      'undecodable instruction',
+      () => request()
+    );
+  });
+
+  it('reads only a literal true as a signer or writable flag', async () => {
+    const accounts = noFee.swapInstruction.accounts.map((account, index) =>
+      index === 3 ? { ...account, isSigner: 'false', isWritable: 1 } : account
+    );
+    http.get.mockResolvedValue({
+      data: { ...noFee, swapInstruction: { ...noFee.swapInstruction, accounts } },
+    });
+
+    const result = await request();
+
+    const swap = result.instructions.find((ix) => ix.programId.toBase58() === JUPITER);
+    expect(swap.keys[3]).toMatchObject({ isSigner: false, isWritable: false });
   });
 
   it('maps a 401/403 onto 503 and never rethrows the error that carries our key', async () => {
@@ -338,6 +365,27 @@ describe('jupiter-swap-provider', () => {
       ['a second wrap', () => withOther(wrap(10000000)), 'second wrap transfer'],
     ])('refuses %s with 502 provider_bad_response', async (_, tampered, reason) => {
       await expectRefused(tampered(), reason);
+    });
+
+    const ownAtaCreate = (mint) =>
+      createAssociatedTokenAccountIdempotentInstruction(
+        taker,
+        getAssociatedTokenAddressSync(new PublicKey(mint), taker),
+        taker,
+        new PublicKey(mint)
+      );
+
+    it("refuses an account create for a mint the route never touches, even the taker's own", async () => {
+      const bonk = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+      await expectRefused(
+        withOther(ownAtaCreate(bonk)),
+        'ATA create for a mint the route does not use'
+      );
+    });
+
+    it('refuses more than 6 account creates (live builds create at most 4)', async () => {
+      const creates = Array.from({ length: 5 }, () => ownAtaCreate(USDC));
+      await expectRefused(withOther(...creates), 'more than 6 account creates');
     });
 
     it('refuses a wrap when the input is not SOL', async () => {
