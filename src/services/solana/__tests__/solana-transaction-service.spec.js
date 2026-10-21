@@ -1,4 +1,6 @@
 'use strict';
+const util = require('util');
+
 jest.mock('@solana/web3.js', () => {
   const getParsedTransaction = jest.fn();
   const getSignaturesForAddress = jest.fn();
@@ -322,6 +324,34 @@ describe('Solana Transaction Service - unit tests', () => {
         nextPageToken: 'sig-1',
       },
     });
+  });
+
+  test('never logs the Triton token when falling back to RPC history', async () => {
+    const token = 'triton-secret-token-1234567890';
+    const nodeUrl = `https://tenant.solana-mainnet.rpcpool.com/${token}`;
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    heliusService.getEnhancedTransactionHistory.mockRejectedValue(
+      new Error(`request to ${nodeUrl} failed`)
+    );
+    Connection.mockImplementation(() => ({
+      getSignaturesForAddress: jest.fn().mockResolvedValue([{ signature: 'sig-1' }]),
+      getParsedTransaction: jest.fn().mockResolvedValue({ slot: 1, meta: { err: null } }),
+    }));
+
+    await service.getTransactions(
+      'fallback-history-address',
+      { pageSize: 1 },
+      { network: { ...locals.network, config: { nodeUrl } } }
+    );
+
+    const printed = [...log.mock.calls, ...error.mock.calls]
+      .map((args) => util.format(...args))
+      .join('\n');
+    expect(printed).toContain('tenant.solana-mainnet.rpcpool.com');
+    expect(printed).not.toContain(token);
+    log.mockRestore();
+    error.mockRestore();
   });
 
   test('skips enhanced path entirely when isEnhancedApiSupported returns false (testnet)', async () => {

@@ -193,6 +193,17 @@ describe('error-handler middleware', () => {
     );
   });
 
+  it('never logs a Triton token echoed in the error message or stack', () => {
+    const res = buildRes();
+    const err = new Error(
+      'request to https://tenant.solana-mainnet.rpcpool.com/super-secret-key failed'
+    );
+
+    errorHandler(err, req, res, jest.fn());
+
+    expect(JSON.stringify(console.error.mock.calls)).not.toContain('super-secret-key');
+  });
+
   it("logs the provider reason, not axios's opaque message, for client errors", () => {
     const res = buildRes();
     const err = Object.assign(new Error('Request failed with status code 400'), {
@@ -249,6 +260,37 @@ describe('error-handler middleware', () => {
 
     expect(next).toHaveBeenCalledWith(err);
     expect(res.status).not.toHaveBeenCalled();
+  });
+
+  // Express's default handler logs what it is given when headers are sent.
+  it('hands express an error without the Triton token or the request', () => {
+    const res = buildRes();
+    res.headersSent = true;
+    const next = jest.fn();
+    const url = 'https://tenant.solana-mainnet.rpcpool.com/super-secret-key';
+    const err = Object.assign(new Error(`request to ${url} failed`), {
+      config: { url, headers: { 'x-api-key': 'super-secret-key' } },
+    });
+
+    errorHandler(err, req, res, next);
+
+    expect(require('util').inspect(next.mock.calls[0][0])).not.toContain('super-secret-key');
+  });
+
+  it('never hands the caller a credential echoed in an upstream reason', () => {
+    const res = buildRes();
+    const err = Object.assign(new Error('Request failed with status code 400'), {
+      response: {
+        status: 400,
+        data: { message: 'bad request to https://x.rpcpool.com/super-secret-key' },
+      },
+    });
+
+    errorHandler(err, req, res, jest.fn());
+
+    expect(res.json.mock.calls[0][0].error_description).toBe(
+      'bad request to https://x.rpcpool.com/[REDACTED]'
+    );
   });
 
   it('keeps the wallet address out of the log on both the 4xx and the 5xx line', () => {

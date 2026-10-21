@@ -26,6 +26,13 @@ concurrency:
 jobs:
   integration-external:
     name: external integration suites
+    # The paid provider keys reach only main: a manual dispatch on any other
+    # branch skips the job, and the keys live in the `provider-tests`
+    # environment, whose deployment-branch rule admits main alone, so a
+    # workflow edited on another branch cannot read them either
+    # (docs/REPO-SETTINGS.md §5).
+    if: github.ref == 'refs/heads/main'
+    environment: provider-tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -57,8 +64,8 @@ jobs:
         run: npm run test:integration
         env:
           REDIS_HOST: localhost
-          # Provider credentials — repository secrets; empty until loaded,
-          # which makes the corresponding suites probe-skip.
+          # Provider credentials — `provider-tests` environment secrets; empty
+          # until loaded, which makes the corresponding suites probe-skip.
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
           TRITON_RPC_URL: ${{ secrets.TRITON_RPC_URL }}
           TRITON_API_TOKEN: ${{ secrets.TRITON_API_TOKEN }}

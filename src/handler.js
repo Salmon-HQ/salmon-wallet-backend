@@ -1,5 +1,7 @@
 'use strict';
 
+const { toSafeError } = require('./infrastructure/log-redaction');
+
 /**
  * Lambda handler wrapper shared by every function in this service (the main
  * API in `src/index.js`, and the scheduled jobs under `src/jobs/`).
@@ -19,6 +21,6 @@ module.exports = (handler) => async (event, context) => {
     }
     return await handler(event, context);
   } catch (err) {
-    console.error(err);
+    console.error('[handler]', toSafeError(err));
   }
 };

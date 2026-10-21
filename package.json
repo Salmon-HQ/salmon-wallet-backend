@@ -1,6 +1,6 @@
 {
   "name": "salmon-api",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "Salmon API",
   "main": "index.js",
   "engines": {
@@ -92,6 +92,7 @@
     "bigint-buffer": "$bigint-buffer",
     "@serverless/platform-client": {
       "adm-zip": "^0.6.1"
-    }
+    },
+    "follow-redirects": "^1.16.1"
   }
 }

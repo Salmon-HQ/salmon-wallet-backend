@@ -17,6 +17,7 @@
 const http = require('axios');
 const repository = require('../../repositories/shared/coingecko-repository');
 const { providerCall } = require('../../infrastructure/providers/provider-client');
+const { toSafeError } = require('../../infrastructure/log-redaction');
 
 const { readCachedQuotes, setCachedQuotes } = require('../../infrastructure/cache/price-cache');
 
@@ -82,7 +83,7 @@ const fetchFromCoinGecko = async (url, params, timeout, operationName, locals) =
 const withLongTermFallback = async (loadLongTerm, error, message) => {
   const cached = await loadLongTerm();
   if (cached) {
-    console.warn(message, error);
+    console.warn(message, toSafeError(error));
     return cached;
   }
   throw error;
