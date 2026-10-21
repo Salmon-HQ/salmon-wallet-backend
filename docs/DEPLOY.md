@@ -62,7 +62,7 @@ Cost per stage, from [AWS WAF pricing](https://aws.amazon.com/waf/pricing/): abo
 The GitHub deploy role needs WAF permissions before the first deploy that carries the web ACL; these are the actions CloudFormation's handlers for `AWS::WAFv2::WebACL` and `AWS::WAFv2::WebACLAssociation` call:
 
 - `wafv2:CreateWebACL`, `UpdateWebACL`, `DeleteWebACL`, `GetWebACL`, `ListTagsForResource`, `TagResource` and `UntagResource` on `arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/gol-salmon-api-*/*`;
-- `wafv2:AssociateWebACL`, `DisassociateWebACL` and `GetWebACLForResource` on that web ACL and on the stage, `arn:aws:apigateway:us-east-1::/restapis/*/stages/*`, since IAM checks both;
+- `wafv2:AssociateWebACL`, `DisassociateWebACL` and `GetWebACLForResource` on any regional web ACL, `arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/*/*`, and on the stage, `arn:aws:apigateway:us-east-1::/restapis/*/stages/*`. `GetWebACLForResource` names only the stage, so IAM checks it against `webacl/*/*`; scoped to the project's web ACL, the association fails and the stack rolls back. The account holds only the project's web ACLs, and the role can already edit them, so the wider scope grants nothing new;
 - `apigateway:SetWebACL` on the stage, which API Gateway requires both to attach and to remove a web ACL.
 
 Without them the stack update fails and CloudFormation rolls it back. They belong in `aws-deploy-policy.json` (statements `WafWebAclForProject` and `WafAssociateStage`); the order to apply them in IAM is under [CI IAM permissions](#ci-iam-permissions). Staging is deployed by hand with the owner's own credentials, not with this role.
