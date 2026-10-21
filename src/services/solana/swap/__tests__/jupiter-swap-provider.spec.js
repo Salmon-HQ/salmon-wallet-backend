@@ -29,6 +29,7 @@ const TAKER = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
 const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const SOL = 'So11111111111111111111111111111111111111112';
 const FEE_ATA = 'DjqW361S9LFPpgwTbjuVa993ZGsk2U7AeXpiptNDpcBq';
+const JUPITER = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
 // The taker's own accounts in the fixtures (associated token accounts under SPL Token).
 const TAKER_WSOL = 'HXkHFMCRQP6pw66QEGBqVsduqUQdSyrrrq82S7Rffsms';
 const TAKER_USDC = '9SHQTA66Ekh7ZgMnKWsjxXk6DwXku8przs45E8bcEe38';
@@ -555,6 +556,85 @@ describe('jupiter-swap-provider', () => {
       expect(console.error).toHaveBeenCalledWith('[SWAP_PROVIDER_BAD_RESPONSE]', {
         provider: 'jupiter',
         reason,
+      });
+    });
+
+    describe('asks again while Jupiter answers with the shared-accounts form', () => {
+      const shared = () => load(CASES[SHARED][0]);
+      const routeV2 = () => load(CASES['route_v2, multi-hop USDC → BONK'][0]);
+      const routerCallOf = (result) =>
+        result.instructions.find((ix) => ix.programId.toBase58() === JUPITER).data;
+
+      it('uses the route_v2 answer of the second call', async () => {
+        http.get
+          .mockResolvedValueOnce({ data: shared() })
+          .mockResolvedValueOnce({ data: routeV2() });
+
+        const result = await requestFor(SHARED);
+
+        expect(http.get).toHaveBeenCalledTimes(2);
+        expect(routerCallOf(result).subarray(0, 8).toString('hex')).toBe('bb64facc31c4af14');
+        expect(result.amountOut).toBe(routeV2().outAmount);
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 2,
+          route: 'route_v2',
+        });
+      });
+
+      it('returns the shared-accounts answer after three shared answers', async () => {
+        http.get.mockResolvedValue({ data: shared() });
+
+        const result = await requestFor(SHARED);
+
+        expect(http.get).toHaveBeenCalledTimes(3);
+        expect(routerCallOf(result).subarray(0, 8).toString('hex')).toBe('d19853937cfed8e9');
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 3,
+          route: 'shared_accounts_route_v2',
+        });
+      });
+
+      it('calls once when the first answer is route_v2', async () => {
+        http.get.mockResolvedValue({ data: routeV2() });
+
+        await requestFor(SHARED);
+
+        expect(http.get).toHaveBeenCalledTimes(1);
+        expect(console.warn).not.toHaveBeenCalledWith(
+          '[SWAP_JUPITER_SHARED_RETRY]',
+          expect.anything()
+        );
+      });
+
+      it('does not ask again when the request budget is nearly spent', async () => {
+        process.env.REQUEST_BUDGET_MS = '10000';
+        http.get.mockResolvedValue({ data: shared() });
+        try {
+          await requestFor(SHARED);
+        } finally {
+          delete process.env.REQUEST_BUDGET_MS;
+        }
+        expect(http.get).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 1,
+          route: 'shared_accounts_route_v2',
+        });
+      });
+
+      it('keeps the shared-accounts answer when a retry fails', async () => {
+        http.get
+          .mockResolvedValueOnce({ data: shared() })
+          .mockRejectedValueOnce({ response: { status: 429, data: {} } });
+
+        const result = await requestFor(SHARED);
+
+        expect(http.get).toHaveBeenCalledTimes(2);
+        expect(routerCallOf(result).subarray(0, 8).toString('hex')).toBe('d19853937cfed8e9');
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 2,
+          route: 'shared_accounts_route_v2',
+          retryError: 'upstream_rate_limited',
+        });
       });
     });
   });

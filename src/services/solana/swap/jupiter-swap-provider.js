@@ -33,6 +33,7 @@ const {
   getAssociatedTokenAddressSync,
 } = require('@solana/spl-token');
 const { providerCall } = require('../../../infrastructure/providers/provider-client');
+const { remainingMs } = require('../../../infrastructure/providers/request-deadline');
 const { SolanaSwapError, SolanaSwapNoRouteError } = require('./solana-swap-errors');
 
 /**
@@ -303,6 +304,55 @@ const assertTakerOnly = ({ swap, support }, request, quote) => {
   if (stray) refuse(`instruction ${stray.data[0] ?? 'empty'} on ${stray.programId.toBase58()}`);
 };
 
+/** Discriminator of the shared-accounts router call, which installed wallets refuse. */
+const SHARED_ROUTE = 'd19853937cfed8e9';
+const JUPITER_BUILD_ATTEMPTS = 3;
+/** A retry needs room for one Jupiter call (10 s cap) plus the simulation that follows. */
+const RETRY_MIN_REMAINING_MS = 15000;
+
+/** Hex discriminator of the answer's router call, or null when it has none. */
+const routerCallOf = (data) =>
+  typeof data?.swapInstruction?.data === 'string'
+    ? Buffer.from(data.swapInstruction.data, 'base64').subarray(0, 8).toString('hex')
+    : null;
+
+/**
+ * One `/build` call, its refusals mapped onto the public envelope.
+ * @throws {SolanaSwapError} 404 `no_route`, 500 `swap_misconfigured`, 503 on 401/403/429.
+ */
+const fetchBuild = async (params) => {
+  try {
+    const { data } = await providerCall(
+      'jupiter',
+      ({ timeout, signal }) =>
+        http.get(`${JUPITER_API_URL}/build`, { params, timeout, signal, headers: headers() }),
+      { operationName: `Jupiter swap build (${params.inputMint} → ${params.outputMint})` }
+    );
+    return data;
+  } catch (error) {
+    const status = error.response?.status;
+    if (status === 429) {
+      throw new SolanaSwapError(
+        'Jupiter rate limit exceeded; retry shortly',
+        503,
+        'upstream_rate_limited'
+      );
+    }
+    if (status === 401 || status === 403) {
+      // Our credential, never the caller's wallet: the raw error carries the
+      // request headers, so it is replaced rather than rethrown.
+      console.error('[SWAP_PROVIDER_AUTH]', { provider: 'jupiter', status });
+      throw new SolanaSwapError('Jupiter refused our credentials', 503, 'upstream_unavailable');
+    }
+    const mapped = status ? toSwapError(status, error.response.data) : null;
+    if (mapped) {
+      console.warn('Jupiter swap build rejected the request:', error.response.data);
+      throw mapped;
+    }
+    throw error;
+  }
+};
+
 /**
  * Request swap instructions from Jupiter.
  *
@@ -337,35 +387,33 @@ const requestSwapInstructions = async ({
     ...(fee ? { platformFeeBps: fee.bps, feeAccount: fee.recipient } : {}),
   };
 
-  let data;
-  try {
-    ({ data } = await providerCall(
-      'jupiter',
-      ({ timeout, signal }) =>
-        http.get(`${JUPITER_API_URL}/build`, { params, timeout, signal, headers: headers() }),
-      { operationName: `Jupiter swap build (${inputMint} → ${outputMint})` }
-    ));
-  } catch (error) {
-    const status = error.response?.status;
-    if (status === 429) {
-      throw new SolanaSwapError(
-        'Jupiter rate limit exceeded; retry shortly',
-        503,
-        'upstream_rate_limited'
-      );
+  let data = await fetchBuild(params);
+  // ponytail: installed wallets verify only route_v2, so a shared-accounts
+  // answer is asked again (sequentially, inside the request budget) before
+  // it is returned. Remove once wallets that accept shared_accounts_route_v2
+  // are the only ones in use; each retry spends the org's 600/min quota.
+  if (routerCallOf(data) === SHARED_ROUTE) {
+    let attempts = 1;
+    let retryError;
+    while (attempts < JUPITER_BUILD_ATTEMPTS && remainingMs() > RETRY_MIN_REMAINING_MS) {
+      attempts += 1;
+      try {
+        const next = await fetchBuild(params);
+        if (routerCallOf(next) !== SHARED_ROUTE) {
+          data = next;
+          break;
+        }
+      } catch (error) {
+        retryError = error.errorCode || 'unknown';
+        break;
+      }
     }
-    if (status === 401 || status === 403) {
-      // Our credential, never the caller's wallet: the raw error carries the
-      // request headers, so it is replaced rather than rethrown.
-      console.error('[SWAP_PROVIDER_AUTH]', { provider: 'jupiter', status });
-      throw new SolanaSwapError('Jupiter refused our credentials', 503, 'upstream_unavailable');
-    }
-    const mapped = status ? toSwapError(status, error.response.data) : null;
-    if (mapped) {
-      console.warn('Jupiter swap build rejected the request:', error.response.data);
-      throw mapped;
-    }
-    throw error;
+    const route = routerCallOf(data) === SHARED_ROUTE ? 'shared_accounts_route_v2' : 'route_v2';
+    console.warn('[SWAP_JUPITER_SHARED_RETRY]', {
+      attempts,
+      route,
+      ...(retryError ? { retryError } : {}),
+    });
   }
 
   assertBuildShape(data);
