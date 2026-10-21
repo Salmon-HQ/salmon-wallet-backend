@@ -36,18 +36,29 @@ describe('isBlockedIp', () => {
     ['::1', 'IPv6 loopback'],
     ['fd00::1', 'IPv6 unique local'],
     ['fe80::1', 'IPv6 link-local'],
+    ['fe9a::1', 'IPv6 link-local, fe80::/10 beyond fe80'],
+    ['febf:ffff::1', 'IPv6 link-local upper bound'],
+    ['192.0.0.9', 'IETF protocol assignments (192.0.0.0/24)'],
+    ['198.18.0.1', 'benchmarking (198.18.0.0/15)'],
+    ['198.19.255.255', 'benchmarking upper bound'],
     ['::ffff:169.254.169.254', 'IPv4-mapped metadata address'],
     ['not-an-ip', 'unparseable input fails closed'],
   ])('blocks %s (%s)', (ip) => {
     expect(isBlockedIp(ip)).toBe(true);
   });
 
-  test.each([['8.8.8.8'], ['1.1.1.1'], ['172.15.0.1'], ['172.32.0.1'], ['2606:4700::1111']])(
-    'allows public address %s',
-    (ip) => {
-      expect(isBlockedIp(ip)).toBe(false);
-    }
-  );
+  test.each([
+    ['8.8.8.8'],
+    ['1.1.1.1'],
+    ['172.15.0.1'],
+    ['172.32.0.1'],
+    ['192.0.1.1'],
+    ['198.20.0.1'],
+    ['fec0::1'],
+    ['2606:4700::1111'],
+  ])('allows public address %s', (ip) => {
+    expect(isBlockedIp(ip)).toBe(false);
+  });
 });
 
 describe('asMetadataObject', () => {
@@ -111,16 +122,77 @@ describe('getOffchainMetadata', () => {
     );
   });
 
-  test('stores no document that is still over the size cap once trimmed', async () => {
+  // An oversized document keeps what the listing shows (name, description,
+  // image); the bulky extras go first, and only a document still too large
+  // without them is discarded.
+  test('drops properties, creators and attributes before discarding a large document', async () => {
     const { MAX_STORED_BYTES } = repository.__testing;
     http.get.mockResolvedValue({
-      data: { description: 'ok', properties: { files: ['f'.repeat(MAX_STORED_BYTES)] } },
+      data: {
+        description: 'ok',
+        image: 'https://arweave.net/i.png',
+        attributes: [{ value: 'a' }],
+        creators: [{ address: 'c'.repeat(MAX_STORED_BYTES) }],
+        properties: { files: ['f'.repeat(MAX_STORED_BYTES)] },
+      },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(result).toEqual({
+      description: 'ok',
+      image: 'https://arweave.net/i.png',
+      attributes: [{ value: 'a' }],
+    });
+  });
+
+  test('stores no document that is still over the size cap without its extras', async () => {
+    const { MAX_STORED_BYTES } = repository.__testing;
+    http.get.mockResolvedValue({
+      data: { description: 'ok', image: 'i'.repeat(MAX_STORED_BYTES) },
     });
 
     const result = await repository.getOffchainMetadata(url, {});
 
     expect(result).toBeNull();
     expect(storeInCache).toHaveBeenCalledWith(expect.any(String), { ok: false }, 60 * 60);
+  });
+
+  // The resource and the spam detector call string methods on these fields;
+  // an attacker's object or number there must not reach them.
+  test('keeps a field only when it has the type the resource reads', async () => {
+    http.get.mockResolvedValue({
+      data: {
+        name: { evil: true },
+        symbol: 7,
+        description: ['d'],
+        image: { url: 'x' },
+        animation_url: 'https://arweave.net/a.mp4',
+        collection: 'not-an-object',
+        attributes: { not: 'an array' },
+        properties: ['not', 'an object'],
+        creators: 'nobody',
+      },
+    });
+
+    const result = await repository.getOffchainMetadata(url, {});
+
+    expect(result).toEqual({ animation_url: 'https://arweave.net/a.mp4' });
+  });
+
+  // Entries written before the fields were trimmed held whole documents for
+  // 30 days; a new key version stops them from being served.
+  test('reads and writes a versioned cache key', async () => {
+    http.get.mockResolvedValue({ data: { description: 'x' } });
+
+    await repository.getOffchainMetadata(url, {});
+
+    expect(getFromCache).toHaveBeenCalledWith(expect.stringContaining('nft_offchain_metadata:v2:'));
+    expect(storeInCache).toHaveBeenCalledWith(
+      expect.stringContaining('nft_offchain_metadata:v2:'),
+      expect.any(Object),
+      expect.any(Number)
+    );
   });
 
   // A content-addressed document cannot change; anything else can, and is
@@ -137,6 +209,10 @@ describe('getOffchainMetadata', () => {
       24 * 60 * 60,
     ],
     ['https://name.arweave.net/1.json', 24 * 60 * 60],
+    [`https://arweave.net/${'a'.repeat(43)}/1.json`, 30 * 24 * 60 * 60],
+    [`https://arweave.net/${'a'.repeat(43)}?ext=json`, 30 * 24 * 60 * 60],
+    [`https://arweave.net/${'a'.repeat(50)}`, 24 * 60 * 60],
+    ['https://ipfs.filebase.io/ipfs/../attacker.json', 24 * 60 * 60],
   ])('keeps %s for %i seconds', async (documentUrl, ttl) => {
     http.get.mockResolvedValue({ data: { description: 'x' } });
 

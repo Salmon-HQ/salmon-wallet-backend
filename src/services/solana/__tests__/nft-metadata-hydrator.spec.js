@@ -8,6 +8,7 @@ const repository = require('../../../repositories/solana/nft-metadata-repository
 const hydrator = require('../nft-metadata-hydrator');
 
 beforeEach(() => jest.clearAllMocks());
+afterEach(() => jest.useRealTimers());
 
 // What Triton's DAS index hands back: on-chain fields only.
 const tritonShaped = {
@@ -174,7 +175,6 @@ describe('hydrateMany', () => {
 
     const [nft] = await pending;
     expect(nft.metadataResolved).toBe(false);
-    jest.useRealTimers();
   });
 
   test('returns an empty list untouched', async () => {
