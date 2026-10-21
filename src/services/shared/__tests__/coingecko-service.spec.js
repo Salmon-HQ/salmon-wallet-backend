@@ -527,8 +527,9 @@ describe('coingecko-service', () => {
     // A rank-less catalog tags every SPL token `community`, and the balance
     // hides those: an empty page cached for a day would show holders nothing
     // but SOL (page 1) or hide every token ranked past it (a later page). A
-    // short page is the list's end; an empty or malformed one is a fault, and
-    // it must fail so the last good catalog is served.
+    // short or empty later page is the list's end (a full page can be the
+    // last); an empty first page or a malformed page is a fault, and it must
+    // fail so the last good catalog is served.
     it.each([[[]], [{ status: { error_code: 429 } }], [null]])(
       'fails instead of returning no ranks when the first page is %j',
       async (body) => {
@@ -540,7 +541,22 @@ describe('coingecko-service', () => {
       }
     );
 
-    it.each([[[]], [{ status: { error_code: 429 } }]])(
+    it('ends the list at an empty page that follows a full one', async () => {
+      repository.getSolanaMarketRanks.mockResolvedValue(null);
+      http.get
+        .mockResolvedValueOnce({ data: fullPage('first') })
+        .mockResolvedValueOnce({ data: [] });
+
+      const ranks = await service.getSolanaMarketRanks();
+
+      expect(ranks.size).toBe(service.MARKET_RANK_PAGE_SIZE);
+      expect(repository.saveSolanaMarketRanks).toHaveBeenCalledWith(
+        expect.objectContaining({ 'first-0': 1 }),
+        24 * 60 * 60
+      );
+    });
+
+    it.each([[{ status: { error_code: 429 } }], [null]])(
       'fails instead of returning partial ranks when a later page is %j',
       async (body) => {
         repository.getSolanaMarketRanks.mockResolvedValue(null);

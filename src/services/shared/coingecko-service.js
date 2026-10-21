@@ -474,9 +474,10 @@ const getSolanaMarketRanks = async () => {
       10000,
       `CoinGecko Solana market ranks (page ${page})`
     );
-    // A short page is the end of the list; an empty or malformed one is a
-    // CoinGecko fault, whichever page it is.
-    if (!Array.isArray(data) || data.length === 0) {
+    // A malformed page or an empty first page is a CoinGecko fault. A short or
+    // empty later page is the end of the list: the previous page can be the
+    // last full one, and CoinGecko errors arrive as HTTP failures instead.
+    if (!Array.isArray(data) || (page === 1 && data.length === 0)) {
       throw new Error(`CoinGecko market ranks: page ${page} is empty or not a list`);
     }
     data.forEach((coin, index) => {
