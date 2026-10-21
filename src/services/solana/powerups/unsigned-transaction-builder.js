@@ -146,6 +146,28 @@ const fetchLookupTables = async (connection, addresses) => {
   });
 };
 
+/**
+ * Serialized size, in bytes, of the transaction `compileUnsigned` would return
+ * for `instructions`: the same lookup tables and both compute-budget
+ * instructions, without any cleanup (dropped anyway when it does not fit).
+ * Compares against `PACKET_DATA_SIZE` (1232), the most a transaction may be.
+ * @throws when a lookup table cannot be read or the message cannot compile
+ */
+const serializedSize = async (connection, { payer, instructions, lookupTableAddresses = [] }) => {
+  const lookupTables = await fetchLookupTables(connection, lookupTableAddresses);
+  const message = new TransactionMessage({
+    payerKey: new PublicKey(payer),
+    // Any 32 bytes take the blockhash's place; only the length matters here.
+    recentBlockhash: PublicKey.default.toBase58(),
+    instructions: [
+      ComputeBudgetProgram.setComputeUnitLimit({ units: MAX_COMPUTE_UNIT_LIMIT }),
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: PRIORITY_FEE_MAX }),
+      ...instructions,
+    ],
+  }).compileToV0Message(lookupTables);
+  return new VersionedTransaction(message).serialize().length;
+};
+
 /** Program id (base58) of every top-level instruction in `message`, lookup tables resolved. */
 const programIdsOf = (message, lookupTables) => {
   const keys = message.getAccountKeys({ addressLookupTableAccounts: lookupTables });
@@ -267,5 +289,6 @@ module.exports = {
   computeUnitLimitFrom,
   fetchLookupTables,
   resolvePriorityFee,
+  serializedSize,
   simulate,
 };

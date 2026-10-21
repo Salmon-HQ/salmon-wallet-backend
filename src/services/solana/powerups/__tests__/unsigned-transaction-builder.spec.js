@@ -36,6 +36,15 @@ describe('unsigned-transaction-builder compileUnsigned', () => {
 
   afterAll(() => delete process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS);
 
+  it('measures the size of the bytes compileUnsigned returns for the same instructions', async () => {
+    const instructions = [instruction(MEMO), instruction(CLOSER)];
+    const built = await builder.compileUnsigned({ connection, payer: PAYER, instructions });
+
+    const size = await builder.serializedSize(connection, { payer: PAYER, instructions });
+
+    expect(size).toBe(Buffer.from(built.transaction, 'base64').length);
+  });
+
   it('asks the simulation for the watched accounts and hands their state back', async () => {
     const post = [{ lamports: 1, owner: MEMO, data: ['', 'base64'] }];
     connection.simulateTransaction.mockResolvedValue({

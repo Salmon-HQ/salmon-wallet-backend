@@ -39,6 +39,7 @@ const {
   COMMITMENT,
   MAX_COMPUTE_UNIT_LIMIT,
   compileUnsigned,
+  serializedSize,
 } = require('../powerups/unsigned-transaction-builder');
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
 const {
@@ -356,6 +357,9 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     slippageBps,
     fee: fee ? { recipient: fee.recipient, bps: fee.bps, side: fee.side } : null,
     reserveBytes: COMPUTE_BUDGET_RESERVE_BYTES,
+    // Lets an adapter that picks among answers (Jupiter) drop one too big to send.
+    measure: (instructions, lookupTableAddresses) =>
+      serializedSize(connection, { payer: publicKey, instructions, lookupTableAddresses }),
   });
 
   assertFeeInstructionPresent(quote.instructions, fee?.recipient);

@@ -561,6 +561,23 @@ describe('solana-swap-build-service', () => {
       expect(tx.message.staticAccountKeys[0].toBase58()).toBe(TAKER);
     });
 
+    it('lets the adapter measure an answer as the transaction it will become', async () => {
+      mockConnection.getAccountInfo.mockResolvedValue({ owner: TOKEN_PROGRAM_ID });
+      jupiter.requestSwapInstructions.mockResolvedValue({
+        ...quote([swapInstruction([feeAta])]),
+        providerRequestId: null,
+        routeFee: null,
+      });
+
+      const result = await service.build(params(USDC), jupiterLocals);
+
+      const [{ measure }] = jupiter.requestSwapInstructions.mock.calls[0];
+      // Same instructions, same (no) lookup tables: the size of the bytes returned.
+      await expect(measure([swapInstruction([feeAta])], [])).resolves.toBe(
+        Buffer.from(result.transaction, 'base64').length
+      );
+    });
+
     it('pays a SOL-output fee to the owner wrapped-SOL account, never the wallet, and never the input side', async () => {
       // WSOL mint exists; the owner's WSOL ATA does not; the owner's USDC (input) ATA does
       mockConnection.getAccountInfo.mockImplementation(async (key) => {

@@ -570,9 +570,15 @@ describe('jupiter-swap-provider', () => {
       ],
     };
     const load = (file) => require(`./fixtures/${file}`);
-    const requestFor = (name) => {
+    const requestFor = (name, extra = {}) => {
       const [, inputMint, outputMint, amount, recipient] = CASES[name];
-      return request({ inputMint, outputMint, amount, fee: { recipient, bps: 50, side: 'buy' } });
+      return request({
+        inputMint,
+        outputMint,
+        amount,
+        fee: { recipient, bps: 50, side: 'buy' },
+        ...extra,
+      });
     };
 
     it.each(Object.keys(CASES))('%s', async (name) => {
@@ -720,11 +726,18 @@ describe('jupiter-swap-provider', () => {
       });
     });
 
-    describe('asks again while Jupiter answers with the shared-accounts form', () => {
+    describe('asks again while the answer is shared-accounts or too big to send', () => {
       const shared = () => load(CASES[SHARED][0]);
       const routeV2 = () => load(CASES['route_v2, multi-hop USDC → BONK'][0]);
       const routerCallOf = (result) =>
         result.instructions.find((ix) => ix.programId.toBase58() === JUPITER).data;
+      const formOf = (result) => routerCallOf(result).subarray(0, 8).toString('hex');
+      /** Serialized sizes, one per answer, in the order the answers arrive. */
+      const measuring = (...sizes) => {
+        const measure = jest.fn();
+        sizes.forEach((size) => measure.mockResolvedValueOnce(size));
+        return measure;
+      };
 
       it('uses the route_v2 answer of the second call', async () => {
         http.get
@@ -734,11 +747,12 @@ describe('jupiter-swap-provider', () => {
         const result = await requestFor(SHARED);
 
         expect(http.get).toHaveBeenCalledTimes(2);
-        expect(routerCallOf(result).subarray(0, 8).toString('hex')).toBe('bb64facc31c4af14');
+        expect(formOf(result)).toBe('bb64facc31c4af14');
         expect(result.amountOut).toBe(routeV2().outAmount);
         expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
           attempts: 2,
           route: 'route_v2',
+          sizes: [null, null],
         });
       });
 
@@ -748,23 +762,77 @@ describe('jupiter-swap-provider', () => {
         const result = await requestFor(SHARED);
 
         expect(http.get).toHaveBeenCalledTimes(3);
-        expect(routerCallOf(result).subarray(0, 8).toString('hex')).toBe('d19853937cfed8e9');
+        expect(formOf(result)).toBe('d19853937cfed8e9');
         expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
           attempts: 3,
           route: 'shared_accounts_route_v2',
+          sizes: [null, null, null],
         });
       });
 
-      it('calls once when the first answer is route_v2', async () => {
+      it('calls once when the first answer is route_v2 and fits', async () => {
         http.get.mockResolvedValue({ data: routeV2() });
+        const measure = measuring(1100);
 
-        await requestFor(SHARED);
+        await requestFor(SHARED, { measure });
 
         expect(http.get).toHaveBeenCalledTimes(1);
+        expect(measure).toHaveBeenCalledWith(
+          expect.any(Array),
+          Object.keys(routeV2().addressesByLookupTableAddress)
+        );
         expect(console.warn).not.toHaveBeenCalledWith(
           '[SWAP_JUPITER_SHARED_RETRY]',
           expect.anything()
         );
+      });
+
+      it('takes a shared answer that fits over a route_v2 answer that does not', async () => {
+        http.get
+          .mockResolvedValueOnce({ data: routeV2() })
+          .mockResolvedValueOnce({ data: shared() })
+          .mockResolvedValueOnce({ data: shared() });
+
+        const result = await requestFor(SHARED, { measure: measuring(1300, 1100, 1150) });
+
+        expect(http.get).toHaveBeenCalledTimes(3);
+        expect(formOf(result)).toBe('d19853937cfed8e9');
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 3,
+          route: 'shared_accounts_route_v2',
+          sizes: [1300, 1100, 1150],
+        });
+      });
+
+      it('takes a later route_v2 answer that fits after one that does not', async () => {
+        http.get.mockResolvedValue({ data: routeV2() });
+
+        const result = await requestFor(SHARED, { measure: measuring(1300, 1200) });
+
+        expect(http.get).toHaveBeenCalledTimes(2);
+        expect(formOf(result)).toBe('bb64facc31c4af14');
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 2,
+          route: 'route_v2',
+          sizes: [1300, 1200],
+        });
+      });
+
+      it('returns the first answer when none fits, so the build fails as before', async () => {
+        http.get
+          .mockResolvedValueOnce({ data: routeV2() })
+          .mockResolvedValueOnce({ data: shared() })
+          .mockResolvedValueOnce({ data: routeV2() });
+
+        const result = await requestFor(SHARED, { measure: measuring(1300, 1250, 1400) });
+
+        expect(http.get).toHaveBeenCalledTimes(3);
+        expect(formOf(result)).toBe('bb64facc31c4af14');
+        expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
+          attempts: 3,
+          route: 'route_v2',
+          sizes: [1300, 1250, 1400],
+        });
       });
 
       it('does not ask again when the request budget is nearly spent', async () => {
@@ -779,6 +847,7 @@ describe('jupiter-swap-provider', () => {
         expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
           attempts: 1,
           route: 'shared_accounts_route_v2',
+          sizes: [null],
         });
       });
 
@@ -790,10 +859,11 @@ describe('jupiter-swap-provider', () => {
         const result = await requestFor(SHARED);
 
         expect(http.get).toHaveBeenCalledTimes(2);
-        expect(routerCallOf(result).subarray(0, 8).toString('hex')).toBe('d19853937cfed8e9');
+        expect(formOf(result)).toBe('d19853937cfed8e9');
         expect(console.warn).toHaveBeenCalledWith('[SWAP_JUPITER_SHARED_RETRY]', {
           attempts: 2,
           route: 'shared_accounts_route_v2',
+          sizes: [null],
           retryError: 'upstream_rate_limited',
         });
       });

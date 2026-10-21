@@ -24,7 +24,12 @@
  */
 
 const http = require('axios');
-const { PublicKey, SystemProgram, TransactionInstruction } = require('@solana/web3.js');
+const {
+  PACKET_DATA_SIZE,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} = require('@solana/web3.js');
 const {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   NATIVE_MINT,
@@ -373,17 +378,47 @@ const assertTakerOnly = ({ swap, support }, request, quote) => {
   }
 };
 
-/** Discriminator of the shared-accounts router call, which installed wallets refuse. */
-const SHARED_ROUTE = 'd19853937cfed8e9';
 const JUPITER_BUILD_ATTEMPTS = 3;
 /** A retry needs room for one Jupiter call (10 s cap) plus the simulation that follows. */
 const RETRY_MIN_REMAINING_MS = 15000;
 
-/** Hex discriminator of the answer's router call, or null when it has none. */
-const routerCallOf = (data) =>
-  typeof data?.swapInstruction?.data === 'string'
-    ? Buffer.from(data.swapInstruction.data, 'base64').subarray(0, 8).toString('hex')
-    : null;
+/** Name of the answer's router call (`route_v2`, `shared_accounts_route_v2`), or null. */
+const routeOf = (data) => {
+  if (typeof data?.swapInstruction?.data !== 'string') return null;
+  const discriminator = Buffer.from(data.swapInstruction.data, 'base64')
+    .subarray(0, 8)
+    .toString('hex');
+  return Object.hasOwn(ROUTES, discriminator) ? ROUTES[discriminator].name : null;
+};
+
+const instructionsOf = (data) =>
+  [
+    ...(data.setupInstructions || []),
+    data.swapInstruction,
+    data.cleanupInstruction,
+    ...(data.otherInstructions || []),
+  ]
+    .filter(Boolean)
+    .map(toInstruction);
+
+/**
+ * Serialized size of the transaction `data` compiles into (`measure`, from the
+ * build service, compiles it as the builder will), null when there is nothing
+ * to measure with, Infinity when it does not compile at all.
+ */
+const sizeOf = async (data, measure) => {
+  if (!measure) return null;
+  try {
+    return await measure(
+      instructionsOf(data),
+      Object.keys(data.addressesByLookupTableAddress || {})
+    );
+  } catch {
+    return Infinity;
+  }
+};
+
+const fits = (answer) => answer.size === null || answer.size <= PACKET_DATA_SIZE;
 
 /**
  * One `/build` call, its refusals mapped onto the public envelope.
@@ -433,6 +468,9 @@ const fetchBuild = async (params) => {
  * @param {number} params.slippageBps
  * @param {{ recipient: string, bps: number, side: 'buy' }|null} params.fee - Salmon's fee;
  *   `recipient` is an existing token account of the output mint.
+ * @param {(instructions: TransactionInstruction[], lookupTableAddresses: string[]) =>
+ *   Promise<number>} [params.measure] - serialized size of the transaction an answer becomes;
+ *   without it every answer is taken to fit.
  * @returns {Promise<{ instructions: TransactionInstruction[], lookupTableAddresses: string[],
  *   amountOut: string, minAmountOut: string, routePlan: Array<{ label: string, percent: number }>,
  *   providerRequestId: null, routeFee: null }>}
@@ -446,6 +484,7 @@ const requestSwapInstructions = async ({
   taker,
   slippageBps,
   fee,
+  measure,
 }) => {
   const params = {
     inputMint,
@@ -456,34 +495,46 @@ const requestSwapInstructions = async ({
     ...(fee ? { platformFeeBps: fee.bps, feeAccount: fee.recipient } : {}),
   };
 
-  let data = await fetchBuild(params);
   // ponytail: installed wallets verify only route_v2, so a shared-accounts
-  // answer is asked again (sequentially, inside the request budget) before
-  // it is returned. Remove once wallets that accept shared_accounts_route_v2
-  // are the only ones in use; each retry spends the org's 600/min quota.
-  if (routerCallOf(data) === SHARED_ROUTE) {
-    let attempts = 1;
-    let retryError;
-    while (attempts < JUPITER_BUILD_ATTEMPTS && remainingMs() > RETRY_MIN_REMAINING_MS) {
-      attempts += 1;
-      try {
-        const next = await fetchBuild(params);
-        if (routerCallOf(next) !== SHARED_ROUTE) {
-          data = next;
-          break;
-        }
-      } catch (error) {
-        retryError = error.errorCode || 'unknown';
-        break;
-      }
+  // answer, or a route_v2 answer too big to send, is asked again (one call
+  // after another, inside the request budget). The first route_v2 answer that
+  // fits wins, else the first answer that fits (new wallets accept the shared
+  // form), else the first answer, which fails as before. Remove once wallets
+  // that accept shared_accounts_route_v2 are the only ones in use; each retry
+  // spends the org's 600/min quota.
+  const answer = async () => {
+    const data = await fetchBuild(params);
+    return { data, route: routeOf(data), size: await sizeOf(data, measure) };
+  };
+  const wantsAnother = (a) =>
+    a.route === 'shared_accounts_route_v2' || (a.route === 'route_v2' && !fits(a));
+  const answers = [await answer()];
+  let attempts = 1;
+  let retryError;
+  while (
+    wantsAnother(answers.at(-1)) &&
+    attempts < JUPITER_BUILD_ATTEMPTS &&
+    remainingMs() > RETRY_MIN_REMAINING_MS
+  ) {
+    attempts += 1;
+    try {
+      answers.push(await answer());
+    } catch (error) {
+      retryError = error.errorCode || 'unknown';
+      break;
     }
-    const route = routerCallOf(data) === SHARED_ROUTE ? 'shared_accounts_route_v2' : 'route_v2';
+  }
+  const chosen =
+    answers.find((a) => a.route === 'route_v2' && fits(a)) ?? answers.find(fits) ?? answers[0];
+  if (wantsAnother(answers[0])) {
     console.warn('[SWAP_JUPITER_SHARED_RETRY]', {
       attempts,
-      route,
+      route: chosen.route,
+      sizes: answers.map((a) => a.size),
       ...(retryError ? { retryError } : {}),
     });
   }
+  const { data } = chosen;
 
   assertBuildShape(data);
 
