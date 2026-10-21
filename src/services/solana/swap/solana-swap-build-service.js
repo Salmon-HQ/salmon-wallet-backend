@@ -33,10 +33,13 @@ const tokenMetadata = require('../token-metadata-service');
 const zeroex = require('./zeroex-swap-provider');
 const jupiter = require('./jupiter-swap-provider');
 const { intermediateAccountCleanup } = require('./intermediate-account-cleanup');
+const { readTakerAccounts, balanceMismatch } = require('./balance-guard');
 const {
   BUILD_TTL_MS,
   COMMITMENT,
+  MAX_COMPUTE_UNIT_LIMIT,
   compileUnsigned,
+  serializedSize,
 } = require('../powerups/unsigned-transaction-builder');
 const { SolanaSwapError, SolanaSwapFeeMismatchError } = require('./solana-swap-errors');
 const {
@@ -74,6 +77,8 @@ const resolveAdapter = (locals) => {
 const PPM_PER_BPS = 100;
 const DEFAULT_SLIPPAGE_BPS = 50;
 const MAX_SLIPPAGE_BPS = 10000;
+/** u64 has 20 digits and SPL decimals stop at 255: no real uiAmount is longer. */
+const MAX_UI_AMOUNT_LENGTH = 300;
 /**
  * Bytes 0x leaves free for what we add: two ComputeBudget instructions (52,
  * the docs' worked example) plus a CloseAccount per intermediate account
@@ -111,15 +116,19 @@ const feeConfig = () => {
 };
 
 /**
+ * Decimal digits only, inside u64: `1e3`, `0x10`, `0` and 2^64 are refused
+ * here, not by the provider, so a caller cannot farm our own error logs.
+ */
+const isBaseUnitAmount = (value) => /^[1-9]\d{0,19}$/.test(value) && BigInt(value) <= U64_MAX;
+
+/**
  * Resolve the base-unit `amount` from either a raw `amount` or a
  * human-readable `uiAmount` (decimals looked up in the token catalog; SOL
  * short-circuits). Returns `{ amount }` or a 400 error envelope.
  */
 const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
   if (amount !== undefined) {
-    // Decimal digits only, inside u64: `1e3`, `0x10` and 2^64 are refused
-    // here, not by the provider, so a caller cannot farm our own error logs.
-    if (!/^[1-9]\d{0,19}$/.test(String(amount)) || BigInt(amount) > U64_MAX) {
+    if (!isBaseUnitAmount(String(amount))) {
       return {
         error: 'invalid_parameter',
         error_description: 'amount must be a positive integer in the token smallest unit',
@@ -135,16 +144,26 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
     };
   }
 
-  const numeric = Number(uiAmount);
-  if (!/^\d+(\.\d+)?$/.test(String(uiAmount)) || !Number.isFinite(numeric) || numeric <= 0) {
-    return { error: 'invalid_parameter', error_description: 'uiAmount must be a positive number' };
+  const invalid = {
+    error: 'invalid_parameter',
+    error_description:
+      "uiAmount must be a positive decimal number within the token's decimals and u64",
+  };
+  const raw = String(uiAmount);
+  if (raw.length > MAX_UI_AMOUNT_LENGTH) {
+    return invalid;
+  }
+  const parts = /^(\d+)(?:\.(\d+))?$/.exec(raw);
+  if (!parts) {
+    return invalid;
   }
 
   let decimals = SOL_DECIMALS;
   if (inputMint !== SOL_ADDRESS) {
     const tokens = await getByMints([inputMint], locals);
     const token = tokens.find((t) => (t.id || t.address) === inputMint);
-    if (!token || typeof token.decimals !== 'number') {
+    // SPL decimals are a u8; anything else is not a mint this can price.
+    if (!token || !Number.isInteger(token.decimals) || token.decimals < 0 || token.decimals > 255) {
       return {
         error: 'unknown_mint',
         error_description: `Could not resolve decimals for inputMint=${inputMint}`,
@@ -153,8 +172,19 @@ const resolveAmount = async ({ amount, uiAmount, inputMint }, locals) => {
     decimals = token.decimals;
   }
 
-  // Math.round avoids 1.5 * 10^9 = 1499999999.9999998 rounding artefacts.
-  return { amount: String(Math.round(numeric * Math.pow(10, decimals))) };
+  // String arithmetic: a float turns 1e-10 SOL into "0" and 1e20 SOL into "1e+29".
+  const [, whole] = parts;
+  // Trailing zeros carry no value: "1.0000000000" SOL is exactly one SOL.
+  // A loop, not /0+$/, which backtracks quadratically on caller input.
+  let fraction = parts[2] || '';
+  let end = fraction.length;
+  while (end > 0 && fraction[end - 1] === '0') end -= 1;
+  fraction = fraction.slice(0, end);
+  if (fraction.length > decimals) {
+    return invalid;
+  }
+  const baseUnits = BigInt(whole + fraction.padEnd(decimals, '0')).toString();
+  return isBaseUnitAmount(baseUnits) ? { amount: baseUnits } : invalid;
 };
 
 /** `{ slippageBps }` (default 50) or a 400 error envelope. */
@@ -285,6 +315,42 @@ const assertRoutable = async (mints, locals) => {
   }
 };
 
+/**
+ * Refuse a build whose simulation moves the taker's funds beyond the swap
+ * (`balance-guard.js`), and one whose effect on them cannot be read.
+ * @throws {SolanaSwapError} 502 `provider_bad_response`, 503 `simulation_unavailable`
+ */
+const assertBalances = ({ built, watched, inputMint, amount, publicKey, provider }) => {
+  const after = built.simulation.accounts;
+  // The wallet missing after the run is the RPC declining to report it, not a drain.
+  if (!Array.isArray(after) || (watched.before.get(publicKey) && !after[0])) {
+    throw new SolanaSwapError(
+      "The swap's effect on the wallet could not be checked; retry shortly",
+      503,
+      'simulation_unavailable'
+    );
+  }
+  const reason = balanceMismatch({
+    watched,
+    after,
+    taker: publicKey,
+    inputMint,
+    amount,
+    foreignCreates: watched.foreignCreates,
+    signatures: built.requiredSignatures,
+    priorityFeeMicroLamports: built.priorityFeeMicroLamports,
+    computeUnitLimit: MAX_COMPUTE_UNIT_LIMIT,
+  });
+  if (reason) {
+    console.error('[SWAP_BALANCE_GUARD]', { provider: provider.id, reason });
+    throw new SolanaSwapError(
+      "The swap would move the wallet's funds beyond the swap itself",
+      502,
+      'provider_bad_response'
+    );
+  }
+};
+
 const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, locals) => {
   const adapter = resolveAdapter(locals);
   await assertRoutable([inputMint, outputMint], locals);
@@ -299,6 +365,9 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     slippageBps,
     fee: fee ? { recipient: fee.recipient, bps: fee.bps, side: fee.side } : null,
     reserveBytes: COMPUTE_BUDGET_RESERVE_BYTES,
+    // Lets an adapter that picks among answers (Jupiter) drop one too big to send.
+    measure: (instructions, lookupTableAddresses) =>
+      serializedSize(connection, { payer: publicKey, instructions, lookupTableAddresses }),
   });
 
   assertFeeInstructionPresent(quote.instructions, fee?.recipient);
@@ -310,12 +379,18 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
     inputMint,
     outputMint,
   });
+  const watched = await readTakerAccounts(connection, publicKey, [
+    ...quote.instructions,
+    ...cleanup,
+  ]);
   const built = await compileUnsigned({
     connection,
     payer: publicKey,
     instructions: quote.instructions,
     lookupTableAddresses: quote.lookupTableAddresses,
     cleanup,
+    watchAccounts: watched.addresses,
+    minContextSlot: watched.minContextSlot,
     // A quote the runtime rejects (slippage already exceeded, a stale pool)
     // is refused here: the user must never sign bytes that are known to fail
     // and pay the fee to watch them fail.
@@ -335,6 +410,14 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
   if (built.simulation.err) {
     throw classifySimulationError(built.simulation) || new PowerupSimulationError(built.simulation);
   }
+  assertBalances({
+    built,
+    watched,
+    inputMint,
+    amount,
+    publicKey,
+    provider: adapter.PROVIDER,
+  });
 
   return {
     provider: adapter.PROVIDER,

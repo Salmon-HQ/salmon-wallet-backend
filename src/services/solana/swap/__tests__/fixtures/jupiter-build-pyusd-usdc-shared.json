@@ -1,0 +1,482 @@
+{
+  "inputMint": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+  "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  "inAmount": "1000000",
+  "outAmount": "995270",
+  "otherAmountThreshold": "990294",
+  "swapMode": "ExactIn",
+  "slippageBps": 50,
+  "priceImpactPct": "0",
+  "routePlan": [
+    {
+      "percent": 100,
+      "bps": 10000,
+      "swapInfo": {
+        "ammKey": "9xrtw5ZPV1gZwVm2WzZZKygctUt8Vt4vnwQ62DRiuLzq",
+        "label": "PancakeSwap",
+        "inputMint": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+        "outputMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "inAmount": "1000000",
+        "outAmount": "1001179"
+      }
+    },
+    {
+      "percent": 83.69,
+      "bps": 8369,
+      "swapInfo": {
+        "ammKey": "22HUWiJaTNph96KQTKZVy2wg8KzfCems5nyW7E5H5J6w",
+        "label": "PancakeSwap",
+        "inputMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "outputMint": "So11111111111111111111111111111111111111112",
+        "inAmount": "837868",
+        "outAmount": "7792533"
+      }
+    },
+    {
+      "percent": 16.31,
+      "bps": 1631,
+      "swapInfo": {
+        "ammKey": "4bS6bkBdJ4B1Bt4ft3oGF8La7eKpCqz8xnu1AMpMxWSP",
+        "label": "Orca V1",
+        "inputMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "outputMint": "So11111111111111111111111111111111111111112",
+        "inAmount": "163311",
+        "outAmount": "1518917"
+      }
+    },
+    {
+      "percent": 100,
+      "bps": 10000,
+      "swapInfo": {
+        "ammKey": "DbuvwPuLvH8uy2B1sKuu18aCd2QpCvfZdfDtdRZztBd2",
+        "label": "1DEX",
+        "inputMint": "So11111111111111111111111111111111111111112",
+        "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "inAmount": "9311450",
+        "outAmount": "1000271"
+      }
+    }
+  ],
+  "computeBudgetInstructions": [
+    {
+      "programId": "ComputeBudget111111111111111111111111111111",
+      "accounts": [],
+      "data": "A4gKAAAAAAAA"
+    }
+  ],
+  "setupInstructions": [
+    {
+      "programId": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+      "accounts": [
+        {
+          "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+          "isSigner": true,
+          "isWritable": true
+        },
+        {
+          "pubkey": "9SHQTA66Ekh7ZgMnKWsjxXk6DwXku8przs45E8bcEe38",
+          "isSigner": false,
+          "isWritable": true
+        },
+        {
+          "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+          "isSigner": false,
+          "isWritable": false
+        },
+        {
+          "pubkey": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "isSigner": false,
+          "isWritable": false
+        },
+        {
+          "pubkey": "11111111111111111111111111111111",
+          "isSigner": false,
+          "isWritable": false
+        },
+        {
+          "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "isSigner": false,
+          "isWritable": false
+        }
+      ],
+      "data": "AQ=="
+    }
+  ],
+  "swapInstruction": {
+    "programId": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+    "accounts": [
+      {
+        "pubkey": "4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+        "isSigner": true,
+        "isWritable": false
+      },
+      {
+        "pubkey": "FV4GxBcHduVh6cq8jVVJQQLefj1M6eWGEpPnWx8Z1GsT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "FV4GxBcHduVh6cq8jVVJQQLefj1M6eWGEpPnWx8Z1GsT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "m3BrPbv2TFmZZTPpyB9NgsCXqGNujpXvzvGqj8ksars",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "9SHQTA66Ekh7ZgMnKWsjxXk6DwXku8przs45E8bcEe38",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "DjqW361S9LFPpgwTbjuVa993ZGsk2U7AeXpiptNDpcBq",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "HpNfyc2Saw7RKkQd8nEL4khUcuPhQ7WwY1B2qjx8jxFq",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "HZzqEWHEvSiqYt6PxxLs7zXETmqGuryqfmvggjAkqisp",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "9xrtw5ZPV1gZwVm2WzZZKygctUt8Vt4vnwQ62DRiuLzq",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "FV4GxBcHduVh6cq8jVVJQQLefj1M6eWGEpPnWx8Z1GsT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "2mnz3h22QcUCyvpyJP6nQU8RWo7yox7k4WQNa5JqHGeT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "6ajPQjhJRFQxPxVnt7HeVoqqBWj8YK5XRcHVvs6MGNVb",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "AAzYNMKMnkq1ERTHHC6skpzUUYDowEXttWHA6XwNa948",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "6D3ZGNemQYwQP2v2xvvAENRSwdQ6ygmXsKKmWMrAK5Pb",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "3pUMRhHupLxaxHMf7aZmykxSoYR3GJB8rcPdXz3daqAA",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "Hwbif7pZXE5qHxFDKcJcUdQved3D7tcU4Af5aekcDxZo",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "7izhxUw6pEU227u7H7TP4ygVhW9vBmzuuF3RuwHBqjhp",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "3myqh3enmGfEaW4G1EAEEJNHB3unS1Wc4RJFg941oSA3",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "HpNfyc2Saw7RKkQd8nEL4khUcuPhQ7WwY1B2qjx8jxFq",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "HZzqEWHEvSiqYt6PxxLs7zXETmqGuryqfmvggjAkqisp",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "22HUWiJaTNph96KQTKZVy2wg8KzfCems5nyW7E5H5J6w",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "2mnz3h22QcUCyvpyJP6nQU8RWo7yox7k4WQNa5JqHGeT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "6zAcFYmxkaH25qWZW5ek4dk4SyQNpSza3ydSoUxjTudD",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "FCBauqNLbEBUci1v3NT4gWyFZXS4YUGnX7ZsPmWVzrvV",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "7YcR78PKBHE5divhPVJ668kmmaDzove2d9msY9NpAJL2",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "AsRbHvJA4a5DujNA6dx3VPWYvd3KkgfK8KWuBRV7YuK3",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "CTtQmc8UYXsv3fGht4o14UBHpqeBL25wpLsvDddPRqAq",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "8Qj8jJsrfPjeAgB9h6rjB583jAbwmBe32c81gB4jRwSk",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "DJ9wZdMms5MjTrubjRcVc3Qp6fNXu3qzLX6qboCqJNrJ",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "jdf3YQEpStDY4Sy4i1PeUcu2vvbwGxNMYnMMsFw3eGL",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "DjVE6JNiYqPL2QXyCUUh8rNjHrbz9hXHNYt99MQ59qw1",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "4bS6bkBdJ4B1Bt4ft3oGF8La7eKpCqz8xnu1AMpMxWSP",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "EAvLj3zW236pUSSSzwjL18QuPpkTxkWaVSR5GdX7yiNa",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "2mnz3h22QcUCyvpyJP6nQU8RWo7yox7k4WQNa5JqHGeT",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "8xepSs1iXsSw8QrCS1rpZk8KY3fMwUZqDT4dmzDa2trX",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "BBDQmitNga99M9QsBRnyos9uWPumNbWLC1mfbReJi45C",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "6zAcFYmxkaH25qWZW5ek4dk4SyQNpSza3ydSoUxjTudD",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "BmZNYGt7aApGTUUxAQUYsW64cMbb6P7uniokCWaptj4D",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "HR2rWgcU6SNCWxJDozDu6qCgSSvUoKCynbhQPGRNqpCG",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "DEXYosS6oEGvk8uCDayvwEZz4qEyDJRf9nFgYCaqPMTm",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "5nmAbnjJfW1skrPvYjLTBNdhoKzJfznnbvDcM8G2U7Ki",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "DbuvwPuLvH8uy2B1sKuu18aCd2QpCvfZdfDtdRZztBd2",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "Enc6rB84ZwGxZU8aqAF41dRJxg3yesiJgD7uJFVhMraM",
+        "isSigner": false,
+        "isWritable": false
+      },
+      {
+        "pubkey": "HZ5JFB1ZoZs6NQLr7bb4MMEXDgty4Vs1ZghoyX35mNnV",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "AHFAv95Z67xnPYuHTf5a9uMEHdXFvbQvwc4EazY3tpt7",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "4xDsmeTWPNjgSVSS1VTfzFq3iHZhp77ffPkAmkZkdu71",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "6zAcFYmxkaH25qWZW5ek4dk4SyQNpSza3ydSoUxjTudD",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "m3BrPbv2TFmZZTPpyB9NgsCXqGNujpXvzvGqj8ksars",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "GswwnegnBMWEuEsptDCBDmRB9YtG5zjetTSw7RunUQMY",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "DuFXxPxAyJhHj4gMpE8As1Ta4nSSVXv8xfEDRrWQmJ9G",
+        "isSigner": false,
+        "isWritable": true
+      },
+      {
+        "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "isSigner": false,
+        "isWritable": false
+      }
+    ],
+    "data": "0ZhTk3z+2OkEQEIPAAAAAADGLw8AAAAAADIAMgAAAAQAAAAoECcAARqxIAEDA18GAQMwECcDBA=="
+  },
+  "cleanupInstruction": null,
+  "otherInstructions": [],
+  "tipInstruction": null,
+  "addressesByLookupTableAddress": {
+    "5arzSTMEYu5jzr3d4xy9kg7Syp5WqAVJR7E4mrnbtMMa": [],
+    "23iTfgGpQMxmeDhF4BcjW6D33UYG4Up25ttdc27vDD42": [],
+    "77Cxk1mBCD9udwQVfqrKrNDcx1FWHAWnv3GeaCNE98Xk": [],
+    "9A2DNR6RPNLYcYS8g5M4V12ytLWmGg8g4tMoeL1xJUW8": []
+  },
+  "blockhashWithMetadata": {
+    "blockhash": [
+      198, 153, 74, 189, 4, 14, 249, 5, 45, 76, 28, 63, 152, 10, 96, 224, 193, 193, 205, 232, 241,
+      73, 168, 111, 29, 120, 184, 11, 189, 119, 98, 184
+    ],
+    "lastValidBlockHeight": 437702881,
+    "fetchedAt": {
+      "secs_since_epoch": 1792594078,
+      "nanos_since_epoch": 370965051
+    }
+  },
+  "transactionVersion": 0
+}

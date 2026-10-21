@@ -3,6 +3,7 @@
 const mockConnection = {
   getAccountInfo: jest.fn(),
   getMultipleAccountsInfo: jest.fn(),
+  getMultipleAccountsInfoAndContext: jest.fn(),
   getLatestBlockhash: jest.fn(),
   getRecentPrioritizationFees: jest.fn(),
   simulateTransaction: jest.fn(),
@@ -27,8 +28,15 @@ jest.mock('../jupiter-swap-provider', () => ({
 jest.mock('../../solana-ft-service', () => ({ getByMints: jest.fn() }));
 jest.mock('../../token-metadata-service', () => ({ getByMints: jest.fn(async () => new Map()) }));
 
-const { PublicKey, TransactionInstruction, VersionedTransaction } = require('@solana/web3.js');
 const {
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+  VersionedTransaction,
+} = require('@solana/web3.js');
+const {
+  AccountLayout,
+  NATIVE_MINT,
   TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
   createCloseAccountInstruction,
@@ -93,9 +101,13 @@ describe('solana-swap-build-service', () => {
     delete process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS;
     mockConnection.getLatestBlockhash.mockResolvedValue({ blockhash: BLOCKHASH });
     mockConnection.getMultipleAccountsInfo.mockResolvedValue([]);
+    mockConnection.getMultipleAccountsInfoAndContext.mockResolvedValue({
+      context: { slot: 1 },
+      value: [],
+    });
     mockConnection.getRecentPrioritizationFees.mockResolvedValue([]);
     mockConnection.simulateTransaction.mockResolvedValue({
-      value: { err: null, unitsConsumed: 135497, logs: [] },
+      value: { err: null, unitsConsumed: 135497, logs: [], accounts: [] },
     });
   });
 
@@ -343,7 +355,7 @@ describe('solana-swap-build-service', () => {
 
     it('leaves a pre-existing intermediate account alone', async () => {
       zeroex.requestSwapInstructions.mockResolvedValue(quote([createAta(USD1), swapInstruction()]));
-      mockConnection.getMultipleAccountsInfo.mockResolvedValue([{ data: Buffer.alloc(165) }]);
+      mockConnection.getMultipleAccountsInfo.mockResolvedValueOnce([{ data: Buffer.alloc(165) }]);
 
       const result = await service.build(params(), locals);
 
@@ -356,7 +368,9 @@ describe('solana-swap-build-service', () => {
       mockConnection.getMultipleAccountsInfo.mockResolvedValue([null]);
       mockConnection.simulateTransaction
         .mockResolvedValueOnce({ value: { err: { InstructionError: [2, 'Custom'] }, logs: [] } })
-        .mockResolvedValueOnce({ value: { err: null, unitsConsumed: 100000, logs: [] } });
+        .mockResolvedValueOnce({
+          value: { err: null, unitsConsumed: 100000, logs: [], accounts: [] },
+        });
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       const result = await service.build(params(), locals);
@@ -548,6 +562,23 @@ describe('solana-swap-build-service', () => {
       expect(tx.message.staticAccountKeys[0].toBase58()).toBe(TAKER);
     });
 
+    it('lets the adapter measure an answer as the transaction it will become', async () => {
+      mockConnection.getAccountInfo.mockResolvedValue({ owner: TOKEN_PROGRAM_ID });
+      jupiter.requestSwapInstructions.mockResolvedValue({
+        ...quote([swapInstruction([feeAta])]),
+        providerRequestId: null,
+        routeFee: null,
+      });
+
+      const result = await service.build(params(USDC), jupiterLocals);
+
+      const [{ measure }] = jupiter.requestSwapInstructions.mock.calls[0];
+      // Same instructions, same (no) lookup tables: the size of the bytes returned.
+      await expect(measure([swapInstruction([feeAta])], [])).resolves.toBe(
+        Buffer.from(result.transaction, 'base64').length
+      );
+    });
+
     it('pays a SOL-output fee to the owner wrapped-SOL account, never the wallet, and never the input side', async () => {
       // WSOL mint exists; the owner's WSOL ATA does not; the owner's USDC (input) ATA does
       mockConnection.getAccountInfo.mockImplementation(async (key) => {
@@ -615,6 +646,348 @@ describe('solana-swap-build-service', () => {
     });
   });
 
+  describe("balance guard: what the simulated swap does to the taker's accounts", () => {
+    const BONK = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+    const STRANGER = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
+    const ata = (mint) =>
+      getAssociatedTokenAddressSync(new PublicKey(mint), new PublicKey(TAKER)).toBase58();
+    const TAKER_USDC = ata(USDC);
+    const TAKER_BONK = ata(BONK);
+    const TAKER_WSOL = ata(NATIVE_MINT.toBase58());
+    const RENT = 2039280;
+    // 5000 per signature + the placeholder 1.4M CU at the minimum 1000 µL/CU.
+    const FEES = 6400;
+
+    const PYUSD = '2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo';
+    const TOKEN_2022 = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
+    const SLOT = 424242;
+
+    const tokenData = ({ mint, owner = TAKER, amount, delegate, delegatedAmount = 0 }) => {
+      const data = Buffer.alloc(AccountLayout.span);
+      AccountLayout.encode(
+        {
+          mint: new PublicKey(mint),
+          owner: new PublicKey(owner),
+          amount: BigInt(amount),
+          delegateOption: delegate ? 1 : 0,
+          delegate: delegate ? new PublicKey(delegate) : PublicKey.default,
+          state: 1,
+          isNativeOption: 0,
+          isNative: 0n,
+          delegatedAmount: BigInt(delegatedAmount),
+          closeAuthorityOption: 0,
+          closeAuthority: PublicKey.default,
+        },
+        data
+      );
+      return data;
+    };
+    const wallet = (lamports) => ({
+      lamports,
+      owner: SystemProgram.programId,
+      data: Buffer.alloc(0),
+    });
+    const token = (fields, lamports = RENT) => ({
+      lamports,
+      owner: TOKEN_PROGRAM_ID,
+      data: tokenData(fields),
+    });
+
+    /** A Token-2022 account carrying extensions: account-type byte 2 at 165, then more. */
+    const token2022 = (fields, lamports = RENT) => ({
+      lamports,
+      owner: TOKEN_2022,
+      data: Buffer.concat([tokenData(fields), Buffer.from([2, 0, 0, 0, 0])]),
+    });
+
+    /** Accounts as the RPC reads them before (sliced as asked), and as the simulation leaves them. */
+    const world = ({ before, after }) => {
+      mockConnection.getMultipleAccountsInfoAndContext.mockImplementation(async (keys, config) => ({
+        context: { slot: SLOT },
+        value: keys.map((key) => {
+          const info = before[key.toBase58()];
+          if (!info || !config?.dataSlice) return info ?? null;
+          const { offset, length } = config.dataSlice;
+          return { ...info, data: info.data.subarray(offset, offset + length) };
+        }),
+      }));
+      mockConnection.simulateTransaction.mockImplementation(async (tx, config) => ({
+        value: {
+          err: null,
+          unitsConsumed: 135497,
+          logs: [],
+          accounts: (config?.accounts?.addresses ?? []).map((address) =>
+            after[address]
+              ? {
+                  lamports: after[address].lamports,
+                  owner: after[address].owner.toBase58(),
+                  data: [after[address].data.toString('base64'), 'base64'],
+                  executable: false,
+                  rentEpoch: 0,
+                }
+              : null
+          ),
+        },
+      }));
+    };
+
+    const SOL_IN = 1000000000;
+    const solToUsdc = (...extraKeys) =>
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([swapInstruction([TAKER_USDC, ...extraKeys])])
+      );
+    const expectGuardRefusal = async (reason, request = params()) => {
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+      await expect(service.build(request, locals)).rejects.toMatchObject({
+        statusCode: 502,
+        errorCode: 'provider_bad_response',
+      });
+      expect(error).toHaveBeenCalledWith('[SWAP_BALANCE_GUARD]', { provider: '0x', reason });
+      error.mockRestore();
+    };
+
+    it('passes a swap that spends the input and the fees and pays the output to the taker', async () => {
+      solToUsdc();
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN), [TAKER_USDC]: token({ mint: USDC, amount: 0 }) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000 }),
+        },
+      });
+
+      await expect(service.build(params(), locals)).resolves.toMatchObject({ amountOut: '990000' });
+      const [, config] = mockConnection.simulateTransaction.mock.calls[0];
+      expect(config.accounts).toEqual({ encoding: 'base64', addresses: [TAKER, TAKER_USDC] });
+      // The simulation runs on state at least as new as what was read before it.
+      expect(config.minContextSlot).toBe(SLOT);
+    });
+
+    it('allows the rent of the token accounts the build creates for the taker', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([
+          createAssociatedTokenAccountIdempotentInstruction(
+            new PublicKey(TAKER),
+            new PublicKey(TAKER_USDC),
+            new PublicKey(TAKER),
+            new PublicKey(USDC)
+          ),
+          swapInstruction([TAKER_USDC]),
+        ])
+      );
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - RENT - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000 }),
+        },
+      });
+
+      await expect(service.build(params(), locals)).resolves.toBeDefined();
+    });
+
+    it("unwraps the taker's own wrapped SOL without reading it as a token loss", async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([swapInstruction([TAKER_USDC, TAKER_WSOL])])
+      );
+      world({
+        before: {
+          [TAKER]: wallet(SOL_IN),
+          [TAKER_USDC]: token({ mint: USDC, amount: 5000000 }),
+          [TAKER_WSOL]: token({ mint: NATIVE_MINT, amount: 3 * SOL_IN }, 3 * SOL_IN + RENT),
+        },
+        after: {
+          [TAKER]: wallet(SOL_IN + 3 * SOL_IN + RENT + 8000000 - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 4000000 }),
+        },
+      });
+
+      await expect(
+        service.build({ ...params(SOL), inputMint: USDC, amount: '1000000' }, locals)
+      ).resolves.toBeDefined();
+    });
+
+    it('refuses a swap that takes tokens of another mint from the taker', async () => {
+      solToUsdc(TAKER_BONK);
+      world({
+        before: {
+          [TAKER]: wallet(5 * SOL_IN),
+          [TAKER_USDC]: token({ mint: USDC, amount: 0 }),
+          [TAKER_BONK]: token({ mint: BONK, amount: 100 }),
+        },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000 }),
+          [TAKER_BONK]: token({ mint: BONK, amount: 0 }),
+        },
+      });
+      await expectGuardRefusal(`taker account ${TAKER_BONK} loses ${BONK}`);
+    });
+
+    it('refuses a swap that takes more of the input than the amount', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(quote([swapInstruction([TAKER_USDC])]));
+      world({
+        before: { [TAKER]: wallet(SOL_IN), [TAKER_USDC]: token({ mint: USDC, amount: 5000000 }) },
+        after: {
+          [TAKER]: wallet(SOL_IN - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 3000000 }),
+        },
+      });
+      await expectGuardRefusal(`taker pays 2000000 of ${USDC}, more than 1000000`, {
+        ...params(SOL),
+        inputMint: USDC,
+        amount: '1000000',
+      });
+    });
+
+    it('refuses a swap that takes more SOL than the amount, the fees and the rent', async () => {
+      solToUsdc();
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN), [TAKER_USDC]: token({ mint: USDC, amount: 0 }) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - 10000000),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000 }),
+        },
+      });
+      await expectGuardRefusal(`taker loses 1010000000 lamports, more than ${SOL_IN + FEES}`);
+    });
+
+    it("refuses a swap that hands a delegate the taker's tokens", async () => {
+      solToUsdc();
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN), [TAKER_USDC]: token({ mint: USDC, amount: 0 }) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000, delegate: STRANGER }),
+        },
+      });
+      await expectGuardRefusal(`taker account ${TAKER_USDC} gains a delegate or close authority`);
+    });
+
+    it("refuses a swap that hands the taker's token account to someone else", async () => {
+      solToUsdc();
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN), [TAKER_USDC]: token({ mint: USDC, amount: 0 }) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000, owner: STRANGER }),
+        },
+      });
+      await expectGuardRefusal(`taker account ${TAKER_USDC} changes owner`);
+    });
+
+    const createFor = (address, mint) =>
+      createAssociatedTokenAccountIdempotentInstruction(
+        new PublicKey(TAKER),
+        new PublicKey(address),
+        new PublicKey(TAKER),
+        new PublicKey(mint)
+      );
+
+    it('watches an output account someone funded before it existed, and refuses a delegate on it', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([createFor(TAKER_USDC, USDC), swapInstruction([TAKER_USDC])])
+      );
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN), [TAKER_USDC]: wallet(1000000) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - RENT - FEES + 1000000),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000, delegate: STRANGER }),
+        },
+      });
+      await expectGuardRefusal(`taker account ${TAKER_USDC} gains a delegate or close authority`);
+    });
+
+    it('gives no rent allowance for a create of an account the taker already has', async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([createFor(TAKER_USDC, USDC), swapInstruction([TAKER_USDC])])
+      );
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN), [TAKER_USDC]: token({ mint: USDC, amount: 0 }) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - FEES - 1000000),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000 }),
+        },
+      });
+      await expectGuardRefusal(
+        `taker loses ${SOL_IN + FEES + 1000000} lamports, more than ${SOL_IN + FEES}`
+      );
+    });
+
+    it("gives no SOL slack for the taker's own account creates, which the guard watches", async () => {
+      zeroex.requestSwapInstructions.mockResolvedValue(
+        quote([createFor(TAKER_BONK, BONK), swapInstruction([TAKER_USDC, TAKER_BONK])])
+      );
+      world({
+        before: { [TAKER]: wallet(5 * SOL_IN), [TAKER_USDC]: token({ mint: USDC, amount: 0 }) },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - RENT - FEES - 1000000),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000 }),
+          [TAKER_BONK]: token({ mint: BONK, amount: 0 }),
+        },
+      });
+      await expectGuardRefusal(
+        `taker loses ${SOL_IN + FEES + 1000000} lamports, more than ${SOL_IN + FEES}`
+      );
+    });
+
+    it("refuses a swap that raises an existing delegate's allowance", async () => {
+      solToUsdc();
+      world({
+        before: {
+          [TAKER]: wallet(5 * SOL_IN),
+          [TAKER_USDC]: token({ mint: USDC, amount: 0, delegate: STRANGER, delegatedAmount: 10 }),
+        },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - FEES),
+          [TAKER_USDC]: token({
+            mint: USDC,
+            amount: 990000,
+            delegate: STRANGER,
+            delegatedAmount: 1000000,
+          }),
+        },
+      });
+      await expectGuardRefusal(`taker account ${TAKER_USDC} gains a delegate or close authority`);
+    });
+
+    it('reads a Token-2022 account with extensions from its first 166 bytes', async () => {
+      const takerPyusd = getAssociatedTokenAddressSync(
+        new PublicKey(PYUSD),
+        new PublicKey(TAKER),
+        false,
+        TOKEN_2022
+      ).toBase58();
+      solToUsdc(takerPyusd);
+      world({
+        before: {
+          [TAKER]: wallet(5 * SOL_IN),
+          [TAKER_USDC]: token({ mint: USDC, amount: 0 }),
+          [takerPyusd]: token2022({ mint: PYUSD, amount: 500 }),
+        },
+        after: {
+          [TAKER]: wallet(5 * SOL_IN - SOL_IN - FEES),
+          [TAKER_USDC]: token({ mint: USDC, amount: 990000 }),
+          [takerPyusd]: token2022({ mint: PYUSD, amount: 0 }),
+        },
+      });
+      await expectGuardRefusal(`taker account ${takerPyusd} loses ${PYUSD}`);
+      const [, config] = mockConnection.getMultipleAccountsInfoAndContext.mock.calls[0];
+      expect(config.dataSlice).toEqual({ offset: 0, length: 166 });
+    });
+
+    it('answers 503 simulation_unavailable when the RPC returns no post-simulation accounts', async () => {
+      solToUsdc();
+      mockConnection.simulateTransaction.mockResolvedValue({
+        value: { err: null, unitsConsumed: 135497, logs: [] },
+      });
+      await expect(service.build(params(), locals)).rejects.toMatchObject({
+        statusCode: 503,
+        errorCode: 'simulation_unavailable',
+      });
+    });
+  });
+
   describe('resolveAmount bounds', () => {
     it('accepts decimal digits inside u64 only', async () => {
       for (const bad of ['1e3', '0x10', '-5', '1.5', '0', '18446744073709551616', '007']) {
@@ -628,6 +1001,62 @@ describe('solana-swap-build-service', () => {
       await expect(
         service.resolveAmount({ uiAmount: '1e30', inputMint: SOL }, locals)
       ).resolves.toMatchObject({ error: 'invalid_parameter' });
+    });
+
+    it.each([
+      ['the smallest unit', '0.000000001', '1'],
+      ['past 2^53 without rounding', '9007199.254740993', '9007199254740993'],
+      ['the u64 ceiling', '18446744073.709551615', '18446744073709551615'],
+      ['trailing zeros within the decimals', '2.500000000', '2500000000'],
+      ['trailing zeros past the decimals', '1.0000000000', '1000000000'],
+      ['a last digit inside the decimals followed by zeros', '0.0000000010', '1'],
+    ])('converts a SOL uiAmount at %s exactly', async (_, uiAmount, amount) => {
+      await expect(service.resolveAmount({ uiAmount, inputMint: SOL }, locals)).resolves.toEqual({
+        amount,
+      });
+    });
+
+    it.each([
+      ['zero', '0'],
+      ['zero with decimals', '0.000000000'],
+      ['more decimal places than SOL has', '0.0000000001'],
+      ['past u64', '18446744073.709551616'],
+      ['far past u64', '100000000000000000000'],
+      ['a negative number', '-1'],
+      ['a bare fraction', '.5'],
+      ['a trailing point', '1.'],
+      ['longer than any real amount', `1.${'0'.repeat(400)}`],
+    ])('refuses a SOL uiAmount that is %s with 400 invalid_parameter', async (_, uiAmount) => {
+      await expect(
+        service.resolveAmount({ uiAmount, inputMint: SOL }, locals)
+      ).resolves.toMatchObject({ error: 'invalid_parameter' });
+    });
+
+    it('accepts trailing zeros up to the length cap', async () => {
+      await expect(
+        service.resolveAmount({ uiAmount: `1.${'0'.repeat(250)}`, inputMint: SOL }, locals)
+      ).resolves.toEqual({ amount: '1000000000' });
+    });
+
+    it("uses the token's own decimals: 6 places pass for USDC, 7 do not", async () => {
+      getByMints.mockResolvedValue([{ id: USDC, decimals: 6 }]);
+      await expect(
+        service.resolveAmount({ uiAmount: '1.123456', inputMint: USDC }, locals)
+      ).resolves.toEqual({ amount: '1123456' });
+      await expect(
+        service.resolveAmount({ uiAmount: '1.1234567', inputMint: USDC }, locals)
+      ).resolves.toEqual({
+        error: 'invalid_parameter',
+        error_description:
+          "uiAmount must be a positive decimal number within the token's decimals and u64",
+      });
+    });
+
+    it('treats catalog decimals outside 0..255 as an unknown mint', async () => {
+      getByMints.mockResolvedValue([{ id: USDC, decimals: 256 }]);
+      await expect(
+        service.resolveAmount({ uiAmount: '1', inputMint: USDC }, locals)
+      ).resolves.toMatchObject({ error: 'unknown_mint' });
     });
   });
 });

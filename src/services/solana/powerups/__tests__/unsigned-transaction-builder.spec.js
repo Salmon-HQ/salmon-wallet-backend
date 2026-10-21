@@ -36,6 +36,62 @@ describe('unsigned-transaction-builder compileUnsigned', () => {
 
   afterAll(() => delete process.env.POWERUP_PRIORITY_FEE_MICROLAMPORTS);
 
+  it('measures the size of the bytes compileUnsigned returns for the same instructions', async () => {
+    const instructions = [instruction(MEMO), instruction(CLOSER)];
+    const built = await builder.compileUnsigned({ connection, payer: PAYER, instructions });
+
+    const size = await builder.serializedSize(connection, { payer: PAYER, instructions });
+
+    expect(size).toBe(Buffer.from(built.transaction, 'base64').length);
+  });
+
+  it('answers null (unknown) when a lookup table cannot be read', async () => {
+    connection.getMultipleAccountsInfo.mockRejectedValueOnce(new Error('rpc down'));
+    await expect(
+      builder.serializedSize(connection, {
+        payer: PAYER,
+        instructions: [instruction(MEMO)],
+        lookupTableAddresses: ['AddressLookupTab1e1111111111111111111111111'],
+      })
+    ).resolves.toBeNull();
+  });
+
+  it('answers Infinity when the instructions cannot compile into one transaction', async () => {
+    const tooMany = new TransactionInstruction({
+      programId: new PublicKey(MEMO),
+      keys: Array.from({ length: 300 }, (_, i) => ({
+        pubkey: new PublicKey(Buffer.alloc(32, i % 255).fill(Math.floor(i / 255) + 1, 0, 1)),
+        isSigner: false,
+        isWritable: false,
+      })),
+      data: Buffer.from([1]),
+    });
+    await expect(
+      builder.serializedSize(connection, { payer: PAYER, instructions: [tooMany] })
+    ).resolves.toBe(Infinity);
+  });
+
+  it('asks the simulation for the watched accounts and hands their state back', async () => {
+    const post = [{ lamports: 1, owner: MEMO, data: ['', 'base64'] }];
+    connection.simulateTransaction.mockResolvedValue({
+      value: { err: null, unitsConsumed: 1000, logs: [], accounts: post },
+    });
+
+    const built = await builder.compileUnsigned({
+      connection,
+      payer: PAYER,
+      instructions: [instruction(MEMO)],
+      watchAccounts: [PAYER],
+    });
+
+    expect(connection.simulateTransaction.mock.calls[0][1]).toEqual({
+      sigVerify: false,
+      replaceRecentBlockhash: true,
+      accounts: { encoding: 'base64', addresses: [PAYER] },
+    });
+    expect(built.simulation.accounts).toBe(post);
+  });
+
   // The compute-budget instructions cost a fixed 300 units (150 each, measured
   // against mainnet). Simulating without them derives the limit from a message
   // that is not the one returned, and the proportional headroom then has to
@@ -120,5 +176,29 @@ describe('unsigned-transaction-builder compileUnsigned', () => {
     });
 
     expect(built.simulation).toEqual({ err: 'rpc down', transport: true, logs: [] });
+  });
+});
+
+describe('unsigned-transaction-builder fetchLookupTables', () => {
+  const TABLE = 'AddressLookupTab1e1111111111111111111111111';
+  const ALT_PROGRAM = 'AddressLookupTab1e1111111111111111111111111';
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('refuses an account that the lookup-table program does not own', async () => {
+    connection.getMultipleAccountsInfo.mockResolvedValue([
+      { owner: new PublicKey(MEMO), data: Buffer.alloc(56) },
+    ]);
+    await expect(builder.fetchLookupTables(connection, [TABLE])).rejects.toThrow(
+      `${TABLE} is not an address lookup table`
+    );
+  });
+
+  it('refuses more than 10 lookup tables without reading any', async () => {
+    const tables = Array.from({ length: 11 }, () => ALT_PROGRAM);
+    await expect(builder.fetchLookupTables(connection, tables)).rejects.toThrow(
+      '11 address lookup tables named; at most 10 are read'
+    );
+    expect(connection.getMultipleAccountsInfo).not.toHaveBeenCalled();
   });
 });

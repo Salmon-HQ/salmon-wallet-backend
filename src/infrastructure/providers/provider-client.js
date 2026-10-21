@@ -53,11 +53,18 @@ const record = ({ name, environment, error, retries, throttleWaitMs, opened }) =
  * @template T
  * @param {string} name - provider profile name.
  * @param {(ctx: { timeout: number, signal: AbortSignal }) => Promise<T>} fn
- * @param {{ locals?: Object, environment?: string, operationName?: string }} [options]
+ * @param {{ locals?: Object, environment?: string, operationName?: string,
+ *   noWait?: boolean }} [options]
  *   `environment` overrides `locals.network.environment` for breaker scoping.
+ *   `noWait`: one attempt, only on a rate-limit token free now — for calls
+ *   that are a nicety, never worth a wait or a backoff.
  * @returns {Promise<T>}
  */
-const providerCall = async (name, fn, { locals, environment, operationName = name } = {}) => {
+const providerCall = async (
+  name,
+  fn,
+  { locals, environment, operationName = name, noWait = false } = {}
+) => {
   const profile = getProfile(name);
   const env = environment || locals?.network?.environment || 'global';
   let retries = 0;
@@ -73,7 +80,11 @@ const providerCall = async (name, fn, { locals, environment, operationName = nam
 
   for (;;) {
     try {
-      throttleWaitMs += await limiter.acquire(profile, locals);
+      throttleWaitMs += await limiter.acquire(
+        profile,
+        locals,
+        noWait ? { maxWaitMs: 0 } : undefined
+      );
       const timeout = Math.max(1, Math.min(profile.timeoutMs, remainingMs(locals)));
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeout);
@@ -91,7 +102,10 @@ const providerCall = async (name, fn, { locals, environment, operationName = nam
         ? await breaker.recordFailure(name, env, profile.breaker)
         : false;
       const canRetry =
-        isRetryableError(error) && !error.errorCode && retries + 1 < profile.retry.maxAttempts;
+        !noWait &&
+        isRetryableError(error) &&
+        !error.errorCode &&
+        retries + 1 < profile.retry.maxAttempts;
       const retryAfter = profile.retry.honorRetryAfter ? getRetryAfter(error) : null;
       const delay =
         retryAfter ?? calculateBackoffDelay(retries, profile.retry.baseMs, 2, profile.retry.maxMs);
