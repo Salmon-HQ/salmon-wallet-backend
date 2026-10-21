@@ -2,6 +2,13 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.26.1 — 2026-10-21
+
+- No endpoint, response or behavior change. Deployment hardening:
+  - The Lambda role carries a permissions boundary (`gol-salmon-api-lambda-boundary`): its own log groups and the availability table parameter, nothing in IAM.
+  - The CI deploy role can create or change project roles only with that boundary, pass roles only to Lambda, and write only the project's CloudFormation stacks.
+  - The nightly provider-test job runs only on `main`, with its keys in the `provider-tests` environment.
+
 ## 0.26.0 — 2026-10-20
 
 - Swap availability fails closed: a caller whose country cannot be worked out gets `403 region_restricted` for `swap` (and `swap` reads as unavailable with `reason: 'region'` in `GET /v1/{network}/powerups/availability`); other Powerups are unaffected. A table without the `swap` row is now invalid.
