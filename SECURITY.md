@@ -41,7 +41,7 @@ Already resolved via `overrides` (kept here so nobody removes them):
 
 ### Development only (`serverless@3` tree)
 
-Every remaining finding (`tar`, `decompress`, `adm-zip`, `file-type`, `aws-sdk` v2, `uuid`) sits under `serverless@3`, which only runs on developer machines and in the GitHub Actions deploy job — never inside the Lambda bundle. `tar` in particular is only required by Serverless's self-updater, which exits early when the framework is installed locally (as it is here). npm's sole fix is `serverless@4` (see `docs/DEPLOY.md`); until then these are accepted. Serverless v3 stopped receiving security updates in early 2025, so this exception has a shelf life.
+`adm-zip` is resolved by the `adm-zip ^0.6.1` override under `@serverless/platform-client`. Every remaining finding (`tar`, `decompress`, `file-type`, `aws-sdk` v2, `uuid`) sits under `serverless@3`, which only runs on developer machines and in the GitHub Actions deploy job — never inside the Lambda bundle. `tar` in particular is only required by Serverless's self-updater, which exits early when the framework is installed locally (as it is here). npm's sole fix is `serverless@4` (see `docs/DEPLOY.md`); until then these are accepted. Serverless v3 stopped receiving security updates in early 2025, so this exception has a shelf life.
 
 ## Notes for maintainers
 
