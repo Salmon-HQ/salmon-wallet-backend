@@ -234,7 +234,7 @@
         "apigateway:SetWebACL"
       ],
       "Resource": [
-        "arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/gol-salmon-api-*/*",
+        "arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/*/*",
         "arn:aws:apigateway:us-east-1::/restapis/*/stages/*"
       ]
     },

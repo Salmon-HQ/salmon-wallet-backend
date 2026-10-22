@@ -33,6 +33,20 @@ const ANALYTICS_EVENTS = [
   'dapp_transaction_signed',
 ];
 
+// Events that follow an on-chain transaction. The moment one happened can be
+// matched to the public chain, which would tie the install to its addresses,
+// so only the day is kept.
+const TRANSACTION_EVENTS = new Set([
+  'first_send_completed',
+  'send_completed',
+  'nft_sent',
+  'first_swap_completed',
+  'swap_completed',
+  'memo_sent',
+  'payment_request_paid',
+  'dapp_transaction_signed',
+]);
+
 const CHAINS = ['solana', 'bitcoin', 'ethereum'];
 // The wallet's Powerup registry ids. A new Powerup adds its id here before it ships.
 const POWERUPS = ['swap', 'payments', 'memo', 'skr'];
@@ -118,6 +132,7 @@ function safeValidateEvent(name, props = {}) {
 
 module.exports = {
   ANALYTICS_EVENTS,
+  TRANSACTION_EVENTS,
   CHAINS,
   POWERUPS,
   ALLOWED_PROP_KEYS,

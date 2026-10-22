@@ -104,6 +104,18 @@ describe('createGa4Sink', () => {
     expect(calls[0].body.events[0]).not.toHaveProperty('timestamp_micros');
   });
 
+  it('sends records dated to the day in their own request, stamped with that day', async () => {
+    const dayStartMs = Math.floor(RECORD.received_at / 86_400_000) * 86_400_000;
+    const hourStartMs = Math.floor(RECORD.received_at / 3_600_000) * 3_600_000;
+    const dayDated = { ...RECORD, received_at: dayStartMs };
+    await createGa4Sink().putRecords([{ ...RECORD, event: 'app_opened' }, dayDated]);
+    expect(calls.map((c) => c.body.timestamp_micros)).toEqual([
+      hourStartMs * 1000,
+      dayStartMs * 1000,
+    ]);
+    expect(calls[1].body.events).toEqual([toGa4Event(dayDated)]);
+  });
+
   it('never forwards the user IP (no ip_override / user-ip fields)', async () => {
     await createGa4Sink().putRecords([RECORD]);
     expect(calls[0].body).not.toHaveProperty('ip_override');

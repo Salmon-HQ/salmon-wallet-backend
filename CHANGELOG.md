@@ -2,6 +2,10 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.27.1 — 2026-10-22
+
+- `POST /v1/events` (usage analytics): events that follow an on-chain transaction (sends, NFT sends, swaps, memos, paid payment requests, dApp transactions) are stored and forwarded to GA4 dated to the start of their UTC day, in a GA4 request of their own; other events keep the hour the batch arrived. Request and response are unchanged.
+
 ## 0.27.0 — 2026-10-21
 
 - `GET /v1/solana-*/ft/swap/build`: every instruction of an upstream build is checked against the taker's own accounts before it is returned (one router call, the taker's token accounts for the requested mints, the requested amount, slippage and fee, SOL wrap and unwrap only), and a simulated balance check refuses a build that would move the taker's funds beyond the swap. A refused upstream answer is `502 provider_bad_response`. Both of Jupiter's router forms are accepted; while installed wallets accept only one of them, the build asks Jupiter again (at most 3 calls, within the request budget) and prefers an answer whose transaction fits the 1232-byte limit.
@@ -61,8 +65,8 @@ All notable, user-visible changes to this API are recorded here, newest first. R
 
 ## 0.22.0 — 2026-10-08
 
-- NFT listing and lookup by mint: a Token-2022 NFT that the indexer lists without a name is named from the mint's own on-chain `tokenMetadata`, or from the account its `metadataPointer` names when the mint is a member of that token group. The Seeker Genesis Token, which keeps its metadata on its group, now appears with its name and image instead of as a blank item, and its empty duplicate from the indexer is dropped. A metadata pointer to an account the mint is not a member of is not followed.
-- Every NFT in `/nft` and `/nft/:mint` carries two new fields: `animation` (the metadata document's `animation_url`, or null) and `frozen` (true when the holder's token account is frozen, so it can be neither sent nor burned). No existing field changes.
+- NFT listing (`GET /nft`) and the by-mint lookup the burn and transfer builds use: a Token-2022 NFT that the indexer lists without a name is named from the mint's own on-chain `tokenMetadata`, or from the account its `metadataPointer` names when the mint is a member of that token group. The Seeker Genesis Token, which keeps its metadata on its group, now appears with its name and image instead of as a blank item, and its empty duplicate from the indexer is dropped. A metadata pointer to an account the mint is not a member of is not followed.
+- Every NFT in `GET /nft` carries two new fields: `animation` (the metadata document's `animation_url`, or null) and `frozen` (true when the holder's token account is frozen, so it can be neither sent nor burned). No existing field changes.
 
 ## 0.21.0 — 2026-10-07
 

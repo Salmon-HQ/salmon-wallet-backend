@@ -47,7 +47,13 @@ wallet (ios / android / seeker / extension)
   a signature by a second or two and would let anyone holding the GA data match
   an install to its on-chain transactions. Reports keep hourly resolution;
   GA's Realtime view (last 30 minutes) may not show events stamped earlier in
-  the hour, so verify delivery with a standard report.
+  the hour, so verify delivery with a standard report. Events that follow an
+  on-chain transaction (`TRANSACTION_EVENTS` in `src/analytics/event-schema.js`:
+  sends, NFT sends, swaps, memos, paid payment requests, dApp transactions)
+  keep only the day, in `ts`, `received_at` and GA's `timestamp_micros`,
+  because over several transactions the hours a wallet was active single it
+  out on the chain far sooner than the days do; they reach GA in a request of
+  their own.
 
 ## Anonymity (why we proxy instead of a client SDK)
 
