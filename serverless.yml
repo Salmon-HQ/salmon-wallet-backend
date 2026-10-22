@@ -149,18 +149,18 @@ custom:
     include: []
 
 resources:
-  # AWS WAF on every deployed stage; `local` never reaches AWS, so the
-  # condition leaves both resources out of its template. One rate-based rule
-  # counts, or with custom.wafRuleAction `block` blocks, a source IP above
+  # AWS WAF on production only: it costs USD 6 a month per stage, and staging
+  # carries partner tests, not public traffic. One rate-based rule counts, or
+  # with custom.wafRuleAction `block` blocks, a source IP above
   # custom.wafRateLimitPerIp requests per 60 s. Cost and the deploy role's
   # WAF permissions: docs/DEPLOY.md.
   Conditions:
-    IsDeployedStage: !Not [!Equals ['${sls:stage}', 'local']]
+    IsProd: !Equals ['${sls:stage}', 'prod']
     WafRuleBlocks: !Equals ['${self:custom.wafRuleAction}', 'block']
   Resources:
     ApiWebAcl:
       Type: AWS::WAFv2::WebACL
-      Condition: IsDeployedStage
+      Condition: IsProd
       Properties:
         Name: ${self:service}-${sls:stage}-api
         Scope: REGIONAL
@@ -187,7 +187,7 @@ resources:
     # Serverless names that deployment ApiGatewayDeployment<instanceId>.
     ApiWebAclAssociation:
       Type: AWS::WAFv2::WebACLAssociation
-      Condition: IsDeployedStage
+      Condition: IsProd
       DependsOn: ApiGatewayDeployment${sls:instanceId}
       Properties:
         ResourceArn: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${sls:stage}
