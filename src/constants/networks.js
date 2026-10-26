@@ -41,6 +41,20 @@ const solanaPublicNodeUrl = (environment) => {
     : `https://api.${environment}.solana.com`;
 };
 
+/**
+ * Solana network config. `nodeUrl` carries the provider secret, so it is
+ * readable but not enumerable: JSON.stringify, util.inspect and spread skip
+ * it, and a catalog object that reaches a log or a response cannot carry it.
+ *
+ * @param {string} environment - Solana cluster ('mainnet' | 'testnet' | 'devnet').
+ * @returns {{ nodeUrl: string, publicNodeUrl: string }}
+ */
+const solanaConfig = (environment) =>
+  Object.defineProperty({ publicNodeUrl: solanaPublicNodeUrl(environment) }, 'nodeUrl', {
+    value: solanaNodeUrl(environment),
+    enumerable: false,
+  });
+
 const ETHEREUM_MAINNET_RPC_URL = process.env.ETHEREUM_MAINNET_RPC_URL || 'https://eth.llamarpc.com';
 const ETHEREUM_SEPOLIA_RPC_URL = process.env.ETHEREUM_SEPOLIA_RPC_URL || 'https://rpc.sepolia.org';
 
@@ -85,10 +99,7 @@ module.exports = [
       symbol: 'SOL',
       decimals: 9,
     },
-    config: {
-      nodeUrl: solanaNodeUrl('mainnet'),
-      publicNodeUrl: solanaPublicNodeUrl('mainnet'),
-    },
+    config: solanaConfig('mainnet'),
   },
   {
     id: 'solana-testnet',
@@ -100,10 +111,7 @@ module.exports = [
       symbol: 'SOL',
       decimals: 9,
     },
-    config: {
-      nodeUrl: solanaNodeUrl('testnet'),
-      publicNodeUrl: solanaPublicNodeUrl('testnet'),
-    },
+    config: solanaConfig('testnet'),
   },
   {
     id: 'solana-devnet',
@@ -115,10 +123,7 @@ module.exports = [
       symbol: 'SOL',
       decimals: 9,
     },
-    config: {
-      nodeUrl: solanaNodeUrl('devnet'),
-      publicNodeUrl: solanaPublicNodeUrl('devnet'),
-    },
+    config: solanaConfig('devnet'),
   },
   {
     id: 'ethereum-mainnet',

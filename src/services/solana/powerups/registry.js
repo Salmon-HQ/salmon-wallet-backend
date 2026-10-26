@@ -25,7 +25,7 @@
  *       build(params, { locals, connection }) → {
  *         instructions, lookupTableAddresses?,
  *         provider?: { id, displayName, attribution },               // data provider behind the build, if any
- *         display: { ...typed fields the client renders },
+ *         display: { ...scalar fields the client renders },             // objects and envelope keys never reach the response
  *       },
  *     },
  *   }
