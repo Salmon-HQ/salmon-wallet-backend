@@ -7,7 +7,10 @@
 # services — it is a signal for maintainers, not a merge blocker. Suites
 # probe their provider first and skip with a logged reason when unreachable
 # or unconfigured, so this workflow degrades gracefully while secrets are
-# not yet loaded (see docs/REPO-SETTINGS.md for the secret list).
+# not yet loaded (see docs/REPO-SETTINGS.md for the secret list). A failed
+# or timed-out nightly run opens (or comments on) an issue, because GitHub's
+# own email reaches only whoever last edited the schedule, and not for a
+# timeout, which ends the run as cancelled.
 #
 # Spec: specs/003-integration-external/spec.md
 name: Integration (external providers)
@@ -113,4 +116,31 @@ jobs:
           if [ "$country" = "US" ] && [ "$(jq -r '.provider' <<<"$swap")" != "0x" ]; then
             echo "::error::A request from the United States was not routed to 0x."
             exit 1
+          fi
+
+  report-failure:
+    name: open an issue for a failed nightly run
+    needs: [integration-external, production-country-gate]
+    if: >-
+      always() && github.event_name == 'schedule' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: Nightly provider checks failing
+        run: |
+          number="$(gh issue list --state open --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --title "$TITLE" --assignee Luquish \
+              --body "The nightly integration workflow failed or timed out: $RUN_URL. Close this issue once a nightly run passes again."
           fi
