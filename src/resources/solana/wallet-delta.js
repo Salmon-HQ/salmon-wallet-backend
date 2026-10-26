@@ -70,7 +70,7 @@ const fromAccountData = (accountData, address) => {
  * transfers. Degraded on purpose — a closed account's rent is invisible
  * here — and marked so a test can tell.
  */
-const fromTransfers = (transaction, address, toRawAmount) => {
+const fromTransfers = (transaction, address, toRawAmount, decimalsOf = () => undefined) => {
   let native = 0n;
   const tokens = new Map();
   (transaction.nativeTransfers || []).forEach((transfer) => {
@@ -79,7 +79,10 @@ const fromTransfers = (transaction, address, toRawAmount) => {
     if (transfer.fromUserAccount === address) native -= amount;
   });
   (transaction.tokenTransfers || []).forEach((transfer) => {
-    const decimals = transfer.decimals ?? 0;
+    // Helius sends UI amounts without decimals: an unknown token has no
+    // amount we can confirm, so it stays out instead of showing a wrong one.
+    const decimals = transfer.decimals ?? decimalsOf(transfer.mint);
+    if (decimals === undefined) return;
     const amount = toBigInt(toRawAmount(transfer.tokenAmount, decimals));
     if (transfer.toUserAccount === address) addToken(tokens, transfer.mint, amount, decimals);
     if (transfer.fromUserAccount === address) addToken(tokens, transfer.mint, -amount, decimals);
@@ -127,16 +130,16 @@ const computeRpcWalletDelta = (meta, accountKeys, address) => {
 /**
  * @param {object} transaction  Enriched transaction (Helius or parser shape).
  * @param {string} address      The wallet under inspection.
- * @param {{toRawAmount: (tokenAmount: number|string, decimals: number) => string}} deps
+ * @param {{toRawAmount: (tokenAmount: number|string, decimals: number) => string, decimalsOf?: (mint: string) => number|undefined}} deps
  *   The resource's amount normaliser, so the fallback reads provider amounts
- *   the same way the legs do.
+ *   the same way the legs do, and the catalog's decimals for a mint.
  * @returns {WalletDelta}
  */
-const computeWalletDelta = (transaction, address, { toRawAmount }) => {
+const computeWalletDelta = (transaction, address, { toRawAmount, decimalsOf }) => {
   const hasLedger = Array.isArray(transaction.accountData) && transaction.accountData.length > 0;
   const { native, tokens } = hasLedger
     ? fromAccountData(transaction.accountData, address)
-    : fromTransfers(transaction, address, toRawAmount);
+    : fromTransfers(transaction, address, toRawAmount, decimalsOf);
 
   // The fee has its own field on the payload; the legs say what moved
   // besides it. The ledger's row for the fee payer already subtracted it.
