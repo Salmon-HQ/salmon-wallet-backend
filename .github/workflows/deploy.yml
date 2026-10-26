@@ -187,3 +187,16 @@ jobs:
             exit 1
           fi
           echo "Country database built ${built}"
+
+  report-failure:
+    name: open an issue for a failed scheduled run
+    needs: [target, verify, deploy]
+    if: >-
+      always() && github.event_name == 'schedule' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    permissions:
+      issues: write
+    uses: $/.github/workflows/report-scheduled-failure.yml
+    with:
+      title: Monthly prod redeploy failed
+      consequence: Prod keeps last month's country database, and Swap closes once it is 45 days old.
