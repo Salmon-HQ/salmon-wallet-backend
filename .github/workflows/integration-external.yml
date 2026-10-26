@@ -7,7 +7,10 @@
 # services — it is a signal for maintainers, not a merge blocker. Suites
 # probe their provider first and skip with a logged reason when unreachable
 # or unconfigured, so this workflow degrades gracefully while secrets are
-# not yet loaded (see docs/REPO-SETTINGS.md for the secret list).
+# not yet loaded (see docs/REPO-SETTINGS.md for the secret list). A failed
+# or timed-out nightly run opens (or comments on) an issue, because GitHub's
+# own email reaches only whoever last edited the schedule, and not for a
+# timeout, which ends the run as cancelled.
 #
 # Spec: specs/003-integration-external/spec.md
 name: Integration (external providers)
@@ -114,3 +117,16 @@ jobs:
             echo "::error::A request from the United States was not routed to 0x."
             exit 1
           fi
+
+  report-failure:
+    name: open an issue for a failed scheduled run
+    needs: [integration-external, production-country-gate]
+    if: >-
+      always() && github.event_name == 'schedule' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    permissions:
+      issues: write
+    uses: $/.github/workflows/report-scheduled-failure.yml
+    with:
+      title: Nightly provider checks failing
+      consequence: A provider may have changed its API or a key may have stopped working; the country gate may also have found a stale database.

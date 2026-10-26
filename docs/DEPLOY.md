@@ -137,17 +137,22 @@ Prod env values live in **AWS SSM Parameter Store** under `/salmon-api/prod/*`, 
 
 ## Adding or rotating a secret
 
-1. Write the parameter directly:
-   ```bash
-   aws ssm put-parameter \
-     --name "/salmon-api/prod/YOUR_VAR" \
-     --type SecureString \
-     --value "new-value" \
-     --overwrite \
-     --region us-east-1
-   ```
-2. New var: add it to the map (or group) of every function that reads it in `config/env.prod.yml` (`${ssm:/salmon-api/prod/YOUR_VAR}`), `config/env.staging.yml` and `config/env.local.yml` (`${env:YOUR_VAR, ''}`), and to the `PARAM_NAMES` list in `scripts/ssm-put-params.sh`.
-3. Push a new `prod/vX.Y.Z` tag to roll it out. Lambda env vars only refresh on deploy, not live.
+Lambda env vars are resolved from SSM at deploy time, so a changed parameter reaches a stage only when that stage is deployed again. Keep secret values off the command line (shell history, process list): pass them as `--value "file://"<(printf '%s' "$VALUE")`, as the script below does.
+
+**Rotating a provider credential** (`JUPITER_API_KEY`, `ZEROEX_API_KEY`, `COINGECKO_API_KEY`, `TRITON_RPC_URL`, `TRITON_RPC_URL_DEVNET`, `SOLANA_PUBLIC_RPC_URL_MAINNET`):
+
+1. Create the new credential at the provider and keep the old one active.
+2. Copy it and run `./scripts/rotate-provider-key.sh NAME`. It proves the value with one read-only call to the provider, then writes `/salmon-api/prod/NAME` and `/salmon-api/staging/NAME`, the `provider-tests` environment secret when the nightly workflow reads it, and the local `.env` line. It prints only 8-character SHA-256 fingerprints and empties the clipboard.
+3. Deploy staging (`npm run serverless:deploy:staging`, below) and prod. Prod needs no release: re-running the last Deploy workflow run redeploys the same tag (`gh run rerun <run id>`, within 30 days of that run; the script prints the command). Otherwise push the next `prod/v*` tag.
+4. `./scripts/rotate-provider-key.sh NAME --verify` prints the fingerprint in SSM and in every Lambda that carries the variable. Revoke the old credential at the provider once they all match.
+
+`./scripts/rotate-provider-key.sh NAME --check` tests the value already in SSM prod without changing anything. `TRITON_RPC_URL` is the server's token URL and must never equal `SOLANA_PUBLIC_RPC_URL_MAINNET`, which `/v1/networks` hands to every client.
+
+**Adding a new variable:**
+
+1. Write `/salmon-api/prod/YOUR_VAR` and `/salmon-api/staging/YOUR_VAR` with `aws ssm put-parameter --type SecureString --overwrite --region us-east-1`, value passed as above.
+2. Add it to the map (or group) of every function that reads it in `config/env.prod.yml` (`${ssm:/salmon-api/prod/YOUR_VAR}`), `config/env.staging.yml` and `config/env.local.yml` (`${env:YOUR_VAR, ''}`), and to the `PARAM_NAMES` list in `scripts/ssm-put-params.sh`.
+3. Deploy, as in step 3 above.
 
 ## One-time / bulk seeding
 

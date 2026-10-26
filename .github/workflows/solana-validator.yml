@@ -116,3 +116,16 @@ jobs:
             echo "::error::Transaction v1 is '${status}' on mainnet — revisit the web3.js prerelease pin and remove this job once acknowledged."
             exit 1
           fi
+
+  report-failure:
+    name: open an issue for a failed scheduled run
+    needs: [local-validator, mainnet-feature-status]
+    if: >-
+      always() && github.event_name == 'schedule' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    permissions:
+      issues: write
+    uses: $/.github/workflows/report-scheduled-failure.yml
+    with:
+      title: Nightly Solana validator checks failing
+      consequence: Either v1 transactions broke against the local validator or v1 changed status on mainnet, which means revisiting the web3.js prerelease pin.

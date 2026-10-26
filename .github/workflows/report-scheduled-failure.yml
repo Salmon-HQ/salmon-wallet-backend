@@ -1,0 +1,45 @@
+# Called by the scheduled workflows when one of their jobs fails or times out.
+# GitHub's own email for a scheduled run reaches only whoever last edited the
+# cron line, and none is sent for a timeout, which ends the run as cancelled;
+# an open issue assigned to a maintainer is what makes a red run visible.
+# One issue per title: a new failure comments on it while it stays open.
+name: Report scheduled failure
+
+on:
+  workflow_call:
+    inputs:
+      title:
+        description: Issue title, fixed per workflow
+        required: true
+        type: string
+      consequence:
+        description: One sentence on what breaks if nobody acts
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  report:
+    name: open or update the tracking issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: ${{ inputs.title }}
+          CONSEQUENCE: ${{ inputs.consequence }}
+        run: |
+          number="$(gh issue list --state open --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")"
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --title "$TITLE" --assignee Luquish \
+              --body "A scheduled run failed or timed out: $RUN_URL. $CONSEQUENCE Close this issue once a scheduled run passes again."
+          fi
