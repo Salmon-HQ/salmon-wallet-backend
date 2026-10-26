@@ -119,28 +119,14 @@ jobs:
           fi
 
   report-failure:
-    name: open an issue for a failed nightly run
+    name: open an issue for a failed scheduled run
     needs: [integration-external, production-country-gate]
     if: >-
       always() && github.event_name == 'schedule' &&
       (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
     permissions:
       issues: write
-    steps:
-      - name: Open or update the tracking issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TITLE: Nightly provider checks failing
-        run: |
-          number="$(gh issue list --state open --json number,title \
-            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")"
-          if [ -n "$number" ]; then
-            gh issue comment "$number" --body "Failed again: $RUN_URL"
-          else
-            gh issue create --title "$TITLE" --assignee Luquish \
-              --body "The nightly integration workflow failed or timed out: $RUN_URL. Close this issue once a nightly run passes again."
-          fi
+    uses: ./.github/workflows/report-scheduled-failure.yml
+    with:
+      title: Nightly provider checks failing
+      consequence: A provider may have changed its API or a key may have stopped working; the country gate may also have found a stale database.
