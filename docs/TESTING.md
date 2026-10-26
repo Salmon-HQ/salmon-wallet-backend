@@ -342,7 +342,12 @@ Three workflows split the suites by determinism (specs 001–003 under
   regression — maintainer signal, not a merge blocker. Its
   `production country gate` job checks prod itself: the country database is
   at most 35 days old, the runner's address is placed, and a US runner is
-  routed to 0x.
+  routed to 0x. A failed or timed-out scheduled run opens the issue
+  "Nightly provider checks failing" (or comments on it while it is open), so
+  a red night reaches a maintainer. Integration suites share one Redis client
+  through the provider rate limiter and circuit breaker;
+  `jest.integration.setup.js` closes it after each suite, and `--forceExit`
+  keeps a leaked handle from turning a result into a timeout.
 - **`deploy.yml`** (tag `prod/v*`, and the newest such tag on the 2nd of
   every month): re-runs lint + unit as a pre-deploy gate.
 
