@@ -126,7 +126,7 @@ jobs:
       (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     permissions:
       issues: write
-    uses: ./.github/workflows/report-scheduled-failure.yml
+    uses: $/.github/workflows/report-scheduled-failure.yml
     with:
       title: Nightly provider checks failing
       consequence: A provider may have changed its API or a key may have stopped working; the country gate may also have found a stale database.

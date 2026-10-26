@@ -196,7 +196,7 @@ jobs:
       (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     permissions:
       issues: write
-    uses: ./.github/workflows/report-scheduled-failure.yml
+    uses: $/.github/workflows/report-scheduled-failure.yml
     with:
       title: Monthly prod redeploy failed
       consequence: Prod keeps last month's country database, and Swap closes once it is 45 days old.
