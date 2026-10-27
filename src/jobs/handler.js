@@ -311,8 +311,9 @@ module.exports.refreshSanctionsJob = async () => {
     return createResponse(`Sanctions refresh job completed: ${addresses.length} addresses`);
   } catch (error) {
     console.error('[SANCTIONS_REFRESH]', { outcome: 'failed', message: error.message });
-    // Rethrown so Lambda counts the invocation as failed and an alarm can see it.
-    throw error;
+    // Rethrown so Lambda counts the invocation as failed and an alarm can see it;
+    // the runtime logs it whole, so it goes without the request and its URL.
+    throw withoutCredentials(error);
   } finally {
     if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
       await redis.quit().catch(() => {});

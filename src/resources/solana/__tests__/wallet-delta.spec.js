@@ -135,6 +135,27 @@ describe('computeWalletDelta', () => {
     expect(delta.tokens.get(USDC)).toEqual({ amount: '1250000', decimals: 6 });
   });
 
+  // Helius transfers carry no `decimals` (see the real fixtures), so the
+  // fallback has to ask the token catalog for them.
+  const heliusTransfer = (mint, tokenAmount) => ({
+    feePayer: OTHER,
+    tokenTransfers: [{ fromUserAccount: OTHER, toUserAccount: WALLET, mint, tokenAmount }],
+  });
+  const decimalsOf = (mint) => (mint === USDC ? 6 : undefined);
+
+  test('reads a transfer without decimals at the decimals the catalog gives its mint', () => {
+    const delta = computeWalletDelta(heliusTransfer(USDC, 1.5), WALLET, { ...deps, decimalsOf });
+    expect(delta.tokens.get(USDC)).toEqual({ amount: '1500000', decimals: 6 });
+  });
+
+  test('leaves out a token whose decimals nobody knows rather than guess an amount', () => {
+    const delta = computeWalletDelta(heliusTransfer('UNKNOWN', 1.5), WALLET, {
+      ...deps,
+      decimalsOf,
+    });
+    expect(delta.tokens.has('UNKNOWN')).toBe(false);
+  });
+
   test('never rounds a large raw balance', () => {
     const big = '123456789012345678901234567890';
     const delta = computeWalletDelta(

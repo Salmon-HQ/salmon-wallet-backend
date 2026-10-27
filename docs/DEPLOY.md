@@ -8,7 +8,7 @@ Prod deploys are tag-triggered: push a git tag `prod/vX.Y.Z` from `main`. A sche
 
 - **`target`** — picks the tag to ship: the pushed one, or on the scheduled run the newest `prod/v*` by version. Both jobs below check out that tag.
 - **`verify`** — no AWS credentials. `npm ci`, the same `format:check` + `lint:check` gate as `ci.yml`, `test:unit`, and a `serverless print --stage local` sanity check (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
-- **`deploy`** (`needs: [target, verify]`) — first runs `node scripts/refresh-geo-data.mjs` (downloads and checks the month's DB-IP country database, before the job holds any AWS credentials; a download or check failure fails the deploy), then assumes the `GithubActionsRole` via GitHub OIDC (`aws-actions/configure-aws-credentials`), runs `npm run serverless:deploy` (`serverless deploy --stage prod`), runs `refreshSanctionsJob` once, then smokes `GET /health` on the stack's execute-api URL (read from `serverless info --verbose`, not CloudFront, whose cache could mask a broken deploy) and fails when `GET /status` reports no `countryDatabase`, since Swap is then closed. A red smoke step only alerts — nothing rolls back on its own.
+- **`deploy`** (`needs: [target, verify]`) — first runs `node scripts/refresh-geo-data.mjs` (downloads and checks the month's DB-IP country database, before the job holds any AWS credentials; a download or check failure fails the deploy), then assumes the `GithubActionsRole` via GitHub OIDC as the `production` environment (`aws-actions/configure-aws-credentials`; `docs/REPO-SETTINGS.md`, section 6), runs `npm run serverless:deploy` (`serverless deploy --stage prod`), runs `refreshSanctionsJob` once, then smokes `GET /health` on the stack's execute-api URL (read from `serverless info --verbose`, not CloudFront, whose cache could mask a broken deploy) and fails when `GET /status` reports no `countryDatabase`, since Swap is then closed. A red smoke step only alerts — nothing rolls back on its own.
 
 Rollback is a human step, run locally with prod credentials:
 
@@ -36,14 +36,14 @@ Staging differs from prod on purpose in three places: the Powerups switched on f
 
 ## Release, step by step
 
-The owner's order is staging first, then prod, so a change runs on the staging stack before it reaches users:
+The owner's order is staging first, then prod, so a change runs on the staging stack before it reaches users. `main` is what prod runs and takes changes only from `staging`; the `PR rules` workflow fails a PR into `main` from any other branch unless it carries the `exception` label.
 
-1. Open the PR from the feature branch to `main`, and a second PR from the same branch to `staging`. The repository allows squash merges only.
-2. Squash-merge the `staging` PR, then deploy staging by hand from `origin/staging` (the commands above; `aws login` first, since the session expires). Smoke it against the staging execute-api URL the deploy prints, for example `GET /v1/solana-mainnet/powerups/availability` with each `X-Salmon-Platform`.
-3. Squash-merge the `main` PR. `main` requires an approving review; while the owner is the only developer, the merge uses `gh pr merge --squash --admin`.
+1. Branch from `staging` and open the PR into `staging`. Merge only what can ship with the next release, because the release PR carries everything `staging` holds.
+2. Squash-merge it (the PR title becomes the commit), then deploy staging by hand from `origin/staging` (the commands above; `aws login` first, since the session expires). Smoke it against the staging execute-api URL the deploy prints, for example `GET /v1/solana-mainnet/powerups/availability` with each `X-Salmon-Platform`.
+3. Open the release PR from `staging` to `main` and merge it with a merge commit, never squash: `main` then shares `staging`'s history, and the next release PR carries only what is new. `main` requires an approving review; while the owner is the only developer, the merge uses `gh pr merge <number> --merge --admin`.
 4. Tag the merge commit `prod/vX.Y.Z`, matching `package.json#version` and the CHANGELOG entry, and push the tag. The `deploy.yml` run verifies, deploys and smokes `/health`; its log prints the prod execute-api URL.
 5. A red `verify` caused by a timing test is rerun with `gh run rerun <id> --failed`; any other red stops the release.
-6. Merge `main` into `staging` right after every merge to `main`, this one or any other (CI, scripts, docs): `git switch staging && git merge origin/main && git push origin staging`, a merge commit. `staging` is then `main` plus whatever is still under test there, and the next branch's two PRs start from the same code. Keep what `staging` has that `main` does not yet; never reset `staging` to `main`. Squash-merging the same change into both branches leaves two commits that git treats as different, so a conflict in this merge is resolved line by line, keeping the newer text from either side.
+6. A fix that cannot wait for the next release goes straight to `main` as an exception: branch from `main`, label the PR `exception` and squash-merge it. Right after, merge `main` into `staging` with a merge commit (`git switch staging && git merge origin/main`), run `npm run lint:check && npm run test:unit`, then `git push origin staging`; never reset `staging` to `main`. Git can join two copies of the same new function without marking a conflict, and the checks catch it.
 
 ### The monthly country database
 

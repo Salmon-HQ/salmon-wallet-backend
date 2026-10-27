@@ -373,6 +373,31 @@ describe('Helius Transaction Resource - Unit Tests', () => {
       expect(result.inputs[0].symbol).toBe('USDT');
       expect(result.inputs[0].source).toBe('sender-address');
     });
+
+    test('reads a Helius amount at the catalog decimals when the payload has no ledger', async () => {
+      // Helius transfers carry a UI amount and no decimals.
+      const heliusTx = {
+        signature: 'test-sig',
+        type: 'TRANSFER',
+        timestamp: 1234567890,
+        fee: 5000,
+        feePayer: 'sender-address',
+        tokenTransfers: [
+          {
+            fromUserAccount: 'sender-address',
+            toUserAccount: mockAddress,
+            tokenAmount: 1.5,
+            mint: 'token-mint',
+          },
+        ],
+        nativeTransfers: [],
+      };
+      const catalog = [{ address: 'token-mint', decimals: 6, symbol: 'USDC' }];
+
+      const result = await transformTransaction(heliusTx, mockAddress, catalog);
+
+      expect(result.inputs[0]).toMatchObject({ amount: '1500000', decimals: 6 });
+    });
   });
 
   describe('Enriched Fields', () => {});

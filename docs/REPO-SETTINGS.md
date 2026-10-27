@@ -14,7 +14,8 @@ Two active rulesets. Bypass is the **admin** role only (`actor_id: 5`,
 
 - **Require a pull request**: 1 approval, code-owner review, dismiss stale
   approvals on push, approval of the most recent reviewable push, all review
-  threads resolved, **squash merge only**.
+  threads resolved, **squash or merge commit**: a merge commit for the release
+  PR from `staging`, so `main` shares its history; squash for an `exception`.
 - **Required status checks** (strict: branch must be up to date):
   `lint / test / config`, `hermetic integration (redis)`,
   `workflow security lint`, `conventional PR title`,
@@ -24,7 +25,13 @@ Two active rulesets. Bypass is the **admin** role only (`actor_id: 5`,
   other alerts `errors`. OpenSSF Scorecard also uploads SARIF (tool
   "Scorecard", `.github/workflows/scorecard.yml`) but is deliberately not a
   required tool: its findings are advisory and must never block a merge.
-- **Require linear history**, **block force pushes**, **block deletion**.
+- **Block force pushes**, **block deletion**. Linear history is not required,
+  because the release PR from `staging` lands as a merge commit.
+
+### `Protect staging` (branch, `refs/heads/staging`)
+
+- **Block deletion** and **block force pushes**. Auto-delete of head branches
+  (section 2) would otherwise delete `staging` when its release PR merges.
 
 ### `Protect prod tags` (tag, `refs/tags/prod/*`, bypass mode `always`)
 
@@ -38,22 +45,25 @@ Read both: `gh api repos/Salmon-HQ/salmon-wallet-backend/rulesets` and
 `.../rulesets/<id>`; update with `PUT .../rulesets/<id>` and the same JSON
 shape the GET returns.
 
-## 2. Merge settings (squash only)
+## 2. Merge settings
 
-The `conventional PR title` check exists because the PR title becomes the
-commit on `main`. That only holds with squash merges.
+The `conventional PR title` check exists because a squash merge takes the PR
+title as its commit. PRs into `staging` are squash-merged; the release PR from
+`staging` to `main` is merged with a merge commit (`docs/DEPLOY.md`).
 
 Applied: squash ON (commit title = PR title, message = PR body), merge
-commits OFF, rebase OFF, auto-delete head branches ON.
+commits ON, rebase OFF, auto-delete head branches ON (`staging` is kept by its
+ruleset).
 
 ```bash
 gh api -X PATCH repos/Salmon-HQ/salmon-wallet-backend \
-  -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false \
+  -F allow_squash_merge=true -F allow_merge_commit=true -F allow_rebase_merge=false \
   -F delete_branch_on_merge=true -F squash_merge_commit_title=PR_TITLE \
   -F squash_merge_commit_message=PR_BODY
 ```
 
-Admins merge with `gh pr merge <n> --squash --admin`.
+Admins merge a PR into `staging` with `gh pr merge <n> --squash` and the
+release PR with `gh pr merge <n> --merge --admin`.
 
 ## 3. Code security (all free on a public repo)
 
@@ -143,7 +153,39 @@ prod's public `GET /status` and `GET /v1/solana-mainnet/powerups/availability`.
 The optional repository variable `PROD_API_URL` points it at another base URL;
 unset, it uses the prod execute-api URL.
 
-## 6. Who can push
+## 6. The `production` environment (deploy role)
+
+The deploy job runs as the `production` environment, and `GithubActionsRole`
+trusts that environment. A job without an environment is identified by its git
+ref, and the monthly scheduled redeploy runs from `main` rather than from a
+`prod/*` tag, so a role that trusted only the tags refused it. The environment
+admits the branch `main` and the tags `prod/*` and nothing else. It has no
+required reviewer, because the monthly run is unattended.
+
+Done before the change that adds `environment: production` to `deploy.yml`
+reaches `main`: a job that names an environment which does not exist yet
+creates it with no branch rule.
+
+1. Create the environment with deployment branches and tags limited to `main`
+   and `prod/*`:
+   ```bash
+   gh api -X PUT repos/Salmon-HQ/salmon-wallet-backend/environments/production \
+     -F 'deployment_branch_policy[protected_branches]=false' \
+     -F 'deployment_branch_policy[custom_branch_policies]=true'
+   gh api -X POST repos/Salmon-HQ/salmon-wallet-backend/environments/production/deployment-branch-policies \
+     -f name=main -f type=branch
+   gh api -X POST repos/Salmon-HQ/salmon-wallet-backend/environments/production/deployment-branch-policies \
+     -f name='prod/*' -f type=tag
+   ```
+2. Let the role's trust policy accept the environment's subject,
+   `repo:Salmon-HQ@296841509/salmon-wallet-backend@1347383970:environment:production`
+   (the repository uses GitHub's immutable subject prefix, read with
+   `gh api repos/Salmon-HQ/salmon-wallet-backend/actions/oidc/customization/sub`),
+   next to the tag subject `…:ref:refs/tags/prod/*`, which keeps a rerun of a
+   deploy made before this change working. Drop the tag subject once a deploy
+   with the environment has passed.
+
+## 7. Who can push
 
 The repo is public, so anyone can fork and open a PR, but only collaborators
 can push branches and only admins can bypass the rulesets or create a
