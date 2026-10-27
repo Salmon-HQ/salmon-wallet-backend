@@ -43,6 +43,7 @@ The owner's order is staging first, then prod, so a change runs on the staging s
 3. Squash-merge the `main` PR. `main` requires an approving review; while the owner is the only developer, the merge uses `gh pr merge --squash --admin`.
 4. Tag the merge commit `prod/vX.Y.Z`, matching `package.json#version` and the CHANGELOG entry, and push the tag. The `deploy.yml` run verifies, deploys and smokes `/health`; its log prints the prod execute-api URL.
 5. A red `verify` caused by a timing test is rerun with `gh run rerun <id> --failed`; any other red stops the release.
+6. Merge `main` into `staging` right after every merge to `main`, this one or any other (CI, scripts, docs): `git switch staging && git merge origin/main && git push origin staging`, a merge commit. `staging` is then `main` plus whatever is still under test there, and the next branch's two PRs start from the same code. Keep what `staging` has that `main` does not yet; never reset `staging` to `main`. Squash-merging the same change into both branches leaves two commits that git treats as different, so a conflict in this merge is resolved line by line, keeping the newer text from either side.
 
 ### The monthly country database
 
