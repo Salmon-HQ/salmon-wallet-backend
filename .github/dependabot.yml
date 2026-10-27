@@ -5,6 +5,8 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    # Updates land on staging first; main only moves when staging ships.
+    target-branch: staging
     schedule:
       interval: weekly
       day: monday
@@ -32,6 +34,7 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: staging
     schedule:
       interval: weekly
       day: monday
@@ -43,6 +46,7 @@ updates:
   # this keeps the digest moving with the node:24 tag instead of by hand.
   - package-ecosystem: docker
     directory: /
+    target-branch: staging
     schedule:
       interval: weekly
       day: monday
