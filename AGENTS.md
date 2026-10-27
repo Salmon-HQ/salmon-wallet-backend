@@ -119,7 +119,7 @@ is build-only (`GET /powerups/{id}/build`): the wallet's Apple
 - Runtime is Node 24 (`nodejs24.x` in `serverless.yml`; AWS deprecated `nodejs20.x` on 2026-04-30 and only ships runtimes for Active LTS releases, so a Node major moves only when Lambda lists it). Develop and test on Node 24 — `.nvmrc` pins it and `package.json#engines` enforces a `>=24` floor.
 - Lint: `npm run linter` (ESLint with auto-fix) fixes locally; the PR gate runs `npm run lint:check` (zero warnings) — run it before finishing.
 - Format: Prettier is enforced in CI (`npm run format:check`). Fix with `npm run format`.
-- Merging is squash-only and gated by the `Protect main` ruleset (required checks, review, code scanning); an agent opens the PR and stops there — a repo admin merges with `gh pr merge <n> --squash --admin`, and the PR title becomes the commit on `main` (`docs/REPO-SETTINGS.md`).
+- Branches start from `staging` and their PRs target `staging` (squash, so the PR title becomes the commit); `main` takes only the release PR from `staging`, merged with a merge commit, and a PR into `main` from any other branch needs the `exception` label (`docs/DEPLOY.md`, "Release, step by step"). `main` is gated by the `Protect main` ruleset (required checks, review, code scanning); an agent opens the PR and stops there — a repo admin merges (`docs/REPO-SETTINGS.md`).
 - Every PR runs the deterministic gate in `.github/workflows/ci.yml` (format, lint, unit tests, serverless config smoke, hermetic Redis integration, conventional PR title, zizmor). Live-provider integration suites run in the nightly `integration-external.yml`, never in the PR gate.
 
 ## Dependencies
