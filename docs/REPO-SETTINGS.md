@@ -14,7 +14,8 @@ Two active rulesets. Bypass is the **admin** role only (`actor_id: 5`,
 
 - **Require a pull request**: 1 approval, code-owner review, dismiss stale
   approvals on push, approval of the most recent reviewable push, all review
-  threads resolved, **squash merge only**.
+  threads resolved, **squash or merge commit**: a merge commit for the release
+  PR from `staging`, so `main` shares its history; squash for an `exception`.
 - **Required status checks** (strict: branch must be up to date):
   `lint / test / config`, `hermetic integration (redis)`,
   `workflow security lint`, `conventional PR title`,
@@ -24,7 +25,13 @@ Two active rulesets. Bypass is the **admin** role only (`actor_id: 5`,
   other alerts `errors`. OpenSSF Scorecard also uploads SARIF (tool
   "Scorecard", `.github/workflows/scorecard.yml`) but is deliberately not a
   required tool: its findings are advisory and must never block a merge.
-- **Require linear history**, **block force pushes**, **block deletion**.
+- **Block force pushes**, **block deletion**. Linear history is not required,
+  because the release PR from `staging` lands as a merge commit.
+
+### `Protect staging` (branch, `refs/heads/staging`)
+
+- **Block deletion** and **block force pushes**. Auto-delete of head branches
+  (section 2) would otherwise delete `staging` when its release PR merges.
 
 ### `Protect prod tags` (tag, `refs/tags/prod/*`, bypass mode `always`)
 
@@ -38,22 +45,25 @@ Read both: `gh api repos/Salmon-HQ/salmon-wallet-backend/rulesets` and
 `.../rulesets/<id>`; update with `PUT .../rulesets/<id>` and the same JSON
 shape the GET returns.
 
-## 2. Merge settings (squash only)
+## 2. Merge settings
 
-The `conventional PR title` check exists because the PR title becomes the
-commit on `main`. That only holds with squash merges.
+The `conventional PR title` check exists because a squash merge takes the PR
+title as its commit. PRs into `staging` are squash-merged; the release PR from
+`staging` to `main` is merged with a merge commit (`docs/DEPLOY.md`).
 
 Applied: squash ON (commit title = PR title, message = PR body), merge
-commits OFF, rebase OFF, auto-delete head branches ON.
+commits ON, rebase OFF, auto-delete head branches ON (`staging` is kept by its
+ruleset).
 
 ```bash
 gh api -X PATCH repos/Salmon-HQ/salmon-wallet-backend \
-  -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false \
+  -F allow_squash_merge=true -F allow_merge_commit=true -F allow_rebase_merge=false \
   -F delete_branch_on_merge=true -F squash_merge_commit_title=PR_TITLE \
   -F squash_merge_commit_message=PR_BODY
 ```
 
-Admins merge with `gh pr merge <n> --squash --admin`.
+Admins merge a PR into `staging` with `gh pr merge <n> --squash` and the
+release PR with `gh pr merge <n> --merge --admin`.
 
 ## 3. Code security (all free on a public repo)
 
