@@ -2,6 +2,11 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.27.2 — 2026-10-27
+
+- Provider credentials stay out of every serialized object: the Solana network configuration no longer lists the credential-bearing RPC URL among its fields, a Powerup build's display fields are scalars that never replace `transaction`, `provider` or `contributor`, and a failed `refreshSanctionsJob` reports its error without the source URL or headers. Request and response shapes are unchanged.
+- Production deploys run as the GitHub environment `production`, so the monthly redeploy of the newest tag, which ships that month's country database, can assume the deploy role. No change to the API.
+
 ## 0.27.1 — 2026-10-22
 
 - `POST /v1/events` (usage analytics): events that follow an on-chain transaction (sends, NFT sends, swaps, memos, paid payment requests, dApp transactions) are stored and forwarded to GA4 dated to the start of their UTC day, in a GA4 request of their own; other events keep the hour the batch arrived. Request and response are unchanged.
