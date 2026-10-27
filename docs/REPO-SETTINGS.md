@@ -153,7 +153,39 @@ prod's public `GET /status` and `GET /v1/solana-mainnet/powerups/availability`.
 The optional repository variable `PROD_API_URL` points it at another base URL;
 unset, it uses the prod execute-api URL.
 
-## 6. Who can push
+## 6. The `production` environment (deploy role)
+
+The deploy job runs as the `production` environment, and `GithubActionsRole`
+trusts that environment. A job without an environment is identified by its git
+ref, and the monthly scheduled redeploy runs from `main` rather than from a
+`prod/*` tag, so a role that trusted only the tags refused it. The environment
+admits the branch `main` and the tags `prod/*` and nothing else. It has no
+required reviewer, because the monthly run is unattended.
+
+Done before the change that adds `environment: production` to `deploy.yml`
+reaches `main`: a job that names an environment which does not exist yet
+creates it with no branch rule.
+
+1. Create the environment with deployment branches and tags limited to `main`
+   and `prod/*`:
+   ```bash
+   gh api -X PUT repos/Salmon-HQ/salmon-wallet-backend/environments/production \
+     -F 'deployment_branch_policy[protected_branches]=false' \
+     -F 'deployment_branch_policy[custom_branch_policies]=true'
+   gh api -X POST repos/Salmon-HQ/salmon-wallet-backend/environments/production/deployment-branch-policies \
+     -f name=main -f type=branch
+   gh api -X POST repos/Salmon-HQ/salmon-wallet-backend/environments/production/deployment-branch-policies \
+     -f name='prod/*' -f type=tag
+   ```
+2. Let the role's trust policy accept the environment's subject,
+   `repo:Salmon-HQ@296841509/salmon-wallet-backend@1347383970:environment:production`
+   (the repository uses GitHub's immutable subject prefix, read with
+   `gh api repos/Salmon-HQ/salmon-wallet-backend/actions/oidc/customization/sub`),
+   next to the tag subject `…:ref:refs/tags/prod/*`, which keeps a rerun of a
+   deploy made before this change working. Drop the tag subject once a deploy
+   with the environment has passed.
+
+## 7. Who can push
 
 The repo is public, so anyone can fork and open a PR, but only collaborators
 can push branches and only admins can bypass the rulesets or create a
