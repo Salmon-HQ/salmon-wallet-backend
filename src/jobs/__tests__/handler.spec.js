@@ -294,6 +294,22 @@ describe('jobs/handler', () => {
       );
     });
 
+    it('fails the invocation without the source URL or its headers in the error', async () => {
+      const credential = 'sanctions-source-credential-123';
+      http.get.mockRejectedValue(
+        axiosError(`https://lists.example/sdn.csv?key=${credential}`, {
+          authorization: `Bearer ${credential}`,
+        })
+      );
+
+      const thrown = await handler.refreshSanctionsJob().catch((e) => e);
+
+      expect(thrown).toBeInstanceOf(Error);
+      // The Lambda runtime logs a rejected invocation with JSON.stringify.
+      expect(JSON.stringify(thrown)).not.toContain(credential);
+      expect(util.inspect(thrown)).not.toContain(credential);
+    });
+
     it('refuses a list far smaller than the one held, as a truncated download', async () => {
       http.get.mockResolvedValue({ data: SDN_FIXTURE });
       sanctionsRepository.getLocalListSize.mockResolvedValue(500);

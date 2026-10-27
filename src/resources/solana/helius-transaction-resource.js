@@ -481,7 +481,10 @@ const transformTransaction = async (heliusTransaction, address, tokens = [], opt
 
   // What the wallet gained or lost, per asset, from the ledger's balance
   // changes; the transfers only name the other side (spec 016).
-  const delta = computeWalletDelta(heliusTransaction, address, { toRawAmount });
+  const delta = computeWalletDelta(heliusTransaction, address, {
+    toRawAmount,
+    decimalsOf: (mint) => findTokenInCache(mint, tokenLookup)?.decimals,
+  });
   const legs = buildLegs(heliusTransaction, address, tokenLookup, delta);
   const type = resolveType(providerType, heliusTransaction, address, legs, memo);
   const { inputs, outputs } = attachCounterparties(type, heliusTransaction, address, legs);
