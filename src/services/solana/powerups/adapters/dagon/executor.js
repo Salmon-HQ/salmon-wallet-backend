@@ -163,10 +163,7 @@ const createInput = async (value, authorized, config, locals) => {
   } catch (error) {
     if (error.errorCode && error.errorCode !== 'upstream_unavailable') throw error;
     const status = error.response?.status;
-    if (status && status < 500) {
-      console.error('[DAGON_EXECUTOR] createInput refused', { status });
-      throw badResponse('http_status');
-    }
+    if (status && status < 500) throw badResponse(`http_${status}`);
     throw unavailable({ error: toSafeError(error) });
   }
   return parseAnswer(answer);

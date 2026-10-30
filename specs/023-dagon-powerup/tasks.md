@@ -135,9 +135,9 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 **Goal**: prove Swap, Memo, Payments, SKR, broken-build and mainnet behave as before.
 
-- [ ] T039 [US5] Run the full gate `npm run format:check && npm run lint:check && npm run test:unit` and paste the tail of the output; all green — FR-026, SC-004
-- [ ] T040 [US5] Show `git diff origin/staging --stat -- src/__tests__/signing-boundary.spec.js src/routes/` is empty (no route added, signing boundary untouched) and that the only edited existing assertions are the two exact lists (`event-schema.spec.js:77`, `profiles.spec.js:20`) plus additive cases — FR-006, FR-026, SC-004
-- [ ] T041 [US5] Grep `src/services/solana/powerups/adapters/dagon/` for Redis / store writes, key generation (`Keypair.generate`, `fromSecretKey`), `sendTransaction` / `sendRawTransaction`, and logging of keys or amounts; expect none — FR-008, FR-025, FR-027
+- [x] T039 [US5] Run the full gate `npm run format:check && npm run lint:check && npm run test:unit` and paste the tail of the output; all green — FR-026, SC-004
+- [x] T040 [US5] Show `git diff origin/staging --stat -- src/__tests__/signing-boundary.spec.js src/routes/` is empty (no route added, signing boundary untouched) and that the only edited existing assertions are the two exact lists (`event-schema.spec.js:77`, `profiles.spec.js:20`) plus additive cases — FR-006, FR-026, SC-004
+- [x] T041 [US5] Grep `src/services/solana/powerups/adapters/dagon/` for Redis / store writes, key generation (`Keypair.generate`, `fromSecretKey`), `sendTransaction` / `sendRawTransaction`, and logging of keys or amounts; expect none — FR-008, FR-025, FR-027
 
 ## Phase 9: Local end to end on devnet (step 12)
 
