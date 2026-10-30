@@ -60,5 +60,7 @@ module.exports = {
     swap: { enabled: true },
     // SKR (spec 021): read-only staking view.
     skr: { enabled: true },
+    // Dagon (spec 023): devnet private tokens, iOS and Android only (availability row).
+    dagon: { enabled: true },
   },
 };

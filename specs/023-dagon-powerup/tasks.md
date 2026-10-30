@@ -120,11 +120,11 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 ### Step 9 — registry, stage flags, analytics
 
-- [ ] T032 Tests first in `src/services/solana/powerups/__tests__/registry.spec.js`: `dagon` entry shape (tier `core`, `networks: ['solana-devnet']`, `contributor: null`, `programIds` = pinned pc-token, pc-swap, Encrypt, SPL Token, System, `lookupTables: []`, `freshSigners` = `{ setup: 1, wrap: 1, reveal: 1, send: 0, swap: 1, unwrapBurn: 1, unwrapDecrypt: 1, unwrapComplete: 0 }`, `errorCodes: ['invalid_fresh_signers']`); offered on `staging` and `local` only, absent on `prod`, `main`, `develop` — FR-001, FR-002, FR-003
-- [ ] T033 [P] Tests first in `src/analytics/__tests__/event-schema.spec.js`: the exact list (`:77`) gains `dagon` — FR-005
-- [ ] T034 Add the `dagon` entry to `src/services/solana/powerups/registry.js` (ids from `ADP/config.js`; `legacyTransaction: true` only if T006 decided 2b) — FR-001, FR-002, FR-011
-- [ ] T035 [P] Add `dagon: { enabled: true }` to the `powerups` block of `src/network-capabilities/network-capabilities-staging.js` (`:56-63`) and `src/network-capabilities/network-capabilities-local.js` (`:55-67`); `-prod.js`, `-main.js`, `-develop.js` untouched — FR-003
-- [ ] T036 [P] Append `'dagon'` to `POWERUPS` in `src/analytics/event-schema.js` (`:52`) — FR-005
+- [x] T032 Tests first in `src/services/solana/powerups/__tests__/registry.spec.js`: `dagon` entry shape (tier `core`, `networks: ['solana-devnet']`, `contributor: null`, `programIds` = pinned pc-token, pc-swap, Encrypt, SPL Token, System, `lookupTables: []`, `freshSigners` = `{ setup: 1, wrap: 1, reveal: 1, send: 0, swap: 1, unwrapBurn: 1, unwrapDecrypt: 1, unwrapComplete: 0 }`, `errorCodes: ['invalid_fresh_signers']`); offered on `staging` and `local` only, absent on `prod`, `main`, `develop` — FR-001, FR-002, FR-003
+- [x] T033 [P] Tests first in `src/analytics/__tests__/event-schema.spec.js`: the exact list (`:77`) gains `dagon` — FR-005
+- [x] T034 Add the `dagon` entry to `src/services/solana/powerups/registry.js` (ids from `ADP/config.js`; `legacyTransaction: true` only if T006 decided 2b) — FR-001, FR-002, FR-011
+- [x] T035 [P] Add `dagon: { enabled: true }` to the `powerups` block of `src/network-capabilities/network-capabilities-staging.js` (`:56-63`) and `src/network-capabilities/network-capabilities-local.js` (`:55-67`); `-prod.js`, `-main.js`, `-develop.js` untouched — FR-003
+- [x] T036 [P] Append `'dagon'` to `POWERUPS` in `src/analytics/event-schema.js` (`:52`) — FR-005
 
 ### Step 10 — availability row
 

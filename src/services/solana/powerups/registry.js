@@ -19,6 +19,8 @@
  *     lookupTables?: string[],                  // transaction-building: every address lookup table an adapter may name
  *     errorCodes?: string[],                    // adapter-specific validation codes passed through as-is (400)
  *     providerProfile?: string,                 // the `profiles.js` row the adapter's upstream calls run under
+ *     freshSigners?: { [action]: number },      // device-generated keys an action may also need signatures from;
+ *                                               // honoured on solana-devnet only (powerup-build-service)
  *     adapter?: {
  *       validate(query) → { params } | { error, error_description },   // codes: missing_parameter / invalid_parameter / one of errorCodes;
  *                                                                       // error_description reaches the client verbatim: never echo an upstream body or raw caller input
@@ -44,6 +46,7 @@
 
 const memo = require('./adapters/memo');
 const brokenBuild = require('./adapters/broken-build');
+const dagon = require('./adapters/dagon');
 
 const POWERUPS = {
   // Payments (frontend spec 033): the wallet builds a Solana Pay transfer
@@ -83,6 +86,26 @@ const POWERUPS = {
     lookupTables: [],
     errorCodes: ['note_too_long'],
     adapter: memo,
+  },
+  // Dagon (spec 023): private tokens on devnet (pc-token / pc-swap on
+  // Encrypt's pre-alpha executor). Each action may name one key the device
+  // generated as a co-signer; the build service accepts it only on devnet
+  // and only as declared here.
+  dagon: {
+    tier: 'core',
+    networks: ['solana-devnet'],
+    contributor: null,
+    programIds: [
+      dagon.PC_TOKEN_PROGRAM_ID,
+      dagon.PC_SWAP_PROGRAM_ID,
+      dagon.ENCRYPT_PROGRAM_ID,
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+      '11111111111111111111111111111111',
+    ],
+    lookupTables: [],
+    freshSigners: dagon.FRESH_SIGNERS,
+    errorCodes: ['invalid_fresh_signers'],
+    adapter: dagon,
   },
   // FIXTURE: always refused with 502 `provider_program_mismatch` so the
   // guard is demonstrable on a device. Never enable it on a shipping stage.

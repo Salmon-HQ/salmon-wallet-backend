@@ -49,7 +49,7 @@ const TRANSACTION_EVENTS = new Set([
 
 const CHAINS = ['solana', 'bitcoin', 'ethereum'];
 // The wallet's Powerup registry ids. A new Powerup adds its id here before it ships.
-const POWERUPS = ['swap', 'payments', 'memo', 'skr'];
+const POWERUPS = ['swap', 'payments', 'memo', 'skr', 'dagon'];
 const ALLOWED_PROP_KEYS = ['chain', 'from_chain', 'to_chain', 'success', 'powerup'];
 
 const PROP_ENUMS = {

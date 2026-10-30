@@ -74,7 +74,7 @@ describe('event-schema guardrail (server mirror)', () => {
   });
 
   it('accepts only registry Powerup ids in powerup', () => {
-    expect(POWERUPS).toEqual(['swap', 'payments', 'memo', 'skr']);
+    expect(POWERUPS).toEqual(['swap', 'payments', 'memo', 'skr', 'dagon']);
     expect(validateEvent('powerup_installed', { powerup: 'swap' })).toEqual({
       event: 'powerup_installed',
       props: { powerup: 'swap' },

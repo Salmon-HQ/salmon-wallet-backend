@@ -64,5 +64,7 @@ module.exports = {
     'broken-build': { enabled: true },
     // Read-only fixture for the client's catalogue/disclosure test (015 T2).
     'kamino-positions': { enabled: true },
+    // Dagon (spec 023): devnet private tokens, iOS and Android only (availability row).
+    dagon: { enabled: true },
   },
 };
