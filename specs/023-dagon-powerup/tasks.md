@@ -66,8 +66,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 ### Step 6 — `instructions.js` (pure builders, PDAs, layout readers)
 
-- [ ] T020 [P] Tests first in `ADT/dagon-instructions.spec.js` with fixture keys: per kind (create_deposit, InitializeAccount, Wrap, ViewBalance, Transfer, Swap both directions, UnwrapBurn, UnwrapDecrypt with read-only `encryptConfig`, UnwrapComplete) the data bytes and account order / signer / writable flags equal research R6; the fresh key is the only extra signer and sits where data-model "Fresh signer" says; create_deposit `feeVault` = payer when the config's `data[100..132]` is the System Program; PDAs equal `findProgramAddressSync` with the GUIDE seeds; readers `readPcAccount` (202 bytes), `readCiphertextStatus` (digest `[2..34]`, status `[99]`, all-zero digest detected), `readReceipt` (203 bytes) on crafted buffers, wrong length rejected — FR-016 to FR-021, SC-004
-- [ ] T021 Implement `ADP/instructions.js`: one pure function per R6 row, `pda()` helpers, the three readers, layout offsets as code constants; no I/O — FR-015 to FR-021
+- [x] T020 [P] Tests first in `ADT/dagon-instructions.spec.js` with fixture keys: per kind (create_deposit, InitializeAccount, Wrap, ViewBalance, Transfer, Swap both directions, UnwrapBurn, UnwrapDecrypt with read-only `encryptConfig`, UnwrapComplete) the data bytes and account order / signer / writable flags equal research R6; the fresh key is the only extra signer and sits where data-model "Fresh signer" says; create_deposit `feeVault` = payer when the config's `data[100..132]` is the System Program; PDAs equal `findProgramAddressSync` with the GUIDE seeds; readers `readPcAccount` (202 bytes), `readCiphertextStatus` (digest `[2..34]`, status `[99]`, all-zero digest detected), `readReceipt` (203 bytes) on crafted buffers, wrong length rejected — FR-016 to FR-021, SC-004
+- [x] T021 Implement `ADP/instructions.js`: one pure function per R6 row, `pda()` helpers, the three readers, layout offsets as code constants; no I/O — FR-015 to FR-021
 
 ### Step 7 — `index.js` validate
 
