@@ -82,8 +82,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 **Independent test**: with mocked `Connection` / `executor` / `config`, each action returns instructions whose signers are the caller plus one fresh key; on devnet, quickstart §3 `--flow setup,wrap,reveal` (T042).
 
-- [ ] T024 [US1] Tests first in `ADT/dagon-adapter.spec.js` (build block, mocked `Connection` + `executor` + `config`): setup with no deposit → create_deposit + InitializeAccount; setup with deposit → InitializeAccount only; setup with `owner` = another wallet → that pc-account, paid and signed by the caller, owner not a signer; pc-account exists → 409 `already_initialized`; wrap of 1000 → Wrap with the fresh key as amount ciphertext and no executor call; reveal → ViewBalance with the fresh key as `viewCt` and `viewer` not a signer, no ciphertext value read; wrap / reveal without a pc-account → 409 `setup_required`; unknown `side` → 400 `invalid_parameter`; a fresh key that already exists on chain → 400 `invalid_fresh_signers` before any executor call; `display` carries the request and `outcomeKnownAfterReveal: true`, never an outcome, quote or success word; provider `{ id: 'dagon', displayName: 'Dagon (devnet preview)', attribution: null }` — FR-007, FR-016, FR-017, FR-018, FR-024, SC-004
-- [ ] T025 [US1] Implement `build(params, { locals, connection })` in `ADP/index.js`: load config, resolve sides, one `getMultipleAccountsInfo` for chain state + fresh-signer freshness (R8), the 409s of data-model "Chain state", then setup / wrap / reveal instructions; logs carry action, side and outcome code only — FR-016, FR-017, FR-018, FR-024, FR-025, FR-027
+- [x] T024 [US1] Tests first in `ADT/dagon-adapter.spec.js` (build block, mocked `Connection` + `executor` + `config`): setup with no deposit → create_deposit + InitializeAccount; setup with deposit → InitializeAccount only; setup with `owner` = another wallet → that pc-account, paid and signed by the caller, owner not a signer; pc-account exists → 409 `already_initialized`; wrap of 1000 → Wrap with the fresh key as amount ciphertext and no executor call; reveal → ViewBalance with the fresh key as `viewCt` and `viewer` not a signer, no ciphertext value read; wrap / reveal without a pc-account → 409 `setup_required`; unknown `side` → 400 `invalid_parameter`; a fresh key that already exists on chain → 400 `invalid_fresh_signers` before any executor call; `display` carries the request and `outcomeKnownAfterReveal: true`, never an outcome, quote or success word; provider `{ id: 'dagon', displayName: 'Dagon (devnet preview)', attribution: null }` — FR-007, FR-016, FR-017, FR-018, FR-024, SC-004
+- [x] T025 [US1] Implement `build(params, { locals, connection })` in `ADP/index.js`: load config, resolve sides, one `getMultipleAccountsInfo` for chain state + fresh-signer freshness (R8), the 409s of data-model "Chain state", then setup / wrap / reveal instructions; logs carry action, side and outcome code only — FR-016, FR-017, FR-018, FR-024, FR-025, FR-027
 
 ## Phase 4: User Story 2 — swap (P1) — step 8, part 2
 
@@ -91,8 +91,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 **Independent test**: mocked build returns a Swap instruction naming the fresh key as receipt with three pc-swap inputs; on devnet, T042 swap + reveal.
 
-- [ ] T026 [US2] Tests first in `ADT/dagon-adapter.spec.js`: USDC → DOGE (direction 0) and DOGE → USDC (direction 1) select the right vaults / reserves; three executor inputs (amountIn, minAmountOut, 0) authorized to pc-swap, waited before building; input balance pending or all-zero digest → 409 `balance_settling` with no executor call; either pc-account missing → 409 `setup_required`; pool missing → 503 `pool_unavailable`; reserve still pending at the end of the wait → 503 `pool_unavailable`; inputs still pending → 503 `executor_pending`; executor down → 503 `executor_unavailable`; same side in and out or a side not in the pool → 400 `invalid_parameter`; no deposit or init prepended — FR-020, FR-022, FR-029, SC-004
-- [ ] T027 [US2] Implement swap in `ADP/index.js` (spec OQ2: both pc-accounts required) — FR-020, FR-022, FR-029
+- [x] T026 [US2] Tests first in `ADT/dagon-adapter.spec.js`: USDC → DOGE (direction 0) and DOGE → USDC (direction 1) select the right vaults / reserves; three executor inputs (amountIn, minAmountOut, 0) authorized to pc-swap, waited before building; input balance pending or all-zero digest → 409 `balance_settling` with no executor call; either pc-account missing → 409 `setup_required`; pool missing → 503 `pool_unavailable`; reserve still pending at the end of the wait → 503 `pool_unavailable`; inputs still pending → 503 `executor_pending`; executor down → 503 `executor_unavailable`; same side in and out or a side not in the pool → 400 `invalid_parameter`; no deposit or init prepended — FR-020, FR-022, FR-029, SC-004
+- [x] T027 [US2] Implement swap in `ADP/index.js` (spec OQ2: both pc-accounts required) — FR-020, FR-022, FR-029
 
 ## Phase 5: User Story 3 — send (P2, behind a frontend switch) — step 8, part 3
 
@@ -100,8 +100,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 **Independent test**: mocked build returns a Transfer whose only signer is the sender, with one pc-token input.
 
-- [ ] T028 [US3] Tests first in `ADT/dagon-adapter.spec.js`: send with `freshSigners=` → one executor input authorized to pc-token, waited, Transfer with the sender as the only signer; recipient without pc-account → 409 `recipient_setup_required` (never onboarded inside the transfer); sender without pc-account → 409 `setup_required`; sender balance pending or never committed → 409 `balance_settling` before any executor call; `to` = sender → 400 (from T022) — FR-019, FR-029, SC-004
-- [ ] T029 [US3] Implement send in `ADP/index.js` (spec OQ3) — FR-019, FR-029
+- [x] T028 [US3] Tests first in `ADT/dagon-adapter.spec.js`: send with `freshSigners=` → one executor input authorized to pc-token, waited, Transfer with the sender as the only signer; recipient without pc-account → 409 `recipient_setup_required` (never onboarded inside the transfer); sender without pc-account → 409 `setup_required`; sender balance pending or never committed → 409 `balance_settling` before any executor call; `to` = sender → 400 (from T022) — FR-019, FR-029, SC-004
+- [x] T029 [US3] Implement send in `ADP/index.js` (spec OQ3) — FR-019, FR-029
 
 ## Phase 6: User Story 4 — unwrap (P3, built and tested, off in the demo) — step 8, part 4
 
@@ -109,8 +109,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 **Independent test**: mocked builds for burn, decrypt and complete with their 409s; on devnet, T044.
 
-- [ ] T030 [US4] Tests first in `ADT/dagon-adapter.spec.js`: unwrapBurn → one pc-token input, waited, UnwrapBurn with the fresh key as `burnedCt` and the receipt PDA derived from it; unwrapBurn without pc-account → 409 `setup_required`; unwrapDecrypt → fresh key as request account; receipt missing, not 203 bytes or owner ≠ caller → 409 `receipt_not_found` (decrypt and complete); `decrypt_requested` ≠ 0 → 409 `already_requested`; `burnedCt` pending → 409 `balance_settling`; unwrapComplete with `freshSigners=` → only the caller signs, side taken from the receipt's `pc_mint`; `requestAcct` ≠ receipt `request` → 400 `invalid_parameter` — FR-021, FR-022, FR-030, SC-004
-- [ ] T031 [US4] Implement unwrapBurn, unwrapDecrypt and unwrapComplete in `ADP/index.js` — FR-021, FR-030
+- [x] T030 [US4] Tests first in `ADT/dagon-adapter.spec.js`: unwrapBurn → one pc-token input, waited, UnwrapBurn with the fresh key as `burnedCt` and the receipt PDA derived from it; unwrapBurn without pc-account → 409 `setup_required`; unwrapDecrypt → fresh key as request account; receipt missing, not 203 bytes or owner ≠ caller → 409 `receipt_not_found` (decrypt and complete); `decrypt_requested` ≠ 0 → 409 `already_requested`; `burnedCt` pending → 409 `balance_settling`; unwrapComplete with `freshSigners=` → only the caller signs, side taken from the receipt's `pc_mint`; `requestAcct` ≠ receipt `request` → 400 `invalid_parameter` — FR-021, FR-022, FR-030, SC-004
+- [x] T031 [US4] Implement unwrapBurn, unwrapDecrypt and unwrapComplete in `ADP/index.js` — FR-021, FR-030
 
 **Checkpoint (end of step 8)**: `npm run test:unit -- dagon` green.
 
