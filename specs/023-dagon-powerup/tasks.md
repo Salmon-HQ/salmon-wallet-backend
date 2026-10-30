@@ -50,8 +50,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 ### Step 3 — provider profiles
 
-- [ ] T013 Tests first in `src/infrastructure/providers/__tests__/profiles.spec.js`: the exact name list (`:20`) gains `encrypt-executor` and `dagon-config`; `getProfile` shape for both (no retry, default breaker); every existing profile unchanged — FR-023, FR-027
-- [ ] T014 Add `'encrypt-executor': { tier: () => ({ rps: 5, burst: 10 }), timeoutMs: 5000, retry: RETRY_NONE, breaker: BREAKER_DEFAULT }` and `'dagon-config': { tier: () => ({ rps: 1, burst: 5 }), timeoutMs: 3000, retry: RETRY_NONE, breaker: BREAKER_DEFAULT }` to `src/infrastructure/providers/profiles.js` — FR-023, FR-027
+- [x] T013 Tests first in `src/infrastructure/providers/__tests__/profiles.spec.js`: the exact name list (`:20`) gains `encrypt-executor` and `dagon-config`; `getProfile` shape for both (no retry, default breaker); every existing profile unchanged — FR-023, FR-027
+- [x] T014 Add `'encrypt-executor': { tier: () => ({ rps: 5, burst: 10 }), timeoutMs: 5000, retry: RETRY_NONE, breaker: BREAKER_DEFAULT }` and `'dagon-config': { tier: () => ({ rps: 1, burst: 5 }), timeoutMs: 3000, retry: RETRY_NONE, breaker: BREAKER_DEFAULT }` to `src/infrastructure/providers/profiles.js` — FR-023, FR-027
 
 ### Step 4 — `config.js` (`devnet.json` trust and cache)
 

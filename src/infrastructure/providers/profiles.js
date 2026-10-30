@@ -90,6 +90,21 @@ const PROFILES = {
     retry: { maxAttempts: 3, baseMs: 500, maxMs: 5000, honorRetryAfter: true },
     breaker: BREAKER_DEFAULT,
   },
+  // Dagon's Encrypt executor (devnet, `createInput`). No retry: a retried
+  // call can mint a second input; the build's commit wait is the retry.
+  'encrypt-executor': {
+    tier: () => ({ rps: 5, burst: 10 }),
+    timeoutMs: 5000,
+    retry: RETRY_NONE,
+    breaker: BREAKER_DEFAULT,
+  },
+  // Dagon's `devnet.json` on GitHub raw; cached 5 minutes per container.
+  'dagon-config': {
+    tier: () => ({ rps: 1, burst: 5 }),
+    timeoutMs: 3000,
+    retry: RETRY_NONE,
+    breaker: BREAKER_DEFAULT,
+  },
 };
 
 /**

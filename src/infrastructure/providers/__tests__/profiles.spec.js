@@ -27,6 +27,8 @@ describe('profiles', () => {
       'trm',
       'jupiter',
       'zeroex',
+      'encrypt-executor',
+      'dagon-config',
     ]);
     for (const name of PROVIDER_NAMES) {
       expect(getProfile(name)).toMatchObject({
@@ -38,6 +40,28 @@ describe('profiles', () => {
       });
     }
     expect(() => getProfile('nope')).toThrow(/Unknown provider profile/);
+  });
+
+  // A retried createInput can mint a second executor input; the build's wait loop is the retry.
+  it('runs the two Dagon upstreams with no retry and the default breaker', () => {
+    const noRetry = { maxAttempts: 1, baseMs: 0, maxMs: 0, honorRetryAfter: false };
+    const breaker = { failures: 5, cooldownMs: 30000 };
+    expect(getProfile('encrypt-executor')).toEqual({
+      name: 'encrypt-executor',
+      rps: 5,
+      burst: 10,
+      timeoutMs: 5000,
+      retry: noRetry,
+      breaker,
+    });
+    expect(getProfile('dagon-config')).toEqual({
+      name: 'dagon-config',
+      rps: 1,
+      burst: 5,
+      timeoutMs: 3000,
+      retry: noRetry,
+      breaker,
+    });
   });
 
   it('gives CoinGecko the paid budget only on the pro-api host', () => {
