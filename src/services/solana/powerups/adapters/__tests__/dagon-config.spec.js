@@ -49,7 +49,7 @@ describe('dagon config', () => {
     expect(providerCall).toHaveBeenCalledWith('dagon-config', expect.any(Function), { locals });
     expect(axios.get).toHaveBeenCalledWith(
       'https://raw.githubusercontent.com/inkwell-finance/pc-wallet-kit/main/devnet.json',
-      expect.objectContaining({ timeout: 3000, signal: 'signal' })
+      expect.objectContaining({ timeout: 3000, signal: 'signal', maxRedirects: 0 })
     );
   });
 

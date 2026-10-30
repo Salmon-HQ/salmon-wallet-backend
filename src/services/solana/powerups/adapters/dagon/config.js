@@ -96,7 +96,7 @@ const fetchDoc = async (locals) => {
   const { data } = await providerCall(
     'dagon-config',
     ({ timeout, signal }) =>
-      axios.get(CONFIG_URL, { timeout, signal, maxContentLength: MAX_BODY_BYTES }),
+      axios.get(CONFIG_URL, { timeout, signal, maxContentLength: MAX_BODY_BYTES, maxRedirects: 0 }),
     { locals }
   );
   return typeof data === 'string' ? JSON.parse(data) : data;

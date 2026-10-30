@@ -151,6 +151,9 @@ const createInput = async (value, authorized, config, locals) => {
             timeout,
             signal,
             responseType: 'arraybuffer',
+            // The host allowlist covers the first hop only; a redirect could carry the amount anywhere.
+            maxRedirects: 0,
+            maxContentLength: 4096,
             headers: {
               'content-type': 'application/grpc-web+proto',
               accept: 'application/grpc-web+proto',

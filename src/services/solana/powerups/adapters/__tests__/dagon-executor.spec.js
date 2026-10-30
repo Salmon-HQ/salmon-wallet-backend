@@ -69,6 +69,8 @@ describe('dagon executor createInputs', () => {
       timeout: 5000,
       signal: 'signal',
       responseType: 'arraybuffer',
+      maxRedirects: 0,
+      maxContentLength: 4096,
       headers: {
         'content-type': 'application/grpc-web+proto',
         accept: 'application/grpc-web+proto',
