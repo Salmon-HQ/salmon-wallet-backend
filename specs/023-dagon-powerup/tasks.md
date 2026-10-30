@@ -128,8 +128,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 ### Step 10 — availability row
 
-- [ ] T037 [US5] Tests first in `src/availability/__tests__/availability-table.spec.js` and `src/middlewares/__tests__/powerup-gate.spec.js`: `validateTable(DEFAULT_TABLE)` returns no errors; `decide()` for `dagon` → iOS and Android enabled, extension `enabled: false, reason: 'maintenance'`, embargoed country on iOS and on Android → region; the `swap` row deep-equals its current value; gate: `dagon` on the extension → 404, on Android → passes, embargoed country → 403 `region_restricted` — FR-004, FR-026, SC-005
-- [ ] T038 [US5] Add `dagon: { enabled: false, reason: 'maintenance', platforms: { ios: { enabled: true, unavailable: EMBARGOED }, android: { enabled: true, unavailable: EMBARGOED } } }` to `DEFAULT_TABLE.capabilities` in `src/availability/availability-table.js` (`:112-126`), `swap` untouched — FR-004
+- [x] T037 [US5] Tests first in `src/availability/__tests__/availability-table.spec.js` and `src/middlewares/__tests__/powerup-gate.spec.js`: `validateTable(DEFAULT_TABLE)` returns no errors; `decide()` for `dagon` → iOS and Android enabled, extension `enabled: false, reason: 'maintenance'`, embargoed country on iOS and on Android → region; the `swap` row deep-equals its current value; gate: `dagon` on the extension → 404, on Android → passes, embargoed country → 403 `region_restricted` — FR-004, FR-026, SC-005
+- [x] T038 [US5] Add `dagon: { enabled: false, reason: 'maintenance', platforms: { ios: { enabled: true, unavailable: EMBARGOED }, android: { enabled: true, unavailable: EMBARGOED } } }` to `DEFAULT_TABLE.capabilities` in `src/availability/availability-table.js` (`:112-126`), `swap` untouched — FR-004
 
 ## Phase 8: User Story 5 — nothing else changes: full gate (step 11)
 

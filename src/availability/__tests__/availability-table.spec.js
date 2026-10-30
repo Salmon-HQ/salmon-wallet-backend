@@ -46,6 +46,66 @@ describe('availability-table', () => {
     });
   });
 
+  describe('the dagon row (spec 023)', () => {
+    const { decide } = require('../availability-service');
+
+    it('keeps the default table valid', () => {
+      expect(validateTable(DEFAULT_TABLE)).toEqual([]);
+    });
+
+    it.each(['ios', 'android'])('offers dagon on %s, with no routing provider', (platform) => {
+      expect(decide(DEFAULT_TABLE, 'dagon', platform, 'AR')).toEqual({ enabled: true });
+      expect(decide(DEFAULT_TABLE, 'dagon', platform, null)).toEqual({ enabled: true });
+    });
+
+    it('switches dagon off on the extension', () => {
+      expect(decide(DEFAULT_TABLE, 'dagon', 'extension', 'AR')).toEqual({
+        enabled: false,
+        reason: 'maintenance',
+      });
+    });
+
+    it.each(['ios', 'android'])('refuses an embargoed country on %s', (platform) => {
+      expect(decide(DEFAULT_TABLE, 'dagon', platform, 'CU')).toEqual({
+        enabled: false,
+        reason: 'region',
+      });
+    });
+
+    it('leaves the swap row exactly as it was', () => {
+      expect(DEFAULT_TABLE.capabilities.swap).toEqual({
+        default: 'jupiter',
+        unavailable: [
+          'CU',
+          'IR',
+          'KP',
+          'SY',
+          'UA-43',
+          'UA-40',
+          'UA-14',
+          'UA-09',
+          'UA-65',
+          'UA-23',
+          'GB',
+          'CN',
+          'MM',
+          'CI',
+          'CD',
+          'IQ',
+          'LY',
+          'ML',
+          'NI',
+          'SO',
+          'SD',
+          'YE',
+          'ZW',
+        ],
+        providers: { '0x': ['US', 'TW', 'SG'] },
+        platforms: { ios: {} },
+      });
+    });
+  });
+
   describe('validateTable', () => {
     // Declared to App Review as blocked: an SSM edit must not reopen them.
     it.each(['GB', 'CN', 'UA-65'])('rejects a swap row that reopens %s', (country) => {

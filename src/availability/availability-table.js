@@ -122,6 +122,16 @@ const DEFAULT_TABLE = Object.freeze({
       },
       platforms: { ios: {} },
     },
+    // Dagon (spec 023): devnet preview on the iOS and Android apps only; the
+    // extension stays off. No provider routing, so no wallet screening.
+    dagon: {
+      enabled: false,
+      reason: 'maintenance',
+      platforms: {
+        ios: { enabled: true, unavailable: EMBARGOED },
+        android: { enabled: true, unavailable: EMBARGOED },
+      },
+    },
   },
 });
 

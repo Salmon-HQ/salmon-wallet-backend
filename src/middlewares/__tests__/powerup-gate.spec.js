@@ -135,6 +135,39 @@ describe('powerup-gate', () => {
     });
   });
 
+  describe('dagon (spec 023)', () => {
+    const dagonRequest = (platform) => req(platform, 'dagon', { publicKey: WALLET });
+
+    it('answers 404 not_found on the extension', async () => {
+      countryOfRequest.mockReturnValue('AR');
+      const { res, next } = await run(DEFAULT_TABLE, dagonRequest('extension'), 'param');
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'not_found' }));
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it.each(['ios', 'android'])(
+      'passes on %s with no provider and no screening',
+      async (platform) => {
+        countryOfRequest.mockReturnValue('AR');
+        const { res, next } = await run(DEFAULT_TABLE, dagonRequest(platform), 'param');
+        expect(next).toHaveBeenCalledWith();
+        expect(res.locals.availability).toMatchObject({ capability: 'dagon', platform });
+        expect(isListed).not.toHaveBeenCalled();
+      }
+    );
+
+    it.each(['ios', 'android'])('refuses an embargoed country on %s with 403', async (platform) => {
+      countryOfRequest.mockReturnValue('IR');
+      const { res, next } = await run(DEFAULT_TABLE, dagonRequest(platform), 'param');
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'region_restricted' })
+      );
+      expect(next).not.toHaveBeenCalled();
+    });
+  });
+
   it('logs the decision without the address', async () => {
     countryOfRequest.mockReturnValue('BR');
     await run(DEFAULT_TABLE, req('android'));
