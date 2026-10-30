@@ -86,6 +86,7 @@ describe('dagon config', () => {
     ['a non-hex network key', copy((d) => (d.networkKeyHex = 'zz'.repeat(32)))],
     ['a non-integer fhe type', copy((d) => (d.fheTypeU64 = 4.5))],
     ['an fhe type given as text', copy((d) => (d.fheTypeU64 = '4'))],
+    ['an fhe type past one byte', copy((d) => (d.fheTypeU64 = 200))],
     ['an invalid side address', copy((d) => (d.sides.USDC.vault = 'not-base58!'))],
     ['a side without decimals', copy((d) => delete d.sides.DOGE.decimals)],
     ['no sides', copy((d) => delete d.sides)],

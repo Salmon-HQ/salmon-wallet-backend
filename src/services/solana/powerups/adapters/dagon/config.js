@@ -71,7 +71,10 @@ const refusalOf = (doc) => {
   }
   if (!isExecutorUrl(doc.encryptGrpcUrl)) return 'executor_url';
   if (!/^[0-9a-f]{64}$/i.test(doc.networkKeyHex || '')) return 'network_key';
-  if (!Number.isInteger(doc.fheTypeU64)) return 'fhe_type';
+  // One byte: it leads the plaintext value and is a one-byte protobuf varint (`executor.js`).
+  if (!Number.isInteger(doc.fheTypeU64) || doc.fheTypeU64 < 0 || doc.fheTypeU64 > 127) {
+    return 'fhe_type';
+  }
   const sides = doc.sides;
   if (!isObject(sides) || Object.keys(sides).length === 0 || !Object.values(sides).every(isSide)) {
     return 'sides';
