@@ -11,6 +11,11 @@ jest.mock('@solana/web3.js', () => {
   return { ...actual, Connection: jest.fn(() => mockConnection) };
 });
 jest.mock('../powerup-catalog-service', () => ({ isOffered: jest.fn() }));
+// Passthrough, so one test can hand the service a compiled result the real compiler never produces.
+jest.mock('../unsigned-transaction-builder', () => {
+  const actual = jest.requireActual('../unsigned-transaction-builder');
+  return { ...actual, compileUnsigned: jest.fn(actual.compileUnsigned) };
+});
 
 const mockAdapter = { validate: jest.fn(), build: jest.fn() };
 jest.mock('../registry', () => ({
@@ -24,12 +29,22 @@ jest.mock('../registry', () => ({
       errorCodes: ['note_too_long'],
       adapter: mockAdapter,
     },
+    'fresh-fixture': {
+      tier: 'core',
+      networks: ['solana-mainnet', 'solana-devnet'],
+      contributor: null,
+      programIds: ['MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'],
+      lookupTables: [],
+      freshSigners: { act: 1, none: 0 },
+      adapter: mockAdapter,
+    },
     readonly: { tier: 'community', networks: ['solana-mainnet'], contributor: null, endpoints: [] },
   },
 }));
 
 const { PublicKey, TransactionInstruction, VersionedTransaction } = require('@solana/web3.js');
 const powerupCatalog = require('../powerup-catalog-service');
+const builder = require('../unsigned-transaction-builder');
 const service = require('../powerup-build-service');
 
 const PAYER = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY';
@@ -305,5 +320,140 @@ describe('powerup-build-service', () => {
     mockAdapter.build.mockRejectedValue(upstream);
 
     await expect(service.build('fixture', { publicKey: PAYER }, locals)).rejects.toBe(upstream);
+  });
+});
+
+describe('powerup-build-service fresh signers', () => {
+  const FRESH = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
+  const FRESH_2 = 'SysvarRent111111111111111111111111111111111';
+  const devnet = { network: { id: 'solana-devnet', config: { nodeUrl: 'http://rpc.test' } } };
+  const mainnet = { network: { id: 'solana-mainnet', config: { nodeUrl: 'http://rpc.test' } } };
+
+  const signedBy = (signers, programId = MEMO) =>
+    new TransactionInstruction({
+      programId: new PublicKey(programId),
+      keys: signers.map((key) => ({
+        pubkey: new PublicKey(key),
+        isSigner: true,
+        isWritable: true,
+      })),
+      data: Buffer.from('hi'),
+    });
+
+  const params = (action, freshSigners) => ({
+    params: { action, freshSigners, publicKey: PAYER },
+  });
+
+  let error;
+  beforeEach(() => {
+    jest.clearAllMocks();
+    powerupCatalog.isOffered.mockReturnValue(true);
+    mockConnection.getLatestBlockhash.mockResolvedValue({ blockhash: BLOCKHASH });
+    mockConnection.getRecentPrioritizationFees.mockResolvedValue([]);
+    mockConnection.simulateTransaction.mockResolvedValue({
+      value: { err: null, unitsConsumed: 10000, logs: [] },
+    });
+    error = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => error.mockRestore());
+
+  const expectSignerMismatch = async (requestLocals) => {
+    await expect(
+      service.build('fresh-fixture', { publicKey: PAYER }, requestLocals)
+    ).rejects.toMatchObject({ statusCode: 502, errorCode: 'provider_signer_mismatch' });
+    expect(JSON.stringify(error.mock.calls)).not.toContain(FRESH);
+  };
+
+  it('builds on devnet when the signers are exactly the caller and the declared fresh key', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH])] });
+
+    const result = await service.build('fresh-fixture', { publicKey: PAYER }, devnet);
+
+    const tx = VersionedTransaction.deserialize(Buffer.from(result.transaction, 'base64'));
+    expect(tx.message.header.numRequiredSignatures).toBe(2);
+    expect(tx.message.staticAccountKeys.slice(0, 2).map((k) => k.toBase58())).toEqual([
+      PAYER,
+      FRESH,
+    ]);
+  });
+
+  it('refuses the same message on solana-mainnet', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH])] });
+
+    await expectSignerMismatch(mainnet);
+  });
+
+  it('refuses when the declared fresh key is not a signer of the message', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER])] });
+
+    await expectSignerMismatch(devnet);
+  });
+
+  it('refuses an extra signer beyond the caller and the fresh key', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH, OTHER])] });
+
+    await expectSignerMismatch(devnet);
+  });
+
+  it('refuses when the fresh key is swapped for another key', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, OTHER])] });
+
+    await expectSignerMismatch(devnet);
+  });
+
+  it('refuses a compiled message whose first signer is not the caller', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH])] });
+    builder.compileUnsigned.mockResolvedValueOnce({
+      transaction: 'AA==',
+      priorityFeeMicroLamports: 0,
+      computeUnitLimit: null,
+      simulation: { units: 1 },
+      cleanup: [],
+      programIds: [MEMO],
+      requiredSignatures: 2,
+      signers: [FRESH, OTHER],
+    });
+
+    await expectSignerMismatch(devnet);
+  });
+
+  it('refuses when the supplied fresh keys outnumber what the action declares', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH, FRESH_2]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH, FRESH_2])] });
+
+    await expectSignerMismatch(devnet);
+  });
+
+  it('refuses a fresh key on an action that declares none', async () => {
+    mockAdapter.validate.mockReturnValue(params('none', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH])] });
+
+    await expectSignerMismatch(devnet);
+  });
+
+  it('logs the mismatch with the Powerup and the count only, never a key', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH])] });
+
+    await expectSignerMismatch(mainnet);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('[POWERUP_SIGNER_MISMATCH]'), {
+      powerup: 'fresh-fixture',
+      requiredSignatures: 2,
+    });
+  });
+
+  it('still refuses an undeclared top-level program with 502 provider_program_mismatch', async () => {
+    mockAdapter.validate.mockReturnValue(params('act', [FRESH]));
+    mockAdapter.build.mockResolvedValue({ instructions: [signedBy([PAYER, FRESH], OTHER)] });
+
+    await expect(
+      service.build('fresh-fixture', { publicKey: PAYER }, devnet)
+    ).rejects.toMatchObject({ statusCode: 502, errorCode: 'provider_program_mismatch' });
   });
 });

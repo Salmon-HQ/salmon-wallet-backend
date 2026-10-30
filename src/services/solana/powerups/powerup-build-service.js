@@ -74,16 +74,34 @@ const assertDeclaredLookupTables = (id, entry, addresses) => {
   }
 };
 
-/** The caller is the only signer: a second signature slot is a transaction the wallet cannot complete. */
-const assertSingleSigner = (id, requiredSignatures) => {
-  if (requiredSignatures !== 1) {
-    console.error(
-      '[POWERUP_SIGNER_MISMATCH] compiled message requires more than the payer signature',
-      {
-        powerup: id,
-        requiredSignatures,
-      }
-    );
+/**
+ * The keys a build may require signatures from: the caller first, then the
+ * fresh keys the device generated, and those only when the entry declares
+ * that many for the requested action and the network is `solana-devnet`.
+ * Every other build (every entry without `freshSigners`, every mainnet
+ * build) is the caller alone.
+ */
+const expectedSigners = (entry, params, publicKey, networkId) => {
+  const freshSigners = entry.freshSigners || {};
+  const declared = Object.hasOwn(freshSigners, params.action) ? freshSigners[params.action] : 0;
+  const supplied = params.freshSigners || [];
+  const fresh =
+    declared > 0 && networkId === 'solana-devnet' && supplied.length === declared ? supplied : [];
+  return [publicKey, ...fresh];
+};
+
+/** The compiled signers must be exactly `expected`, caller first: any other slot is a transaction the wallet cannot complete. */
+const assertSigners = (id, { requiredSignatures, signers }, expected) => {
+  const matches =
+    requiredSignatures === expected.length &&
+    signers.length === expected.length &&
+    signers[0] === expected[0] &&
+    expected.every((key) => signers.includes(key));
+  if (!matches) {
+    console.error('[POWERUP_SIGNER_MISMATCH] compiled message requires an undeclared signature', {
+      powerup: id,
+      requiredSignatures,
+    });
     throw new PowerupSignerMismatchError(id, requiredSignatures);
   }
 };
@@ -128,7 +146,11 @@ const build = async (id, query, locals) => {
     simulationFallback: false,
   });
   assertDeclaredPrograms(id, entry, built.programIds);
-  assertSingleSigner(id, built.requiredSignatures);
+  assertSigners(
+    id,
+    built,
+    expectedSigners(entry, validated.params, query.publicKey, locals.network.id)
+  );
   if (built.simulation.err) {
     throw new PowerupSimulationError(built.simulation);
   }
