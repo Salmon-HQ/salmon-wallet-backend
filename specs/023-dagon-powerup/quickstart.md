@@ -36,7 +36,18 @@ node specs/023-dagon-powerup/probe/drive.mjs --base http://localhost:3000 --keyp
 
 `drive.mjs` generates the fresh keypairs, calls the build route, checks the returned message (fee payer, signer set, programs), signs, sends, waits for the status byte, and for reveal performs the read the frontend will do (`encryptRead.ts`). Expected: the second reveal shows USDC down by the swap input and DOGE up (SC-001). Run `--flow unwrapBurn,unwrapDecrypt,unwrapComplete` once (SC-002).
 
-Refusals to see once each: `setup` twice → 409 `already_initialized`; `freshSigners` with the owner key → 400 `invalid_fresh_signers`; `X-Salmon-Platform: android` → 404; `solana-mainnet` → 404.
+Refusals to see once each: `setup` twice → 409 `already_initialized`; `freshSigners` with the owner key → 400 `invalid_fresh_signers`; `X-Salmon-Platform: extension` → 404; `solana-mainnet` → 404.
+
+### Android emulator QA (by hand, no Maestro)
+
+The local QA runs on the Android emulator against this local backend (owner decision 2026-10-30). `serverless-offline` listens on `0.0.0.0:3000` (`serverless.yml`), and the emulator reaches the host's loopback at `10.0.2.2`, so the demo app's API base URL points to `http://10.0.2.2:3000`. Check first from the host:
+
+```bash
+curl -s -H 'X-Salmon-Platform: android' 'http://localhost:3000/v1/solana-devnet/powerups/availability' | jq '.data[] | select(.id=="dagon")'
+# → { "id": "dagon", "enabled": true }
+```
+
+Then run setup → wrap → reveal → swap → reveal by hand in the app, with a Dagon-funded QA wallet imported on the emulator.
 
 ## 4. Staging (the agent runs each step after warning the owner)
 
@@ -50,7 +61,7 @@ Refusals to see once each: `setup` twice → 409 `already_initialized`; `freshSi
    The diff must show only added `dagon` lines; the `swap` row stays byte-for-byte.
 2. Warn the owner, then deploy this branch (`docs/DEPLOY.md:26-33`): `npm run serverless:deploy:staging`.
 3. Smoke against the execute-api URL the deploy prints:
-   - `GET /v1/solana-devnet/powerups/availability` with `ios`, `android`, `extension` → dagon enabled / off (`maintenance`) / off (SC-005).
+   - `GET /v1/solana-devnet/powerups/availability` with `ios`, `android`, `extension` → dagon enabled / enabled / off (`maintenance`) (SC-005).
    - `GET /v1/solana-mainnet/powerups/availability` → no `dagon`; a partner-style `GET /v1/solana-mainnet/ft/swap/build` answers as before (SC-006).
    - `drive.mjs --base <staging url>` full flow, 10 swap builds timed (SC-003).
 4. Removal after the demo: the next staging deploy from `staging` drops the code; remove the SSM row with the same script.

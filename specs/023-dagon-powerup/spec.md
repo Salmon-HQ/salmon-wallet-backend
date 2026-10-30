@@ -143,7 +143,7 @@ Registry, stage and availability
 - **FR-001**: The registry MUST carry a `dagon` entry, tier `core`, declared for `solana-devnet` only, with `programIds` = pinned pc-token, pinned pc-swap, Encrypt, SPL Token and System (plus the always-allowed Compute Budget), no lookup tables, and its adapter.
 - **FR-002**: The `dagon` entry MUST declare, per action, how many fresh signers it requires: setup 1, wrap 1, reveal 1, send 0, swap 1, unwrapBurn 1, unwrapDecrypt 1, unwrapComplete 0. The declaration is code in the registry, never caller-supplied.
 - **FR-003**: The stage `powerups` block MUST enable `dagon` on `staging` (and `local` for development) and MUST NOT enable it on `prod`, `main` or `develop`.
-- **FR-004**: The availability table MUST offer `dagon` on iOS only: off on Android and the extension, with every embargoed country unavailable on the iOS row. The row MUST be present in both the built-in default table and the staging SSM parameter before the demo, written through the existing validating script; the existing `swap` row MUST stay byte-for-byte unchanged.
+- **FR-004**: The availability table MUST offer `dagon` on iOS and Android: off on the extension, with every embargoed country unavailable on the iOS and Android rows. Android is on because the local QA runs by hand on the Android emulator against the local backend (owner decision 2026-10-30); the demo device is the iPhone. The row MUST be present in both the built-in default table and the staging SSM parameter before the demo, written through the existing validating script; the existing `swap` row MUST stay byte-for-byte unchanged.
 - **FR-005**: The analytics schema MUST accept `dagon` as a `powerup` value; no other analytics change.
 
 Route and validation
@@ -202,7 +202,7 @@ Truthfulness and isolation
 - **SC-002**: Unwrap's three steps complete once end to end on devnet before the demo build is frozen, even though the demo hides it.
 - **SC-003**: Wrap, reveal and setup builds answer within 3 s; send, swap and unwrapBurn builds answer within the 25 s request budget in at least 9 of 10 attempts on devnet.
 - **SC-004**: 100% of the existing Powerup, availability, signing-boundary, swap and analytics tests pass unchanged; new tests cover: a two-signer message refused for a non-`dagon` entry, refused for `dagon` on mainnet, refused when a fresh key is missing, extra or swapped; `devnet.json` with a changed program id refused; fresh-signer validation; each action's 409s.
-- **SC-005**: The availability endpoint on staging lists `dagon` enabled for iOS on devnet and disabled for Android and the extension; it is absent on mainnet and on prod.
+- **SC-005**: The availability endpoint on staging lists `dagon` enabled for iOS and Android on devnet and disabled for the extension; it is absent on mainnet and on prod.
 - **SC-006**: A partner Swap request on staging during the demo period gets the same answer as before the branch was deployed.
 
 ## Assumptions
@@ -222,7 +222,7 @@ Truthfulness and isolation
 3. **First-time send recipient.** `send` answers 409 `recipient_setup_required` and the wallet then requests a separate `setup` with `owner` = recipient, as Dagon's reference does, because the executor drops work when account creation and the first write share a transaction (User Story 3).
 4. **Where the send and unwrap switches live.** Default: in the frontend only; the backend builds every action so they stay testable. Alternative: a per-action list in the staging `powerups` block, if the owner wants the backend to refuse them in the demo.
 5. **`devnet.json` epoch.** Default: accept any epoch whose pinned programs match, so a replacement pool needs no deploy; refuse only on program mismatch.
-6. **Off-platform reason in the availability row.** The table only knows `maintenance` and `deprecated` as off reasons. Default: Android and extension rows off with `maintenance`; a new reason value is not worth a validator change on a never-merged branch.
+6. **Off-platform reason in the availability row.** The table only knows `maintenance` and `deprecated` as off reasons. Default: the extension row off with `maintenance`; a new reason value is not worth a validator change on a never-merged branch.
 
 ## Out of scope
 

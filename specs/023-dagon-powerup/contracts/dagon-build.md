@@ -4,7 +4,7 @@ The existing generic Powerup build route (`src/routes/solana/solana-powerups-rou
 
 ## Request
 
-Headers: `X-Salmon-Platform: ios` (the availability row offers `dagon` on iOS only; a missing header resolves to `ios`, `src/availability/platform.js:22-26`).
+Headers: `X-Salmon-Platform: ios` or `android` (the availability row offers `dagon` on iOS and Android, off on the extension; a missing header resolves to `ios`, `src/availability/platform.js:22-26`).
 
 | Action           | Required query                                                               | `freshSigners` count |
 | ---------------- | ---------------------------------------------------------------------------- | -------------------- |
@@ -54,7 +54,7 @@ The transaction's fee payer is `publicKey`; its required signers are exactly `pu
 | 400    | `missing_parameter` / `invalid_parameter`                                    | missing or malformed field; secret-like key; unknown side; same side in and out; amount out of range; `to` = caller; `requestAcct` not the receipt's |
 | 400    | `invalid_fresh_signers`                                                      | wrong count, duplicate, invalid, equal to another key in the request, or already exists on chain                                                     |
 | 403    | `region_restricted`                                                          | embargoed country (gate)                                                                                                                             |
-| 404    | `not_found`                                                                  | not `solana-devnet`, stage off, or the platform row is off (Android, extension)                                                                      |
+| 404    | `not_found`                                                                  | not `solana-devnet`, stage off, or the platform row is off (extension)                                                                               |
 | 409    | `already_initialized`                                                        | setup: the pc-account exists                                                                                                                         |
 | 409    | `setup_required`                                                             | the caller has no pc-account for a side the action needs                                                                                             |
 | 409    | `recipient_setup_required`                                                   | send: the recipient has no pc-account                                                                                                                |
