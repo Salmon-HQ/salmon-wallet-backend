@@ -210,9 +210,10 @@ const programIdsOf = (message, lookupTables) => {
  *   `simulation` instead, so the caller can refuse without a warn-then-throw.
  * @returns {Promise<{ transaction: string|null, priorityFeeMicroLamports: number,
  *   computeUnitLimit: number|null, simulation: Object, cleanup: Array,
- *   programIds: string[], requiredSignatures: number }>} base64 bytes, the budget
- *   applied, the (final) simulation, the cleanup kept, every program the compiled
- *   message invokes, and how many signatures it requires (1 = the payer alone)
+ *   programIds: string[], requiredSignatures: number, signers: string[] }>} base64
+ *   bytes, the budget applied, the (final) simulation, the cleanup kept, every program
+ *   the compiled message invokes, how many signatures it requires (1 = the payer
+ *   alone) and who must sign, payer first
  */
 const compileUnsigned = async ({
   connection,
@@ -273,6 +274,10 @@ const compileUnsigned = async ({
     cleanup: applied,
     programIds: programIdsOf(simulated, lookupTables),
     requiredSignatures: simulated.header.numRequiredSignatures,
+    // Signers are always static keys (never table-loaded); index 0 is the fee payer.
+    signers: simulated.staticAccountKeys
+      .slice(0, simulated.header.numRequiredSignatures)
+      .map((key) => key.toBase58()),
   };
   if (simulation.err) {
     if (!simulationFallback) {

@@ -35,8 +35,8 @@ Adapter folder shorthand: `ADP` = `src/services/solana/powerups/adapters/dagon/`
 
 ### Step 1 — `signers` in `compileUnsigned`
 
-- [ ] T007 Tests first in `src/services/solana/powerups/__tests__/unsigned-transaction-builder.spec.js`: payer-only message → `signers` = `[payer]`; two-signer message → payer first, then the co-signer; `requiredSignatures` unchanged — FR-009
-- [ ] T008 Add `signers: simulated.staticAccountKeys.slice(0, simulated.header.numRequiredSignatures).map((k) => k.toBase58())` to the result in `src/services/solana/powerups/unsigned-transaction-builder.js` (around `:270-276`); additive, Swap keeps reading only `requiredSignatures`; run the builder spec and `src/services/solana/swap/__tests__/` — FR-009, FR-026
+- [x] T007 Tests first in `src/services/solana/powerups/__tests__/unsigned-transaction-builder.spec.js`: payer-only message → `signers` = `[payer]`; two-signer message → payer first, then the co-signer; `requiredSignatures` unchanged — FR-009
+- [x] T008 Add `signers: simulated.staticAccountKeys.slice(0, simulated.header.numRequiredSignatures).map((k) => k.toBase58())` to the result in `src/services/solana/powerups/unsigned-transaction-builder.js` (around `:270-276`); additive, Swap keeps reading only `requiredSignatures`; run the builder spec and `src/services/solana/swap/__tests__/` — FR-009, FR-026
 
 ### Step 2 — relaxed signer check, negative tests early
 

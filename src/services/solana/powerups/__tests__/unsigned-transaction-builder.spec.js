@@ -165,6 +165,38 @@ describe('unsigned-transaction-builder compileUnsigned', () => {
     warn.mockRestore();
   });
 
+  it('names the payer as the only signer of a payer-only message', async () => {
+    const built = await builder.compileUnsigned({
+      connection,
+      payer: PAYER,
+      instructions: [instruction(MEMO)],
+    });
+
+    expect(built.signers).toEqual([PAYER]);
+    expect(built.requiredSignatures).toBe(1);
+  });
+
+  it('names the payer first, then the co-signer, of a two-signer message', async () => {
+    const cosigner = '9mpJyg7iEse9rPMP1tdiSdSAYbLJX6nJyGbNkbT3SAd3';
+    const built = await builder.compileUnsigned({
+      connection,
+      payer: PAYER,
+      instructions: [
+        new TransactionInstruction({
+          programId: new PublicKey(MEMO),
+          keys: [
+            { pubkey: new PublicKey(cosigner), isSigner: true, isWritable: true },
+            { pubkey: new PublicKey(PAYER), isSigner: true, isWritable: true },
+          ],
+          data: Buffer.from([1]),
+        }),
+      ],
+    });
+
+    expect(built.signers).toEqual([PAYER, cosigner]);
+    expect(built.requiredSignatures).toBe(2);
+  });
+
   it('marks a transport failure so callers do not blame the transaction', async () => {
     connection.simulateTransaction.mockRejectedValue(new Error('rpc down'));
 
