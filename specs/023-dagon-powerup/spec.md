@@ -183,6 +183,8 @@ Truthfulness and isolation
 - **FR-026**: Swap, Memo, Payments, SKR, broken-build and every mainnet build MUST behave exactly as before this feature: same responses, same status codes, same signer rule, same availability decisions. The existing test suites pass unchanged.
 - **FR-027**: The feature MUST NOT add persistent storage or write to the shared data store beyond the circuit-breaker and rate-limiter keys of its two new provider profiles.
 - **FR-028**: The first implementation task MUST prove on devnet, by simulating one build per Dagon instruction kind, that pc-token and pc-swap accept a v0 transaction (Dagon's reference client builds legacy ones). If they do not, the shared builder emits a legacy transaction for `dagon` builds only, and every other Powerup keeps v0.
+- **FR-029**: `swap` and `send` MUST refuse with 409 `balance_settling`, before any executor call, when the caller's input balance ciphertext is pending (status byte `data[99] != 1`) or was never committed (all-zero digest), because a transaction built on a pending balance computes on the old value.
+- **FR-030**: `unwrapDecrypt` MUST refuse with 409 `balance_settling` when `burnedCt` is pending (status byte `data[99] != 1`), because a decryption requested before the burn commits may read the old value, and UnwrapComplete then closes the receipt without releasing anything, with no refund path.
 
 ### Key Entities
 
