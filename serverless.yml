@@ -134,7 +134,7 @@ custom:
   # the inner layer.
   wafRateLimitPerIp: 150
   # Cap for the routes that call a provider (balances, history, NFTs, stakes,
-  # prices, dApp metadata, swap): a flood there also burns Triton, Helius and
+  # SKR staking, prices, token search, dApp metadata, Powerups, swap): a flood there also burns Triton, Helius and
   # CoinGecko quota, which costs every user a longer outage than the flood.
   wafProviderPathsLimitPerIp: 100
   # Tighter cap for GET /v1/exchange-rates, the endpoint request floods have
@@ -272,6 +272,24 @@ resources:
                             UriPath: {}
                           PositionalConstraint: CONTAINS
                           SearchString: /ft/swap
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /ft/search
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /skr/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /powerups/
                           TextTransformations: *pathTransforms
             VisibilityConfig:
               CloudWatchMetricsEnabled: true
