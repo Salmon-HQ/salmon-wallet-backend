@@ -2,6 +2,17 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.27.3 — 2026-11-11
+
+- No endpoint or response-shape change. Hardening after three request floods against `GET /v1/exchange-rates` on 2026-11-11:
+  - AWS WAF in front of the API now blocks: AWS's anti-DDoS managed group (counting until it has a traffic baseline, browser challenge off), per-IP caps (150 per minute overall, 100 on provider-backed routes, 30 on exchange-rates), AWS's IP reputation list, and a cap on cloud-hosting addresses (20 per minute each, 3,000 together). A capped request gets 429.
+  - API Gateway: 200 requests per second per method (400 burst); `GET /v1/exchange-rates` has its own route and bucket (20 per second), so a flood on it fails alone. Lambda reserved concurrency: api 300, events 20.
+  - `GET /chart/...` and `GET /coin/...`: `days` must be `ytd`, `max` or a whole number from 1 to 365, `currency` one of the supported fiat codes, and ids their own charset; anything else is `400 invalid_parameter`. CoinGecko-backed reads refresh with one upstream call per cache entry, and a 404 is cached for the short term.
+  - `GET /v1/solana-mainnet/skr/stake`: the answer is cached per owner for 60 s; an owner's history read is bounded.
+  - `GET /v1/solana-*/ft/search`: `query` must be 2 to 64 characters; `Cache-Control: max-age=60`.
+  - The per-IP limiter keeps counting in memory while Redis is unavailable instead of skipping the check.
+  - The deploy role may set Lambda reserved concurrency (`aws-deploy-policy.json`, applied in IAM as policy v30).
+
 ## 0.27.2 — 2026-10-27
 
 - Provider credentials stay out of every serialized object: the Solana network configuration no longer lists the credential-bearing RPC URL among its fields, a Powerup build's display fields are scalars that never replace `transaction`, `provider` or `contributor`, and a failed `refreshSanctionsJob` reports its error without the source URL or headers. Request and response shapes are unchanged.
