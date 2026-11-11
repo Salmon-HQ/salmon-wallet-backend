@@ -2,6 +2,11 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.28.0 — 2026-11-11
+
+- `GET /v1/exchange-rates`: `rates` covers 45 fiat currencies instead of 15, every one CoinGecko both rates and quotes market data in. Added: aed, ars, bdt, bhd, bmd, clp, czk, dkk, gel, huf, idr, ils, kwd, lkr, mmk, myr, ngn, nok, nzd, php, pkr, pln, rub, sar, sek, thb, twd, uah, vnd, zar. The `currency` parameter of `GET /chart/...` and `GET /coin/...` accepts the same 45. Response shape unchanged.
+- `GET /v1/solana-*/account/:address/stakes`: an address with more than 100 stake accounts gets its stakes instead of `500`; rewards are requested from the RPC 100 accounts at a time. Response shape unchanged.
+
 ## 0.27.3 — 2026-11-11
 
 - No endpoint or response-shape change. Hardening after three request floods against `GET /v1/exchange-rates` on 2026-11-11:
