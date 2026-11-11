@@ -56,12 +56,12 @@ describe('production config defaults', () => {
     );
   });
 
-  // Whether the regional web ACL sees client addresses on this edge-optimized
-  // API is not documented by AWS: the rule only counts until a deploy shows
-  // it does (docs/DEPLOY.md), and blocking is a deliberate follow-up change.
-  it('ships the WAF per-IP rule counting, not blocking', () => {
+  // The regional web ACL sees client addresses on this edge-optimized API
+  // (docs/DEPLOY.md): the rules block. Counting would let a request flood
+  // through to the stage throttle, which then rejects every user.
+  it('ships the WAF rules blocking', () => {
     const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
-    expect(serverless.match(/^\s*wafRuleAction:\s*(\w+)\s*$/m)?.[1]).toBe('count');
+    expect(serverless.match(/^\s*wafRuleAction:\s*(\w+)\s*$/m)?.[1]).toBe('block');
   });
 
   // The web ACL is the largest line on the AWS bill (USD 6 a month per

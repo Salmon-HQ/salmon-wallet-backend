@@ -123,18 +123,19 @@ custom:
     maxRequestsPerSecond: 50
     maxConcurrentRequests: 100
   # AWS WAF per-IP cap (resources.ApiWebAcl): requests one source IP may send
-  # in any 60 s before the rule acts on it. Same number as the Express per-IP
+  # in any 60 s before the rule blocks it. Same number as the Express per-IP
   # limit (RATE_LIMIT_MAX per RATE_LIMIT_WINDOW_SECONDS in src/index.js),
   # applied before the request reaches the Lambda, so one client cannot hold
   # the shared stage throttle above at its ceiling.
   wafRateLimitPerIp: 300
-  # `count` records the IPs over the cap without blocking them; only `block`
-  # blocks. AWS does not document whether a regional web ACL on this
-  # edge-optimized API sees the client's address or a CloudFront edge's, so
-  # the rule counts until the first deploy shows client addresses
-  # (docs/DEPLOY.md, "AWS WAF in front of the API"), then a follow-up change
-  # sets `block`.
-  wafRuleAction: count
+  # Tighter cap for GET /v1/exchange-rates, the endpoint request floods have
+  # targeted: the clients fetch it once per 15 minutes, so a source IP above
+  # this in 60 s is not a wallet.
+  wafExchangeRatesLimitPerIp: 30
+  # `block` blocks; `count` only records the IPs over the caps. The regional
+  # web ACL sees client addresses on this edge-optimized API (docs/DEPLOY.md,
+  # "AWS WAF in front of the API"), so the rules block.
+  wafRuleAction: block
   serverless-offline:
     host: 0.0.0.0
     httpPort: ${env:OFFLINE_HTTP_PORT, 3000}
@@ -183,6 +184,60 @@ resources:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
               MetricName: per-ip-rate-limit
+          - Name: exchange-rates-rate-limit
+            Priority: 1
+            Action: !If [WafRuleBlocks, { Block: {} }, { Count: {} }]
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: IP
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafExchangeRatesLimitPerIp}
+                ScopeDownStatement:
+                  ByteMatchStatement:
+                    FieldToMatch:
+                      UriPath: {}
+                    PositionalConstraint: CONTAINS
+                    SearchString: /v1/exchange-rates
+                    TextTransformations:
+                      - Priority: 0
+                        Type: NONE
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: exchange-rates-rate-limit
+          # Addresses AWS lists as sources of attacks (bots, scanners,
+          # reconnaissance). A wallet user is never on it.
+          - Name: aws-ip-reputation
+            Priority: 2
+            OverrideAction: !If [WafRuleBlocks, { None: {} }, { Count: {} }]
+            Statement:
+              ManagedRuleGroupStatement:
+                VendorName: AWS
+                Name: AWSManagedRulesAmazonIpReputationList
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: aws-ip-reputation
+          # Cloud hosting providers' addresses are blocked: a flood spread over
+          # thousands of addresses stays under the per-IP caps, and those
+          # addresses are rented servers, not phones. VPN, proxy and Tor
+          # addresses (the group's AnonymousIPList rule) are only counted,
+          # because wallet users do use VPNs.
+          - Name: aws-hosting-providers
+            Priority: 3
+            OverrideAction: !If [WafRuleBlocks, { None: {} }, { Count: {} }]
+            Statement:
+              ManagedRuleGroupStatement:
+                VendorName: AWS
+                Name: AWSManagedRulesAnonymousIpList
+                RuleActionOverrides:
+                  - Name: AnonymousIPList
+                    ActionToUse:
+                      Count: {}
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: aws-hosting-providers
     # The stage only exists once the API Gateway deployment has created it;
     # Serverless names that deployment ApiGatewayDeployment<instanceId>.
     ApiWebAclAssociation:
