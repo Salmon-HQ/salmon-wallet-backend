@@ -39,6 +39,8 @@ const VALIDATOR_IDENTITY_OFFSET = 34;
 const MAX_U64 = '18446744073709551615';
 
 const REWARD_EPOCHS = 5;
+// The RPC answers "Too many inputs provided; max 100" past this.
+const MAX_REWARD_ADDRESSES = 100;
 // A completed epoch's reward never changes.
 const REWARD_TTL_SECONDS = 30 * 24 * 60 * 60;
 const VALIDATOR_TTL_SECONDS = 24 * 60 * 60;
@@ -195,11 +197,11 @@ const rewardsFor = async (accounts, epoch, locals) => {
       }
     }
     if (missing.length === 0) continue;
-    const answers = await rpc(
-      'getInflationReward',
-      [missing.map((a) => a.address), { epoch: e }],
-      locals
-    );
+    const answers = [];
+    for (let i = 0; i < missing.length; i += MAX_REWARD_ADDRESSES) {
+      const batch = missing.slice(i, i + MAX_REWARD_ADDRESSES).map((a) => a.address);
+      answers.push(...((await rpc('getInflationReward', [batch, { epoch: e }], locals)) ?? []));
+    }
     for (const [i, account] of missing.entries()) {
       const answer = answers?.[i];
       const reward = answer
