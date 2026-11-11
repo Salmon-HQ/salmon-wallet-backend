@@ -9,6 +9,74 @@ const service = require('../../services/shared/coingecko-service');
  * the client. The error middleware strips it for the errors it handles — this
  * path answers directly, so it strips it itself.
  */
+// A CoinGecko id is lowercase letters, digits and hyphens; a contract address
+// is base58 or 0x-hex. Anything else is garbage that would still cost one
+// upstream call per spelling, since each spelling is its own cache entry.
+const COIN_ID = /^[a-z0-9-]{1,64}$/;
+const CONTRACT_ADDRESS = /^[A-Za-z0-9]{1,64}$/;
+const PLATFORM = /^[a-z0-9-]{1,32}$/;
+
+const respondInvalid = (res, error_description) =>
+  res.status(400).json({ error: 'invalid_parameter', error_description });
+
+/**
+ * Normalises `days` to `'ytd'`, `'max'` or an integer string from 1 to the
+ * free-tier maximum, so `7`, `07` and `7.0` share one cache entry; returns
+ * `null` for anything else.
+ */
+const normalizeDays = (days) => {
+  if (days === undefined) return undefined;
+  if (days === 'ytd' || days === 'max') return days;
+  const value = Number(days);
+  if (!Number.isInteger(value) || value < 1) return null;
+  return String(Math.min(value, service.MAX_DAYS_FREE_TIER));
+};
+
+const normalizeCurrency = (currency) => {
+  if (currency === undefined) return undefined;
+  const value = String(currency).toLowerCase();
+  return service.SUPPORTED_FIAT_CURRENCIES.includes(value) ? value : null;
+};
+
+/** Validated `{ days, currency }` from the query, or a 400 already sent. */
+const marketParams = (req, res, { withDays }) => {
+  const currency = normalizeCurrency(req.query.currency);
+  if (currency === null) {
+    respondInvalid(res, `currency must be one of ${service.SUPPORTED_FIAT_CURRENCIES.join(', ')}`);
+    return null;
+  }
+  if (!withDays) return { currency };
+  const days = normalizeDays(req.query.days);
+  if (days === null) {
+    respondInvalid(
+      res,
+      `days must be ytd, max or a whole number from 1 to ${service.MAX_DAYS_FREE_TIER}`
+    );
+    return null;
+  }
+  return { days, currency };
+};
+
+/** Validated `{ coinId }` or `{ platform, address }` from the path, or a 400 already sent. */
+const subjectParams = (req, res) => {
+  const { coinId, platform, address } = req.params;
+  if (coinId !== undefined) {
+    if (!COIN_ID.test(coinId)) {
+      respondInvalid(res, 'coinId must be a CoinGecko coin id');
+      return null;
+    }
+    return { coinId };
+  }
+  if (!PLATFORM.test(platform) || !CONTRACT_ADDRESS.test(address)) {
+    respondInvalid(
+      res,
+      'platform and address must be a CoinGecko platform id and a contract address'
+    );
+    return null;
+  }
+  return { platform, address };
+};
+
 const respondUnlisted = (res, error, error_description) => {
   res.removeHeader('Cache-Control');
   res.status(404).send({ error, error_description });
@@ -24,9 +92,10 @@ const respondUnlisted = (res, error, error_description) => {
  * @returns {Promise<void>}
  */
 const getMarketChart = async (req, res) => {
-  const { coinId } = req.params;
-  const { days, currency } = req.query;
-  const data = await service.getMarketChart({ coinId, days, currency }, res.locals);
+  const subject = subjectParams(req, res);
+  const market = subject && marketParams(req, res, { withDays: true });
+  if (!market) return;
+  const data = await service.getMarketChart({ ...subject, ...market }, res.locals);
   res.status(200).send(data);
 };
 
@@ -42,11 +111,13 @@ const getMarketChart = async (req, res) => {
  * @returns {Promise<void>}
  */
 const getContractMarketChart = async (req, res) => {
-  const { platform, address } = req.params;
-  const { days, currency } = req.query;
+  const subject = subjectParams(req, res);
+  const market = subject && marketParams(req, res, { withDays: true });
+  if (!market) return;
+  const { platform, address } = subject;
   try {
     const data = await service.getContractMarketChart(
-      { platform, contractAddress: address, days, currency },
+      { platform, contractAddress: address, ...market },
       res.locals
     );
     res.status(200).send(data);
@@ -71,9 +142,10 @@ const getContractMarketChart = async (req, res) => {
  * @returns {Promise<void>}
  */
 const getCoinInfo = async (req, res) => {
-  const { coinId } = req.params;
-  const { currency } = req.query;
-  const data = await service.getCoinInfo({ coinId, currency }, res.locals);
+  const subject = subjectParams(req, res);
+  const market = subject && marketParams(req, res, { withDays: false });
+  if (!market) return;
+  const data = await service.getCoinInfo({ ...subject, ...market }, res.locals);
   res.status(200).send(data);
 };
 
@@ -89,11 +161,13 @@ const getCoinInfo = async (req, res) => {
  * @returns {Promise<void>}
  */
 const getContractCoinInfo = async (req, res) => {
-  const { platform, address } = req.params;
-  const { currency } = req.query;
+  const subject = subjectParams(req, res);
+  const market = subject && marketParams(req, res, { withDays: false });
+  if (!market) return;
+  const { platform, address } = subject;
   try {
     const data = await service.getContractCoinInfo(
-      { platform, contractAddress: address, currency },
+      { platform, contractAddress: address, ...market },
       res.locals
     );
     res.status(200).send(data);

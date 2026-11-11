@@ -20,6 +20,14 @@ const { providerCall } = require('../../infrastructure/providers/provider-client
 const { toSafeError } = require('../../infrastructure/log-redaction');
 
 const { readCachedQuotes, setCachedQuotes } = require('../../infrastructure/cache/price-cache');
+const {
+  LOCK_POLL_MS,
+  tryLock,
+  releaseLock,
+  getCacheKey,
+} = require('../../infrastructure/cache/cache-helper');
+const { sleep } = require('../../infrastructure/rate-limiting/rate-limiter');
+const { remainingMs } = require('../../infrastructure/providers/request-deadline');
 
 // Demo keys go to api.coingecko.com with `x-cg-demo-api-key`; paid plans go
 // to pro-api.coingecko.com with `x-cg-pro-api-key`. One variable picks both.
@@ -169,26 +177,79 @@ const normalizeExchangeRates = (data) => {
   };
 };
 
+/** Lock held while one caller refreshes a cache entry; the budget bounds the rest. */
+const REFRESH_LOCK_MS = 6000;
+const NOT_FOUND = { notFound: true };
+
+const notFoundError = () => {
+  const error = new Error('CoinGecko answered 404');
+  error.response = { status: 404 };
+  return error;
+};
+
+/**
+ * Two-tier cached read with one flight per entry: on a short-term miss the
+ * `SET NX` holder fetches and saves; every other concurrent caller serves the
+ * long-term copy when there is one, or waits for the holder's save (bounded
+ * by `REFRESH_LOCK_MS` and the request budget). Without that, every
+ * concurrent request at expiry called CoinGecko, whose free tier allows 25 a
+ * minute, and the surplus answered 503. A 404 is cached for the short term
+ * under the same key, so an unlisted id costs one upstream call per window.
+ */
 const getCachedOrFetch = async ({
   loadShortTerm,
   fetchAndMap,
   save,
   loadLongTerm,
   fallbackMessage,
+  lockKey,
+  locals,
 }) => {
-  const cached = await loadShortTerm();
-  if (cached) {
+  const served = (cached) => {
+    if (cached?.notFound) throw notFoundError();
     return cached;
-  }
+  };
+  const cached = await loadShortTerm();
+  if (cached) return served(cached);
 
-  try {
-    const data = await fetchAndMap();
-    await save(data);
-    return data;
-  } catch (error) {
-    return withLongTermFallback(loadLongTerm, error, fallbackMessage);
+  const refresh = async () => {
+    try {
+      const data = await fetchAndMap();
+      await save(data);
+      return data;
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        await save(NOT_FOUND);
+        throw error;
+      }
+      return withLongTermFallback(loadLongTerm, error, fallbackMessage);
+    }
+  };
+  if (!lockKey) return refresh();
+
+  if (await tryLock(lockKey, REFRESH_LOCK_MS)) {
+    try {
+      return await refresh();
+    } finally {
+      await releaseLock(lockKey);
+    }
   }
+  const stale = await loadLongTerm();
+  if (stale) return served(stale);
+  const until = Date.now() + Math.min(REFRESH_LOCK_MS, remainingMs(locals));
+  while (Date.now() < until) {
+    await sleep(LOCK_POLL_MS);
+    const fresh = await loadShortTerm();
+    if (fresh) return served(fresh);
+  }
+  return refresh();
 };
+
+const lockKeyFor = (parts, locals) =>
+  getCacheKey(
+    `coingecko_lock:${parts.map((p) => encodeURIComponent(String(p))).join(':')}`,
+    locals
+  );
 
 const calculateYTDDays = () => {
   const now = new Date();
@@ -237,6 +298,8 @@ const getMarketChart = async (params, locals) => {
     save: (chartData) => repository.saveChart(cacheKey, chartData, locals),
     loadLongTerm: () => repository.getLongTermChart(cacheKey, locals),
     fallbackMessage: 'Using long-term cached chart due to:',
+    lockKey: lockKeyFor(['chart', coinId, rawDays, currency], locals),
+    locals,
   });
 };
 
@@ -273,6 +336,8 @@ const getCoinInfo = async (params, locals) => {
     save: (coinInfo) => repository.saveCoinInfo(cacheKey, coinInfo, locals),
     loadLongTerm: () => repository.getLongTermCoinInfo(cacheKey, locals),
     fallbackMessage: 'Using long-term cached coin info due to:',
+    lockKey: lockKeyFor(['coin', coinId, currency], locals),
+    locals,
   });
 };
 
@@ -304,6 +369,8 @@ const getExchangeRates = async (locals) => {
     save: (rates) => repository.saveExchangeRates(rates, locals),
     loadLongTerm: () => repository.getLongTermExchangeRates(locals),
     fallbackMessage: 'Using long-term cached exchange rates due to:',
+    lockKey: lockKeyFor(['exchange_rates'], locals),
+    locals,
   });
 };
 
@@ -345,6 +412,8 @@ const getContractMarketChart = async (params, locals) => {
     save: (chartData) => repository.saveChart(cacheKey, chartData, locals),
     loadLongTerm: () => repository.getLongTermChart(cacheKey, locals),
     fallbackMessage: 'Using long-term cached contract chart due to:',
+    lockKey: lockKeyFor(['chart', platform, contractAddress, rawDays, currency], locals),
+    locals,
   });
 };
 
@@ -381,6 +450,8 @@ const getContractCoinInfo = async (params, locals) => {
     save: (coinInfo) => repository.saveCoinInfo(cacheKey, coinInfo, locals),
     loadLongTerm: () => repository.getLongTermCoinInfo(cacheKey, locals),
     fallbackMessage: 'Using long-term cached contract coin info due to:',
+    lockKey: lockKeyFor(['coin', platform, contractAddress, currency], locals),
+    locals,
   });
 };
 
@@ -557,4 +628,6 @@ module.exports = {
   getCoinInfo,
   getContractCoinInfo,
   getExchangeRates,
+  SUPPORTED_FIAT_CURRENCIES,
+  MAX_DAYS_FREE_TIER,
 };

@@ -3,6 +3,11 @@
 const { resolveSourceIp } = require('../../packages/network-utils');
 
 const { redis } = require('../repositories/data-source');
+const { MemoryStore } = require('../infrastructure/providers/memory-store');
+
+// Counts kept in this process while Redis is unreachable or slow: one
+// container then limits what it sees on its own, instead of nothing at all.
+const fallback = new MemoryStore();
 
 // Hard cap on how long a single limiter check may hold the request; a slow
 // or hung Redis must never add user-visible latency (fail-open).
@@ -25,8 +30,9 @@ const withTimeout = (promise, ms) => {
  * Behavior is controlled by `process.env.RATE_LIMIT_MODE` (read per
  * request): 'off' skips entirely, 'log' (default) counts and logs excesses
  * without blocking, 'enforce' responds 429 with a `Retry-After` header.
- * Any Redis error or slowness fails open — the limiter never breaks a
- * request.
+ * On a Redis error or slowness the count continues in this process's memory,
+ * so a flood during a Redis outage is still limited per container; the
+ * limiter never breaks a request.
  *
  * @param {object} options
  * @param {number} options.max - Max requests per IP per window.
@@ -62,8 +68,11 @@ module.exports = ({ max, windowSeconds, prefix }) => {
         REDIS_TIMEOUT_MS
       );
     } catch (error) {
-      console.warn(`Rate-limit check skipped (fail-open) [${prefix}]: ${error.message}`);
-      return next();
+      console.warn(
+        `Rate-limit counting in memory (Redis unavailable) [${prefix}]: ${error.message}`
+      );
+      count = await fallback.incr(key);
+      if (count === 1) await fallback.pExpire(key, windowSeconds * 1000);
     }
 
     if (count <= max) return next();

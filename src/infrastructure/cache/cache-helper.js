@@ -122,6 +122,10 @@ const storeManyInCache = async (entries, ttl) => {
   }
 };
 
+/**
+ * `SET NX` lock for a single-flight rebuild; `true` when this caller holds
+ * it. No Redis → `true`: every process is then its own single flight.
+ */
 const tryLock = async (lockKey, lockMs) => {
   try {
     return (await redis.set(lockKey, '1', { nx: true, px: lockMs })) === 'OK';
@@ -163,7 +167,7 @@ const withSingleFlight = async (key, { ttl, staleTtl, lockMs, rebuild, locals })
       console.warn(`[cache] serving stale ${family} after rebuild failed: ${error.message}`);
       return stale;
     } finally {
-      await redis.del(lockKey).catch(console.warn);
+      await releaseLock(lockKey);
     }
   }
 
@@ -179,7 +183,12 @@ const withSingleFlight = async (key, { ttl, staleTtl, lockMs, rebuild, locals })
   return rebuild(); // lock holder died or ran out of time; the budget bounds us too
 };
 
+const releaseLock = (lockKey) => redis.del(lockKey).catch(console.warn);
+
 module.exports = {
+  LOCK_POLL_MS,
+  tryLock,
+  releaseLock,
   getCacheKey,
   getCacheKeyFor,
   getFromCache,

@@ -3,6 +3,14 @@
 const skrService = require('../../services/solana/skr-staking-service');
 const decorate = require('../../resources/solana/solana-skr-stake-resource');
 const { isValidSolanaAddress } = require('../../utils/solana-address');
+const { withSingleFlight, getCacheKeyFor } = require('../../infrastructure/cache/cache-helper');
+
+// One read is about five Triton calls plus the owner's transactions; the
+// route's Cache-Control is 60 s, so the server keeps the same answer that
+// long, with one flight per owner and a stale copy while a refresh fails.
+const STAKE_TTL_SECONDS = 60;
+const STAKE_STALE_TTL_SECONDS = 600;
+const STAKE_LOCK_MS = 10000;
 
 /**
  * The owner's SKR staking position (spec 021). SKR staking exists on mainnet
@@ -26,8 +34,14 @@ const getStake = async (req, res) => {
       error_description: 'owner is not a valid Solana address.',
     });
   }
-  const result = await skrService.getSkrStake(owner, res.locals);
-  return res.status(200).send(decorate(result));
+  const resource = await withSingleFlight(getCacheKeyFor('skr_stake', 'owner', owner, res.locals), {
+    ttl: STAKE_TTL_SECONDS,
+    staleTtl: STAKE_STALE_TTL_SECONDS,
+    lockMs: STAKE_LOCK_MS,
+    rebuild: async () => decorate(await skrService.getSkrStake(owner, res.locals)),
+    locals: res.locals,
+  });
+  return res.status(200).send(resource);
 };
 
 module.exports = { getStake };
