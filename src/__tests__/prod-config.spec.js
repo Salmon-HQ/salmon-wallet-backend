@@ -50,12 +50,15 @@ describe('production config defaults', () => {
   // one, over the same window.
   it('caps each IP at AWS WAF within the Express per-IP budget and window', () => {
     const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
-    const cap = (key) => Number(serverless.match(new RegExp(`^\\s*${key}:\\s*(\\d+)\\s*$`, 'm'))?.[1]);
+    const cap = (key) =>
+      Number(serverless.match(new RegExp(`^\\s*${key}:\\s*(\\d+)\\s*$`, 'm'))?.[1]);
     const perIp = cap('wafRateLimitPerIp');
     expect(perIp).toBeGreaterThan(0);
     expect(perIp).toBeLessThanOrEqual(Number(defaultFor('RATE_LIMIT_MAX')));
     expect(cap('wafProviderPathsLimitPerIp')).toBeLessThanOrEqual(perIp);
-    expect(cap('wafExchangeRatesLimitPerIp')).toBeLessThanOrEqual(cap('wafProviderPathsLimitPerIp'));
+    expect(cap('wafExchangeRatesLimitPerIp')).toBeLessThanOrEqual(
+      cap('wafProviderPathsLimitPerIp')
+    );
     for (const window of serverless.match(/^\s*EvaluationWindowSec:\s*(\d+)\s*$/gm) ?? []) {
       expect(window.trim().split(/\s+/)[1]).toBe(defaultFor('RATE_LIMIT_WINDOW_SECONDS'));
     }
