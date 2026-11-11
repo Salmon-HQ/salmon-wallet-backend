@@ -102,20 +102,12 @@
         "lambda:UpdateAlias",
         "lambda:DeleteFunction",
         "lambda:DeleteAlias",
-        "lambda:GetFunction",
-        "lambda:GetFunctionConfiguration",
-        "lambda:GetAlias",
-        "lambda:ListVersionsByFunction",
-        "lambda:ListAliases",
-        "lambda:GetPolicy",
         "lambda:AddPermission",
         "lambda:RemovePermission",
         "lambda:TagResource",
         "lambda:UntagResource",
-        "lambda:ListTags",
-        "lambda:GetFunctionCodeSigningConfig",
-        "lambda:GetRuntimeManagementConfig",
-        "lambda:GetFunctionRecursionConfig"
+        "lambda:Get*",
+        "lambda:List*"
       ],
       "Resource": "arn:aws:lambda:us-east-1:<AWS_ACCOUNT_ID>:function:gol-salmon-api-*"
     },
