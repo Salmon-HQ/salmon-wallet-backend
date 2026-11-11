@@ -51,22 +51,59 @@ const MAX_ADDRESSES_PER_PRICE_CALL = 100;
 const CATALOG_TTL_SECONDS = 24 * 60 * 60;
 /** Wording + link CoinGecko's attribution guide accepts; clients render it verbatim. */
 const ATTRIBUTION = { text: 'Data provided by CoinGecko', url: 'https://www.coingecko.com/en/api' };
+/**
+ * The fiat currencies CoinGecko both rates in `/exchange_rates` and quotes
+ * charts and coin data in (`/simple/supported_vs_currencies`), so a wallet that
+ * shows one of them can show every figure in it. Its other fiat rates have no
+ * market data, and XDR (an IMF accounting unit) and VEF (withdrawn in 2018) are
+ * not currencies anyone holds.
+ */
 const SUPPORTED_FIAT_CURRENCIES = [
   'usd',
+  'aed',
+  'ars',
+  'aud',
+  'bdt',
+  'bhd',
+  'bmd',
+  'brl',
+  'cad',
+  'chf',
+  'clp',
+  'cny',
+  'czk',
+  'dkk',
   'eur',
   'gbp',
-  'jpy',
-  'cny',
-  'krw',
-  'inr',
-  'cad',
-  'aud',
-  'brl',
-  'mxn',
-  'chf',
-  'sgd',
+  'gel',
   'hkd',
+  'huf',
+  'idr',
+  'ils',
+  'inr',
+  'jpy',
+  'krw',
+  'kwd',
+  'lkr',
+  'mmk',
+  'mxn',
+  'myr',
+  'ngn',
+  'nok',
+  'nzd',
+  'php',
+  'pkr',
+  'pln',
+  'rub',
+  'sar',
+  'sek',
+  'sgd',
+  'thb',
   'try',
+  'twd',
+  'uah',
+  'vnd',
+  'zar',
 ];
 
 const apiHeaders = () =>

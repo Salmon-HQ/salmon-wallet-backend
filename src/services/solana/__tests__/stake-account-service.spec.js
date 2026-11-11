@@ -207,6 +207,36 @@ describe('listStakeAccounts', () => {
     expect(accounts[0].rewards.map((r) => r.epoch)).toEqual([1051, 1049, 1048, 1047]);
   });
 
+  test('asks for rewards at most 100 accounts at a time, each matched to its own account', async () => {
+    const many = Array.from({ length: 150 }, (_, i) => stakeAccount(`Stake${i}`));
+    rpcWith(
+      defaults({
+        getProgramAccounts: ([program]) => (program.startsWith('Config') ? [] : many),
+        // The RPC refuses more than 100 addresses per call, as Triton does in production.
+        getInflationReward: ([addresses, { epoch }]) => {
+          if (addresses.length > 100) {
+            throw new Error('getInflationReward failed: Too many inputs provided; max 100');
+          }
+          return addresses.map((address) => ({
+            epoch,
+            amount: Number(address.slice(5)),
+            postBalance: 1,
+          }));
+        },
+      })
+    );
+
+    const { accounts } = await listStakeAccounts(WALLET, locals);
+
+    expect(accounts).toHaveLength(150);
+    for (const account of accounts) {
+      expect(account.rewards[0].lamports).toBe(Number(account.address.slice(5)));
+    }
+    expect(calls('getInflationReward').map(([, b]) => b.params[0].length)).toEqual(
+      Array(5).fill([100, 50]).flat()
+    );
+  });
+
   test('a stake account never delegated has no validator and no rewards', async () => {
     rpcWith(
       defaults({

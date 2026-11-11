@@ -308,6 +308,30 @@ describe('coingecko-service', () => {
     });
   });
 
+  it('keeps only the fiat currencies CoinGecko also quotes charts and coin data in', async () => {
+    repository.getShortTermExchangeRates.mockResolvedValue(null);
+    http.get.mockResolvedValue({
+      data: {
+        rates: {
+          usd: { value: 50000, type: 'fiat' },
+          czk: { value: 1100000, type: 'fiat' },
+          pln: { value: 200000, type: 'fiat' },
+          // A rate but no market data in it (not in /simple/supported_vs_currencies).
+          cop: { value: 200000000, type: 'fiat' },
+          // IMF accounting unit, and a currency Venezuela withdrew in 2018.
+          xdr: { value: 37000, type: 'fiat' },
+          vef: { value: 5000, type: 'fiat' },
+          eth: { value: 20, type: 'crypto' },
+        },
+      },
+    });
+
+    const { rates } = await service.getExchangeRates(locals);
+
+    expect(rates).toEqual({ usd: 1, czk: 22, pln: 4 });
+    expect(service.SUPPORTED_FIAT_CURRENCIES).toHaveLength(45);
+  });
+
   it('falls back to long-term cached exchange rates when CoinGecko fails', async () => {
     const cached = {
       base: 'usd',
