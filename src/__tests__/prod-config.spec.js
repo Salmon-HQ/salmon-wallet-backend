@@ -44,16 +44,24 @@ describe('production config defaults', () => {
   });
 
   // AWS WAF blocks a source IP before the request reaches API Gateway's
-  // shared stage throttle; it must never block an IP the Express limiter
-  // would still serve, nor let through more than it does.
-  it('caps each IP at AWS WAF with the Express per-IP budget and window', () => {
+  // shared stage throttle. It is the outer layer: its caps may be tighter
+  // than the Express limiter's budget (an IP WAF blocks never reaches
+  // Express), never looser, and the tighter path caps sit under the general
+  // one, over the same window.
+  it('caps each IP at AWS WAF within the Express per-IP budget and window', () => {
     const serverless = fs.readFileSync(path.join(__dirname, '..', '..', 'serverless.yml'), 'utf8');
-    expect(serverless.match(/^\s*wafRateLimitPerIp:\s*(\d+)\s*$/m)?.[1]).toBe(
-      defaultFor('RATE_LIMIT_MAX')
+    const cap = (key) =>
+      Number(serverless.match(new RegExp(`^\\s*${key}:\\s*(\\d+)\\s*$`, 'm'))?.[1]);
+    const perIp = cap('wafRateLimitPerIp');
+    expect(perIp).toBeGreaterThan(0);
+    expect(perIp).toBeLessThanOrEqual(Number(defaultFor('RATE_LIMIT_MAX')));
+    expect(cap('wafProviderPathsLimitPerIp')).toBeLessThanOrEqual(perIp);
+    expect(cap('wafExchangeRatesLimitPerIp')).toBeLessThanOrEqual(
+      cap('wafProviderPathsLimitPerIp')
     );
-    expect(serverless.match(/^\s*EvaluationWindowSec:\s*(\d+)\s*$/m)?.[1]).toBe(
-      defaultFor('RATE_LIMIT_WINDOW_SECONDS')
-    );
+    for (const window of serverless.match(/^\s*EvaluationWindowSec:\s*(\d+)\s*$/gm) ?? []) {
+      expect(window.trim().split(/\s+/)[1]).toBe(defaultFor('RATE_LIMIT_WINDOW_SECONDS'));
+    }
   });
 
   // The regional web ACL sees client addresses on this edge-optimized API

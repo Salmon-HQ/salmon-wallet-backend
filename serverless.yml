@@ -89,9 +89,24 @@ functions:
   api:
     handler: src/index.handler
     timeout: 60
+    # Ceiling on executions, and so on Lambda spend, whatever API Gateway
+    # lets through; the remaining account concurrency stays for the analytics
+    # ingest and the scheduled jobs. Needs lambda:PutFunctionConcurrency on
+    # the deploy role (aws-deploy-policy.json).
+    reservedConcurrency: 300
     events:
       - http: ANY /
       - http: ANY /{proxy+}
+      # Its own token bucket, so a flood on this endpoint (the one request
+      # floods have targeted) exhausts only this route: the wallets fall back
+      # to USD prices, and every other route keeps its own budget. The explicit
+      # route wins over {proxy+}; the handler is the same Express app.
+      - http:
+          path: /v1/exchange-rates
+          method: get
+          throttling:
+            maxRequestsPerSecond: 20
+            maxConcurrentRequests: 40
     environment: ${self:custom.envFile.api}
 
   # Anonymous usage-analytics ingest. A dedicated function (not the catch-all
@@ -105,6 +120,7 @@ functions:
   events:
     handler: src/analytics/handler.handler
     timeout: 15
+    reservedConcurrency: 20
     events:
       - http:
           path: /v1/events
@@ -119,23 +135,47 @@ custom:
   envFile: ${file(./config/env.${sls:stage}.yml)}
   # Aggregate stage-level throttling (all endpoints). Per-IP limits are
   # handled by the Express rate-limit middleware; this is the blunt outer cap.
+  # Per method (ANY /, ANY /{proxy+}, the exchange-rates route, POST
+  # /v1/events each get a bucket): 200 requests per second sustained, 400 as
+  # burst. About 600 times the API's normal rate; Lambda spend is bounded by
+  # the functions' reservedConcurrency, not by this. A flood paced under the
+  # WAF per-IP caps can still fill a bucket (the floods of 2026-11-11 did at
+  # 50 rps): the exchange-rates route has its own so that it fails alone.
   apiGatewayThrottling:
-    maxRequestsPerSecond: 50
-    maxConcurrentRequests: 100
-  # AWS WAF per-IP cap (resources.ApiWebAcl): requests one source IP may send
-  # in any 60 s before the rule blocks it. Same number as the Express per-IP
-  # limit (RATE_LIMIT_MAX per RATE_LIMIT_WINDOW_SECONDS in src/index.js),
-  # applied before the request reaches the Lambda, so one client cannot hold
-  # the shared stage throttle above at its ceiling.
-  wafRateLimitPerIp: 300
+    maxRequestsPerSecond: 200
+    maxConcurrentRequests: 400
+  # AWS WAF per-IP caps (resources.ApiWebAcl): requests one source IP may
+  # send in any 60 s before the rule blocks it, applied before the request
+  # reaches API Gateway's throttle, so no client can hold the shared stage
+  # throttle above at its ceiling. The wallets send a few dozen requests a
+  # minute at most, even on a pull-to-refresh spree. The Express per-IP limit
+  # (RATE_LIMIT_MAX per RATE_LIMIT_WINDOW_SECONDS in src/index.js) stays as
+  # the inner layer.
+  wafRateLimitPerIp: 150
+  # Cap for the routes that call a provider (balances, history, NFTs, stakes,
+  # SKR staking, prices, token search, dApp metadata, Powerups, swap): a flood there also burns Triton, Helius and
+  # CoinGecko quota, which costs every user a longer outage than the flood.
+  wafProviderPathsLimitPerIp: 100
   # Tighter cap for GET /v1/exchange-rates, the endpoint request floods have
   # targeted: the clients fetch it once per 15 minutes, so a source IP above
   # this in 60 s is not a wallet.
   wafExchangeRatesLimitPerIp: 30
+  # Cap for addresses AWS lists as cloud hosting providers (rented servers).
+  # A flood spread over thousands of such addresses stays under the caps
+  # above; a GitHub Actions runner (Azure) checking /status or a wallet user
+  # on a datacenter-hosted VPN sends a handful a minute and stays under this.
+  wafHostingProvidersLimitPerIp: 20
+  # Cap for all hosting-provider addresses together, in 60 s: a rented fleet
+  # pacing each address under the cap above still adds up, while legitimate
+  # datacenter traffic (CI checks, VPN users) is a few hundred a minute.
+  wafHostingProvidersLimitTotal: 3000
   # `block` blocks; `count` only records the IPs over the caps. The regional
   # web ACL sees client addresses on this edge-optimized API (docs/DEPLOY.md,
   # "AWS WAF in front of the API"), so the rules block.
   wafRuleAction: block
+  # The AWS anti-DDoS managed group: `count` while it builds its traffic
+  # baseline (AWS asks for normal traffic first), `block` afterwards.
+  wafAntiDdosAction: count
   serverless-offline:
     host: 0.0.0.0
     httpPort: ${env:OFFLINE_HTTP_PORT, 3000}
@@ -158,6 +198,7 @@ resources:
   Conditions:
     IsProd: !Equals ['${sls:stage}', 'prod']
     WafRuleBlocks: !Equals ['${self:custom.wafRuleAction}', 'block']
+    AntiDdosBlocks: !Equals ['${self:custom.wafAntiDdosAction}', 'block']
   Resources:
     ApiWebAcl:
       Type: AWS::WAFv2::WebACL
@@ -172,9 +213,43 @@ resources:
           SampledRequestsEnabled: true
           MetricName: ${self:service}-${sls:stage}-api
         Rules:
-          - Name: per-ip-rate-limit
+          # AWS's application-layer DDoS protection: it learns the API's
+          # normal traffic and, during an event, blocks the requests that
+          # take part in it, however many addresses they come from. Requests
+          # it blocks are not charged WAF's per-request fee. AWS asks for it
+          # first in the ACL and for a baseline before it blocks, so it
+          # starts counting (custom.wafAntiDdosAction). Its browser challenge
+          # is disabled: a challenge is solved by a browser, and the wallets
+          # are native apps.
+          - Name: aws-anti-ddos
             Priority: 0
-            Action: !If [WafRuleBlocks, { Block: {} }, { Count: {} }]
+            OverrideAction: !If [AntiDdosBlocks, { None: {} }, { Count: {} }]
+            Statement:
+              ManagedRuleGroupStatement:
+                VendorName: AWS
+                Name: AWSManagedRulesAntiDDoSRuleSet
+                ManagedRuleGroupConfigs:
+                  - AWSManagedRulesAntiDDoSRuleSet:
+                      # LOW blocks only the requests the group is most sure
+                      # of; raise during a sustained event.
+                      SensitivityToBlock: LOW
+                      ClientSideActionConfig:
+                        Challenge:
+                          UsageOfAction: DISABLED
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: aws-anti-ddos
+          # A rate rule answers 429, the status the Express limiter uses, so
+          # a client never mistakes it for the availability 403.
+          - Name: per-ip-rate-limit
+            Priority: 1
+            Action:
+              !If &rateAction [
+                WafRuleBlocks,
+                { Block: { CustomResponse: { ResponseCode: 429 } } },
+                { Count: {} },
+              ]
             Statement:
               RateBasedStatement:
                 AggregateKeyType: IP
@@ -185,8 +260,8 @@ resources:
               SampledRequestsEnabled: true
               MetricName: per-ip-rate-limit
           - Name: exchange-rates-rate-limit
-            Priority: 1
-            Action: !If [WafRuleBlocks, { Block: {} }, { Count: {} }]
+            Priority: 2
+            Action: *rateAction
             Statement:
               RateBasedStatement:
                 AggregateKeyType: IP
@@ -211,27 +286,109 @@ resources:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
               MetricName: exchange-rates-rate-limit
+          - Name: provider-paths-rate-limit
+            Priority: 3
+            Action: *rateAction
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: IP
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafProviderPathsLimitPerIp}
+                ScopeDownStatement:
+                  OrStatement:
+                    Statements:
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /account/
+                          TextTransformations: &pathTransforms
+                            - Priority: 0
+                              Type: URL_DECODE
+                            - Priority: 1
+                              Type: NORMALIZE_PATH
+                            - Priority: 2
+                              Type: LOWERCASE
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /nft
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /chart/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /coin/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /dapp/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /ft/swap
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /ft/search
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /skr/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /powerups/
+                          TextTransformations: *pathTransforms
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: provider-paths-rate-limit
           # Addresses AWS lists as sources of attacks (bots, scanners,
-          # reconnaissance). A wallet user is never on it.
+          # reconnaissance, DDoS). A wallet user is never on it. The group
+          # ships its DDoS list counting; here it blocks.
           - Name: aws-ip-reputation
-            Priority: 2
+            Priority: 4
             OverrideAction: !If [WafRuleBlocks, { None: {} }, { Count: {} }]
             Statement:
               ManagedRuleGroupStatement:
                 VendorName: AWS
                 Name: AWSManagedRulesAmazonIpReputationList
+                RuleActionOverrides:
+                  - Name: AWSManagedIPDDoSList
+                    ActionToUse:
+                      Block: {}
             VisibilityConfig:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
               MetricName: aws-ip-reputation
-          # Cloud hosting providers' addresses are blocked: a flood spread over
-          # thousands of addresses stays under the per-IP caps, and those
-          # addresses are rented servers, not phones. VPN, proxy and Tor
-          # addresses (the group's AnonymousIPList rule) are only counted,
-          # because wallet users do use VPNs.
-          - Name: aws-hosting-providers
-            Priority: 3
-            OverrideAction: !If [WafRuleBlocks, { None: {} }, { Count: {} }]
+          # AWS's lists of VPN, proxy and Tor exits (AnonymousIPList) and of
+          # cloud hosting providers (HostingProviderIPList). The group only
+          # labels the request: blocking every datacenter address would also
+          # block GitHub Actions runners (the deploy and daily checks), store
+          # reviewers' device farms and users on datacenter-hosted VPNs. The
+          # rule below caps the hosting-provider ones instead.
+          - Name: aws-anonymous-ip-labels
+            Priority: 5
+            OverrideAction:
+              None: {}
             Statement:
               ManagedRuleGroupStatement:
                 VendorName: AWS
@@ -240,10 +397,45 @@ resources:
                   - Name: AnonymousIPList
                     ActionToUse:
                       Count: {}
+                  - Name: HostingProviderIPList
+                    ActionToUse:
+                      Count: {}
             VisibilityConfig:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
-              MetricName: aws-hosting-providers
+              MetricName: aws-anonymous-ip-labels
+          - Name: hosting-providers-rate-limit
+            Priority: 6
+            Action: *rateAction
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: IP
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafHostingProvidersLimitPerIp}
+                ScopeDownStatement:
+                  LabelMatchStatement:
+                    Scope: LABEL
+                    Key: awswaf:managed:aws:anonymous-ip-list:HostingProviderIPList
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: hosting-providers-rate-limit
+          - Name: hosting-providers-total-limit
+            Priority: 7
+            Action: *rateAction
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: CONSTANT
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafHostingProvidersLimitTotal}
+                ScopeDownStatement:
+                  LabelMatchStatement:
+                    Scope: LABEL
+                    Key: awswaf:managed:aws:anonymous-ip-list:HostingProviderIPList
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: hosting-providers-total-limit
     # The stage only exists once the API Gateway deployment has created it;
     # Serverless names that deployment ApiGatewayDeployment<instanceId>.
     ApiWebAclAssociation:
