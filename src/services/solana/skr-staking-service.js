@@ -266,6 +266,10 @@ const stakedSince = async (address, locals) => {
 
 const TX_EVENTS_TTL_SECONDS = 400 * 24 * 60 * 60;
 const SIGNATURE_PAGE = 1000;
+// Bounds on one owner's history read: an address with more activity than
+// this gets the most recent part, which is what the 30-day history needs.
+const MAX_SIGNATURE_PAGES = 5;
+const MAX_EVENT_TRANSACTIONS = 200;
 
 /** The share-changing events of one confirmed transaction, cached for good. */
 const transactionEvents = async (signature, owner, locals) => {
@@ -309,7 +313,7 @@ const transactionEvents = async (signature, owner, locals) => {
 const ownerEvents = async (owner, since, locals) => {
   const signatures = [];
   let before;
-  for (;;) {
+  for (let pages = 0; pages < MAX_SIGNATURE_PAGES; pages += 1) {
     const page = await rpc(
       'getSignaturesForAddress',
       [owner, { limit: SIGNATURE_PAGE, ...(before && { before }) }],
@@ -322,7 +326,7 @@ const ownerEvents = async (owner, since, locals) => {
     before = page[page.length - 1].signature;
   }
   const events = [];
-  for (const signature of signatures) {
+  for (const signature of signatures.slice(0, MAX_EVENT_TRANSACTIONS)) {
     events.push(...(await transactionEvents(signature, owner, locals)));
   }
   return events

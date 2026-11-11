@@ -137,6 +137,9 @@ const verified = async (req, res) => {
  *   error_description }` when `query` is missing.
  * @returns {Promise<void>}
  */
+const SEARCH_MIN_LENGTH = 2;
+const SEARCH_MAX_LENGTH = 64;
+
 const search = async (req, res) => {
   const { query } = req.query;
 
@@ -146,8 +149,17 @@ const search = async (req, res) => {
       error_description: 'Query parameter "query" is required',
     });
   }
+  // A one-character query matches most of the catalog and costs a metadata
+  // batch per spelling; a mint is at most 44 characters.
+  const term = String(query).trim();
+  if (term.length < SEARCH_MIN_LENGTH || term.length > SEARCH_MAX_LENGTH) {
+    return res.status(400).json({
+      error: 'invalid_parameter',
+      error_description: `query must be ${SEARCH_MIN_LENGTH} to ${SEARCH_MAX_LENGTH} characters`,
+    });
+  }
 
-  const data = await tokenService.search(query, res.locals);
+  const data = await tokenService.search(term, res.locals);
   const resource = await decorator(decorateBatchToken, data, { req, res });
   res.status(200).send(resource);
 };

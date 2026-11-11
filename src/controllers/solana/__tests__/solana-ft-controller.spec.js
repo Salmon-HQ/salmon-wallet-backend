@@ -60,6 +60,15 @@ describe('solana-ft-controller', () => {
       error: 'missing_parameter',
       error_description: 'Query parameter "query" is required',
     });
+    for (const query of ['a', ' a ', 'x'.repeat(65)]) {
+      const shortRes = createRes();
+      await controller.search({ query: { query } }, shortRes);
+      expect(shortRes.status).toHaveBeenCalledWith(400);
+      expect(shortRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'invalid_parameter' })
+      );
+    }
+    expect(tokenService.search).not.toHaveBeenCalled();
 
     const tokens = [{ address: 'search-1', decimals: 6 }];
     tokenService.search.mockResolvedValue(tokens);

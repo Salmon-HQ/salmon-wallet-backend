@@ -93,17 +93,21 @@ describe('rate-limit middleware', () => {
     expect(redis.incr).not.toHaveBeenCalled();
   });
 
-  test('fails open on Redis error', async () => {
+  test('keeps counting in memory on a Redis error and still limits the IP', async () => {
     redis.incr.mockRejectedValue(new Error('boom'));
-    const middleware = rateLimit({ max: 5, windowSeconds: 60, prefix: 'test' });
+    const middleware = rateLimit({ max: 5, windowSeconds: 60, prefix: 'mem-error' });
     const next = jest.fn();
-    await middleware(buildReq(), buildRes(), next);
-    expect(next).toHaveBeenCalledWith();
+    for (let i = 0; i < 5; i += 1) await middleware(buildReq(), buildRes(), next);
+    expect(next).toHaveBeenCalledTimes(5);
+    const res = buildRes();
+    await middleware(buildReq(), res, next);
+    expect(next).toHaveBeenCalledTimes(5);
+    expect(res.statusCode).toBe(429);
   });
 
-  test('fails open when Redis hangs past the timeout', async () => {
+  test('keeps counting in memory when Redis hangs past the timeout', async () => {
     redis.incr.mockImplementation(() => new Promise(() => {}));
-    const middleware = rateLimit({ max: 5, windowSeconds: 60, prefix: 'test' });
+    const middleware = rateLimit({ max: 5, windowSeconds: 60, prefix: 'mem-hang' });
     const next = jest.fn();
     await middleware(buildReq(), buildRes(), next);
     expect(next).toHaveBeenCalledWith();

@@ -26,7 +26,7 @@ const powerupGate = require('../../middlewares/powerup-gate');
 const router = express.Router();
 
 router.get('/verified', cacheControl('max-age=300'), safe(controller.verified));
-router.get('/search', safe(controller.search));
+router.get('/search', cacheControl('max-age=60'), safe(controller.search));
 // Mainnet check → request shape → availability gate (country/platform row,
 // screening on Jupiter rows) → build. No execute/relay route exists by design.
 router.get(
