@@ -119,15 +119,24 @@ custom:
   envFile: ${file(./config/env.${sls:stage}.yml)}
   # Aggregate stage-level throttling (all endpoints). Per-IP limits are
   # handled by the Express rate-limit middleware; this is the blunt outer cap.
+  # 200 rps is about 600 times the API's normal rate and keeps Lambda spend
+  # bounded; with the WAF caps below, a flood no longer empties it for
+  # everyone (the floods of 2026-11-11 did at 50 rps).
   apiGatewayThrottling:
-    maxRequestsPerSecond: 50
-    maxConcurrentRequests: 100
-  # AWS WAF per-IP cap (resources.ApiWebAcl): requests one source IP may send
-  # in any 60 s before the rule blocks it. Same number as the Express per-IP
-  # limit (RATE_LIMIT_MAX per RATE_LIMIT_WINDOW_SECONDS in src/index.js),
-  # applied before the request reaches the Lambda, so one client cannot hold
-  # the shared stage throttle above at its ceiling.
-  wafRateLimitPerIp: 300
+    maxRequestsPerSecond: 200
+    maxConcurrentRequests: 400
+  # AWS WAF per-IP caps (resources.ApiWebAcl): requests one source IP may
+  # send in any 60 s before the rule blocks it, applied before the request
+  # reaches API Gateway's throttle, so no client can hold the shared stage
+  # throttle above at its ceiling. The wallets send a few dozen requests a
+  # minute at most, even on a pull-to-refresh spree. The Express per-IP limit
+  # (RATE_LIMIT_MAX per RATE_LIMIT_WINDOW_SECONDS in src/index.js) stays as
+  # the inner layer.
+  wafRateLimitPerIp: 150
+  # Cap for the routes that call a provider (balances, history, NFTs, stakes,
+  # prices, dApp metadata, swap): a flood there also burns Triton, Helius and
+  # CoinGecko quota, which costs every user a longer outage than the flood.
+  wafProviderPathsLimitPerIp: 100
   # Tighter cap for GET /v1/exchange-rates, the endpoint request floods have
   # targeted: the clients fetch it once per 15 minutes, so a source IP above
   # this in 60 s is not a wallet.
@@ -211,10 +220,67 @@ resources:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
               MetricName: exchange-rates-rate-limit
+          - Name: provider-paths-rate-limit
+            Priority: 2
+            Action: !If [WafRuleBlocks, { Block: {} }, { Count: {} }]
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: IP
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafProviderPathsLimitPerIp}
+                ScopeDownStatement:
+                  OrStatement:
+                    Statements:
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /account/
+                          TextTransformations: &pathTransforms
+                            - Priority: 0
+                              Type: URL_DECODE
+                            - Priority: 1
+                              Type: NORMALIZE_PATH
+                            - Priority: 2
+                              Type: LOWERCASE
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /nft
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /chart/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /coin/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /dapp/
+                          TextTransformations: *pathTransforms
+                      - ByteMatchStatement:
+                          FieldToMatch:
+                            UriPath: {}
+                          PositionalConstraint: CONTAINS
+                          SearchString: /ft/swap
+                          TextTransformations: *pathTransforms
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: provider-paths-rate-limit
           # Addresses AWS lists as sources of attacks (bots, scanners,
           # reconnaissance). A wallet user is never on it.
           - Name: aws-ip-reputation
-            Priority: 2
+            Priority: 3
             OverrideAction: !If [WafRuleBlocks, { None: {} }, { Count: {} }]
             Statement:
               ManagedRuleGroupStatement:
@@ -230,7 +296,7 @@ resources:
           # addresses (the group's AnonymousIPList rule) are only counted,
           # because wallet users do use VPNs.
           - Name: aws-hosting-providers
-            Priority: 3
+            Priority: 4
             OverrideAction: !If [WafRuleBlocks, { None: {} }, { Count: {} }]
             Statement:
               ManagedRuleGroupStatement:
