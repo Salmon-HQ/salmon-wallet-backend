@@ -224,7 +224,10 @@
         "wafv2:TagResource",
         "wafv2:UntagResource"
       ],
-      "Resource": "arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/gol-salmon-api-*/*"
+      "Resource": [
+        "arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/webacl/gol-salmon-api-*/*",
+        "arn:aws:wafv2:us-east-1:<AWS_ACCOUNT_ID>:regional/managedruleset/*/*"
+      ]
     },
     {
       "Sid": "WafAssociateStage",
