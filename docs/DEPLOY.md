@@ -51,14 +51,20 @@ Each prod deploy downloads that month's DB-IP country database (`scripts/refresh
 
 ## AWS WAF in front of the API
 
-Production gets a regional AWS WAF web ACL, `gol-salmon-api-prod-api`, associated with its API Gateway stage (the `IsProd` condition; staging and `local` get none, because staging carries partner tests rather than public traffic and the web ACL costs the same per stage) (`resources` in `serverless.yml`). Its one rule, `per-ip-rate-limit`, acts on a source IP that sends more than `custom.wafRateLimitPerIp` requests (300) in any 60 seconds; every other request is allowed. The number matches the Express per-IP limit (`RATE_LIMIT_MAX` per `RATE_LIMIT_WINDOW_SECONDS`, `src/index.js`), so it acts on no caller the API would have served. The aim is that one client sending more than 50 requests per second can no longer empty the stage throttle (`custom.apiGatewayThrottling`, 50 rps per method), which every wallet route shares through `ANY /{proxy+}`, leaving every user with API Gateway's 429. WAF checks the rate about every 10 seconds, so a flood is cut off within seconds rather than at once.
+Production gets a regional AWS WAF web ACL, `gol-salmon-api-prod-api`, associated with its API Gateway stage (the `IsProd` condition; staging and `local` get none, because staging carries partner tests rather than public traffic and the web ACL costs the same per stage) (`resources` in `serverless.yml`). Its rules, in priority order:
 
-The rule ships counting, not blocking (`custom.wafRuleAction: count`): it records the addresses over the cap and lets their requests through. Two things the AWS documentation leaves open decide whether blocking does any good:
+- `per-ip-rate-limit` blocks a source IP that sends more than `custom.wafRateLimitPerIp` requests (300) in any 60 seconds. The number matches the Express per-IP limit (`RATE_LIMIT_MAX` per `RATE_LIMIT_WINDOW_SECONDS`, `src/index.js`), so it acts on no caller the API would have served.
+- `exchange-rates-rate-limit` blocks a source IP that sends more than `custom.wafExchangeRatesLimitPerIp` requests (30) to `GET /v1/exchange-rates` in any 60 seconds. The wallet clients fetch that endpoint once per 15 minutes and cache it; it is the endpoint request floods target.
+- `aws-ip-reputation` is the AWS managed group `AWSManagedRulesAmazonIpReputationList`: addresses AWS observes as sources of bots, scanners and attacks.
+- `aws-hosting-providers` is the AWS managed group `AWSManagedRulesAnonymousIpList` with its `HostingProviderIPList` rule blocking (cloud hosting addresses: a flood spread over thousands of rented servers stays under the per-IP caps, and no phone is on one) and its `AnonymousIPList` rule (VPN, proxy, Tor) overridden to count, because wallet users do use VPNs.
 
-- Which address the web ACL sees. The API is edge-optimized, so requests reach API Gateway through CloudFront, and AWS does not document whether a regional web ACL on such an API counts the client's address or the CloudFront edge's. If it is the edge's, the rule would lump many users under one address and block them together. Aggregating on `X-Forwarded-For` instead is not an option: a rate-based rule reads the first address in that header, which the client itself can write.
-- Whether a request WAF blocks still takes a token from the stage throttle. AWS does not document the order of the two, so whether blocking keeps the throttle free for everyone else is unverified.
+The aim is that a flood can no longer empty the stage throttle (`custom.apiGatewayThrottling`, 50 rps per method), which every wallet route shares through `ANY /{proxy+}`, leaving every user with API Gateway's 429. WAF checks the rate-based rules about every 10 seconds, so a flood is cut off within seconds rather than at once. A blocked request gets 403 from WAF and never reaches API Gateway's throttle or its request charge.
 
-Cost, from [AWS WAF pricing](https://aws.amazon.com/waf/pricing/): USD 5 per web ACL per month, USD 1 per rule per month and USD 0.60 per million requests inspected, so about USD 6 a month plus the request charge, which is cents at the API's volume (27,143 production requests from 21 September to 20 October 2026).
+`custom.wafRuleAction` is `block`; `count` would only record what the rules match and let every request through, which is useful for trying a new rule. The rules block because the regional web ACL sees client addresses on this edge-optimized API: during the floods of 11 November 2026 the rule's sampled requests and managed keys held the clients' own addresses, no CloudFront ones, and `src/__tests__/prod-config.spec.js` guards the setting. Aggregating on `X-Forwarded-For` instead is not an option: a rate-based rule reads the first address in that header, which the client itself can write.
+
+Salmon's own CloudFront distribution in front of the API (origin `te4x28v8e0.execute-api…`, no alias) receives no traffic: the clients call the execute-api hostname directly. If a client is ever pointed at that distribution, its requests reach API Gateway from CloudFront's addresses, many users per address, and the IP-aggregated rules would block them together; the rate rules then need a `ScopeDownStatement` that leaves out requests carrying a secret origin header the distribution adds (an origin custom header, [CloudFront: adding custom headers to origin requests](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/add-origin-custom-headers.html), value in SSM Parameter Store), with the distribution's own WAF limiting those requests.
+
+Cost, from [AWS WAF pricing](https://aws.amazon.com/waf/pricing/): USD 5 per web ACL per month, USD 1 per rule or managed rule group per month and USD 0.60 per million requests inspected, so about USD 9 a month plus the request charge, which is cents at the API's normal volume (27,143 production requests from 21 September to 20 October 2026) and about USD 0.60 per million during a flood, instead of API Gateway's USD 3.50 per million for the requests WAF now blocks.
 
 The GitHub deploy role needs WAF permissions before the first deploy that carries the web ACL; these are the actions CloudFormation's handlers for `AWS::WAFv2::WebACL` and `AWS::WAFv2::WebACLAssociation` call:
 
@@ -70,28 +76,16 @@ Without them the stack update fails and CloudFormation rolls it back. They belon
 
 Release order: the web ACL ships after the deploy-role change that carries these permissions (`fix/deploy-least-privilege`, which also adds the Lambda role's permissions boundary). Merge it after that change, and push its `prod/vX.Y.Z` tag only once step 1 of that change's rollout (the temporary inline policy with the WAF permissions) is applied in IAM. A tag pushed earlier fails: CloudFormation cannot create the web ACL and rolls the stack back. The monthly scheduled run then redeploys that same newest tag and fails the same way, so the country database stops being refreshed and Swap closes once it is 45 days old.
 
-After a deploy that creates the web ACL, check the association, then confirm the rule sees client addresses before it blocks anything:
+After a deploy that changes the web ACL, check the association and what the rules are acting on:
 
 ```bash
 aws wafv2 get-web-acl-for-resource --region us-east-1 \
   --resource-arn arn:aws:apigateway:us-east-1::/restapis/<api-id>/stages/<stage>
+aws wafv2 get-rate-based-statement-managed-keys --region us-east-1 --scope REGIONAL \
+  --web-acl-name gol-salmon-api-prod-api --web-acl-id <web-acl-id> --rule-name per-ip-rate-limit
 ```
 
-1. From one address you control, send production more than 5 requests per second for a minute (for example a loop of `curl` against `GET /health` on the prod execute-api URL). `GET /health` calls no provider, and a counting rule lets every request through.
-2. While it runs, list the addresses the rule is counting. Your own public address must appear, and no CloudFront address may (CloudFront's ranges are the `CLOUDFRONT` entries of `https://ip-ranges.amazonaws.com/ip-ranges.json`):
-   ```bash
-   aws wafv2 get-rate-based-statement-managed-keys --region us-east-1 --scope REGIONAL \
-     --web-acl-name gol-salmon-api-<stage>-api --web-acl-id <web-acl-id> --rule-name per-ip-rate-limit
-   ```
-3. Cross-check in the sampled requests (AWS WAF console → the web ACL → Sampled requests, or `aws wafv2 get-sampled-requests` with the rule's metric name `per-ip-rate-limit`): the source IP of the counted requests must be the client's.
-
-Before the rule may block, one more source of shared addresses has to be excluded. Requests that reach the API through Salmon's own CloudFront distribution (the static API hostname, which already sits behind that distribution's own WAF) arrive at API Gateway from CloudFront's addresses, many users per address, so an IP-aggregated rule would block them together. The required scope-down, which needs a CloudFront change by the owner and is not built yet:
-
-1. The distribution adds a secret custom header to every request it forwards to the API (an origin custom header, [CloudFront: adding custom headers to origin requests](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/add-origin-custom-headers.html)). The value lives in SSM Parameter Store (for example `/salmon-api/<stage>/ORIGIN_VERIFY_HEADER`), never in this repository.
-2. The rate rule gets a `ScopeDownStatement` that leaves out requests carrying that header: a `NotStatement` around a `ByteMatchStatement` on the header (`FieldToMatch.SingleHeader`, `PositionalConstraint: EXACTLY`, the value resolved from SSM at deploy time). The distribution's own WAF limits those requests.
-3. On a busy day, list prod's managed keys (the `get-rate-based-statement-managed-keys` command above, with `--web-acl-name gol-salmon-api-prod-api`) and check none fall in the `CLOUDFRONT` ranges.
-
-Only when the load test and the managed keys show client addresses, and the scope-down is in place, set `custom.wafRuleAction: block` in a follow-up change (and update the guard in `src/__tests__/prod-config.spec.js`), deploy, and repeat the load test against production's `GET /health`: the loaded address must now get 403 from WAF while a second address still gets 200. If CloudFront addresses show up for direct requests, leave the rule counting; per-client limiting then needs a different design.
+The CloudWatch metrics `BlockedRequests` and `CountedRequests` in the `AWS/WAFV2` namespace, per rule, show what each rule did; the sampled requests (AWS WAF console → the web ACL → Sampled requests, or `aws wafv2 get-sampled-requests` with the rule's metric name) show the addresses and paths. A legitimate client that gets 403 from WAF is a rule that is too tight: lower its action to count in `serverless.yml` while the cap is revised.
 
 ## Provisioned but unused: Solana Actions / Blinks infrastructure
 
