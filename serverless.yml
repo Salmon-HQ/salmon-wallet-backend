@@ -165,6 +165,10 @@ custom:
   # above; a GitHub Actions runner (Azure) checking /status or a wallet user
   # on a datacenter-hosted VPN sends a handful a minute and stays under this.
   wafHostingProvidersLimitPerIp: 20
+  # Cap for all hosting-provider addresses together, in 60 s: a rented fleet
+  # pacing each address under the cap above still adds up, while legitimate
+  # datacenter traffic (CI checks, VPN users) is a few hundred a minute.
+  wafHostingProvidersLimitTotal: 3000
   # `block` blocks; `count` only records the IPs over the caps. The regional
   # web ACL sees client addresses on this edge-optimized API (docs/DEPLOY.md,
   # "AWS WAF in front of the API"), so the rules block.
@@ -380,6 +384,22 @@ resources:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
               MetricName: hosting-providers-rate-limit
+          - Name: hosting-providers-total-limit
+            Priority: 6
+            Action: *rateAction
+            Statement:
+              RateBasedStatement:
+                AggregateKeyType: CONSTANT
+                EvaluationWindowSec: 60
+                Limit: ${self:custom.wafHostingProvidersLimitTotal}
+                ScopeDownStatement:
+                  LabelMatchStatement:
+                    Scope: LABEL
+                    Key: awswaf:managed:aws:anonymous-ip-list:HostingProviderIPList
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: hosting-providers-total-limit
     # The stage only exists once the API Gateway deployment has created it;
     # Serverless names that deployment ApiGatewayDeployment<instanceId>.
     ApiWebAclAssociation:
