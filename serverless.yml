@@ -218,9 +218,9 @@ resources:
           # take part in it, however many addresses they come from. Requests
           # it blocks are not charged WAF's per-request fee. AWS asks for it
           # first in the ACL and for a baseline before it blocks, so it
-          # starts counting (custom.wafAntiDdosAction). Its two Challenge
-          # rules stay counting for good: a challenge is solved by a browser,
-          # and the wallets are native apps.
+          # starts counting (custom.wafAntiDdosAction). Its browser challenge
+          # is disabled: a challenge is solved by a browser, and the wallets
+          # are native apps.
           - Name: aws-anti-ddos
             Priority: 0
             OverrideAction: !If [AntiDdosBlocks, { None: {} }, { Count: {} }]
@@ -228,13 +228,14 @@ resources:
               ManagedRuleGroupStatement:
                 VendorName: AWS
                 Name: AWSManagedRulesAntiDDoSRuleSet
-                RuleActionOverrides:
-                  - Name: ChallengeAllDuringEvent
-                    ActionToUse:
-                      Count: {}
-                  - Name: ChallengeDDoSRequests
-                    ActionToUse:
-                      Count: {}
+                ManagedRuleGroupConfigs:
+                  - AWSManagedRulesAntiDDoSRuleSet:
+                      # LOW blocks only the requests the group is most sure
+                      # of; raise during a sustained event.
+                      SensitivityToBlock: LOW
+                      ClientSideActionConfig:
+                        Challenge:
+                          UsageOfAction: DISABLED
             VisibilityConfig:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
