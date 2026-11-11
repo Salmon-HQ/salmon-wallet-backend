@@ -198,9 +198,15 @@ resources:
                       UriPath: {}
                     PositionalConstraint: CONTAINS
                     SearchString: /v1/exchange-rates
+                    # Express routes paths case-insensitively and decodes
+                    # them, so the match sees the path the way Express does.
                     TextTransformations:
                       - Priority: 0
-                        Type: NONE
+                        Type: URL_DECODE
+                      - Priority: 1
+                        Type: NORMALIZE_PATH
+                      - Priority: 2
+                        Type: LOWERCASE
             VisibilityConfig:
               CloudWatchMetricsEnabled: true
               SampledRequestsEnabled: true
