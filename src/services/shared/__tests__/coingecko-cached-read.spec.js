@@ -47,7 +47,9 @@ describe('coingecko cached reads: one flight per entry', () => {
     expect(rates.base).toBe('usd');
     expect(http.get).toHaveBeenCalledTimes(1);
     expect(repository.saveExchangeRates).toHaveBeenCalledTimes(1);
-    expect(releaseLock).toHaveBeenCalledWith(expect.stringContaining('coingecko_lock:exchange_rates'));
+    expect(releaseLock).toHaveBeenCalledWith(
+      expect.stringContaining('coingecko_lock:exchange_rates')
+    );
   });
 
   it('a caller that loses the lock serves the long-term copy without calling CoinGecko', async () => {
@@ -58,7 +60,7 @@ describe('coingecko cached reads: one flight per entry', () => {
     expect(http.get).not.toHaveBeenCalled();
   });
 
-  it('a caller that loses the lock with no long-term copy waits for the holder\'s save', async () => {
+  it("a caller that loses the lock with no long-term copy waits for the holder's save", async () => {
     tryLock.mockResolvedValue(false);
     repository.getShortTermExchangeRates
       .mockResolvedValueOnce(null)
