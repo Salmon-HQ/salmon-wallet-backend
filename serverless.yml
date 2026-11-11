@@ -173,6 +173,9 @@ custom:
   # web ACL sees client addresses on this edge-optimized API (docs/DEPLOY.md,
   # "AWS WAF in front of the API"), so the rules block.
   wafRuleAction: block
+  # The AWS anti-DDoS managed group: `count` while it builds its traffic
+  # baseline (AWS asks for normal traffic first), `block` afterwards.
+  wafAntiDdosAction: count
   serverless-offline:
     host: 0.0.0.0
     httpPort: ${env:OFFLINE_HTTP_PORT, 3000}
@@ -195,6 +198,7 @@ resources:
   Conditions:
     IsProd: !Equals ['${sls:stage}', 'prod']
     WafRuleBlocks: !Equals ['${self:custom.wafRuleAction}', 'block']
+    AntiDdosBlocks: !Equals ['${self:custom.wafAntiDdosAction}', 'block']
   Resources:
     ApiWebAcl:
       Type: AWS::WAFv2::WebACL
@@ -209,10 +213,36 @@ resources:
           SampledRequestsEnabled: true
           MetricName: ${self:service}-${sls:stage}-api
         Rules:
+          # AWS's application-layer DDoS protection: it learns the API's
+          # normal traffic and, during an event, blocks the requests that
+          # take part in it, however many addresses they come from. Requests
+          # it blocks are not charged WAF's per-request fee. AWS asks for it
+          # first in the ACL and for a baseline before it blocks, so it
+          # starts counting (custom.wafAntiDdosAction). Its two Challenge
+          # rules stay counting for good: a challenge is solved by a browser,
+          # and the wallets are native apps.
+          - Name: aws-anti-ddos
+            Priority: 0
+            OverrideAction: !If [AntiDdosBlocks, { None: {} }, { Count: {} }]
+            Statement:
+              ManagedRuleGroupStatement:
+                VendorName: AWS
+                Name: AWSManagedRulesAntiDDoSRuleSet
+                RuleActionOverrides:
+                  - Name: ChallengeAllDuringEvent
+                    ActionToUse:
+                      Count: {}
+                  - Name: ChallengeDDoSRequests
+                    ActionToUse:
+                      Count: {}
+            VisibilityConfig:
+              CloudWatchMetricsEnabled: true
+              SampledRequestsEnabled: true
+              MetricName: aws-anti-ddos
           # A rate rule answers 429, the status the Express limiter uses, so
           # a client never mistakes it for the availability 403.
           - Name: per-ip-rate-limit
-            Priority: 0
+            Priority: 1
             Action: &rateAction !If [WafRuleBlocks, { Block: { CustomResponse: { ResponseCode: 429 } } }, { Count: {} }]
             Statement:
               RateBasedStatement:
@@ -224,7 +254,7 @@ resources:
               SampledRequestsEnabled: true
               MetricName: per-ip-rate-limit
           - Name: exchange-rates-rate-limit
-            Priority: 1
+            Priority: 2
             Action: *rateAction
             Statement:
               RateBasedStatement:
@@ -251,7 +281,7 @@ resources:
               SampledRequestsEnabled: true
               MetricName: exchange-rates-rate-limit
           - Name: provider-paths-rate-limit
-            Priority: 2
+            Priority: 3
             Action: *rateAction
             Statement:
               RateBasedStatement:
@@ -329,7 +359,7 @@ resources:
           # reconnaissance, DDoS). A wallet user is never on it. The group
           # ships its DDoS list counting; here it blocks.
           - Name: aws-ip-reputation
-            Priority: 3
+            Priority: 4
             OverrideAction: !If [WafRuleBlocks, { None: {} }, { Count: {} }]
             Statement:
               ManagedRuleGroupStatement:
@@ -350,7 +380,7 @@ resources:
           # reviewers' device farms and users on datacenter-hosted VPNs. The
           # rule below caps the hosting-provider ones instead.
           - Name: aws-anonymous-ip-labels
-            Priority: 4
+            Priority: 5
             OverrideAction:
               None: {}
             Statement:
@@ -369,7 +399,7 @@ resources:
               SampledRequestsEnabled: true
               MetricName: aws-anonymous-ip-labels
           - Name: hosting-providers-rate-limit
-            Priority: 5
+            Priority: 6
             Action: *rateAction
             Statement:
               RateBasedStatement:
@@ -385,7 +415,7 @@ resources:
               SampledRequestsEnabled: true
               MetricName: hosting-providers-rate-limit
           - Name: hosting-providers-total-limit
-            Priority: 6
+            Priority: 7
             Action: *rateAction
             Statement:
               RateBasedStatement:
