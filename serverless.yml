@@ -244,7 +244,12 @@ resources:
           # a client never mistakes it for the availability 403.
           - Name: per-ip-rate-limit
             Priority: 1
-            Action: &rateAction !If [WafRuleBlocks, { Block: { CustomResponse: { ResponseCode: 429 } } }, { Count: {} }]
+            Action:
+              !If &rateAction [
+                WafRuleBlocks,
+                { Block: { CustomResponse: { ResponseCode: 429 } } },
+                { Count: {} },
+              ]
             Statement:
               RateBasedStatement:
                 AggregateKeyType: IP
