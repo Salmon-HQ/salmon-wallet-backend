@@ -176,11 +176,22 @@ Unchanged: `cp .env.example .env`, fill in values, `npm run serverless:start:loc
 
 ## GitHub repo secrets
 
-No deploy workflow reads GitHub repo secrets; any entries remaining under Settings → Secrets can be deleted.
+One: `SERVERLESS_ACCESS_KEY`, an access key of the Serverless, Inc. organization `walletsalmon`, labelled `github-ci` there. Serverless Framework v4 runs no command without it, so `ci.yml` (the config smoke) and `deploy.yml` (`verify` and `deploy`) read it; deleting it stops every production deploy at `verify`. It identifies the organization to Serverless, Inc. and grants nothing in AWS. To rotate it, create a new key under Settings → Access Keys at app.serverless.com, run `gh secret set SERVERLESS_ACCESS_KEY`, re-run CI on any open PR to see the config smoke pass, then delete the old key.
 
 ## CI IAM permissions
 
 The GitHub Actions OIDC role (`GithubActionsRole`) deploys with the customer managed policy `GithubActionsPolicy`, which this repository checks in as `aws-deploy-policy.json` (`LambdaInvokeSanctionsRefresh` lets the deploy run `refreshSanctionsJob` once and nothing else). The role also carries an inline `ReadSalmonApiProdParams` that lets it read `/salmon-api/prod/*` from SSM, which the deploy needs to resolve every `${ssm:...}` ref; keep any tightening of that one scoped to `ssm:GetParameter*` on that prefix. The policy is close to IAM's limit of 6,144 characters for a managed policy (white space not counted), so a large addition needs a second managed policy on the role.
+
+### Checking the deploy role before a tooling or permissions change
+
+Staging is deployed with a maintainer's own credentials, so a permission `GithubActionsRole` lacks first shows on a production deploy. Before merging a change to the deploy tool, its plugins or `aws-deploy-policy.json`, prove the role can do what the new deploy does:
+
+1. Deploy the branch to staging and note the start and end time in UTC.
+2. List what that deploy did in AWS from the audit log, all pages: `aws cloudtrail lookup-events --region us-east-1 --lookup-attributes AttributeKey=Username,AttributeValue=<your IAM user> --start-time <start> --end-time <end> --output json`. Each event's `eventSource` and `eventName` give the action; the log lags up to 15 minutes, and S3 object reads and writes are not in it.
+3. Ask IAM whether the role may do each action on the production resource it would touch: `aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::<account>:role/GithubActionsRole --resource-arns <prod ARN> --action-names <actions>`. Pass a real production ARN per service (the stack, a function, the API's stage, a schedule rule, the Lambda role, the deployment bucket and an object in it, an SSM parameter under `/salmon-api/prod/`): the policy is scoped by resource, so a simulation without `--resource-arns` answers `implicitDeny` for everything.
+4. Every action must answer `allowed`. One that does not is added to `aws-deploy-policy.json` and applied before the release, in the order under "Rollout order".
+
+Nothing in steps 2 and 3 changes AWS.
 
 ### The Lambda role's permissions boundary
 
