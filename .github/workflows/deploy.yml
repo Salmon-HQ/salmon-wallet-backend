@@ -193,7 +193,8 @@ jobs:
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
-          endpoint="$(npx serverless info --stage prod --verbose \
+          # v4 writes this report to stderr.
+          endpoint="$(npx serverless info --stage prod --verbose 2>&1 \
             | awk '/ServiceEndpoint:/ {print $NF; exit}')"
           if [ -z "$endpoint" ]; then
             echo "::error::Could not read ServiceEndpoint from serverless info."
