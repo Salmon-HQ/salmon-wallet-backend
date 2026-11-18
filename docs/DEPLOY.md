@@ -7,7 +7,7 @@ Prod deploys are tag-triggered: push a git tag `prod/vX.Y.Z` from `main`. A sche
 `.github/workflows/deploy.yml` runs three jobs:
 
 - **`target`** — picks the tag to ship: the pushed one, or on the scheduled run the newest `prod/v*` by version. Both jobs below check out that tag.
-- **`verify`** — no AWS credentials. `npm ci`, the same `format:check` + `lint:check` gate as `ci.yml`, `test:unit`, and a `serverless print --stage local` sanity check (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
+- **`verify`** — no AWS credentials. `npm ci`, the same `format:check` + `lint:check` gate as `ci.yml`, `test:unit`, and a `serverless print --stage local` sanity check with the `SERVERLESS_ACCESS_KEY` secret (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
 - **`deploy`** (`needs: [target, verify]`) — first runs `node scripts/refresh-geo-data.mjs` (downloads and checks the month's DB-IP country database, before the job holds any AWS credentials; a download or check failure fails the deploy), then assumes the `GithubActionsRole` via GitHub OIDC as the `production` environment (`aws-actions/configure-aws-credentials`; `docs/REPO-SETTINGS.md`, section 6), runs `npm run serverless:deploy` (`serverless deploy --stage prod`), runs `refreshSanctionsJob` once, then smokes `GET /health` on the stack's execute-api URL (read from `serverless info --verbose`, not CloudFront, whose cache could mask a broken deploy) and fails when `GET /status` reports no `countryDatabase`, since Swap is then closed. A red smoke step only alerts — nothing rolls back on its own.
 
 Rollback is a human step, run locally with prod credentials:
@@ -26,7 +26,7 @@ Three stages exist: `local` (dev, no AWS), `prod` (tag-triggered deploy), and `s
 `staging` is a mirror of `prod` for testing a branch before it ships: stack `gol-salmon-api-staging`, params under `/salmon-api/staging/*`, capabilities in `network-capabilities-staging.js` (the Powerups under test are on there and off in prod). It is deployed by hand from the branch under test, never by CI:
 
 ```bash
-eval "$(aws configure export-credentials --format env)"   # Serverless v3 does not read an `aws login` session
+eval "$(aws configure export-credentials --format env)"
 npm run serverless:deploy:staging
 ```
 
@@ -136,7 +136,7 @@ Prod env values live in **AWS SSM Parameter Store** under `/salmon-api/prod/*`, 
 
 - `config/env.prod.yml` — the `${ssm:/salmon-api/prod/X}` refs consumed by `serverless.yml` via `custom.envFile`, laid out as one map per function (`api`, `coingeckoJob`, `sanctionsJob`, `skrJob`, `events`) built from shared groups (`redis`, `resilience`, `coingecko`, `triton`) merged with `<<`. Each Lambda receives only its own map, so a function never holds a credential its code does not read; `src/__tests__/prod-config.spec.js` pins which secrets each map may hold. Vars that previously had an `${env:X, <default>}` fallback keep a matching `${ssm:X, <default>}` fallback, so an optional/missing param doesn't break a deploy. Vars that were previously required (no default) stay strict and fail the deploy loudly if the param is missing.
 - `config/env.staging.yml` — the same map pointed at `/salmon-api/staging/*`. To refresh staging after a prod param changes, copy that param to the staging path.
-- `config/env.local.yml` — the local/dev mirror: every var comes from `${env:X, ''}`, loaded from `.env` via `serverless-dotenv-plugin`. The `local` stage never touches AWS.
+- `config/env.local.yml` — the local/dev mirror: every var comes from `${env:X, ''}`, loaded from `.env` by Serverless itself (`useDotenv: true`). The `local` stage never touches AWS.
 
 ## Adding or rotating a secret
 

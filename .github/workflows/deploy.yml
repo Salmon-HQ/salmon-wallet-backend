@@ -99,7 +99,11 @@ jobs:
       # No AWS credentials configured in this job. Confirms the local-stage
       # config resolves entirely from env vars/defaults and never reaches
       # for SSM, before we trust the same serverless.yml with the prod stage.
+      # The key only identifies the organisation to Serverless, Inc. (v4 runs
+      # no command without one); it grants nothing in AWS.
       - name: Serverless config sanity check (local stage, no AWS creds)
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: npx serverless print --stage local > /dev/null
 
   deploy:
@@ -152,6 +156,7 @@ jobs:
       - name: Deploy serverless PROD stack
         run: npm run serverless:deploy
         env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_ID: ${{ github.run_id }}
 
@@ -173,6 +178,8 @@ jobs:
       # human command — see docs/DEPLOY.md. Retries absorb the first cold start.
       # The response body is never printed.
       - name: Smoke test /health
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
           endpoint="$(npx serverless info --stage prod --verbose \
             | awk '/ServiceEndpoint:/ {print $NF; exit}')"

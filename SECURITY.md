@@ -41,9 +41,9 @@ Already resolved via `overrides` (kept here so nobody removes them):
 - `follow-redirects ^1.16.1` — `axios` (every provider call) declares `^1.16.0`, and 1.16.0 carries [GHSA-8r9p-f939-6h3c](https://github.com/advisories/GHSA-8r9p-f939-6h3c) and [GHSA-q3jh-wrc6-jgq8](https://github.com/advisories/GHSA-q3jh-wrc6-jgq8), fixed in 1.16.1. The override keeps a regenerated lockfile from resolving back to 1.16.0.
 - `bn.js ^4.12.5` under `ethjs-unit` and `number-to-bn` — `mpl-bubblegum` → `merkletreejs@0.3.11` declares `web3-utils` but never imports it, so the 4.x copy is never loaded at runtime.
 
-### Development only (`serverless@3` tree)
+### Development only (Serverless Framework v4)
 
-`adm-zip` is resolved by the `adm-zip ^0.6.1` override under `@serverless/platform-client`. Every remaining finding (`tar`, `decompress`, `file-type`, `aws-sdk` v2, `uuid`) sits under `serverless@3`, which only runs on developer machines and in the GitHub Actions deploy job — never inside the Lambda bundle. `tar` in particular is only required by Serverless's self-updater, which exits early when the framework is installed locally (as it is here). npm's sole fix is `serverless@4` (see `docs/DEPLOY.md`); until then these are accepted. Serverless v3 stopped receiving security updates in early 2025, so this exception has a shelf life.
+The deploy tool is Serverless Framework v4, pinned to one exact version in `package.json` and in `frameworkVersion` (`serverless.yml`). The npm package is an installer: it downloads the CLI of that version from Serverless, Inc. the first time a command runs, so `npm audit` and `npm audit signatures` do not see inside it. Every command also sends a key to Serverless, Inc. to be validated (`SERVERLESS_ACCESS_KEY` in CI); the key identifies the organisation and grants nothing in AWS. The CLI runs on developer machines and in the GitHub Actions deploy job, never inside the Lambda bundle.
 
 ## Notes for maintainers
 
