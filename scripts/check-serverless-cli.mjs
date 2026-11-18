@@ -94,7 +94,10 @@ for (const part of ['installer', 'release']) {
 }
 // On a developer machine other projects keep their own releases here; a CI
 // runner starts empty, so anything else arrived during this run.
-const others = process.env.CI ? releases.filter((name) => name !== version) : [];
+// The CLI also leaves a lock file here (`.4.46.0.lock`); only version folders count.
+const others = process.env.CI
+  ? releases.filter((name) => /^\d/.test(name) && name !== version)
+  : [];
 if (others.length > 0) {
   fail(
     `another release is present (${others.join(', ')}): the CLI replaced the pinned version. Do not deploy with it.`
