@@ -20,6 +20,13 @@ updates:
       npm-minor-and-patch:
         update-types: [minor, patch]
     # Majors arrive as separate PRs: in a wallet backend a human decides them.
+    ignore:
+      # web3.js 3 is a rewrite on Solana Kit (async signing, Uint8Array-first,
+      # new address type), and the Metaplex libraries that serve NFTs declare
+      # web3.js 1 as a peer. It moves in a planned migration of the
+      # transaction-building code, never as a bump.
+      - dependency-name: '@solana/web3.js'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
@@ -27,6 +34,9 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Same wait as npm: a release is proposed once it is 7 days old.
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ['*']
@@ -39,6 +49,9 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Same wait as npm: a release is proposed once it is 7 days old.
+    cooldown:
+      default-days: 7
     ignore:
       # The Lambda runtime is nodejs24.x and .nvmrc pins 24: a Node major in
       # the Dockerfile would diverge dev/CI from prod. Digest refreshes and
