@@ -23,6 +23,7 @@ Layered Express/Serverless backend organized as vertical slices per blockchain (
 ## Tests
 
 - New behavior comes with tests at the nearest meaningful layer (service/resource/controller over full-suite runs).
+- Tests run in a random order on every run and call counts start at zero in each test, so a test sets the state it needs in `beforeEach`, including the answer of a mock another test may have changed. A failure prints its seed; replay it with `--seed=<n>`. CI runs the unit suite with coverage, and `jest.config.js` holds a floor that only moves up.
 - `npm run test:unit` — hermetic, runs on every PR. `npm run test:integration:hermetic` — docker-compose services only (Redis), also runs on every PR. `npm run test:integration` — hits live providers, needs a real `.env` locally; in CI it runs in the nightly workflow, never in the PR gate.
 
 ## Commits and PRs

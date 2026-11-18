@@ -105,6 +105,12 @@ is build-only (`GET /powerups/{id}/build`): the wallet's Apple
   `verify` job runs `test:unit` with no `.env`, no services, and no secrets —
   a misnamed integration suite either fails CI or, worse, silently makes CI
   depend on external services.
+- Tests run in a random order on every run (`randomize`) and call counts
+  start at zero in each test (`clearMocks`). A test sets the state it needs
+  in `beforeEach`, including the answer of a mock another test may have
+  changed. A failure prints its seed: replay it with `--seed=<n>`.
+- CI runs `test:unit` with coverage; `coverageThreshold` in `jest.config.js`
+  is a ratchet that only moves up.
 - `jest.setup.js` loads `.env` when present; unit tests must run
   hermetically without it. If a new module throws at import when an env var
   is missing, add a dummy there instead of making unit tests need a real
