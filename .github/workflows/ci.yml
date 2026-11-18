@@ -49,8 +49,16 @@ jobs:
       - name: Lint (zero warnings)
         run: npm run lint:check
 
-      - name: Unit tests
-        run: npm run test:unit
+      # Known advisories in what ships to Lambda. The development tree has its
+      # own list (osv-scanner.toml); a production advisory is fixed, never
+      # ignored.
+      - name: No high or critical advisory in production dependencies
+        run: npm run check:audit
+
+      # With coverage: jest.config.js carries a floor set just under the
+      # measured value, which only ever moves up.
+      - name: Unit tests with coverage floor
+        run: npm run test:unit -- --coverage
 
       # Credential-free smoke of serverless config resolution: the local
       # stage resolves `${env:X, ''}` with no `.env` present, so a broken
