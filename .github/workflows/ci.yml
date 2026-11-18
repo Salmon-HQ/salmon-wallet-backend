@@ -82,6 +82,12 @@ jobs:
       - name: Unit tests with coverage floor
         run: npm run test:unit -- --coverage
 
+      # Serverless v4 downloads its CLI outside the lockfile. Compared with the
+      # fingerprints in scripts/check-serverless-cli.mjs, on every PR, so a
+      # change in what the vendor serves shows here and not in a deploy.
+      - name: Serverless CLI matches its fingerprints
+        run: npm run check:serverless-cli
+
       # Smoke of serverless config resolution: the local stage resolves
       # `${env:X, ''}` with no `.env` present, so a broken serverless.yml
       # fails here without touching AWS. Output is discarded — never print

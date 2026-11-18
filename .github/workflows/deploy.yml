@@ -146,6 +146,13 @@ jobs:
       - name: Refresh the country database
         run: node scripts/refresh-geo-data.mjs
 
+      # Serverless v4 downloads its CLI outside the lockfile. Compared with the
+      # fingerprints in scripts/check-serverless-cli.mjs before the job
+      # holds AWS credentials: a CLI that is not the reviewed one never gets
+      # the deploy role.
+      - name: Serverless CLI matches its fingerprints
+        run: npm run check:serverless-cli
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
@@ -159,6 +166,11 @@ jobs:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_ID: ${{ github.run_id }}
+
+      # Again after the deploy: fails if the CLI fetched another release while
+      # it held the role (it can replace a version the vendor has blocked).
+      - name: Serverless CLI still matches its fingerprints
+        run: node scripts/check-serverless-cli.mjs
 
       # Swap screening reads the sanctions list from Redis, and only the daily
       # refreshSanctionsJob fills it. A fresh or emptied Redis would block every

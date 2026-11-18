@@ -18,6 +18,10 @@ provider:
   # A change set first, then its execution: the deploy role and the rollback
   # steps in docs/DEPLOY.md are written for that path.
   deploymentMethod: changesets
+  # Each stage keeps its own deployment bucket inside its stack. Without
+  # this, v4 looks for a bucket shared by the whole account and creates it
+  # (and an SSM parameter) on the first `package` of a stage with no stack.
+  enableLegacyDeploymentBucket: true
   # Request logs pair a client IP with the request path, and wallet routes carry
   # the address in the path. Without this, CloudWatch keeps that pairing forever.
   logRetentionInDays: 30

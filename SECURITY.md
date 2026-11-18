@@ -43,7 +43,7 @@ Already resolved via `overrides` (kept here so nobody removes them):
 
 ### Development only (Serverless Framework v4)
 
-The deploy tool is Serverless Framework v4, pinned to one exact version in `package.json` and in `frameworkVersion` (`serverless.yml`). The npm package is an installer: it downloads the CLI of that version from Serverless, Inc. the first time a command runs, so `npm audit` and `npm audit signatures` do not see inside it. Every command also sends a key to Serverless, Inc. to be validated (`SERVERLESS_ACCESS_KEY` in CI); the key identifies the organisation and grants nothing in AWS. The CLI runs on developer machines and in the GitHub Actions deploy job, never inside the Lambda bundle.
+The deploy tool is Serverless Framework v4, pinned to one exact version in `package.json` and in `frameworkVersion` (`serverless.yml`). The npm package is an installer: it downloads the CLI of that version from Serverless, Inc. the first time a command runs, so `npm audit` and `npm audit signatures` do not see inside it. Serverless, Inc. publishes no checksum for it, so `scripts/check-serverless-cli.mjs` holds SHA-256 fingerprints of the installer and of the release for the two platforms that deploy (CI on Linux x64, staging from macOS arm64): CI compares them on every PR, and the deploy compares them before it takes AWS credentials and again after deploying. Every command also sends a key to Serverless, Inc. to be validated (`SERVERLESS_ACCESS_KEY` in CI); the key identifies the organisation and grants nothing in AWS. The CLI runs on developer machines and in the GitHub Actions deploy job, never inside the Lambda bundle.
 
 ## Notes for maintainers
 
