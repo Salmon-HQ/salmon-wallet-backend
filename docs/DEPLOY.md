@@ -26,9 +26,11 @@ Three stages exist: `local` (dev, no AWS), `prod` (tag-triggered deploy), and `s
 `staging` is a mirror of `prod` for testing a branch before it ships: stack `gol-salmon-api-staging`, params under `/salmon-api/staging/*`, capabilities in `network-capabilities-staging.js` (the Powerups under test are on there and off in prod). It is deployed by hand from the branch under test, never by CI:
 
 ```bash
-eval "$(aws configure export-credentials --format env)"
+eval "$(aws configure export-credentials --profile <admin profile> --format env)"
 npm run serverless:deploy:staging
 ```
+
+Name the administrator profile explicitly. A machine's default AWS profile is best kept read-only, so that a tool picking up ambient credentials cannot write to the account: `serverless package`, for one, creates a bucket when it finds credentials and no stack.
 
 The script first runs `node scripts/refresh-geo-data.mjs`, so staging ships the month's DB-IP country database like prod; a failed download stops it before anything is deployed. Staging holds to the same 45-day limit as prod: a staging stack not redeployed for 45 days places nobody and refuses every swap. It then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
 
