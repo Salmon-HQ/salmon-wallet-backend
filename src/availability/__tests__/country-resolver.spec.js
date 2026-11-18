@@ -45,7 +45,7 @@ describe('availability/country-resolver', () => {
     });
 
     it('answers the region for a Donetsk address filed under UA', () => {
-      expect(countryOf('5.105.214.20')).toBe('UA-14');
+      expect(countryOf('5.105.215.20')).toBe('UA-14');
     });
 
     it('matches IPv6 ranges too', () => {
