@@ -54,6 +54,23 @@ jobs:
       - name: Dead code
         run: npm run check:dead-code
 
+      # No module reaches itself through its own requires.
+      - name: Import cycles
+        run: npm run check:cycles
+
+      # A ceiling that only goes down (scripts/check-duplication.mjs).
+      - name: Duplicated lines at the ceiling
+        run: npm run check:duplication
+
+      # Zero-width, bidirectional and tag characters in tracked files. The
+      # diff view does not draw them, so a reviewer cannot see an instruction
+      # written with them, while an agent that loads AGENTS.md reads it. The
+      # check's own fixtures run first so it cannot silently stop catching.
+      - name: No hidden characters in the tree
+        run: |
+          node --test scripts/check-hidden-unicode.test.mjs
+          npm run check:hidden-unicode
+
       # Known advisories in what ships to Lambda. The development tree has its
       # own list (osv-scanner.toml); a production advisory is fixed, never
       # ignored.

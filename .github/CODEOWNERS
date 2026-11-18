@@ -1,1 +1,9 @@
 /.github/ @Luquish
+
+# What agents and the local hooks obey: a change here changes every later
+# change, so a maintainer reads it.
+AGENTS.md     @Luquish
+CLAUDE.md     @Luquish
+GEMINI.md     @Luquish
+/.claude/     @Luquish
+/.githooks/   @Luquish
