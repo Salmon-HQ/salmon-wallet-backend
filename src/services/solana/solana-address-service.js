@@ -8,7 +8,7 @@
  */
 
 const { Connection, PublicKey } = require('@solana/web3.js');
-const { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } = require('@solana/spl-token');
+const { TOKEN_PROGRAM_ID } = require('@solana/spl-token');
 
 const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
   'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'
@@ -34,22 +34,6 @@ const findAssociatedTokenAddress = async (walletAddress, tokenMintAddress) => {
   );
 
   return programAddress?.[0];
-};
-
-/**
- * Compute the associated token account address for a wallet/mint pair via
- * `@solana/spl-token`'s `getAssociatedTokenAddress`.
- *
- * @param {string} walletAddress - Owner wallet base58 address.
- * @param {string} tokenMintAddress - SPL token mint base58 address.
- * @returns {Promise<string>} ATA base58 address.
- */
-const getATA = async (walletAddress, tokenMintAddress) => {
-  const owner = new PublicKey(walletAddress);
-  const mint = new PublicKey(tokenMintAddress);
-  const ata = await getAssociatedTokenAddress(mint, owner, false);
-
-  return ata.toBase58();
 };
 
 /**
@@ -93,7 +77,6 @@ const getTokenAccounts = async (address, locals) => {
 
 module.exports = {
   findAssociatedTokenAddress,
-  getATA,
   getAccountInfo,
   getTokenAccounts,
 };

@@ -139,7 +139,6 @@ const getQuoteWithCache = async (mintAddress, fetchFn, locals = {}) => {
 };
 
 module.exports = {
-  setCachedQuote,
   setCachedQuotes,
   readCachedQuotes,
   getQuoteWithCache,

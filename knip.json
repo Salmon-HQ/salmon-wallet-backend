@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/network-capabilities/network-capabilities-*.js",
+    "scripts/*.{js,mjs}",
+    "jest.integration.setup.js"
+  ],
+  "project": ["src/**/*.js", "packages/**/*.js", "scripts/**/*.{js,mjs}"],
+  "ignore": [
+    "src/services/multichain/balance-providers/balance-provider.js",
+    "src/services/multichain/price-enrichers/price-enricher.js"
+  ],
+  "ignoreDependencies": ["@aws-sdk/client-ssm"],
+  "exclude": ["exports", "nsExports", "types", "nsTypes", "duplicates"]
+}

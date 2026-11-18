@@ -585,4 +585,4 @@ const requestSwapInstructions = async ({
   };
 };
 
-module.exports = { requestSwapInstructions, isConfigured, PROVIDER, FEE, JUPITER_ERROR_MAP };
+module.exports = { requestSwapInstructions, isConfigured, PROVIDER, FEE };

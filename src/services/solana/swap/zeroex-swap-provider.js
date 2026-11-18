@@ -257,5 +257,4 @@ module.exports = {
   FEE,
   PPM_PER_BPS,
   ZEROEX_NATIVE_SOL,
-  ZEROEX_ERROR_MAP,
 };

@@ -15,4 +15,4 @@ const NFT_TOKEN_STANDARDS = new Set([
 
 const isNftTokenStandard = (tokenStandard) => NFT_TOKEN_STANDARDS.has(tokenStandard);
 
-module.exports = { NFT_TOKEN_STANDARDS, isNftTokenStandard };
+module.exports = { isNftTokenStandard };

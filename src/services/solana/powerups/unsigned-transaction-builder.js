@@ -301,9 +301,7 @@ module.exports = {
   COMMITMENT,
   MAX_COMPUTE_UNIT_LIMIT,
   compileUnsigned,
-  computeUnitLimitFrom,
   fetchLookupTables,
-  resolvePriorityFee,
   serializedSize,
   simulate,
 };

@@ -184,7 +184,6 @@ const clearTransactionHistoryCache = () => {
 };
 
 module.exports = {
-  CACHE_TTL,
   MAX_CACHE_ENTRIES,
   __testing: { size: () => cache.size },
   buildCacheKey,

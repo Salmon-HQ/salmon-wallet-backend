@@ -33,6 +33,22 @@ Two active rulesets. Bypass is the **admin** role only (`actor_id: 5`,
 - **Block deletion** and **block force pushes**. Auto-delete of head branches
   (section 2) would otherwise delete `staging` when its release PR merges.
 
+### Branch protection on `staging` and `main` (Settings → Branches)
+
+Beside the rulesets, both branches carry classic branch protection, which
+adds to them:
+
+- `staging`: a pull request is required (no approval count, since one
+  maintainer merges), with the same five status checks `Protect main`
+  requires: `lint / test / config`, `hermetic integration (redis)`,
+  `local validator (v1 transactions)`, `workflow security lint`,
+  `conventional PR title`.
+- `staging` and `main`: pushes are restricted to the one maintainer who
+  merges, and the rule holds for administrators too. Merging a pull request
+  is a push, so nobody else can merge.
+
+Read it with `gh api repos/Salmon-HQ/salmon-wallet-backend/branches/staging/protection`.
+
 ### `Protect prod tags` (tag, `refs/tags/prod/*`, bypass mode `always`)
 
 A `prod/vX.Y.Z` tag triggers the production deploy

@@ -25,19 +25,5 @@
  *   error handling stays uniform.
  */
 
-/**
- * Thrown by a `BalanceProvider` resolver when no provider supports the
- * requested blockchain/capability pair.
- */
-class BalanceProviderNotImplementedError extends Error {
-  /**
-   * @param {string} blockchain - value of `locals.network.blockchain`.
-   * @param {string} capability - capability name that was requested.
-   */
-  constructor(blockchain, capability) {
-    super(`No balance provider for blockchain "${blockchain}" supports "${capability}"`);
-    this.name = 'BalanceProviderNotImplementedError';
-  }
-}
-
-module.exports = { BalanceProviderNotImplementedError };
+// A contract only: the typedef above is what the module is for.
+module.exports = {};
