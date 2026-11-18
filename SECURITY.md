@@ -22,7 +22,7 @@ You can expect an acknowledgement within a few business days. Please give us a r
 
 In scope: everything served by this repository — the HTTP API (`src/`), scheduled jobs, the analytics ingest endpoint, and the deployment configuration checked in here.
 
-Out of scope: the wallet clients (separate repositories), third-party providers this API consumes (0x, CoinGecko, Triton, mempool.space, blockstream.info), and social engineering.
+Out of scope: the wallet clients (separate repositories), third-party providers this API consumes (0x, Jupiter, CoinGecko, Triton, mempool.space, blockstream.info), and social engineering.
 
 ## Known `npm audit` findings (reviewed, not exploitable here)
 
@@ -47,5 +47,5 @@ The deploy tool is Serverless Framework v4, pinned to one exact version in `pack
 
 ## Notes for maintainers
 
-- Private vulnerability reporting is a GitHub feature for **public** repositories. While this repository is private it cannot be enabled; when the repository goes public, an admin must turn it on once under **Settings → Advanced Security → Private vulnerability reporting**.
+- Private vulnerability reporting is enabled on this repository (**Settings → Advanced Security**).
 - Secret handling and rotation live in `docs/DEPLOY.md` (prod secrets are in AWS SSM Parameter Store, never in the repo).
