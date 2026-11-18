@@ -331,10 +331,12 @@ Three workflows split the suites by determinism (specs 001–003 under
 `specs/`):
 
 - **`ci.yml`** (every PR + push to main): `npm run lint:check`,
-  `npm run test:unit`, a credential-free `serverless print` smoke, and
+  `npm run test:unit`, a `serverless print` smoke (skipped where the
+  PR gets no secrets), and
   `npm run test:integration:hermetic` — the curated hermetic integration
   set (today: the redis-connector suite) against a `redis:7-alpine` service
-  container. No secrets; safe for fork PRs.
+  container. Safe for fork PRs: the one secret, the Serverless key, is
+  given to the `serverless print` step only, and a fork never receives it.
 - **`integration-external.yml`** (nightly + manual dispatch, never on PRs):
   `npm run test:integration` against live providers with repository
   secrets. Suites probe their provider and skip with a logged reason when

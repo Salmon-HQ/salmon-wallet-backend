@@ -90,7 +90,7 @@ jobs:
             2. A behaviour change in transaction building, the availability gate and sanctions screening, request validation, rate limiting or caching of provider answers that the diff does not cover with a test.
             3. Any place a provider key, a provider URL that carries a token, a caught error object, a wallet address tied to an IP address, or a request header could reach a log, an error response or analytics. AGENTS.md says what may be logged.
             4. A test that proves nothing: it asserts on a mock's own return value, was changed to match new behaviour without a reason visible in the diff, or was deleted or skipped.
-            5. A change to what agents and CI obey (`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.github/`, `.githooks/`, `knip.json`, the ceiling in `scripts/check-duplication.mjs`, the exemptions in the `scripts/check-*.mjs` files, `coverageThreshold`, lint configuration, `osv-scanner.toml`) that weakens a rule, raises a ceiling, lowers a floor or adds an exception.
+            5. A change to what agents and CI obey (`AGENTS.md`, `CLAUDE.md`, `.claude/`, `.github/`, `.githooks/`, `knip.json`, the ceiling in `scripts/check-duplication.mjs`, the exemptions in the `scripts/check-*.mjs` files, `coverageThreshold`, lint configuration) that weakens a rule, raises a ceiling, lowers a floor or adds an exception.
             6. A new dependency, or a production dependency whose advisory is ignored instead of fixed.
 
             Do not report formatting, lint, unused exports, import cycles or duplicated lines: CI measures those. Do not report style preferences or possible improvements.

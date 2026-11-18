@@ -24,6 +24,8 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+    env:
+      HAS_SERVERLESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY != '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -71,9 +73,7 @@ jobs:
           node --test scripts/check-hidden-unicode.test.mjs
           npm run check:hidden-unicode
 
-      # Known advisories in what ships to Lambda. The development tree has its
-      # own list (osv-scanner.toml); a production advisory is fixed, never
-      # ignored.
+      # Known advisories in what ships to Lambda: fixed, never ignored.
       - name: No high or critical advisory in production dependencies
         run: npm run check:audit
 
@@ -82,11 +82,23 @@ jobs:
       - name: Unit tests with coverage floor
         run: npm run test:unit -- --coverage
 
-      # Credential-free smoke of serverless config resolution: the local
-      # stage resolves `${env:X, ''}` with no `.env` present, so a broken
-      # serverless.yml fails here without touching AWS or secrets. Output
-      # is discarded — never print resolved config in CI logs.
+      # Serverless v4 downloads its CLI outside the lockfile. Compared with the
+      # fingerprints in scripts/check-serverless-cli.mjs, on every PR, so a
+      # change in what the vendor serves shows here and not in a deploy.
+      - name: Serverless CLI matches its fingerprints
+        run: npm run check:serverless-cli
+
+      # Smoke of serverless config resolution: the local stage resolves
+      # `${env:X, ''}` with no `.env` present, so a broken serverless.yml
+      # fails here without touching AWS. Output is discarded — never print
+      # resolved config in CI logs. Serverless v4 runs no command without a
+      # key, and a fork or Dependabot PR gets no secrets: the step is skipped
+      # there, and the deploy workflow's `verify` job runs the same check
+      # before anything ships. The key is in this step's environment only.
       - name: Serverless config resolves
+        if: env.HAS_SERVERLESS_KEY == 'true'
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: npx serverless print --stage local > /dev/null
 
   integration-hermetic:

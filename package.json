@@ -19,6 +19,7 @@
     "check:cycles": "madge --circular --extensions js src packages",
     "check:duplication": "node scripts/check-duplication.mjs",
     "check:hidden-unicode": "node scripts/check-hidden-unicode.mjs",
+    "check:serverless-cli": "serverless --version > /dev/null && node scripts/check-serverless-cli.mjs",
     "check:audit": "npm audit --omit=dev --audit-level=high",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -27,7 +28,7 @@
     "serverless:print": "serverless print --stage prod -v",
     "serverless:build": "serverless package --stage prod",
     "serverless:deploy": "serverless deploy --stage prod",
-    "serverless:deploy:staging": "node scripts/refresh-geo-data.mjs && serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
+    "serverless:deploy:staging": "npm run -s check:serverless-cli && node scripts/refresh-geo-data.mjs && serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
     "test:integration:local-validator": "jest --testPathPatterns=\"local-validator.integration.spec.js$\" --detectOpenHandles --runInBand"
   },
   "repository": {
@@ -51,10 +52,9 @@
     "knip": "6.45.0",
     "madge": "8.0.0",
     "prettier": "^3.9.9",
-    "serverless": "^3",
+    "serverless": "4.46.0",
     "serverless-api-gateway-throttling": "^2.0.3",
-    "serverless-dotenv-plugin": "^6",
-    "serverless-offline": "^13.10.1"
+    "serverless-offline": "14.8.4"
   },
   "dependencies": {
     "@ip-location-db/dbip-country-mmdb": "^2.3.2026060120",
@@ -99,9 +99,6 @@
       "uuid": "^11.1.1"
     },
     "bigint-buffer": "$bigint-buffer",
-    "@serverless/platform-client": {
-      "adm-zip": "^0.6.1"
-    },
     "follow-redirects": "^1.16.1"
   }
 }
