@@ -25,4 +25,4 @@ const platformOf = (req) => {
   return PLATFORMS.includes(value) ? value : MOST_RESTRICTIVE;
 };
 
-module.exports = { platformOf, PLATFORMS, MOST_RESTRICTIVE, HEADER };
+module.exports = { platformOf, PLATFORMS };

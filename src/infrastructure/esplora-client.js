@@ -76,4 +76,4 @@ const get = async (path, locals) => {
   throw lastError;
 };
 
-module.exports = { get, HOSTS };
+module.exports = { get };

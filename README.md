@@ -56,6 +56,7 @@ npm run test:unit        # *.spec.js excluding integration suites
 npm run test:integration # only *integration.spec.js (runInBand)
 npm run test:watch       # watch mode
 npm run test:coverage    # coverage report
+npm run check:dead-code  # no unused file or dependency (knip), no export that no other file names
 npm run check:audit      # no high or critical advisory in production dependencies
 ```
 

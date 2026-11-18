@@ -116,5 +116,5 @@ const hydrate = async (nft, locals) => withBudget((signal) => hydrateOne(nft, lo
 module.exports = {
   hydrate,
   hydrateMany,
-  __testing: { hasOffchainFields, mapWithConcurrency, CONCURRENCY, TOTAL_BUDGET_MS },
+  __testing: { hasOffchainFields, CONCURRENCY, TOTAL_BUDGET_MS },
 };

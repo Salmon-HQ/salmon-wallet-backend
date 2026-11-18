@@ -184,6 +184,4 @@ module.exports = {
   fetchToken2022NftsByOwner,
   paginateNfts,
   getPagination,
-  DEFAULT_LIMIT,
-  MAX_LIMIT,
 };

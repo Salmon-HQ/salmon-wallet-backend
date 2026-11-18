@@ -278,11 +278,9 @@ const getUiAmounts = async (holdings, locals = {}) => {
 
 module.exports = {
   getUiAmounts,
-  getMintExtensions,
   renderUiAmount,
   readMultiplier,
   toFixedPoint,
   SCALE,
-  SCALE_DECIMALS,
   MAX_MINTS_PER_BATCH,
 };

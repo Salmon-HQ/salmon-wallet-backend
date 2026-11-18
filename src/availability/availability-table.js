@@ -322,8 +322,6 @@ const loadTable = createTableLoader();
 module.exports = {
   DEFAULT_TABLE,
   JUPITER_PROHIBITED,
-  EMBARGOED,
-  PROVIDERS,
   REGULATED,
   validateTable,
   createTableLoader,

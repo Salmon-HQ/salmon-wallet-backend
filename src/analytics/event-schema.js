@@ -133,11 +133,8 @@ function safeValidateEvent(name, props = {}) {
 module.exports = {
   ANALYTICS_EVENTS,
   TRANSACTION_EVENTS,
-  CHAINS,
   POWERUPS,
   ALLOWED_PROP_KEYS,
-  PROP_ENUMS,
-  MAX_PROP_STRING_LENGTH,
   isAddressLike,
   validateEvent,
   safeValidateEvent,

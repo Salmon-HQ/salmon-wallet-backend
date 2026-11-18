@@ -117,4 +117,4 @@ const getPowerups = () => {
   return powerups;
 };
 
-module.exports = { get, getPowerups, POWERUP_DISABLED_REASONS, SUPPORTED_STAGES };
+module.exports = { get, getPowerups, SUPPORTED_STAGES };

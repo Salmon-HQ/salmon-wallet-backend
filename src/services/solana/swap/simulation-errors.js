@@ -125,8 +125,5 @@ const classifySimulationError = (simulation) => {
 
 module.exports = {
   classifySimulationError,
-  JUPITER_CODES,
-  TOKEN_CODES,
-  ZEROEX_SETTLER_CODES,
   failedProgramOf,
 };

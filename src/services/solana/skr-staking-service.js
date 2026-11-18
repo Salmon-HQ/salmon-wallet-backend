@@ -475,5 +475,4 @@ module.exports = {
   decodeStakeEvent,
   ownerEvents,
   apyFrom,
-  SKR_MINT,
 };

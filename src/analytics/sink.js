@@ -131,4 +131,4 @@ function createSink() {
   return kind === 'ga4' ? createGa4Sink() : createFileSink();
 }
 
-module.exports = { createSink, createFileSink, createGa4Sink, toGa4Event };
+module.exports = { createSink, createGa4Sink, toGa4Event };

@@ -39,4 +39,4 @@ const emit = ({ dimensions, metrics, namespace = NAMESPACE }) => {
   }
 };
 
-module.exports = { emit, NAMESPACE };
+module.exports = { emit };

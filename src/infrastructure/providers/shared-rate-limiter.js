@@ -112,4 +112,4 @@ const resetLocal = () => {
   lastWarnAt = 0;
 };
 
-module.exports = { acquire, resetLocal, MAX_WAIT_MS, SCRIPT };
+module.exports = { acquire, resetLocal, SCRIPT };

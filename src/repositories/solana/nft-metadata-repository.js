@@ -298,7 +298,6 @@ module.exports = {
     isBlockedIp,
     guardedLookup,
     asMetadataObject,
-    fetchOffchainMetadata,
     FETCH_TIMEOUT_MS,
     MAX_DESCRIPTION_CHARS,
     MAX_ATTRIBUTES,

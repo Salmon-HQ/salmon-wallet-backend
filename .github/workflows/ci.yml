@@ -49,6 +49,11 @@ jobs:
       - name: Lint (zero warnings)
         run: npm run lint:check
 
+      # No file nothing reaches, no dependency nothing requires (knip.json),
+      # and no export that no other file names.
+      - name: Dead code
+        run: npm run check:dead-code
+
       # Known advisories in what ships to Lambda. The development tree has its
       # own list (osv-scanner.toml); a production advisory is fixed, never
       # ignored.
