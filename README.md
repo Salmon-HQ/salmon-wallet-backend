@@ -57,6 +57,9 @@ npm run test:integration # only *integration.spec.js (runInBand)
 npm run test:watch       # watch mode
 npm run test:coverage    # coverage report
 npm run check:dead-code  # no unused file or dependency (knip), no export that no other file names
+npm run check:cycles     # no import cycle (madge)
+npm run check:duplication # duplicated lines at or under the ceiling (jscpd)
+npm run check:hidden-unicode # no zero-width, bidirectional or tag character in tracked files
 npm run check:audit      # no high or critical advisory in production dependencies
 ```
 

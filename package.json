@@ -7,6 +7,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "test": "jest --detectOpenHandles",
     "test:unit": "jest --testPathPatterns='.spec.js$' --testPathIgnorePatterns='integration.spec.js' --detectOpenHandles",
     "test:integration": "jest --testPathPatterns='integration.spec.js$' --setupFilesAfterEnv=./jest.integration.setup.js --detectOpenHandles --runInBand --forceExit",
@@ -15,6 +16,9 @@
     "linter": "eslint ./ --fix",
     "lint:check": "eslint ./ --max-warnings 0",
     "check:dead-code": "knip && node scripts/check-unused-exports.mjs",
+    "check:cycles": "madge --circular --extensions js src packages",
+    "check:duplication": "node scripts/check-duplication.mjs",
+    "check:hidden-unicode": "node scripts/check-hidden-unicode.mjs",
     "check:audit": "npm audit --omit=dev --audit-level=high",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -43,7 +47,9 @@
     "eslint": "^10.11.0",
     "fast-check": "^4.10.2",
     "jest": "^30.5.2",
+    "jscpd": "5.3.3",
     "knip": "6.45.0",
+    "madge": "8.0.0",
     "prettier": "^3.9.9",
     "serverless": "^3",
     "serverless-api-gateway-throttling": "^2.0.3",
