@@ -1,4 +1,4 @@
-# Contributing to salmon-api
+# Contributing to salmon-wallet-backend
 
 Thanks for contributing. This document is the human-facing summary of the repo's working rules; the authoritative, always-current rule source is [`AGENTS.md`](AGENTS.md) (root plus the nested one closest to each folder) — if this file and `AGENTS.md` ever disagree, `AGENTS.md` wins.
 
@@ -38,7 +38,7 @@ Prod deploys are tag-triggered: push `prod/vX.Y.Z` from `main`. The tag must mat
 
 ## License and contributions
 
-This project is licensed under **Apache-2.0** (see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE)). Contributions are accepted under the **Contributor License Agreement** in [`CLA.md`](CLA.md): first-time contributors sign it once via the CLA bot on their first pull request. By contributing you also certify you have the right to submit the code under this license.
+This project is licensed under **Apache-2.0** (see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE)). Contributions are accepted under the **Contributor License Agreement** in [`CLA.md`](CLA.md): first-time contributors sign it once in their first pull request, where the maintainer collects the signature. By contributing you also certify you have the right to submit the code under this license.
 
 ## Security issues
 
