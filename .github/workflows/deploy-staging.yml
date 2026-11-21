@@ -53,11 +53,14 @@ jobs:
       - name: Serverless CLI matches its fingerprints
         run: npm run check:serverless-cli
 
-      # Nothing in the bundle is secret: public code, public packages and the
-      # public country database.
-      - name: Pack the workspace and the CLI
+      # Only what this job produced travels: the installed packages, the
+      # country database with the ranges built from it, and the CLI. The deploy
+      # job takes the code from git, so nothing here can rewrite a tracked file.
+      # Nothing in the bundle is secret.
+      - name: Pack the packages, the country database and the CLI
         run: |
-          tar --zstd -cf "$RUNNER_TEMP/workspace.tar.zst" -C "$GITHUB_WORKSPACE" .
+          tar --zstd -cf "$RUNNER_TEMP/workspace.tar.zst" -C "$GITHUB_WORKSPACE" \
+            node_modules src/availability/data src/availability/region-ranges.json
           tar --zstd -cf "$RUNNER_TEMP/serverless-home.tar.zst" -C "$HOME" .serverless
       - name: Upload the bundle
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -81,12 +84,16 @@ jobs:
       contents: read
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Download the bundle
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: deploy-bundle
           path: ${{ runner.temp }}/bundle
-      - name: Unpack the workspace and the CLI
+      - name: Unpack the packages, the country database and the CLI
         run: |
           tar --zstd -xf "$RUNNER_TEMP/bundle/workspace.tar.zst" -C "$GITHUB_WORKSPACE"
           tar --zstd -xf "$RUNNER_TEMP/bundle/serverless-home.tar.zst" -C "$HOME"
@@ -97,7 +104,8 @@ jobs:
           node-version-file: .nvmrc
           package-manager-cache: false
 
-      # Only hashes files, and runs before anything from the bundle does: a CLI
+      # The script and its fingerprints come from git, not from the bundle. It
+      # only hashes files, and runs before anything from the bundle does: a CLI
       # that is not the reviewed one never gets the deploy role.
       - name: Serverless CLI matches its fingerprints
         run: node scripts/check-serverless-cli.mjs

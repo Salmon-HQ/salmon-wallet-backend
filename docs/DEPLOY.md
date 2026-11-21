@@ -29,7 +29,7 @@ Three stages exist: `local` (dev, no AWS), `prod` (tag-triggered deploy), and `s
 gh workflow run deploy-staging.yml --ref staging
 ```
 
-The workflow assumes `GithubActionsStagingRole` as the `staging` environment, which admits the `staging` branch only (`docs/REPO-SETTINGS.md`, section 6). The role reaches the staging stack, its API, its schedules and the `/salmon-api/staging/*` params, and nothing of prod. Like the prod deploy, a `bundle` job without the role installs and downloads everything, and the `deploy` job only unpacks and deploys.
+The workflow assumes `GithubActionsStagingRole` as the `staging` environment, which admits the `staging` branch only (`docs/REPO-SETTINGS.md`, section 6). The role reaches the staging stack, its API, its schedules and the `/salmon-api/staging/*` params, and nothing of prod. Like the prod deploy, a `bundle` job without the role installs and downloads everything, and the `deploy` job takes the code from git, unpacks the packages and deploys.
 
 A deploy from a machine is the fallback when the workflow cannot run, and needs administrator credentials:
 
