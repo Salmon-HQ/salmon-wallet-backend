@@ -84,7 +84,19 @@ const NAME_DOMAIN_PATTERN =
 const PHISHING_KEYWORDS =
   /claim (your|now|at|here|within|before)|visit the domain|check available claim|airdrop pass|free mint|eligible for|go to|lucky box|drop pass|whitelist|selected for|reward drop|forfeit/i;
 
-const SPAM_NAME_KEYWORDS = /airdrop|free mint|claim your|lucky box|redeem.*voucher/i;
+const SPAM_NAME_KEYWORDS = /airdrop|free mint|claim your|lucky box/i;
+
+/**
+ * "redeem … voucher", in that order. Two `indexOf` calls rather than
+ * `/redeem.*voucher/`: the pattern rescans the rest of the name from every
+ * "redeem", which is quadratic on a name that repeats the word, and the name
+ * is written by whoever mints the NFT.
+ */
+const hasRedeemVoucher = (name) => {
+  const lower = name.toLowerCase();
+  const redeem = lower.indexOf('redeem');
+  return redeem !== -1 && lower.indexOf('voucher', redeem) !== -1;
+};
 
 /**
  * Words a lure leans on. Each is also an ordinary NFT word ("Z-Pass", "Golden
@@ -132,11 +144,13 @@ const DUPLICATE_NAME_MIN_COUNT = 3;
  * Key under which a name is counted for `duplicate_name`: normalized,
  * lowercased, with a trailing edition number dropped so `BOX#43` and `BOX#64`
  * count as one name. Empty names never count — they have their own reason.
+ * `normalizeForScoring` leaves single spaces only, so the pattern asks for at
+ * most one: `\s*` would backtrack over a run of whitespace.
  */
 const nameKey = (name) =>
   normalizeForScoring(name)
     .toLowerCase()
-    .replace(/\s*#\s*\d+$/, '');
+    .replace(/ ?# ?\d+$/, '');
 
 /**
  * Count names across one page of provider-normalized assets, for the
@@ -229,7 +243,8 @@ const isDuplicateName = (name, nameCounts) =>
 const hasLureWord = (name) => Boolean(name) && LURE_WORDS.test(name);
 
 /** H7: name contains a spam/airdrop-bait keyword. */
-const hasSpamNameKeyword = (name) => Boolean(name) && SPAM_NAME_KEYWORDS.test(name);
+const hasSpamNameKeyword = (name) =>
+  Boolean(name) && (SPAM_NAME_KEYWORDS.test(name) || hasRedeemVoucher(name));
 
 /** H8: no description, no collection, and no attributes at all. */
 const isBarebonesNft = (nft) => {

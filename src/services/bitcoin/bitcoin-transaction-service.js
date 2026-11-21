@@ -81,7 +81,14 @@ const getTransactions = async (address, filters, locals) => {
   }
 
   return withCachedTransactionHistory(
-    buildCacheKey('bitcoin-transactions', address, filters, locals),
+    // Keyed by the page size the loader will serve, not by the raw filters:
+    // a parameter nothing reads must not mint a fresh key (and a paid call).
+    buildCacheKey(
+      'bitcoin-transactions',
+      address,
+      { pageSize: clampPageSize(filters.pageSize) },
+      locals
+    ),
     loadTransactions
   );
 };

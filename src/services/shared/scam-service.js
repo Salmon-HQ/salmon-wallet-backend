@@ -27,13 +27,16 @@ const BLACKLIST_URL = {
  * never be a suffix of the hostname it names, and the site it blocks is
  * silently never flagged.
  *
+ * An entry written as a full URL keeps its own scheme: prefixing a second one
+ * would parse the scheme as the host (`https://https://scam.com` → `https`).
+ *
  * @param {string} url - a blocklist entry, normally a bare hostname.
  * @returns {string} the entry as a hostname, lowercased and punycoded.
  */
 const normalizeHost = (url) => {
   const entry = String(url).trim();
   try {
-    return new URL(`https://${entry}`).hostname;
+    return new URL(/^https?:\/\//i.test(entry) ? entry : `https://${entry}`).hostname;
   } catch {
     return entry.toLowerCase();
   }

@@ -19,7 +19,10 @@ const BROKEN_GATEWAY_PATTERNS = [
   /https?:\/\/(?:www\.)?nftstorage\.link\/ipfs\/(.+)/,
 ];
 
-const SUBDOMAIN_IPFS_PATTERN = /https?:\/\/([a-zA-Z0-9]+)\.ipfs\.([^/]+)\/?(.*)$/;
+// The path group opens only on a `/`: with `\/?(.*)` the host and the path
+// could both claim the same characters, and a crafted URL backtracked
+// quadratically.
+const SUBDOMAIN_IPFS_PATTERN = /https?:\/\/([a-zA-Z0-9]+)\.ipfs\.([^/]+)(?:\/(.*))?$/;
 // The same gateway the clients normalise to (`packages/shared/src/utils/url.ts`).
 const DEFAULT_IPFS_GATEWAY = 'https://ipfs.filebase.io/ipfs/';
 
