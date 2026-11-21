@@ -11,6 +11,7 @@
     "test": "jest --detectOpenHandles",
     "test:unit": "jest --testPathPatterns='.spec.js$' --testPathIgnorePatterns='integration.spec.js' --detectOpenHandles",
     "test:integration": "jest --testPathPatterns='integration.spec.js$' --setupFilesAfterEnv=./jest.integration.setup.js --detectOpenHandles --runInBand --forceExit",
+    "test:security": "jest --testPathPatterns='.security.spec.js$' --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",
     "test:coverage": "jest --coverage --detectOpenHandles",
     "linter": "eslint ./ --fix",

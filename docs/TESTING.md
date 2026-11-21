@@ -153,6 +153,40 @@ and the validators sit on attacker-controlled data; the first run found a
 real crash on a `null` entry in `postTokenBalances`. They run inside
 `test:unit` and are what OpenSSF Scorecard's Fuzzing check detects.
 
+Security specs (`*.security.spec.js`) — the suite that attacks this API:
+
+Each one is an abuse case: a `describe('abuse: …')` that states what an
+attacker tries, and tests that play the attacker and assert the attempt
+fails. They sit in `__tests__/` beside the code they attack, run inside
+`test:unit` on every pull request, and run alone with `npm run test:security`.
+
+- `src/controllers/solana/__tests__/solana-account-controller.security.spec.js`,
+  `src/services/bitcoin/__tests__/bitcoin-transaction-service.security.spec.js`
+  — cache busting: a query parameter nothing reads cannot force a second
+  provider call
+- `src/services/shared/__tests__/scam-service.security.spec.js` — blocklist
+  evasion: every stored entry matches the hostname of the site it names
+- `src/services/solana/__tests__/nft-spam-detector.security.spec.js`,
+  `src/resources/solana/__tests__/content-urls.security.spec.js` — regular
+  expression denial of service: minter-written names and URLs are handled in
+  linear time
+
+Rules for this suite:
+
+1. **A security fix lands with its security spec**, and the spec fails
+   without the fix — check that by stashing the fix once. A fix with no spec
+   is a bug waiting to come back (NIST SSDF PW.8.2: tests for previously
+   reported vulnerabilities join the suite).
+2. **State the property, then let fast-check attack it.** "No parameter the
+   service ignores changes the answer" over generated queries finds the
+   spelling nobody listed; three hand-picked examples do not.
+3. **Name the catalogue entry when one applies**, in the `describe` title:
+   `[API4:2023]` for the OWASP API Security Top 10, `[v5.0.0-1.2.5]` for an
+   OWASP ASVS requirement. Only an identifier read in the catalogue itself.
+4. **A time budget proves linear time only with a wide margin**: size the
+   input so the quadratic version needs seconds and the budget is a hundred
+   times the linear one, or the spec flakes on a slow runner.
+
 **Characteristics:**
 
 - No calls to external APIs

@@ -29,7 +29,7 @@ const providerCallsFor = async (queries) => {
   return esplora.get.mock.calls.length;
 };
 
-describe('abuse: cache busting through the history query string', () => {
+describe('[API4:2023] abuse: cache busting through the history query string', () => {
   test('parameters the loader does not read never cost a second provider call', async () => {
     const junk = fc
       .dictionary(fc.string(), fc.string())

@@ -9,10 +9,11 @@
 
 const { normalizeIpfsUrl } = require('../content-urls');
 
-// A quadratic pattern needs minutes for this size; a linear one, milliseconds.
+// Measured on a laptop: the quadratic patterns took 2 to 4 s on these inputs,
+// the linear ones under 5 ms.
 const BUDGET_MS = 1000;
 
-describe('abuse: a crafted content URL that stalls the IPFS rewrite', () => {
+describe('[API4:2023] abuse: a crafted content URL that stalls the IPFS rewrite', () => {
   test('a subdomain-gateway URL built to backtrack is handled in linear time', () => {
     const url = `http://0.ipfs.${'.'.repeat(100_000)}/\nx`;
 
