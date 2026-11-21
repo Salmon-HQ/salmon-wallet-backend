@@ -1,5 +1,12 @@
 /.github/ @Luquish
 
+# What the deploy job runs or ships without a workflow edit.
+/serverless.yml                    @Luquish
+/package.json                      @Luquish
+/package-lock.json                 @Luquish
+/scripts/check-serverless-cli.mjs  @Luquish
+/scripts/refresh-geo-data.mjs      @Luquish
+
 # What agents and the local hooks obey: a change here changes every later
 # change, so a maintainer reads it.
 AGENTS.md     @Luquish
