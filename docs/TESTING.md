@@ -173,6 +173,12 @@ fails. They sit in `__tests__/` beside the code they attack, run inside
 - `src/services/shared/__tests__/dapp-service.security.spec.js`,
   `src/infrastructure/__tests__/log-redaction.security.spec.js` — the same
   attack through a hostile page's HTML and through a long log message
+- `src/routes/bitcoin/__tests__/bitcoin-account-router.security.spec.js` —
+  upstream request forgery: the history cursor reaches Esplora only as a
+  transaction id (driven over HTTP against the real router)
+- `src/repositories/solana/__tests__/nft-metadata-repository.security.spec.js`
+  — SSRF: an internal address is blocked in every spelling a resolver can
+  answer with, IPv4-mapped IPv6 included
 
 The lint gate carries the deterministic half of that last abuse case:
 `regexp/no-super-linear-backtracking` and `regexp/no-super-linear-move`

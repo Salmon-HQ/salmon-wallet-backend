@@ -43,7 +43,11 @@ const fetchTransactions = async (address, filters, locals) => {
 
   do {
     chunk = await esplora.get(
-      cursor ? `/address/${address}/txs/chain/${cursor}` : `/address/${address}/txs`,
+      // Encoded as well as validated at the router: a cursor is one path
+      // segment whoever calls this function.
+      cursor
+        ? `/address/${address}/txs/chain/${encodeURIComponent(cursor)}`
+        : `/address/${address}/txs`,
       locals
     );
     const mined = chunk.filter(isConfirmed);
