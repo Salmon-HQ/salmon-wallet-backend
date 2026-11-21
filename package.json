@@ -1,6 +1,6 @@
 {
   "name": "salmon-api",
-  "version": "0.28.0",
+  "version": "0.28.1",
   "description": "Salmon API",
   "main": "src/index.js",
   "engines": {
