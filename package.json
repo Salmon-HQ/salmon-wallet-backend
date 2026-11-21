@@ -1,6 +1,6 @@
 {
   "name": "salmon-api",
-  "version": "0.28.0",
+  "version": "0.28.1",
   "description": "Salmon API",
   "main": "src/index.js",
   "engines": {
@@ -11,6 +11,7 @@
     "test": "jest --detectOpenHandles",
     "test:unit": "jest --testPathPatterns='.spec.js$' --testPathIgnorePatterns='integration.spec.js' --detectOpenHandles",
     "test:integration": "jest --testPathPatterns='integration.spec.js$' --setupFilesAfterEnv=./jest.integration.setup.js --detectOpenHandles --runInBand --forceExit",
+    "test:security": "jest --testPathPatterns='.security.spec.js$' --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",
     "test:coverage": "jest --coverage --detectOpenHandles",
     "linter": "eslint ./ --fix",
@@ -46,6 +47,7 @@
     "@solana/kit": "8.6.0",
     "dotenv": "^18.0.10",
     "eslint": "^10.11.0",
+    "eslint-plugin-regexp": "^3.3.3",
     "fast-check": "^4.10.2",
     "jest": "^30.5.2",
     "jscpd": "5.4.3",

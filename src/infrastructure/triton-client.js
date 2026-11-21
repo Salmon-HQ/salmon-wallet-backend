@@ -67,7 +67,8 @@ const appendToken = (url) => {
 
   // Triton convention: token is a path segment after the host.
   // Strip trailing slash so we don't end up with `//token`.
-  const base = url.replace(/\/+$/, '');
+  let base = url;
+  while (base.endsWith('/')) base = base.slice(0, -1);
   return `${base}/${token}`;
 };
 

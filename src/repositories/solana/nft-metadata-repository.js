@@ -29,6 +29,7 @@ const http = require('axios');
 const crypto = require('crypto');
 const dns = require('dns');
 const net = require('net');
+const { mappedIpv4 } = require('../../services/shared/dapp-url-guard');
 const https = require('https');
 const nodeHttp = require('http');
 
@@ -113,9 +114,10 @@ const isBlockedIp = (ip) => {
     if (/^fe[89ab]/.test(normalized)) return true;
     if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
 
-    const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped) return isBlockedIp(mapped[1]);
-    return false;
+    // Either spelling: a resolver may answer `::ffff:a9fe:a9fe` for the
+    // metadata address, which a dotted-only match lets through.
+    const mapped = mappedIpv4(normalized);
+    return mapped ? isBlockedIp(mapped) : false;
   }
 
   return true;

@@ -64,23 +64,36 @@ const expandIpv6 = (address) => {
   return groups.map((group) => parseInt(group, 16));
 };
 
+/**
+ * The IPv4 address inside an IPv4-mapped IPv6 one, or null.
+ *
+ * The same address is equally valid dotted (`::ffff:127.0.0.1`) or as two hex
+ * groups (`::ffff:7f00:1`); `new URL()` rewrites the first into the second,
+ * and a DNS answer may arrive in either. A guard that reads only one spelling
+ * has every IPv4 range check bypassed by the other.
+ *
+ * @param {string} address - an IPv6 address.
+ * @returns {string|null} the dotted IPv4 address it maps, if it maps one.
+ */
+const mappedIpv4 = (address) => {
+  const normalized = address.toLowerCase().split('%')[0];
+  const dotted = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (dotted) return dotted[1];
+
+  const groups = expandIpv6(normalized);
+  if (groups && groups[5] === 0xffff && groups.slice(0, 5).every((group) => group === 0)) {
+    const [high, low] = groups.slice(6);
+    return [high >> 8, high & 0xff, low >> 8, low & 0xff].join('.');
+  }
+  return null;
+};
+
 const isBlockedIpv6 = (address) => {
   const normalized = address.toLowerCase().split('%')[0];
   if (normalized === '::' || normalized === '::1') return true;
 
-  const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-  if (mapped) return isBlockedIpv4(mapped[1]);
-
-  // The same address is equally valid written as two hex groups
-  // (`::ffff:7f00:1` === `::ffff:127.0.0.1`), and `new URL()` rewrites the
-  // dotted spelling into exactly that before the guard sees it — so without
-  // this branch every IPv4 range check above is bypassed by a bracketed
-  // literal such as http://[::ffff:127.0.0.1]/.
-  const groups = expandIpv6(normalized);
-  if (groups && groups[5] === 0xffff && groups.slice(0, 5).every((group) => group === 0)) {
-    const [high, low] = groups.slice(6);
-    return isBlockedIpv4([high >> 8, high & 0xff, low >> 8, low & 0xff].join('.'));
-  }
+  const mapped = mappedIpv4(normalized);
+  if (mapped) return isBlockedIpv4(mapped);
 
   const head = normalized.slice(0, 4);
   if (/^f[cd]/.test(head)) return true;
@@ -158,4 +171,4 @@ const assertFetchableUrl = async (rawUrl) => {
   return { url, address, family };
 };
 
-module.exports = { assertFetchableUrl, isBlockedAddress, DappUrlError };
+module.exports = { assertFetchableUrl, isBlockedAddress, mappedIpv4, DappUrlError };

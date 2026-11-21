@@ -34,7 +34,26 @@ router.param('address', (req, res, next, address) => {
   });
 });
 
-router.get('/:address/transactions', cacheControl('no-cache'), safe(controller.listTransactions));
+// The cursor becomes a path segment of the Esplora request, so anything but
+// a transaction id is refused here: `../` would land the request on another
+// upstream endpoint and `?` would add a query to it.
+const TXID = /^[0-9a-f]{64}$/i;
+const validatePageToken = (req, res, next) => {
+  const { pageToken } = req.query;
+  if (pageToken === undefined || pageToken === '') return next();
+  if (typeof pageToken === 'string' && TXID.test(pageToken)) return next();
+  return res.status(400).json({
+    error: 'invalid_parameter',
+    error_description: 'The pageToken parameter is not a transaction id.',
+  });
+};
+
+router.get(
+  '/:address/transactions',
+  cacheControl('no-cache'),
+  validatePageToken,
+  safe(controller.listTransactions)
+);
 
 router.get('/:address/utxo', cacheControl('no-cache'), safe(controller.listUtxo));
 

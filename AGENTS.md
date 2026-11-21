@@ -92,6 +92,7 @@ is build-only (`GET /powerups/{id}/build`): the wallet's Apple
 ## Testing rules
 
 - Any new behavior should come with tests at the nearest meaningful layer.
+- A security fix lands with a `*.security.spec.js` abuse case that fails without it (`docs/TESTING.md`, "Security specs"); `npm run test:security` runs that suite alone.
 - Before changing sensitive behavior, establish a small baseline test when practical.
 - After changing behavior, rerun the targeted backend tests for the touched area.
 - If the touched endpoint is consumed by `../salmon-wallet-frontend`, verify the most relevant frontend client or tests too.

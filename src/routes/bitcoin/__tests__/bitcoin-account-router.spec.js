@@ -51,6 +51,7 @@ describe('bitcoin-account-router', () => {
     expect(mockRouter.get).toHaveBeenCalledWith(
       '/:address/transactions',
       { type: 'cacheControl', value: 'no-cache' },
+      expect.any(Function),
       { type: 'safe', handler: 'listTransactions' }
     );
     expect(mockRouter.get).toHaveBeenCalledWith(

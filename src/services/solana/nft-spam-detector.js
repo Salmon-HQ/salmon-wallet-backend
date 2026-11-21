@@ -84,7 +84,19 @@ const NAME_DOMAIN_PATTERN =
 const PHISHING_KEYWORDS =
   /claim (your|now|at|here|within|before)|visit the domain|check available claim|airdrop pass|free mint|eligible for|go to|lucky box|drop pass|whitelist|selected for|reward drop|forfeit/i;
 
-const SPAM_NAME_KEYWORDS = /airdrop|free mint|claim your|lucky box|redeem.*voucher/i;
+const SPAM_NAME_KEYWORDS = /airdrop|free mint|claim your|lucky box/i;
+
+/**
+ * "redeem … voucher", in that order. Two `indexOf` calls rather than
+ * `/redeem.*voucher/`: the pattern rescans the rest of the name from every
+ * "redeem", which is quadratic on a name that repeats the word, and the name
+ * is written by whoever mints the NFT.
+ */
+const hasRedeemVoucher = (name) => {
+  const lower = name.toLowerCase();
+  const redeem = lower.indexOf('redeem');
+  return redeem !== -1 && lower.indexOf('voucher', redeem) !== -1;
+};
 
 /**
  * Words a lure leans on. Each is also an ordinary NFT word ("Z-Pass", "Golden
@@ -105,9 +117,13 @@ const TICKER_NAME_PATTERN = /^\$[A-Z]{2,}/i;
  * confusable set (`NFTы`), and stays clear.
  */
 const CONFUSABLE_LETTERS = 'аеіјоѕрсухһԁАВЕНІЈКМОРЅСТУХαεικνορτυχΑΒΕΖΗΙΚΜΝΟΡΤΥΧ';
-const MIXED_SCRIPT_WORD = new RegExp(
-  `(?=[^\\s]*[A-Za-z])(?=[^\\s]*[${CONFUSABLE_LETTERS}])[^\\s]+`
-);
+const LATIN_LETTER = /[A-Za-z]/;
+const CONFUSABLE_LETTER = new RegExp(`[${CONFUSABLE_LETTERS}]`);
+// Word by word, two single-character tests each: one pattern with lookaheads
+// would rescan the rest of the word from every position.
+const hasMixedScriptWord = (text) =>
+  typeof text === 'string' &&
+  text.split(/\s+/).some((word) => LATIN_LETTER.test(word) && CONFUSABLE_LETTER.test(word));
 
 /** "Scan the QR code / box to unlock your special offer": the QR-lure family. */
 const QR_LURE_PATTERN = /scan the (qr|code|box)|unlock your special offer/i;
@@ -132,11 +148,13 @@ const DUPLICATE_NAME_MIN_COUNT = 3;
  * Key under which a name is counted for `duplicate_name`: normalized,
  * lowercased, with a trailing edition number dropped so `BOX#43` and `BOX#64`
  * count as one name. Empty names never count — they have their own reason.
+ * `normalizeForScoring` leaves single spaces only, so the pattern asks for at
+ * most one: `\s*` would backtrack over a run of whitespace.
  */
 const nameKey = (name) =>
   normalizeForScoring(name)
     .toLowerCase()
-    .replace(/\s*#\s*\d+$/, '');
+    .replace(/ ?# ?\d+$/, '');
 
 /**
  * Count names across one page of provider-normalized assets, for the
@@ -203,7 +221,7 @@ const hasTickerName = (name) => Boolean(name) && TICKER_NAME_PATTERN.test(name);
 
 /** Strong: a Latin word padded with lookalike Cyrillic/Greek letters. */
 const hasMixedScript = ({ name, description }) =>
-  MIXED_SCRIPT_WORD.test(name) || MIXED_SCRIPT_WORD.test(description);
+  hasMixedScriptWord(name) || hasMixedScriptWord(description);
 
 /** Weak: nothing readable in the name (empty, or only control/punctuation). */
 const isEmptyName = (name) => !/[\p{L}\p{N}]/u.test(name);
@@ -229,7 +247,8 @@ const isDuplicateName = (name, nameCounts) =>
 const hasLureWord = (name) => Boolean(name) && LURE_WORDS.test(name);
 
 /** H7: name contains a spam/airdrop-bait keyword. */
-const hasSpamNameKeyword = (name) => Boolean(name) && SPAM_NAME_KEYWORDS.test(name);
+const hasSpamNameKeyword = (name) =>
+  Boolean(name) && (SPAM_NAME_KEYWORDS.test(name) || hasRedeemVoucher(name));
 
 /** H8: no description, no collection, and no attributes at all. */
 const isBarebonesNft = (nft) => {
