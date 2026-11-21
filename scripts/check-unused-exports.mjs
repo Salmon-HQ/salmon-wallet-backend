@@ -50,7 +50,7 @@ for (const [file, source] of text) {
     /^(src|packages)\/.*\.js$/.test(file) && !/(__tests__|__mocks__|\.spec\.)/.test(file);
   if (!isSource || ENTRY.some((pattern) => pattern.test(file))) continue;
   for (const name of exportedNames(source)) {
-    const word = new RegExp(`\\b${name.replace(/\$/g, '\\$')}\\b`);
+    const word = new RegExp(`\\b${RegExp.escape(name)}\\b`);
     const usedElsewhere = [...text].some(([other, body]) => other !== file && word.test(body));
     if (!usedElsewhere) unused.push(`${file}: ${name}`);
   }
