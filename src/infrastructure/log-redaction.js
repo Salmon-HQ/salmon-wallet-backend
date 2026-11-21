@@ -16,7 +16,9 @@ const tritonClient = require('./triton-client');
 
 const RPCPOOL_TOKEN = /(\.rpcpool\.com)\/[A-Za-z0-9_-]{8,}/gi;
 const QUERY_CREDENTIAL = /([?&][\w-]*(?:api[-_]?key|api_secret)=)[^&\s]+/gi;
-const HEADER_CREDENTIAL = /([\w-]*(?:api[-_]?key|api_secret)['"]?\s*:\s*['"]?)[^\s'",;}]+/gi;
+// The key name's prefix is bounded: an unbounded `[\w-]*` rescans a long run
+// of word characters from each position, and log lines carry upstream text.
+const HEADER_CREDENTIAL = /([\w-]{0,64}(?:api[-_]?key|api_secret)['"]?\s*:\s*['"]?)[^\s'",;}]+/gi;
 
 /**
  * Replaces the credentials this backend's providers use with `[REDACTED]`:

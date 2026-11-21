@@ -170,6 +170,16 @@ fails. They sit in `__tests__/` beside the code they attack, run inside
   `src/resources/solana/__tests__/content-urls.security.spec.js` — regular
   expression denial of service: minter-written names and URLs are handled in
   linear time
+- `src/services/shared/__tests__/dapp-service.security.spec.js`,
+  `src/infrastructure/__tests__/log-redaction.security.spec.js` — the same
+  attack through a hostile page's HTML and through a long log message
+
+The lint gate carries the deterministic half of that last abuse case:
+`regexp/no-super-linear-backtracking` and `regexp/no-super-linear-move`
+(eslint-plugin-regexp) fail `lint:check` on a pattern in `src/` or `packages/`
+that can be made to run in more than linear time. A flagged pattern is
+rewritten or bounded (`{0,2048}` instead of `*`), not disabled. The rules see
+simple cases only; `/redeem.*voucher/` passed them and was caught by CodeQL.
 
 Rules for this suite:
 

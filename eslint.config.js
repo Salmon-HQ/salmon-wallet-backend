@@ -1,4 +1,5 @@
 const js = require('@eslint/js');
+const regexp = require('eslint-plugin-regexp');
 
 module.exports = [
   js.configs.recommended,
@@ -43,6 +44,19 @@ module.exports = [
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
       'no-prototype-builtins': 'off',
+    },
+  },
+  {
+    // Patterns that backtrack or rescan in more than linear time. Most text
+    // this API matches is written by a caller, a minter or a remote page, so
+    // it holds for everything that ships; specs and scripts match files of
+    // this repository and are left out.
+    files: ['src/**/*.js', 'packages/**/*.js'],
+    ignores: ['**/__tests__/**'],
+    plugins: { regexp },
+    rules: {
+      'regexp/no-super-linear-backtracking': 'error',
+      'regexp/no-super-linear-move': 'error',
     },
   },
   {

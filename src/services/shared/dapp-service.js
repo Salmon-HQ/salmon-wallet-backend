@@ -28,7 +28,11 @@ const MAX_NAME_LENGTH = 64;
 // Enough for the <head> of any reasonable page; OG tags live there.
 const MAX_PARSED_BYTES = 256 * 1024;
 
-const META_TAG_PATTERN = /<meta\s+[^>]*>/gi;
+// A tag is read up to 2048 characters. The page is whatever the caller's
+// URL serves: with an unbounded `[^>]*`, a body of `<meta` openings that never
+// close is rescanned to its end from each one, quadratic over 256 kB (24 s
+// measured), on a route anyone can call.
+const META_TAG_PATTERN = /<meta\s[^>]{0,2048}>/gi;
 
 /**
  * Reads the `property`/`name` and `content` attributes out of a single meta

@@ -117,9 +117,13 @@ const TICKER_NAME_PATTERN = /^\$[A-Z]{2,}/i;
  * confusable set (`NFTы`), and stays clear.
  */
 const CONFUSABLE_LETTERS = 'аеіјоѕрсухһԁАВЕНІЈКМОРЅСТУХαεικνορτυχΑΒΕΖΗΙΚΜΝΟΡΤΥΧ';
-const MIXED_SCRIPT_WORD = new RegExp(
-  `(?=[^\\s]*[A-Za-z])(?=[^\\s]*[${CONFUSABLE_LETTERS}])[^\\s]+`
-);
+const LATIN_LETTER = /[A-Za-z]/;
+const CONFUSABLE_LETTER = new RegExp(`[${CONFUSABLE_LETTERS}]`);
+// Word by word, two single-character tests each: one pattern with lookaheads
+// would rescan the rest of the word from every position.
+const hasMixedScriptWord = (text) =>
+  typeof text === 'string' &&
+  text.split(/\s+/).some((word) => LATIN_LETTER.test(word) && CONFUSABLE_LETTER.test(word));
 
 /** "Scan the QR code / box to unlock your special offer": the QR-lure family. */
 const QR_LURE_PATTERN = /scan the (qr|code|box)|unlock your special offer/i;
@@ -217,7 +221,7 @@ const hasTickerName = (name) => Boolean(name) && TICKER_NAME_PATTERN.test(name);
 
 /** Strong: a Latin word padded with lookalike Cyrillic/Greek letters. */
 const hasMixedScript = ({ name, description }) =>
-  MIXED_SCRIPT_WORD.test(name) || MIXED_SCRIPT_WORD.test(description);
+  hasMixedScriptWord(name) || hasMixedScriptWord(description);
 
 /** Weak: nothing readable in the name (empty, or only control/punctuation). */
 const isEmptyName = (name) => !/[\p{L}\p{N}]/u.test(name);
