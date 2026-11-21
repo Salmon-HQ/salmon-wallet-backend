@@ -1,9 +1,10 @@
 service: gol-salmon-api
-frameworkVersion: '3'
+# Exact: the v4 CLI downloads the version named here and stays on it, so a
+# release moves only through a reviewed change to this line and package.json.
+frameworkVersion: '4.46.0'
 
 plugins:
   - serverless-offline
-  - serverless-dotenv-plugin
   - serverless-api-gateway-throttling
 
 useDotenv: true
@@ -14,6 +15,13 @@ provider:
   stage: ${opt:stage, 'prod'}
   region: us-east-1
   versionFunctions: false
+  # A change set first, then its execution: the deploy role and the rollback
+  # steps in docs/DEPLOY.md are written for that path.
+  deploymentMethod: changesets
+  # Each stage keeps its own deployment bucket inside its stack. Without
+  # this, v4 looks for a bucket shared by the whole account and creates it
+  # (and an SSM parameter) on the first `package` of a stage with no stack.
+  enableLegacyDeploymentBucket: true
   # Request logs pair a client IP with the request path, and wallet routes carry
   # the address in the path. Without this, CloudWatch keeps that pairing forever.
   logRetentionInDays: 30
@@ -181,14 +189,6 @@ custom:
     host: 0.0.0.0
     httpPort: ${env:OFFLINE_HTTP_PORT, 3000}
     lambdaPort: ${env:OFFLINE_LAMBDA_PORT, 3002}
-  # Function environments are assigned explicitly from custom.envFile (see
-  # above), so the plugin's auto-inject-into-provider.environment feature is
-  # disabled (include: []): it would hand every function every variable in the
-  # dotenv file, undoing the per-function scoping. The plugin still loads that
-  # file into process.env for ${env:X} resolution, which `include` does not
-  # affect.
-  dotenv:
-    include: []
 
 resources:
   # AWS WAF on production only: it costs USD 6 a month per stage, and staging

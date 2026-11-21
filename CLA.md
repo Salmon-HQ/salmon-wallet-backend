@@ -1,6 +1,6 @@
 # Salmon Individual Contributor License Agreement
 
-Adapted from the Apache Software Foundation Individual CLA (v2.2). By signing this agreement (via the CLA Assistant check on your first pull request), You accept and agree to the following terms for Your present and future Contributions submitted to Salmon ("the Project"), whose copyright is held by GeekOcean Labs Ltd ("the Company").
+Adapted from the Apache Software Foundation Individual CLA (v2.2). By signing this agreement (in your first pull request), You accept and agree to the following terms for Your present and future Contributions submitted to Salmon ("the Project"), whose copyright is held by GeekOcean Labs Ltd ("the Company").
 
 **1. Definitions.** "You" means the individual signing this agreement. "Contribution" means any original work of authorship, including any modifications or additions to an existing work, that You intentionally submit to the Project for inclusion in any of its repositories, in any form (pull requests, patches, issues containing code, or other submissions). "Submitted" excludes communication conspicuously marked by You as "Not a Contribution."
 
@@ -18,4 +18,4 @@ Adapted from the Apache Software Foundation Individual CLA (v2.2). By signing th
 
 ---
 
-_Signing is handled automatically: the CLA Assistant bot comments on your first pull request with a link; accepting there records your GitHub account, the timestamp, and the version of this document. You only sign once._
+_Signing happens in your first pull request: the maintainer collects your signature there and records your GitHub account and the date. You only sign once._

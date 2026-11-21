@@ -184,5 +184,4 @@ module.exports = {
   logoOf,
   search,
   clearSnapshot,
-  MAX_SEARCH_RESULTS,
 };

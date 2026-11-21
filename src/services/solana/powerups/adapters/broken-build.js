@@ -36,4 +36,4 @@ const build = async ({ publicKey }) => ({
   display: {},
 });
 
-module.exports = { validate, build, DECLARED_PROGRAM_ID, UNDECLARED_PROGRAM_ID };
+module.exports = { validate, build, DECLARED_PROGRAM_ID };

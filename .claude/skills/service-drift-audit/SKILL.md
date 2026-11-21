@@ -54,7 +54,7 @@ prior evidence; the two do not overlap and neither replaces the other.
 
 - `spl-token-registry` is deprecated upstream — that deprecation is the drift
   signal to watch here. CVE tracking for both packages belongs to
-  `osv-scanner.toml` + the global security audit, not to this baseline.
+  the global security audit, not to this baseline.
 
 ### Node runtime
 

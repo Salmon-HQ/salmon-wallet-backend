@@ -451,4 +451,4 @@ const build = async ({ inputMint, outputMint, amount, publicKey, slippageBps }, 
   };
 };
 
-module.exports = { build, resolveAmount, resolveSlippage, estimateFeeAmount, ADAPTERS };
+module.exports = { build, resolveAmount, resolveSlippage, estimateFeeAmount };

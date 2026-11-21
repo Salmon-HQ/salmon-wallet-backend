@@ -19,17 +19,13 @@ updates:
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
-    # Majors need a human decision in a wallet backend; they arrive as
-    # separate PRs.
+    # Majors arrive as separate PRs: in a wallet backend a human decides them.
     ignore:
-      # serverless v4 requires CLI auth (SERVERLESS_ACCESS_KEY) even for
-      # free users — it breaks the credential-free CI verify job — and needs
-      # serverless-offline@14 plus a plugin-compatibility audit. Migrate
-      # deliberately as its own task, not via a dependabot bump. Security
-      # advisories still raise PRs (ignore only affects version updates).
-      - dependency-name: serverless
-        update-types: [version-update:semver-major]
-      - dependency-name: serverless-offline
+      # web3.js 3 is a rewrite on Solana Kit (async signing, Uint8Array-first,
+      # new address type), and the Metaplex libraries that serve NFTs declare
+      # web3.js 1 as a peer. It moves in a planned migration of the
+      # transaction-building code, never as a bump.
+      - dependency-name: '@solana/web3.js'
         update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
@@ -38,6 +34,9 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Same wait as npm: a release is proposed once it is 7 days old.
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ['*']
@@ -50,6 +49,9 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Same wait as npm: a release is proposed once it is 7 days old.
+    cooldown:
+      default-days: 7
     ignore:
       # The Lambda runtime is nodejs24.x and .nvmrc pins 24: a Node major in
       # the Dockerfile would diverge dev/CI from prod. Digest refreshes and

@@ -1,19 +1,27 @@
 {
   "name": "salmon-api",
-  "version": "0.28.0",
+  "version": "0.28.1",
   "description": "Salmon API",
-  "main": "index.js",
+  "main": "src/index.js",
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "test": "jest --detectOpenHandles",
     "test:unit": "jest --testPathPatterns='.spec.js$' --testPathIgnorePatterns='integration.spec.js' --detectOpenHandles",
     "test:integration": "jest --testPathPatterns='integration.spec.js$' --setupFilesAfterEnv=./jest.integration.setup.js --detectOpenHandles --runInBand --forceExit",
+    "test:security": "jest --testPathPatterns='.security.spec.js$' --detectOpenHandles",
     "test:watch": "jest --watch --detectOpenHandles",
     "test:coverage": "jest --coverage --detectOpenHandles",
     "linter": "eslint ./ --fix",
     "lint:check": "eslint ./ --max-warnings 0",
+    "check:dead-code": "knip && node scripts/check-unused-exports.mjs",
+    "check:cycles": "madge --circular --extensions js src packages",
+    "check:duplication": "node scripts/check-duplication.mjs",
+    "check:hidden-unicode": "node scripts/check-hidden-unicode.mjs",
+    "check:serverless-cli": "serverless --version > /dev/null && node scripts/check-serverless-cli.mjs",
+    "check:audit": "npm audit --omit=dev --audit-level=high",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:integration:hermetic": "jest --testPathPatterns='packages/redis-connector/index.integration.spec.js' --detectOpenHandles --runInBand",
@@ -21,7 +29,7 @@
     "serverless:print": "serverless print --stage prod -v",
     "serverless:build": "serverless package --stage prod",
     "serverless:deploy": "serverless deploy --stage prod",
-    "serverless:deploy:staging": "node scripts/refresh-geo-data.mjs && serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
+    "serverless:deploy:staging": "npm run -s check:serverless-cli && node scripts/refresh-geo-data.mjs && serverless deploy --stage staging && (serverless invoke -f refreshSanctionsJob --stage staging || echo 'WARNING: refreshSanctionsJob failed; swaps stay blocked until its daily run')",
     "test:integration:local-validator": "jest --testPathPatterns=\"local-validator.integration.spec.js$\" --detectOpenHandles --runInBand"
   },
   "repository": {
@@ -36,16 +44,19 @@
   "homepage": "https://github.com/Salmon-HQ/salmon-wallet-backend#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@solana/kit": "8.4.0",
-    "dotenv": "^18.0.4",
+    "@solana/kit": "8.6.0",
+    "dotenv": "^18.0.10",
     "eslint": "^10.11.0",
+    "eslint-plugin-regexp": "^3.3.3",
     "fast-check": "^4.10.2",
     "jest": "^30.5.2",
-    "prettier": "^3.9.9",
-    "serverless": "^3",
+    "jscpd": "5.4.3",
+    "knip": "6.45.1",
+    "madge": "8.0.0",
+    "prettier": "^3.10.0",
+    "serverless": "4.46.0",
     "serverless-api-gateway-throttling": "^2.0.3",
-    "serverless-dotenv-plugin": "^6",
-    "serverless-offline": "^13.10.1"
+    "serverless-offline": "14.8.4"
   },
   "dependencies": {
     "@ip-location-db/dbip-country-mmdb": "^2.3.2026060120",
@@ -58,18 +69,18 @@
     "@solana/spl-token": "^0.4.15",
     "@solana/spl-token-registry": "^0.2.3551",
     "@solana/web3.js": "1.99.0",
-    "axios": "^1.20.0",
+    "axios": "^1.21.1",
     "bigint-buffer": "file:vendor/bigint-buffer-1.2.0-salmon.0.tgz",
     "bn.js": "^5.2.5",
     "bs58": "^6.0.0",
     "buffer-layout": "^1.2.2",
     "compression": "^1.8.2",
     "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "js-yaml": "^5.4.2",
+    "express": "^5.3.0",
+    "js-yaml": "^5.5.0",
     "lodash": "^4.17.21",
-    "mmdb-lib": "^3.0.3",
-    "redis": "^6.2.1",
+    "mmdb-lib": "^3.0.5",
+    "redis": "^6.3.1",
     "serverless-http": "^4.0.0"
   },
   "overrides": {
@@ -90,9 +101,6 @@
       "uuid": "^11.1.1"
     },
     "bigint-buffer": "$bigint-buffer",
-    "@serverless/platform-client": {
-      "adm-zip": "^0.6.1"
-    },
     "follow-redirects": "^1.16.1"
   }
 }

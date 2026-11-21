@@ -169,7 +169,4 @@ const verifySignedResponse = (request, response, { keys = signingKeys(), now } =
 module.exports = {
   verifySignedResponse,
   contentDigest,
-  SignatureVerificationError,
-  PINNED_KEYS,
-  REQUIRED_COMPONENTS,
 };

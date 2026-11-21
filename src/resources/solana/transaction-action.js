@@ -125,4 +125,4 @@ const deriveAction = (transaction, address, legs, type, source) => {
   return { ...result, action: 'program_call' };
 };
 
-module.exports = { deriveAction, APP_NAMES };
+module.exports = { deriveAction };

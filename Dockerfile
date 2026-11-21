@@ -1,9 +1,9 @@
 # Stage 1: Base
 # Node 24 = the nodejs24.x Lambda runtime (nodejs20.x was deprecated by AWS on
-# 2026-04-30). serverless-offline 13.10 needs >= 20.19 for ERR_REQUIRE_ESM.
+# 2026-04-30). serverless-offline 14 needs >= 20.19 for ERR_REQUIRE_ESM.
 # Pinned by digest (OpenSSF Scorecard Pinned-Dependencies). Refresh with:
 #   docker buildx imagetools inspect node:<tag> | grep Digest
-FROM node:24.21.0-alpine@sha256:be80f76cf40ec8e42b9bec49f60a55e0660f30af58d3e5a25530785b30ea67e2 AS base
+FROM node:24.22.3-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
 WORKDIR /app
 
 # Stage 2: Dependencies

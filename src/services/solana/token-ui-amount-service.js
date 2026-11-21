@@ -241,7 +241,8 @@ const renderUiAmount = (rawAmount, decimals, multiplier) => {
   const whole = scaledBaseUnits / divisor;
   const fraction = scaledBaseUnits % divisor;
   if (decimals === 0) return whole.toString();
-  const fractionText = fraction.toString().padStart(decimals, '0').replace(/0+$/, '');
+  let fractionText = fraction.toString().padStart(decimals, '0');
+  while (fractionText.endsWith('0')) fractionText = fractionText.slice(0, -1);
   return fractionText ? `${whole}.${fractionText}` : whole.toString();
 };
 
@@ -278,11 +279,9 @@ const getUiAmounts = async (holdings, locals = {}) => {
 
 module.exports = {
   getUiAmounts,
-  getMintExtensions,
   renderUiAmount,
   readMultiplier,
   toFixedPoint,
   SCALE,
-  SCALE_DECIMALS,
   MAX_MINTS_PER_BATCH,
 };

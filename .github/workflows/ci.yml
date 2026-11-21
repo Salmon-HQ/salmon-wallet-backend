@@ -24,12 +24,14 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+    env:
+      HAS_SERVERLESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY != '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -49,14 +51,54 @@ jobs:
       - name: Lint (zero warnings)
         run: npm run lint:check
 
-      - name: Unit tests
-        run: npm run test:unit
+      # No file nothing reaches, no dependency nothing requires (knip.json),
+      # and no export that no other file names.
+      - name: Dead code
+        run: npm run check:dead-code
 
-      # Credential-free smoke of serverless config resolution: the local
-      # stage resolves `${env:X, ''}` with no `.env` present, so a broken
-      # serverless.yml fails here without touching AWS or secrets. Output
-      # is discarded — never print resolved config in CI logs.
+      # No module reaches itself through its own requires.
+      - name: Import cycles
+        run: npm run check:cycles
+
+      # A ceiling that only goes down (scripts/check-duplication.mjs).
+      - name: Duplicated lines at the ceiling
+        run: npm run check:duplication
+
+      # Zero-width, bidirectional and tag characters in tracked files. The
+      # diff view does not draw them, so a reviewer cannot see an instruction
+      # written with them, while an agent that loads AGENTS.md reads it. The
+      # check's own fixtures run first so it cannot silently stop catching.
+      - name: No hidden characters in the tree
+        run: |
+          node --test scripts/check-hidden-unicode.test.mjs
+          npm run check:hidden-unicode
+
+      # Known advisories in what ships to Lambda: fixed, never ignored.
+      - name: No high or critical advisory in production dependencies
+        run: npm run check:audit
+
+      # With coverage: jest.config.js carries a floor set just under the
+      # measured value, which only ever moves up.
+      - name: Unit tests with coverage floor
+        run: npm run test:unit -- --coverage
+
+      # Serverless v4 downloads its CLI outside the lockfile. Compared with the
+      # fingerprints in scripts/check-serverless-cli.mjs, on every PR, so a
+      # change in what the vendor serves shows here and not in a deploy.
+      - name: Serverless CLI matches its fingerprints
+        run: npm run check:serverless-cli
+
+      # Smoke of serverless config resolution: the local stage resolves
+      # `${env:X, ''}` with no `.env` present, so a broken serverless.yml
+      # fails here without touching AWS. Output is discarded — never print
+      # resolved config in CI logs. Serverless v4 runs no command without a
+      # key, and a fork or Dependabot PR gets no secrets: the step is skipped
+      # there, and the deploy workflow's `verify` job runs the same check
+      # before anything ships. The key is in this step's environment only.
       - name: Serverless config resolves
+        if: env.HAS_SERVERLESS_KEY == 'true'
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: npx serverless print --stage local > /dev/null
 
   integration-hermetic:
@@ -80,7 +122,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -109,6 +151,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+      - uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
         with:
           advanced-security: false

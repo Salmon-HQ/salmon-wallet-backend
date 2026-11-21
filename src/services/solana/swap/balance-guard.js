@@ -198,4 +198,4 @@ const balanceMismatch = ({
   return lost > allowance ? `taker loses ${lost} lamports, more than ${allowance}` : null;
 };
 
-module.exports = { readTakerAccounts, balanceMismatch, ATA_RENT_ALLOWANCE };
+module.exports = { readTakerAccounts, balanceMismatch };

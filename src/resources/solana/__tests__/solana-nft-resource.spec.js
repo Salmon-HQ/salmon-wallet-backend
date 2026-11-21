@@ -30,6 +30,12 @@ const baseNft = {
   image: undefined,
 };
 
+// No image override unless a test sets one: an answer one test gave the
+// lookup is not the next test's starting point.
+beforeEach(() => {
+  imageOverrides.lookup.mockReturnValue(null);
+});
+
 describe('solana-nft-resource decorator', () => {
   beforeEach(() => {
     jest.clearAllMocks();

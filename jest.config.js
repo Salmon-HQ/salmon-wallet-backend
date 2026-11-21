@@ -14,8 +14,11 @@ module.exports = {
   // The directory where Jest should store its cached dependency information
   // cacheDirectory: "/tmp/jest_rs",
 
-  // Automatically clear mock calls and instances between every test
-  // clearMocks: false,
+  // Call counts start at zero in every test, and tests run in a new order on
+  // every run: a test that only passes after another one fails here, with the
+  // seed printed to reproduce it (`--seed=<n>`).
+  clearMocks: true,
+  randomize: true,
 
   // Indicates whether the coverage information should be collected while executing the test
   // collectCoverage: false,
@@ -38,7 +41,11 @@ module.exports = {
   // ],
 
   // An object that configures minimum threshold enforcement for coverage results
-  // coverageThreshold: null,
+  // Ratchet: floors sit just under the measured unit-test coverage
+  // (2026-11-18) and only ever move up. A PR that drops below fails CI.
+  coverageThreshold: {
+    global: { statements: 93, branches: 85, functions: 90, lines: 94 },
+  },
 
   // A path to a custom dependency extractor
   // dependencyExtractor: null,

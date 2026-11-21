@@ -51,6 +51,9 @@ const axiosError = (url, headers = {}) => {
 describe('jobs/handler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // No list held yet, unless a test says otherwise: an answer one test set
+    // is not the next test's starting point.
+    sanctionsRepository.getLocalListSize.mockResolvedValue(0);
     process.env.AWS_LAMBDA_FUNCTION_NAME = 'jest';
   });
 

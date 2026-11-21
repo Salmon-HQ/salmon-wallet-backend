@@ -26,19 +26,5 @@
  *   Never throws on missing-quote — that is a pass-through, not an error.
  */
 
-/**
- * Thrown by a `PriceEnricher` resolver when no enricher supports the
- * requested blockchain/capability pair.
- */
-class PriceEnricherNotImplementedError extends Error {
-  /**
-   * @param {string} blockchain - value of `locals.network.blockchain`.
-   * @param {string} capability - capability name that was requested.
-   */
-  constructor(blockchain, capability) {
-    super(`No price enricher for blockchain "${blockchain}" supports "${capability}"`);
-    this.name = 'PriceEnricherNotImplementedError';
-  }
-}
-
-module.exports = { PriceEnricherNotImplementedError };
+// A contract only: the typedef above is what the module is for.
+module.exports = {};

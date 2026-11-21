@@ -1,0 +1,8 @@
+#!/bin/sh
+# Lint and the unit suite before the branch leaves the machine: both finish
+# in seconds, with no services and no credentials.
+# Skip once with `git push --no-verify`.
+set -e
+
+npm run -s lint:check
+npm run -s test:unit

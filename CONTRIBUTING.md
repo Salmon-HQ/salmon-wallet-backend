@@ -1,4 +1,4 @@
-# Contributing to salmon-api
+# Contributing to salmon-wallet-backend
 
 Thanks for contributing. This document is the human-facing summary of the repo's working rules; the authoritative, always-current rule source is [`AGENTS.md`](AGENTS.md) (root plus the nested one closest to each folder) — if this file and `AGENTS.md` ever disagree, `AGENTS.md` wins.
 
@@ -23,6 +23,7 @@ Layered Express/Serverless backend organized as vertical slices per blockchain (
 ## Tests
 
 - New behavior comes with tests at the nearest meaningful layer (service/resource/controller over full-suite runs).
+- Tests run in a random order on every run and call counts start at zero in each test, so a test sets the state it needs in `beforeEach`, including the answer of a mock another test may have changed. A failure prints its seed; replay it with `--seed=<n>`. CI runs the unit suite with coverage, and `jest.config.js` holds a floor that only moves up.
 - `npm run test:unit` — hermetic, runs on every PR. `npm run test:integration:hermetic` — docker-compose services only (Redis), also runs on every PR. `npm run test:integration` — hits live providers, needs a real `.env` locally; in CI it runs in the nightly workflow, never in the PR gate.
 
 ## Commits and PRs
@@ -37,7 +38,7 @@ Prod deploys are tag-triggered: push `prod/vX.Y.Z` from `main`. The tag must mat
 
 ## License and contributions
 
-This project is licensed under **Apache-2.0** (see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE)). Contributions are accepted under the **Contributor License Agreement** in [`CLA.md`](CLA.md): first-time contributors sign it once via the CLA bot on their first pull request. By contributing you also certify you have the right to submit the code under this license.
+This project is licensed under **Apache-2.0** (see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE)). Contributions are accepted under the **Contributor License Agreement** in [`CLA.md`](CLA.md): first-time contributors sign it once in their first pull request, where the maintainer collects the signature. By contributing you also certify you have the right to submit the code under this license.
 
 ## Security issues
 

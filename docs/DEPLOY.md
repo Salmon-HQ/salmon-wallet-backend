@@ -7,7 +7,7 @@ Prod deploys are tag-triggered: push a git tag `prod/vX.Y.Z` from `main`. A sche
 `.github/workflows/deploy.yml` runs three jobs:
 
 - **`target`** — picks the tag to ship: the pushed one, or on the scheduled run the newest `prod/v*` by version. Both jobs below check out that tag.
-- **`verify`** — no AWS credentials. `npm ci`, the same `format:check` + `lint:check` gate as `ci.yml`, `test:unit`, and a `serverless print --stage local` sanity check (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
+- **`verify`** — no AWS credentials. `npm ci`, the same `format:check` + `lint:check` gate as `ci.yml`, `test:unit`, and a `serverless print --stage local` sanity check with the `SERVERLESS_ACCESS_KEY` secret (proves the config resolves without needing AWS/SSM before we trust the same file with the prod stage).
 - **`deploy`** (`needs: [target, verify]`) — first runs `node scripts/refresh-geo-data.mjs` (downloads and checks the month's DB-IP country database, before the job holds any AWS credentials; a download or check failure fails the deploy), then assumes the `GithubActionsRole` via GitHub OIDC as the `production` environment (`aws-actions/configure-aws-credentials`; `docs/REPO-SETTINGS.md`, section 6), runs `npm run serverless:deploy` (`serverless deploy --stage prod`), runs `refreshSanctionsJob` once, then smokes `GET /health` on the stack's execute-api URL (read from `serverless info --verbose`, not CloudFront, whose cache could mask a broken deploy) and fails when `GET /status` reports no `countryDatabase`, since Swap is then closed. A red smoke step only alerts — nothing rolls back on its own.
 
 Rollback is a human step, run locally with prod credentials:
@@ -26,9 +26,11 @@ Three stages exist: `local` (dev, no AWS), `prod` (tag-triggered deploy), and `s
 `staging` is a mirror of `prod` for testing a branch before it ships: stack `gol-salmon-api-staging`, params under `/salmon-api/staging/*`, capabilities in `network-capabilities-staging.js` (the Powerups under test are on there and off in prod). It is deployed by hand from the branch under test, never by CI:
 
 ```bash
-eval "$(aws configure export-credentials --format env)"   # Serverless v3 does not read an `aws login` session
+eval "$(aws configure export-credentials --profile <admin profile> --format env)"
 npm run serverless:deploy:staging
 ```
+
+Name the administrator profile explicitly. A machine's default AWS profile is best kept read-only, so that a tool picking up ambient credentials cannot write to the account: `serverless package`, for one, creates a bucket when it finds credentials and no stack.
 
 The script first runs `node scripts/refresh-geo-data.mjs`, so staging ships the month's DB-IP country database like prod; a failed download stops it before anything is deployed. Staging holds to the same 45-day limit as prod: a staging stack not redeployed for 45 days places nobody and refuses every swap. It then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
 
@@ -136,7 +138,7 @@ Prod env values live in **AWS SSM Parameter Store** under `/salmon-api/prod/*`, 
 
 - `config/env.prod.yml` — the `${ssm:/salmon-api/prod/X}` refs consumed by `serverless.yml` via `custom.envFile`, laid out as one map per function (`api`, `coingeckoJob`, `sanctionsJob`, `skrJob`, `events`) built from shared groups (`redis`, `resilience`, `coingecko`, `triton`) merged with `<<`. Each Lambda receives only its own map, so a function never holds a credential its code does not read; `src/__tests__/prod-config.spec.js` pins which secrets each map may hold. Vars that previously had an `${env:X, <default>}` fallback keep a matching `${ssm:X, <default>}` fallback, so an optional/missing param doesn't break a deploy. Vars that were previously required (no default) stay strict and fail the deploy loudly if the param is missing.
 - `config/env.staging.yml` — the same map pointed at `/salmon-api/staging/*`. To refresh staging after a prod param changes, copy that param to the staging path.
-- `config/env.local.yml` — the local/dev mirror: every var comes from `${env:X, ''}`, loaded from `.env` via `serverless-dotenv-plugin`. The `local` stage never touches AWS.
+- `config/env.local.yml` — the local/dev mirror: every var comes from `${env:X, ''}`, loaded from `.env` by Serverless itself (`useDotenv: true`). The `local` stage never touches AWS.
 
 ## Adding or rotating a secret
 
@@ -176,11 +178,22 @@ Unchanged: `cp .env.example .env`, fill in values, `npm run serverless:start:loc
 
 ## GitHub repo secrets
 
-No deploy workflow reads GitHub repo secrets; any entries remaining under Settings → Secrets can be deleted.
+One: `SERVERLESS_ACCESS_KEY`, an access key of the Serverless, Inc. organization `walletsalmon`, labelled `github-ci` there. Serverless Framework v4 runs no command without it, so `ci.yml` (the config smoke) and `deploy.yml` (`verify` and `deploy`) read it; deleting it stops every production deploy at `verify`. It identifies the organization to Serverless, Inc. and grants nothing in AWS. To rotate it, create a new key under Settings → Access Keys at app.serverless.com, run `gh secret set SERVERLESS_ACCESS_KEY`, re-run CI on any open PR to see the config smoke pass, then delete the old key.
 
 ## CI IAM permissions
 
 The GitHub Actions OIDC role (`GithubActionsRole`) deploys with the customer managed policy `GithubActionsPolicy`, which this repository checks in as `aws-deploy-policy.json` (`LambdaInvokeSanctionsRefresh` lets the deploy run `refreshSanctionsJob` once and nothing else). The role also carries an inline `ReadSalmonApiProdParams` that lets it read `/salmon-api/prod/*` from SSM, which the deploy needs to resolve every `${ssm:...}` ref; keep any tightening of that one scoped to `ssm:GetParameter*` on that prefix. The policy is close to IAM's limit of 6,144 characters for a managed policy (white space not counted), so a large addition needs a second managed policy on the role.
+
+### Checking the deploy role before a tooling or permissions change
+
+Staging is deployed with a maintainer's own credentials, so a permission `GithubActionsRole` lacks first shows on a production deploy. Before merging a change to the deploy tool, its plugins or `aws-deploy-policy.json`, prove the role can do what the new deploy does:
+
+1. Deploy the branch to staging and note the start and end time in UTC.
+2. List what that deploy did in AWS from the audit log, all pages: `aws cloudtrail lookup-events --region us-east-1 --lookup-attributes AttributeKey=Username,AttributeValue=<your IAM user> --start-time <start> --end-time <end> --output json`. Each event's `eventSource` and `eventName` give the action; the log lags up to 15 minutes, and S3 object reads and writes are not in it.
+3. Ask IAM whether the role may do each action on the production resource it would touch: `aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::<account>:role/GithubActionsRole --resource-arns <prod ARN> --action-names <actions>`. Pass a real production ARN per service (the stack, a function, the API's stage, a schedule rule, the Lambda role, the deployment bucket and an object in it, an SSM parameter under `/salmon-api/prod/`): the policy is scoped by resource, so a simulation without `--resource-arns` answers `implicitDeny` for everything.
+4. Every action must answer `allowed`. One that does not is added to `aws-deploy-policy.json` and applied before the release, in the order under "Rollout order".
+
+Nothing in steps 2 and 3 changes AWS.
 
 ### The Lambda role's permissions boundary
 

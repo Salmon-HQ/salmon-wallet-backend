@@ -2,6 +2,15 @@
 
 All notable, user-visible changes to this API are recorded here, newest first. Releases are tag-driven (`prod/vX.Y.Z` from `main`, matching `package.json#version` — see `docs/DEPLOY.md`). Each release entry should list contract-relevant changes: new/changed/removed endpoints, response-shape changes, provider or behavior changes observable by clients.
 
+## 0.28.1 — 2026-11-21
+
+- Security fixes; no response shape changes.
+  - `GET /v1/bitcoin-*/account/:address/transactions`: `pageToken` must be a transaction id (64 hex characters); anything else is `400 invalid_parameter`.
+  - Transaction history (Solana and Bitcoin): the cache key uses the page size and spam flag the request resolves to, so varying their spelling no longer bypasses the cache.
+  - `GET /v1/dapp`, NFT listings and content URLs: text patterns that a crafted page, NFT name or URL could stall now run in linear time (a 256 kB hostile page went from 24 s to 130 ms).
+  - NFT metadata fetches: IPv4-mapped IPv6 addresses written in hex groups are refused like the private IPv4 address they map to.
+  - Scam blocklist: an entry written as a full URL is matched by its hostname.
+
 ## 0.28.0 — 2026-11-11
 
 - `GET /v1/exchange-rates`: `rates` covers 45 fiat currencies instead of 15, every one CoinGecko both rates and quotes market data in. Added: aed, ars, bdt, bhd, bmd, clp, czk, dkk, gel, huf, idr, ils, kwd, lkr, mmk, myr, ngn, nok, nzd, php, pkr, pln, rub, sar, sek, thb, twd, uah, vnd, zar. The `currency` parameter of `GET /chart/...` and `GET /coin/...` accepts the same 45. Response shape unchanged.

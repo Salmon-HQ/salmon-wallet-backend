@@ -43,7 +43,11 @@ const fetchTransactions = async (address, filters, locals) => {
 
   do {
     chunk = await esplora.get(
-      cursor ? `/address/${address}/txs/chain/${cursor}` : `/address/${address}/txs`,
+      // Encoded as well as validated at the router: a cursor is one path
+      // segment whoever calls this function.
+      cursor
+        ? `/address/${address}/txs/chain/${encodeURIComponent(cursor)}`
+        : `/address/${address}/txs`,
       locals
     );
     const mined = chunk.filter(isConfirmed);
@@ -81,7 +85,14 @@ const getTransactions = async (address, filters, locals) => {
   }
 
   return withCachedTransactionHistory(
-    buildCacheKey('bitcoin-transactions', address, filters, locals),
+    // Keyed by the page size the loader will serve, not by the raw filters:
+    // a parameter nothing reads must not mint a fresh key (and a paid call).
+    buildCacheKey(
+      'bitcoin-transactions',
+      address,
+      { pageSize: clampPageSize(filters.pageSize) },
+      locals
+    ),
     loadTransactions
   );
 };

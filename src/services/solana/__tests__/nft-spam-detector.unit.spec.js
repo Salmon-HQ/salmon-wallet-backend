@@ -328,7 +328,7 @@ describe('nft-spam-detector.score', () => {
   // is what let it score 0 and sit in the collectibles tab looking legitimate:
   // `.lol`, the domain, and every keyword were unmatchable as literals.
   describe('invisible-character evasion', () => {
-    const ZWSP = '​';
+    const ZWSP = '\u200B';
     const pad = (text) => text.split('').join(ZWSP);
 
     const jup = {

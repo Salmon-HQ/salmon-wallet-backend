@@ -204,5 +204,4 @@ module.exports = {
   countryOfRequest,
   databaseBuiltAt,
   resetCountryDatabase,
-  CountryDatabaseUnavailableError,
 };

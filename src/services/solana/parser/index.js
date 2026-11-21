@@ -446,8 +446,6 @@ module.exports = {
   __testing: {
     deriveType,
     buildAccountMaps,
-    collectAccountData,
-    collectTokenBalanceChanges,
     collectInstructionMetadata,
   },
 };

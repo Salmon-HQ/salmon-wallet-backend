@@ -23,4 +23,4 @@ const clampPageSize = (pageSize) => {
   return Math.min(Math.max(Math.trunc(parsed), MIN_PAGE_SIZE), MAX_PAGE_SIZE);
 };
 
-module.exports = { clampPageSize, MIN_PAGE_SIZE, MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE };
+module.exports = { clampPageSize, DEFAULT_PAGE_SIZE };

@@ -49,4 +49,4 @@ const build = async ({ note, publicKey }) => ({
   display: { note, noteBytes: Buffer.byteLength(note, 'utf8') },
 });
 
-module.exports = { validate, build, MEMO_PROGRAM_ID, MAX_NOTE_BYTES };
+module.exports = { validate, build, MEMO_PROGRAM_ID };
