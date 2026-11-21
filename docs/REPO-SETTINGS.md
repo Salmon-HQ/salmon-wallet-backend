@@ -197,9 +197,22 @@ creates it with no branch rule.
    `repo:Salmon-HQ@296841509/salmon-wallet-backend@1347383970:environment:production`
    (the repository uses GitHub's immutable subject prefix, read with
    `gh api repos/Salmon-HQ/salmon-wallet-backend/actions/oidc/customization/sub`),
-   next to the tag subject `…:ref:refs/tags/prod/*`, which keeps a rerun of a
-   deploy made before this change working. Drop the tag subject once a deploy
-   with the environment has passed.
+   and no other: a subject by git ref (`…:ref:refs/tags/prod/*`) would let
+   any workflow running on such a tag take the role without the environment.
+
+The `staging` environment works the same way for `deploy-staging.yml`: it
+admits the branch `staging` only, and `GithubActionsStagingRole` trusts the
+subject `…:environment:staging` and nothing else. Its policy,
+`GithubActionsStagingPolicy`, names the staging stack, API, schedules and
+params, so a staging deploy cannot touch prod.
+
+```bash
+gh api -X PUT repos/Salmon-HQ/salmon-wallet-backend/environments/staging \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST repos/Salmon-HQ/salmon-wallet-backend/environments/staging/deployment-branch-policies \
+  -f name=staging -f type=branch
+```
 
 ## 7. Who can push
 

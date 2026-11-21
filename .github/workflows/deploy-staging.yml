@@ -1,0 +1,133 @@
+name: Deploy staging
+
+# Run by hand from the `staging` branch. The deploy role trusts the `staging`
+# environment, which admits that branch only (docs/REPO-SETTINGS.md, section 6),
+# so nobody deploys staging with administrator credentials from a laptop.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  # Everything that downloads or installs code runs here, in a job that cannot
+  # ask for the deploy role: `id-token: write` is granted per job, so any step
+  # of the job that holds it (an install script, the CLI installer) could
+  # request the role's token. This job has no secrets and no token to give.
+  bundle:
+    name: Bundle
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use Node.js from .nvmrc
+        # v7.0.0. No dependency cache: a poisoned cache entry could reach the
+        # shipped artifact. (zizmor can't tell the version from the SHA.)
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # zizmor: ignore[cache-poisoning]
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Install node modules
+        run: npm ci
+
+      - name: Verify registry signatures
+        run: npm audit signatures
+
+      # Staging holds to the same 45-day limit as prod: without this month's
+      # DB-IP database it places nobody and refuses every swap.
+      - name: Refresh the country database
+        run: node scripts/refresh-geo-data.mjs
+
+      # Serverless v4 downloads its CLI outside the lockfile; this downloads it
+      # and compares it with the fingerprints in scripts/check-serverless-cli.mjs.
+      - name: Serverless CLI matches its fingerprints
+        run: npm run check:serverless-cli
+
+      # Nothing in the bundle is secret: public code, public packages and the
+      # public country database.
+      - name: Pack the workspace and the CLI
+        run: |
+          tar --zstd -cf "$RUNNER_TEMP/workspace.tar.zst" -C "$GITHUB_WORKSPACE" .
+          tar --zstd -cf "$RUNNER_TEMP/serverless-home.tar.zst" -C "$HOME" .serverless
+      - name: Upload the bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deploy-bundle
+          path: |
+            ${{ runner.temp }}/workspace.tar.zst
+            ${{ runner.temp }}/serverless-home.tar.zst
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+  deploy:
+    name: Deploy Serverless STAGING
+    needs: bundle
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    environment: staging
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download the bundle
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: deploy-bundle
+          path: ${{ runner.temp }}/bundle
+      - name: Unpack the workspace and the CLI
+        run: |
+          tar --zstd -xf "$RUNNER_TEMP/bundle/workspace.tar.zst" -C "$GITHUB_WORKSPACE"
+          tar --zstd -xf "$RUNNER_TEMP/bundle/serverless-home.tar.zst" -C "$HOME"
+      - name: Use Node.js from .nvmrc
+        # v7.0.0. (zizmor can't tell the version from the SHA.)
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # zizmor: ignore[cache-poisoning]
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      # Only hashes files, and runs before anything from the bundle does: a CLI
+      # that is not the reviewed one never gets the deploy role.
+      - name: Serverless CLI matches its fingerprints
+        run: node scripts/check-serverless-cli.mjs
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::228067885724:role/GithubActionsStagingRole
+          role-session-name: gha-staging-${{ github.run_id }}
+          aws-region: us-east-1
+
+      - name: Deploy serverless STAGING stack
+        run: npx serverless deploy --stage staging
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      # Again after the deploy: fails if the CLI fetched another release while
+      # it held the role.
+      - name: Serverless CLI still matches its fingerprints
+        run: node scripts/check-serverless-cli.mjs
+
+      # Swap screening reads the sanctions list from Redis, and only the daily
+      # refreshSanctionsJob fills it. A failure warns and does not fail the
+      # deploy: the code is already live.
+      - name: Refresh the sanctions list
+        run: |
+          if ! err="$(aws lambda invoke --function-name gol-salmon-api-staging-refreshSanctionsJob \
+            --cli-read-timeout 130 --query FunctionError --output text sanctions.json)" \
+            || [ "$err" != "None" ]; then
+            echo "::warning::refreshSanctionsJob did not complete; swaps stay blocked until its daily run."
+          fi

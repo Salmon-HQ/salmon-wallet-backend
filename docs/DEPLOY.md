@@ -23,7 +23,15 @@ Each artifact carries the country database of the deploy that built it. That dat
 
 Three stages exist: `local` (dev, no AWS), `prod` (tag-triggered deploy), and `staging`.
 
-`staging` is a mirror of `prod` for testing a branch before it ships: stack `gol-salmon-api-staging`, params under `/salmon-api/staging/*`, capabilities in `network-capabilities-staging.js` (the Powerups under test are on there and off in prod). It is deployed by hand from the branch under test, never by CI:
+`staging` is a mirror of `prod` for testing a branch before it ships: stack `gol-salmon-api-staging`, params under `/salmon-api/staging/*`, capabilities in `network-capabilities-staging.js` (the Powerups under test are on there and off in prod). It is deployed from the `staging` branch by the `Deploy staging` workflow (`.github/workflows/deploy-staging.yml`), started by hand:
+
+```bash
+gh workflow run deploy-staging.yml --ref staging
+```
+
+The workflow assumes `GithubActionsStagingRole` as the `staging` environment, which admits the `staging` branch only (`docs/REPO-SETTINGS.md`, section 6). The role reaches the staging stack, its API, its schedules and the `/salmon-api/staging/*` params, and nothing of prod. Like the prod deploy, a `bundle` job without the role installs and downloads everything, and the `deploy` job only unpacks and deploys.
+
+A deploy from a machine is the fallback when the workflow cannot run, and needs administrator credentials:
 
 ```bash
 eval "$(aws configure export-credentials --profile <admin profile> --format env)"
@@ -32,7 +40,7 @@ npm run serverless:deploy:staging
 
 Name the administrator profile explicitly. A machine's default AWS profile is best kept read-only, so that a tool picking up ambient credentials cannot write to the account: `serverless package`, for one, creates a bucket when it finds credentials and no stack.
 
-The script first runs `node scripts/refresh-geo-data.mjs`, so staging ships the month's DB-IP country database like prod; a failed download stops it before anything is deployed. Staging holds to the same 45-day limit as prod: a staging stack not redeployed for 45 days places nobody and refuses every swap. It then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
+Both paths first run `node scripts/refresh-geo-data.mjs`, so staging ships the month's DB-IP country database like prod; a failed download stops it before anything is deployed. Staging holds to the same 45-day limit as prod: a staging stack not redeployed for 45 days places nobody and refuses every swap. It then runs `refreshSanctionsJob` once. Swap screening reads the sanctions list from Redis and only that daily job fills it, so a fresh or emptied Redis would otherwise block every swap for up to a day. A failed refresh prints a warning and leaves the deploy in place.
 
 Staging differs from prod on purpose in three places: the Powerups switched on for testing, analytics written to Lambda's `/tmp` instead of GA4 (so testers never reach the production property), and Redis on Upstash over TLS. It shares every provider key with prod, so a load test against staging spends prod's provider quotas.
 
